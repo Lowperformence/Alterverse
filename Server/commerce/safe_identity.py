@@ -1,13 +1,14 @@
-"""Closed, project-authored English identity catalog shared with the Unity client.
+"""Generated canonical identities and bounded Google Play display aliases.
 
-Full reviewed names plus seven ASCII digits: no submitted text or arbitrary word
-combinations. A catalog format check is the authority, not a profanity blacklist.
+Canonical account names and clan identities retain the reviewed catalog.
+Display aliases are cosmetic and cannot change account ownership or name claims.
 """
 import hashlib
 import json
 from pathlib import Path
 import re
 import secrets
+import unicodedata
 
 CATALOG_PATH = Path(__file__).resolve().parents[2] / 'Assets/Alterverse/Resources/Social/SafeIdentityCatalog.json'
 CATALOG = json.loads(CATALOG_PATH.read_text())
@@ -15,6 +16,7 @@ PLAYER_NAMES = tuple(CATALOG['playerNames'])
 CLAN_NAMES = tuple(CATALOG['clanNames'])
 DESCRIPTIONS = tuple(CATALOG['clanDescriptions'])
 NAME_KEY = 'DF_PlayerName'
+PLAY_GAMES_NAME_KEY = 'DF_PlayGamesDisplayName'
 NAME_SPACE = len(PLAYER_NAMES) * 10 ** CATALOG['suffixDigits']
 PLAYER_PATTERN = re.compile(r'(' + '|'.join(re.escape(n) for n in PLAYER_NAMES) + r')[0-9]{7}')
 CLAN_PATTERN = re.compile(r'(' + '|'.join(re.escape(n) for n in CLAN_NAMES) + r') [0-9]{7}')
@@ -59,11 +61,27 @@ def fallback_player_name(identity):
 
 
 def visible_player_name(value, identity):
-    return value if valid_player_name(value) else fallback_player_name(identity)
+    return value if valid_display_name(value) else fallback_player_name(identity)
+
+
+def valid_display_name(value):
+    # Cosmetic alias, not an account identifier or a server-verified Google claim.
+    if not isinstance(value, str) or not value or value != value.strip():
+        return False
+    if unicodedata.normalize('NFC', value) != value:
+        return False
+    if any(c in '<>' or unicodedata.category(c) in ('Cc','Cf','Cs','Co','Cn','Zl','Zp') for c in value):
+        return False
+    return len(value.encode('utf-16-le')) <= 64 and len(value.encode('utf-8')) <= 60
 
 
 def profile_name(entries):
     return next((e.get('text') for e in entries if e.get('key') == NAME_KEY), None)
+
+
+def profile_display_name(entries):
+    alias = next((e.get('text') for e in entries if e.get('key') == PLAY_GAMES_NAME_KEY and e.get('kind') == 1), None)
+    return alias if valid_display_name(alias) else profile_name(entries)
 
 
 def with_player_name(entries, name):
@@ -144,3 +162,4 @@ def migrate_sqlite_clans(db):
         if description not in DESCRIPTIONS:
             description = DESCRIPTIONS[0]
         db.execute('UPDATE social_clan SET name=?,name_search=?,tag=?,description=? WHERE id=?', (name, name.casefold(), tag, description, identifier))
+

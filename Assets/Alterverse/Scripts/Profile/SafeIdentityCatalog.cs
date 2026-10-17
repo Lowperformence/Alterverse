@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Security.Cryptography;
+using System.Text;
 using UnityEngine;
 
 namespace Alterverse.Profile
@@ -48,6 +49,44 @@ namespace Alterverse.Profile
         public static long PlayerNameCapacity => (long)Data.playerNames.Length * 10000000;
         public static long ClanNameCapacity => (long)Data.clanNames.Length * 10000000;
         public static bool IsPlayerName(string name) => HasApprovedRoot(name, Data.playerNames, false);
+        // Display aliases never replace the server-assigned account name. Bound
+        // UTF-8 as well as UTF-16 so every name fits FixedString64Bytes on the wire.
+        public const int MaxDisplayNameLength = 32, MaxDisplayNameBytes = 60;
+        public const string DisplayNameFormatKey = "displayNameFormat", DisplayNameFormat = "gpg-v1";
+        public static string NormalizePlayGamesName(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+            try { value = value.Trim().Normalize(NormalizationForm.FormC); }
+            catch (ArgumentException) { return null; }
+            if (!DisplayCharactersAllowed(value)) return null;
+            int length = 0, bytes = 0;
+            var elements = StringInfo.GetTextElementEnumerator(value);
+            while (elements.MoveNext())
+            {
+                string element = elements.GetTextElement();
+                int size = Encoding.UTF8.GetByteCount(element);
+                if (length + element.Length > MaxDisplayNameLength || bytes + size > MaxDisplayNameBytes) break;
+                length += element.Length; bytes += size;
+            }
+            string result = value.Substring(0, length).TrimEnd();
+            return result.Length == 0 ? null : result;
+        }
+        public static bool IsDisplayName(string value) => !string.IsNullOrEmpty(value) &&
+            value.Length <= MaxDisplayNameLength && value == value.Trim() && DisplayCharactersAllowed(value) &&
+            value.IsNormalized(NormalizationForm.FormC) && Encoding.UTF8.GetByteCount(value) <= MaxDisplayNameBytes;
+        static bool DisplayCharactersAllowed(string value)
+        {
+            for (int i = 0; i < value.Length; i++)
+            {
+                UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(value, i);
+                if (value[i] == '<' || value[i] == '>' || category == UnicodeCategory.Control ||
+                    category == UnicodeCategory.Format || category == UnicodeCategory.Surrogate ||
+                    category == UnicodeCategory.PrivateUse || category == UnicodeCategory.OtherNotAssigned ||
+                    category == UnicodeCategory.LineSeparator || category == UnicodeCategory.ParagraphSeparator) return false;
+                if (char.IsHighSurrogate(value[i])) i++;
+            }
+            return true;
+        }
         public static bool IsClanName(string name) => HasApprovedRoot(name, Data.clanNames, true);
         public static bool IsClanTag(string value) => value != null && value.Length == 8 && value[0] == 'C' && Digits(value, 1);
         static bool HasApprovedRoot(string name, string[] roots, bool space)
@@ -88,9 +127,9 @@ namespace Alterverse.Profile
             throw new InvalidOperationException("Clan name generation unavailable.");
         }
         public static string GenerateClanTag() => "C" + Suffix();
-        public static string DisplayPlayerName(string value, string identity = null)
+        public static string DisplayPlayerName(string value, string identity = null, bool allowPlayGamesNames = true)
         {
-            if (IsPlayerName(value)) return value;
+            if (IsPlayerName(value) || allowPlayGamesNames && IsDisplayName(value)) return value;
             uint hash = IdentityHash(identity ?? value ?? "player");
             return Data.playerNames[hash % (uint)Data.playerNames.Length] +
                 (hash / (uint)Data.playerNames.Length % 10000000).ToString("D7", CultureInfo.InvariantCulture);
@@ -114,3 +153,4 @@ namespace Alterverse.Profile
         { int index = Array.IndexOf(Data.clanDescriptions, text); return index < 0 ? 0 : index; }
     }
 }
+

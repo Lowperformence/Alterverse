@@ -8,7 +8,7 @@ import re
 import time
 import uuid
 from ranked_store import SQLiteRankedStore, FirestoreRankedStore
-from safe_identity import profile_name, visible_player_name
+from safe_identity import profile_display_name, visible_player_name
 
 PROFILE = 'dimensions-front-ranked'
 TEAM_SIZE = 4
@@ -108,7 +108,7 @@ class Ranked:
 
     def search(self, account, name):
         now, reservation = int(self.clock()), uuid.uuid4().hex
-        assigned_name = profile_name(self.ledger.wallet(account)['profile'])
+        assigned_name = profile_display_name(self.ledger.wallet(account)['profile'])
         def reserve(tx):
             p = tx.get(self.pk(account)) or self.player(account)
             if p.get('activeMatch'):
@@ -304,3 +304,4 @@ class Ranked:
                     tx.set(self.pk(p['account']), profile)
             return {'voided': True}
         return self.store.atomic(clear)
+

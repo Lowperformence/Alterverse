@@ -1164,7 +1164,7 @@ namespace Alterverse.UI
             float identityWidth=ContentWidth*.54f;
             theme.Panel(new Rect(Left,220,identityWidth,450));
             AvatarBadgeRenderer.Draw(new Rect(Left+24,246,74,74),PlayerProfile.Avatar,Texture2D.whiteTexture,Time.unscaledTime);
-            theme.Label(new Rect(Left+120,244,identityWidth-148,34),PlayerProfile.PlayerName,theme.Heading);
+            theme.FitLabel(new Rect(Left+120,244,identityWidth-148,34),PlayerProfile.PlayerName,theme.Heading);
             theme.Label(new Rect(Left+120,286,identityWidth-148,26),$"{PlayerProfile.DisplayTitle}  /  LEVEL {PlayerExperience.Level}",theme.Small,true);
             theme.Progress(new Rect(Left+24,348,identityWidth-48,6),PlayerExperience.LevelProgress);
             theme.Label(new Rect(Left+24,364,identityWidth-48,28),XpLabel(),theme.Small,true);
@@ -1272,7 +1272,7 @@ namespace Alterverse.UI
                 "Lifetime match victories place you on the global leaderboard.", theme.Body, true);
 
             theme.Label(new Rect(Left + 28, 410, leftWidth - 56, 22), "GOOGLE PLAY GAMES ACCOUNT", theme.Small, true);
-            theme.Label(new Rect(Left + 28, 440, leftWidth - 56, 32), PlayerProfile.PlayerName, theme.Heading);
+            theme.FitLabel(new Rect(Left + 28, 440, leftWidth - 56, 32), PlayerProfile.PlayerName, theme.Heading);
             theme.Label(new Rect(Left + 28, 484, leftWidth - 56, 54), GooglePlayLevelLeaderboard.Status, theme.Small, true);
 
             bool configured = GooglePlayLevelLeaderboard.IsConfigured;
@@ -1520,4 +1520,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 

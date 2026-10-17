@@ -66,7 +66,7 @@ with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
             '-r:'+str(runtime/'System.dll'),'-r:'+str(runtime/'System.Core.dll'),
             '-r:'+str(runtime/'System.Runtime.Serialization.dll'),
             '-r:'+str(runtime/'System.Xml.dll'),
-            str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'FingerprintRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(here/'LifecycleFixtures.cs'),str(here/'LifecycleRegression.cs'),str(hotcode),str(ui),str(layout),
+            str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'GoogleNameRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'FingerprintRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(here/'LifecycleFixtures.cs'),str(here/'LifecycleRegression.cs'),str(hotcode),str(ui),str(layout),
             *[str(source/name) for name in names]],env=env,check=True)
         subprocess.run([str(a.mono_root/'usr/bin/mono-sgen'),str(output)],env=env,check=True)
         raise SystemExit(0)
@@ -75,9 +75,10 @@ with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
     output=Path(directory)/'RankedRegression.dll'
     response=Path(directory)/'compile.rsp'
     response.write_text('\n'.join(['-nologo','-nowarn:0649,0067','-target:exe','-langversion:9','-out:'+str(output),
-        *['-r:'+str(path) for path in runtime.glob('*.dll')],str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'FingerprintRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(here/'LifecycleFixtures.cs'),str(here/'LifecycleRegression.cs'),str(hotcode),str(ui),str(layout),
+        *['-r:'+str(path) for path in runtime.glob('*.dll')],str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'GoogleNameRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'FingerprintRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(here/'LifecycleFixtures.cs'),str(here/'LifecycleRegression.cs'),str(hotcode),str(ui),str(layout),
         *[str(source/name) for name in names]]))
     subprocess.run([str(a.dotnet_root/'dotnet'),str(sdk/'Roslyn/bincore/csc.dll'),'@'+str(response)],check=True)
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))
     subprocess.run([str(a.dotnet_root/'dotnet'),str(output)],env=dict(os.environ,DF_TEST_IDENTITY_CATALOG=str(root/'Assets/Alterverse/Resources/Social/SafeIdentityCatalog.json')),check=True)
+
 

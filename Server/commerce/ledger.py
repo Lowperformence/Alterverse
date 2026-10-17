@@ -7,7 +7,8 @@ from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 import sqlite3
 from pathlib import Path
-from safe_identity import NAME_KEY, profile_name, reserve_player_name, normalize_sqlite_profile
+from safe_identity import (NAME_KEY, PLAY_GAMES_NAME_KEY, valid_display_name,
+                           profile_name, reserve_player_name, normalize_sqlite_profile)
 
 CATALOG_PATH = Path(__file__).resolve().parents[2] / 'Assets/Alterverse/Resources/Commerce/ShardCatalog.json'
 CATALOG = json.loads(CATALOG_PATH.read_text())
@@ -51,6 +52,8 @@ def validate_profile(entries):
         else: raise ValueError('Invalid profile type')
         if key == 'DF_Shards' and kind != 0: raise ValueError('Invalid earned balance type')
         if key == NAME_KEY and kind != 1: raise ValueError('Invalid player name type')
+        if key == PLAY_GAMES_NAME_KEY and (kind != 1 or not valid_display_name(value.get('text'))):
+            raise ValueError('Invalid Google Play display name')
         if key in ('DF_LoginStreakDay_v1', 'DF_LoginStreakIndex_v1', 'DF_DailyQuestWonMaps_v1'):
             if kind != 0: raise ValueError('Invalid daily progression type')
             if key == 'DF_LoginStreakIndex_v1' and not 1 <= number <= 7:
@@ -249,4 +252,5 @@ class Ledger:
             if row.rowcount != 1: raise ValueError('Insufficient shards')
             db.execute('INSERT INTO cosmetic VALUES (?,?)', (account, sku))
             return self.snapshot(db, account)
+
 

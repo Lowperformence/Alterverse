@@ -50,13 +50,14 @@ partial class Regression
   Check(PlayerProfile.PlayerName=="CONNECTING..."&&!AccountProfilePrefs.Dirty,
    "legacy text is not published or replaced with a client-generated account name");
   var legacy=new SocialService.Snapshot{
-   me=new SocialService.Player{playerId="legacy-player",name="Old name"},
+   me=new SocialService.Player{playerId="legacy-player",name="<b>Old name</b>"},
    clan=new SocialService.Clan{clanId="legacy-clan",name="Old clan",tag="FREE",description="https://discord.gg/test",
-    members=new[]{new SocialService.Player{playerId="member",name="Another name"}}}};
+    members=new[]{new SocialService.Player{playerId="member",name="Another\nname"}}}};
   SocialService.CleanSnapshot(legacy);
-  Check(SafeIdentityCatalog.IsPlayerName(legacy.me.name)&&SafeIdentityCatalog.IsPlayerName(legacy.clan.members[0].name),"legacy server player text hidden");
+  Check(SafeIdentityCatalog.IsPlayerName(legacy.me.name)&&SafeIdentityCatalog.IsPlayerName(legacy.clan.members[0].name),"malformed server player text hidden");
   Check(SafeIdentityCatalog.IsClanName(legacy.clan.name)&&SafeIdentityCatalog.IsClanTag(legacy.clan.tag),"legacy server clan text hidden");
   Check(legacy.clan.description==SafeIdentityCatalog.Descriptions[0],"legacy server description replaced by preset");
   AccountProfilePrefs.Detach();
  }
 }
+

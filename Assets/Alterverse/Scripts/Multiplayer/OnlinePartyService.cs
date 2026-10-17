@@ -550,13 +550,17 @@ namespace Alterverse.Multiplayer
                 if (session == null) return memberBuffer;
 
                 string localId = session.CurrentPlayer?.Id ?? "";
+                bool allowPlayGamesNames = true;
+                foreach (IReadOnlyPlayer player in session.Players)
+                    if (player != null && ReadPlayer(player, SafeIdentityCatalog.DisplayNameFormatKey, "") != SafeIdentityCatalog.DisplayNameFormat)
+                        allowPlayGamesNames = false;
                 foreach (IReadOnlyPlayer player in session.Players)
                 {
                     if (player == null) continue;
                     memberBuffer.Add(new MemberView
                     {
                         PlayerId = player.Id,
-                        DisplayName = SafeIdentityCatalog.DisplayPlayerName(ReadPlayer(player, PlayerNameKey, "TRAVELER"),player.Id),
+                        DisplayName = SafeIdentityCatalog.DisplayPlayerName(ReadPlayer(player, PlayerNameKey, "TRAVELER"),player.Id,allowPlayGamesNames),
                         Hero = (HeroId)ReadIntPlayer(player, PlayerHeroKey, (int)HeroId.Veyr),
                         BattleItem = (BattleItemType)Mathf.Clamp(ReadIntPlayer(player, PlayerBattleItemKey, 0), 0, 4),
                         Ready = ReadPlayer(player, PlayerReadyKey, "0") == "1",
@@ -647,6 +651,7 @@ namespace Alterverse.Multiplayer
             return new Dictionary<string, PlayerProperty>
             {
                 { PlayerNameKey, new PlayerProperty(SanitizeDisplayName(PlayerProfile.PlayerName), VisibilityPropertyOptions.Member) },
+                { SafeIdentityCatalog.DisplayNameFormatKey, new PlayerProperty(SafeIdentityCatalog.DisplayNameFormat, VisibilityPropertyOptions.Member) },
                 { PlayerHeroKey, new PlayerProperty(((int)PlayerHeroSelection.Selected).ToString(CultureInfo.InvariantCulture), VisibilityPropertyOptions.Member) },
                 { PlayerBattleItemKey, new PlayerProperty(((int)BattleItemInventory.Equipped).ToString(CultureInfo.InvariantCulture), VisibilityPropertyOptions.Member) },
                 { PlayerReadyKey, new PlayerProperty(ready ? "1" : "0", VisibilityPropertyOptions.Member) }
@@ -899,5 +904,6 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 
 

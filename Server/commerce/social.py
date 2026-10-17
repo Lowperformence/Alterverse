@@ -12,7 +12,7 @@ from ledger import ITEMS, ProfileConflict
 from clan_chat import ClanChat, ChatConfig, initialize as initialize_chat
 from safe_identity import (DESCRIPTIONS, normalize_sqlite_profile,
                            visible_player_name, validate_clan_identity, migrate_sqlite_clans,
-                           generate_clan_name, generate_clan_tag, description_for)
+                           generate_clan_name, generate_clan_tag, description_for, profile_display_name)
 
 CLAN_CREATION_COST = 500
 MAX_MEMBERS = 50
@@ -37,9 +37,8 @@ def level_for_xp(xp):
 
 
 def public_values(entries, identity='player'):
+    name = visible_player_name(profile_display_name(entries), identity)
     entries = {e['key']: e for e in entries}
-    name = entries.get('DF_PlayerName', {}).get('text', 'Traveler')
-    name = visible_player_name(name, identity)
     raw = entries.get('DF_AccountXP', {}).get('text', '0')
     try:
         # Bound parsing before integer conversion of potentially huge profile strings.
@@ -487,5 +486,6 @@ class Social:
     def check_account_allowed(self, account):
         with self.ledger.connect() as db:
             self.chat.account_allowed(db, account)
+
 
 

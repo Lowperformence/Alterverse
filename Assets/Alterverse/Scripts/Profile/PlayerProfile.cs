@@ -8,12 +8,17 @@ namespace Alterverse.Profile
         const string NameKey="DF_PlayerName", AvatarKey="DF_Avatar", MasterKey="DF_MasterVolume",
             MusicKey="DF_MusicVolume", SfxKey="DF_SfxVolume";
         public const int MinNameLength=3, MaxNameLength=16;
+        public const string PlayGamesNameKey="DF_PlayGamesDisplayName";
         public static string PlayerName
         {
             get
             {
                 string value=AccountProfilePrefs.GetString(NameKey, "");
-                if (SafeIdentityCatalog.IsPlayerName(value)) return value;
+                if (SafeIdentityCatalog.IsPlayerName(value))
+                {
+                    string alias=AccountProfilePrefs.Attached?AccountProfilePrefs.GetString(PlayGamesNameKey, ""):null;
+                    return SafeIdentityCatalog.IsDisplayName(alias)?alias:value;
+                }
                 // When signed in, wait for the server-assigned name. Never invent
                 // and save a second identity locally for a connected account.
                 if (AccountProfilePrefs.Attached) return "CONNECTING...";
@@ -22,8 +27,18 @@ namespace Alterverse.Profile
                 return value;
             }
         }
+        // Only the verified Google-link path calls this, after the matching cloud
+        // profile has loaded. A late callback must never edit another account.
+        internal static bool TryUseGooglePlayName(string verifiedAccount,string displayName)
+        {
+            if(!AccountProfilePrefs.Attached||string.IsNullOrEmpty(verifiedAccount)||AccountProfilePrefs.Account!=verifiedAccount)return false;
+            string value=SafeIdentityCatalog.NormalizePlayGamesName(displayName);
+            if(value==null||AccountProfilePrefs.GetString(PlayGamesNameKey, "")==value)return false;
+            AccountProfilePrefs.SetString(PlayGamesNameKey,value);AccountProfilePrefs.Save();
+            return true;
+        }
         // Retained as a compatibility entry point for older callers.
-        // Registered players must keep their original assigned name forever.
+        // The canonical account name remains fixed; Google supplies a display alias.
         public static void RerollName() { }
         public static string SanitizeName(string value) => SafeIdentityCatalog.DisplayPlayerName(value);
         public static bool IsValidName(string value) => SafeIdentityCatalog.IsPlayerName(value);
@@ -54,3 +69,4 @@ namespace Alterverse.Profile
         public const string Language="English";
     }
 }
+

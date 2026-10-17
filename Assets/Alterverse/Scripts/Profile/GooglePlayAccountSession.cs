@@ -62,6 +62,18 @@ namespace Alterverse.Profile
 #endif
             }
         }
+        public static string DisplayName
+        {
+            get
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                try { return IsAuthenticated ? PlayGamesPlatform.Instance.GetUserDisplayName() : null; }
+                catch (Exception) { return null; }
+#else
+                return null;
+#endif
+            }
+        }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void Reset()=>signingIn=null;
 
@@ -107,3 +119,4 @@ namespace Alterverse.Profile
         }
     }
 }
+

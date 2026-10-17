@@ -99,7 +99,19 @@ namespace Alterverse.Profile
         }
         void OnSignedOut(){connectedPlayer=linkedUnityPlayer=linkedGooglePlayer=null;SocialService.Disconnect();PaidShardCommerce.Disconnect();Status="Signed out.";}
         void OnExpired(){Status="Session expired. Sign in to synchronize.";PaidShardCommerce.Instance?.Refresh();}
-        void OnCloudProfileChanged()=>GooglePlayLevelLeaderboard.SubmitCurrentScore();
+        void OnCloudProfileChanged()
+        {
+            ApplyGooglePlayDisplayName();
+            GooglePlayLevelLeaderboard.SubmitCurrentScore();
+        }
+        void ApplyGooglePlayDisplayName()
+        {
+            if(!GooglePlayAccountReady)return;
+            using var hash=SHA256.Create();
+            string account=BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(linkedUnityPlayer))).Replace("-", "").ToLowerInvariant();
+            if(PlayerProfile.TryUseGooglePlayName(account,GooglePlayAccountSession.DisplayName)&&PaidShardCommerce.Instance?.Ready==true)
+                _=PaidShardCommerce.Instance.FlushProfileAsync();
+        }
         void Update()
         {
             if(UnityServices.State==ServicesInitializationState.Initialized&&AuthenticationService.Instance.IsAuthorized&&subscribed)
@@ -174,6 +186,7 @@ namespace Alterverse.Profile
             if(string.IsNullOrEmpty(provider)||provider!=google||google!=GooglePlayAccountSession.PlayerId||
                 !AuthenticationService.Instance.IsAuthorized||player!=AuthenticationService.Instance.PlayerId)return false;
             linkedUnityPlayer=player;linkedGooglePlayer=provider;
+            ApplyGooglePlayDisplayName();
             GoogleRestoreAvailable=false;
             GoogleStatus="Google Play account linked. Progress and purchases use your cloud account.";
             GooglePlayLevelLeaderboard.SubmitCurrentScore();
@@ -264,6 +277,7 @@ namespace Alterverse.Profile
         }
     }
 }
+
 
 
 

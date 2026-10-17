@@ -25,6 +25,7 @@ namespace Alterverse.Multiplayer
         private const string AckMessage = "DF_DEDICATED_PLAN_ACK_V1";
         private const string LaunchMessage = "DF_DEDICATED_LAUNCH_V1";
         private const int ProtocolVersion = 6;
+        private const uint DisplayNameCapability = 0x44464E31; // Optional trailing DFN1 marker; old servers ignore it.
         private const float HumanJoinWindowSeconds = 60f;
         private const float PlanAckTimeoutSeconds = 20f;
         private const float AuthenticationTimeoutSeconds = 10f;
@@ -40,6 +41,7 @@ namespace Alterverse.Multiplayer
             public HeroId Hero;
             public BattleItemType BattleItem;
             public string Admission;
+            public bool SupportsDisplayNames;
         }
 
         public static DedicatedOnlineMatchHandshake Instance { get; private set; }
@@ -233,6 +235,7 @@ namespace Alterverse.Multiplayer
             writer.WriteValueSafe((int)hero);
             writer.WriteValueSafe((int)BattleItemInventory.Equipped);
             writer.WriteValueSafe(new FixedString4096Bytes(RankedService.Instance?.Admission ?? ""));
+            writer.WriteValueSafe(DisplayNameCapability);
             messaging.SendNamedMessage(HelloMessage, NetworkManager.ServerClientId, writer, NetworkDelivery.ReliableSequenced);
             helloSent = true;
             status = "PLAYER IDENTITY SENT TO DEDICATED SERVER";
@@ -274,6 +277,12 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out int heroRaw);
             reader.ReadValueSafe(out int battleItemRaw);
             reader.ReadValueSafe(out FixedString4096Bytes fixedAdmission);
+            bool supportsDisplayNames = false;
+            if (reader.TryBeginRead(sizeof(uint)))
+            {
+                reader.ReadValueSafe(out uint nameCapability);
+                supportsDisplayNames = nameCapability == DisplayNameCapability;
+            }
             string admission = fixedAdmission.ToString();
             if (RankedMatchReporter.RankedDeployment != !string.IsNullOrEmpty(admission))
             { RejectClient(manager, senderClientId, "ranked admission required for ranked deployment only"); return; }
@@ -347,7 +356,8 @@ namespace Alterverse.Multiplayer
                 DisplayName = SanitizeName(displayName),
                 Hero = (HeroId)heroRaw,
                 BattleItem = (BattleItemType)battleItemRaw,
-                Admission = admission
+                Admission = admission,
+                SupportsDisplayNames = supportsDisplayNames
             };
             authorizedPlayers[senderClientId] = playerId;
             unauthenticatedSince.Remove(senderClientId);
@@ -416,7 +426,12 @@ namespace Alterverse.Multiplayer
                     BotDifficultySettings.OnlineDifficulty,
                     members,
                     RankedMatchReporter.RankedDeployment ? SessionMode.OnlineRanked : SessionMode.OnlineCasual);
-                foreach(var slot in plan.Session.Slots)slot.DisplayName=SanitizeName(slot.DisplayName);
+                // An older client sanitizes aliases before hashing its plan. Use
+                // canonical-format labels for the whole roster in mixed matches
+                // so every peer hashes the same names and can still connect.
+                bool allowPlayGamesNames = ordered.TrueForAll(human => human.SupportsDisplayNames);
+                foreach(var slot in plan.Session.Slots)
+                    slot.DisplayName=SafeIdentityCatalog.DisplayPlayerName(slot.DisplayName,null,allowPlayGamesNames&&!slot.IsBot);
                 CoopAuthority.Prepare(plan);
                 planFingerprint = CoopPlanHandshake.Fingerprint(plan);
                 planAcks.Clear();
@@ -811,4 +826,5 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 
