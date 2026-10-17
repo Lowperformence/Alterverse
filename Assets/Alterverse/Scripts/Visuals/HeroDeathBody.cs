@@ -19,10 +19,13 @@ namespace Alterverse.Visuals
         private readonly List<Renderer> renderers = new();
         private readonly List<BonePose> poses = new();
         private readonly List<Transform> contacts = new();
-        private readonly MaterialPropertyBlock block = new();
+        private MaterialPropertyBlock block;
         private Vector3 startPosition, fallDirection;
         private Quaternion startRotation;
         private float groundY, elapsed, side;
+
+        // Native Unity objects must be created on the main thread after AddComponent.
+        private void Awake() => block = new MaterialPropertyBlock();
 
         private struct BonePose
         {
