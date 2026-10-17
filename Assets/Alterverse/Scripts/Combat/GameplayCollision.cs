@@ -10,18 +10,18 @@ namespace Alterverse.Combat
         public const float LengthScale=1.10f*1.10f;
         public const float HalfLength=42f*LengthScale;
         public const float HalfBreadth=36f;
-        // Move each complete base group outward, preserving the marked internal spacing.
+        // Shared team-end anchors. Healing and spawn positions can move independently of defenses.
         public const float CoreX=36f*LengthScale;
-        public const float SpawnX=CoreX-6.6f;
-        // The marked layout places the plate forward of the core, with the hero line on its front half.
-        public const float HealingX=SpawnX+1f;
+        // Move the pad and its compact hero line two units farther toward the centre.
+        public const float HealingX=CoreX-7.6f;
+        public const float SpawnX=HealingX-1f;
         public const float HealingPlateScale=1.30f;
         public const float HealingPlateRadius=2.15f*HealingPlateScale;
         public const float HealingRadius=4.5f*HealingPlateScale;
         public const float HealingGuardOffset=HealingPlateRadius+1.25f;
         // Identical defense anchors on every map, including the frontier planets.
-        public const float BunkerX=HealingX+2f,BunkerZ=21.5f;
-        public const float TrenchX=HealingX+3f,TrenchZ=10.75f;
+        public const float BunkerX=CoreX-3.6f,BunkerZ=21.5f;
+        public const float TrenchX=CoreX-2.6f,TrenchZ=10.75f;
         public const float SpawnSpacing=1.4f;
         public static Vector3 Stretch(Vector3 point)
         {point.x*=LengthScale;return point;}

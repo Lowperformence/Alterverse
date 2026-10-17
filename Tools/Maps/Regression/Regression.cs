@@ -10,10 +10,13 @@ static class Regression
  static void Main()
  {
   Near(ArenaLayout.CoreX*2f,79.2f*1.1f,"another ten percent between base centres");
-  Near(ArenaLayout.CoreX-ArenaLayout.SpawnX,6.6f,"base-to-spawn spacing preserved");
+  Near(ArenaLayout.CoreX-ArenaLayout.SpawnX,8.6f,"spawn follows the pad toward centre");
   Near(ArenaLayout.HealingX-ArenaLayout.SpawnX,1f,"plate-to-spawn spacing preserved");
-  Near(ArenaLayout.BunkerX-ArenaLayout.HealingX,2f,"bunker-to-plate spacing preserved");
-  Near(ArenaLayout.TrenchX-ArenaLayout.HealingX,3f,"trench-to-plate spacing preserved");
+  Near(ArenaLayout.BunkerX-ArenaLayout.HealingX,4f,"plate moved forward independently of bunkers");
+  Near(ArenaLayout.TrenchX-ArenaLayout.HealingX,5f,"plate moved forward independently of trenches");
+  Near(ArenaLayout.HealingX,37.96f-2f,"pad moves exactly two units toward centre");
+  Near(ArenaLayout.BunkerX,39.96f,"bunker anchor unchanged");
+  Near(ArenaLayout.TrenchX,40.96f,"trench anchor unchanged");
   Near(ArenaLayout.HalfLength*2f,92.4f*1.1f,"floor length");Near(ArenaLayout.HalfBreadth*2f,72f,"unchanged breadth");
   foreach(int teamSize in new[]{4,5})for(int team=0;team<2;team++)for(int slot=0;slot<teamSize;slot++)
   {
