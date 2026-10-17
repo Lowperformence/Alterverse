@@ -21,6 +21,7 @@ namespace Alterverse.Multiplayer
         private readonly HashSet<string> previousHostKeys=new();
         private readonly HashSet<string> currentHostKeys=new();
         private readonly List<string> tombstones=new();
+        private readonly List<CoopWorldEntityKey> live=new(128);
         private CustomMessagingManager messaging;
         private bool attached;
         private float nextSend,nextRefresh;
@@ -34,7 +35,9 @@ namespace Alterverse.Multiplayer
             if(manager==null||!manager.IsListening)return;
             Attach(manager.CustomMessagingManager);
 
-            if(Time.unscaledTime>=nextRefresh)
+            // The host refreshes immediately before each snapshot; a second timed scan
+            // in the same frame would only repeat the same work.
+            if(!CoopAuthority.LocalHasServerAuthority&&Time.unscaledTime>=nextRefresh)
             {
                 nextRefresh=Time.unscaledTime+.35f;
                 RefreshEntities();
@@ -72,14 +75,15 @@ namespace Alterverse.Multiplayer
             // Keep each unfragmented state message below the transport MTU, even with
             // maximum-length keys. Each chunk is an independent partial snapshot.
             const int chunkSize=6;
-            List<CoopWorldEntityKey> live=new();
+            live.Clear();
             foreach(CoopWorldEntityKey entity in entities.Values)
                 if(entity!=null&&entity.GetComponent<Health>()!=null)live.Add(entity);
+            uint round=CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan);
             for(int offset=0;offset<live.Count;offset+=chunkSize)
             {
                 int count=Mathf.Min(chunkSize,live.Count-offset);
                 using FastBufferWriter writer=new(1024,Allocator.Temp);
-                writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+                writer.WriteValueSafe(round);
                 writer.WriteValueSafe(count);
                 for(int i=0;i<count;i++)
                 {
@@ -100,7 +104,7 @@ namespace Alterverse.Multiplayer
             {
                 int count=Mathf.Min(chunkSize,tombstones.Count-offset);
                 using FastBufferWriter writer=new(1024,Allocator.Temp);
-                writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+                writer.WriteValueSafe(round);
                 writer.WriteValueSafe(0);writer.WriteValueSafe(count);
                 for(int i=0;i<count;i++)writer.WriteValueSafe(new FixedString128Bytes(tombstones[offset+i]));
                 SendChunk(manager,writer,NetworkDelivery.ReliableSequenced);

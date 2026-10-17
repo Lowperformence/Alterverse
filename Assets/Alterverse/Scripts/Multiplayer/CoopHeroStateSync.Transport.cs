@@ -50,7 +50,7 @@ namespace Alterverse.Multiplayer
             FixedString128Bytes id=new(localPlayerId??"");
 
             using FastBufferWriter writer=new(256,Allocator.Temp);
-            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            writer.WriteValueSafe(poseRound); // EnsurePoseRound already computed this packet's identity.
             writer.WriteValueSafe(localSlot);
             writer.WriteValueSafe(id);
             writer.WriteValueSafe(ownerPoseHistory.Record(p));
@@ -156,7 +156,7 @@ namespace Alterverse.Multiplayer
             if(count==0)return;
 
             using FastBufferWriter writer=new(2048,Allocator.Temp);
-            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            writer.WriteValueSafe(poseRound); // EnsurePoseRound already computed this packet's identity.
             writer.WriteValueSafe(count);
             for(int i=0;i<slots.Length;i++)
             {

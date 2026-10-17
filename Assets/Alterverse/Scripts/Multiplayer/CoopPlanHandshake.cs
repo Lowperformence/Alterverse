@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -256,39 +255,60 @@ namespace Alterverse.Multiplayer
         public static uint Fingerprint(CoopMatchPlan plan)
         {
             if(plan==null||plan.Session==null)return 0;
-
-            StringBuilder builder=new(256);
-            builder.Append(plan.MatchId??"").Append('|')
-                .Append((int)plan.Arena).Append('|')
-                .Append((int)plan.Difficulty);
-            if (plan.Session.Mode == SessionMode.OnlineRanked) builder.Append("|ranked");
-
+            // Stream the existing UTF-16 wire identity directly into FNV-1a. This is
+            // called for movement packets as well as the handshake: no temporary
+            // StringBuilder/string is needed, and mutable rosters are never cached.
+            var hash=new PlanFingerprint(2166136261u);
+            hash.Append(plan.MatchId);hash.Append('|');
+            hash.Append((int)plan.Arena);hash.Append('|');
+            hash.Append((int)plan.Difficulty);
+            if(plan.Session.Mode==SessionMode.OnlineRanked)hash.Append("|ranked");
             for(int i=0;i<plan.Session.Slots.Length;i++)
             {
                 MatchPlayerSlot slot=plan.Session.Slots[i];
-                builder.Append('|').Append(i).Append(':');
-                if(slot==null){builder.Append("null");continue;}
-                builder.Append(slot.PlayerId??"").Append(',')
-                    .Append(slot.DisplayName??"").Append(',')
-                    .Append(slot.Team).Append(',')
-                    .Append((int)slot.Hero).Append(',')
-                    .Append((int)slot.BattleItem).Append(',')
-                    .Append(slot.IsBot?'1':'0').Append(',')
-                    .Append(slot.IsHost?'1':'0');
+                hash.Append('|');hash.Append(i);hash.Append(':');
+                if(slot==null){hash.Append("null");continue;}
+                hash.Append(slot.PlayerId);hash.Append(',');
+                hash.Append(slot.DisplayName);hash.Append(',');
+                hash.Append(slot.Team);hash.Append(',');
+                hash.Append((int)slot.Hero);hash.Append(',');
+                hash.Append((int)slot.BattleItem);hash.Append(',');
+                hash.Append(slot.IsBot?'1':'0');hash.Append(',');
+                hash.Append(slot.IsHost?'1':'0');
             }
+            return hash.Value==0?1u:hash.Value;
+        }
 
-            // Stable FNV-1a over UTF-16 code units; deterministic across both peers.
-            const uint offset=2166136261u;
-            const uint prime=16777619u;
-            uint hash=offset;
-            string text=builder.ToString();
-            for(int i=0;i<text.Length;i++)
+        private struct PlanFingerprint
+        {
+            public uint Value;
+            public PlanFingerprint(uint initial){Value=initial;}
+            public void Append(char value)
             {
-                char ch=text[i];
-                hash^=(byte)(ch&0xFF);hash*=prime;
-                hash^=(byte)(ch>>8);hash*=prime;
+                unchecked
+                {
+                    Value^=(byte)(value&0xFF);Value*=16777619u;
+                    Value^=(byte)(value>>8);Value*=16777619u;
+                }
             }
-            return hash==0?1u:hash;
+            public void Append(string value)
+            {
+                if(value==null)return;
+                for(int i=0;i<value.Length;i++)Append(value[i]);
+            }
+            public void Append(int value)
+            {
+                // Valid roster values are nonnegative. Preserve the old culture-specific
+                // negative sign for malformed/diagnostic values instead of changing hashes.
+                if(value<0){Append(value.ToString());return;}
+                if(value<10){Append((char)('0'+value));return;}
+                int divisor=10;
+                while(value/divisor>=10)divisor*=10;
+                do
+                {
+                    Append((char)('0'+value/divisor));value%=divisor;divisor/=10;
+                }while(divisor>0);
+            }
         }
 
         private void OnDestroy()

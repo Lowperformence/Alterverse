@@ -21,7 +21,12 @@ def main():
     with tempfile.TemporaryDirectory(prefix='df-server-build-') as directory:
         output = Path(directory) / 'Regression.dll'
         response = Path(directory) / 'compile.rsp'
-        sources = [here / 'EngineStubs.cs', here / 'Regression.cs',
+        runtime_source = (root / 'Assets/Alterverse/Scripts/Multiplayer/DedicatedServerNetworkRuntime.cs').read_text()
+        start = runtime_source.index('private static void SuppressClientOnlyRuntime()')
+        end = runtime_source.index('public static void ReleaseMatchBootstrap()', start)
+        suppression = Path(directory) / 'RuntimeSuppression.cs'
+        suppression.write_text('using UnityEngine;using Alterverse.Match;using Alterverse.Prototype;using Alterverse.UI;namespace Alterverse.Multiplayer {public sealed class DedicatedServerNetworkRuntime:UnityEngine.Object {' + runtime_source[start:end] + 'public static void Tick()=>SuppressClientOnlyRuntime();}}')
+        sources = [suppression, here / 'EngineStubs.cs', here / 'Regression.cs',
                    root / 'Assets/Alterverse/Editor/DimensionsFrontDedicatedServerBuilder.cs',
                    root / 'Assets/Alterverse/Editor/AndroidRuntimeShaderPreserver.cs']
         response.write_text('\n'.join(['-nologo', '-target:exe', '-langversion:9', '-define:UNITY_EDITOR',

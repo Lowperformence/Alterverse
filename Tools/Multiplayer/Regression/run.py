@@ -41,7 +41,9 @@ def main():
         a = world.index('private void SendState(')
         b = world.index('private void OnState(', a)
         packets = directory / 'WorldPackets.cs'
-        packets.write_text('using System.Collections.Generic;using Alterverse.Combat;using UnityEngine;using Unity.Netcode;using Unity.Collections;namespace Alterverse.Multiplayer {public sealed partial class CoopWorldStateSync {' + world[a:b] + '}}')
+        update = world[world.index('private void Update()'):world.index('private void RefreshEntities()')]
+        interval = re.search(r'private const float SendInterval=[^;]+;', world)[0]
+        packets.write_text('using System.Collections.Generic;using Alterverse.Combat;using UnityEngine;using Unity.Netcode;using Unity.Collections;namespace Alterverse.Multiplayer {public sealed partial class CoopWorldStateSync {' + interval + update + world[a:b] + '}}')
         locomotion = (source / 'Characters/HeroLocomotion.cs').read_text()
         a = locomotion.index('private uint movementRevision;')
         b = locomotion.index('public bool OwnsMovementFrame', a)

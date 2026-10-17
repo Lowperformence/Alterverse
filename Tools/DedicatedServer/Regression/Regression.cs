@@ -35,6 +35,23 @@ static class Regression
   try{action();}catch(Exception error){Check(error.Message.Contains(phrase),"Failure must explain "+phrase);return;}
   throw new Exception("Expected failure: "+phrase);
  }
+ static void RuntimeSuppressionCases()
+ {
+  var bootstrap=new Alterverse.Prototype.PrototypeBootstrap();
+  UnityEngine.Object.RuntimeObjects[typeof(Alterverse.Prototype.PrototypeBootstrap)]=bootstrap;
+  Alterverse.Multiplayer.CoopAuthority.ActivePlan=null;Alterverse.Match.MatchClock.Paused=true;
+  Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Tick();
+  Check(!bootstrap.enabled&&!Alterverse.Match.MatchClock.Paused,"Unstaged server still suppresses bootstrap and menu pause");
+  bootstrap.enabled=true;Alterverse.Multiplayer.CoopAuthority.ActivePlan=new object();
+  UnityEngine.Object.RuntimeSearches.Clear();
+  for(int i=0;i<60;i++)Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Tick();
+  Check(bootstrap.enabled&&!UnityEngine.Object.RuntimeSearches.ContainsKey(typeof(Alterverse.Prototype.PrototypeBootstrap)),"Installed match performs zero bootstrap scene searches across 60 frames");
+  UnityEngine.Object.RuntimeObjects[typeof(Alterverse.UI.MainMenuController)]=new Alterverse.UI.MainMenuController();
+  int destroyed=UnityEngine.Object.DestroyCalls;Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Tick();
+  Check(UnityEngine.Object.DestroyCalls==destroyed+1,"Client menu cleanup remains active during a match");
+  Alterverse.Multiplayer.CoopAuthority.ActivePlan=null;Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Tick();
+  Check(!bootstrap.enabled,"Returning to unstaged state resumes bootstrap suppression immediately");
+ }
  static void Main()
  {
   string directory=Path.Combine(Path.GetTempPath(),"df-server-regression-"+Guid.NewGuid());
@@ -73,6 +90,7 @@ static class Regression
    Reset();var energy=Shader.Find(Names[2]);Resources.Assets["Shader:CombatVfx/HeroEnergy"]=energy;Resources.Assets["Material:CombatVfx/HeroEnergy"]=new Material{shader=energy};
    new AndroidRuntimeShaderPreserver().OnPreprocessBuild(new BuildReport{summary=new BuildSummary{platform=BuildTarget.Android}});
    Check(HeroPresentationChecks.Checks==1&&AssetDatabase.Settings.Included.Count==Names.Length,"Android preflight still preserves shaders and validates hero presentation");
+   RuntimeSuppressionCases();
    Console.WriteLine("PASS: "+checks+" dedicated server build checks (Unity editor substitutes; no native player build)");
   }
   finally{Directory.Delete(directory,true);}

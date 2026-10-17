@@ -4,7 +4,14 @@ using UnityEditor.Build.Reporting;
 
 namespace UnityEngine
 {
- public class Object {}
+ public class Object
+ {
+  public static readonly Dictionary<Type,Object> RuntimeObjects=new();
+  public static readonly Dictionary<Type,int> RuntimeSearches=new();
+  public static T FindAnyObjectByType<T>() where T:class
+  {RuntimeSearches[typeof(T)]=RuntimeSearches.TryGetValue(typeof(T),out int n)?n+1:1;return RuntimeObjects.TryGetValue(typeof(T),out var x)?x as T:null;}
+  public static int DestroyCalls;public static void Destroy(Object value){DestroyCalls++;}
+ }
  public class Shader:Object
  {
   public string name;
@@ -83,3 +90,8 @@ namespace Alterverse.EditorChecks
 {
  public static class HeroPresentationChecks {public static int Checks;public static void CheckCombatLineTransforms(){Checks++;}}
 }
+
+namespace Alterverse.Match {public enum PauseReason{Menu}public static class MatchClock {public static bool Paused;public static void Set(PauseReason reason,bool value){Paused=value;}}}
+namespace Alterverse.Prototype {public sealed class PrototypeBootstrap:UnityEngine.Object {public bool enabled=true;}}
+namespace Alterverse.UI {public sealed class MainMenuController:UnityEngine.Object {public UnityEngine.Object gameObject=new();}}
+namespace Alterverse.Multiplayer {public static class CoopAuthority {public static object ActivePlan;}}

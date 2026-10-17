@@ -99,8 +99,13 @@ namespace Alterverse.Multiplayer
             if(menu!=null)UnityEngine.Object.Destroy(menu.gameObject);
 
             // PrototypeBootstrap must remain dormant until an authoritative match plan is installed.
-            PrototypeBootstrap bootstrap=FindAnyObjectByType<PrototypeBootstrap>();
-            if(bootstrap!=null&&CoopAuthority.ActivePlan==null)bootstrap.enabled=false;
+            // Once a plan is installed there is nothing to suppress. Avoid an
+            // otherwise unused scene-wide bootstrap search on every server frame.
+            if(CoopAuthority.ActivePlan==null)
+            {
+                PrototypeBootstrap bootstrap=FindAnyObjectByType<PrototypeBootstrap>();
+                if(bootstrap!=null)bootstrap.enabled=false;
+            }
         }
 
         public static void ReleaseMatchBootstrap()

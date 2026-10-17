@@ -214,7 +214,8 @@ static class Regression
    var entity=new GameObject().AddComponent<CoopWorldEntityKey>();entity.Key=i.ToString().PadRight(120,'x');
    entity.gameObject.AddComponent<Health>();sync.Live.Add(entity);
   }
-  sync.Broadcast(manager);int delivered=0;
+  CoopPlanHandshake.Calls=0;sync.Broadcast(manager);int delivered=0;
+  Check(CoopPlanHandshake.Calls==1,"One round hash covers all 19 world chunks instead of hashing per chunk");
   foreach(var message in sync.Messages.Sent)
   {
    int count=(int)message.Values[1];delivered+=count;
@@ -234,5 +235,36 @@ static class Regression
   Check(removed==110,"All removals are delivered beyond the former 64 cap");
   sync.Messages.Sent.Clear();sync.Broadcast(manager);Check(sync.Messages.Sent.Count==0,"Removed world objects are retired after reliable send");
  }
- static void Main(){HistoryCases();TransportCases();DashTransportCases();HealingAndStatusCases();WorldPacketCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
+ static void SnapshotWorkCases()
+ {
+  CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=true;
+  NetworkManager.Singleton=new NetworkManager{IsServer=true};Time.unscaledTime=0;
+  var sync=new CoopWorldStateSync();var e=new GameObject().AddComponent<CoopWorldEntityKey>();e.Key="live";
+  var health=e.gameObject.AddComponent<Health>();health.Current=37;health.Shield=12;e.transform.position=new Vector3(3,2,1);
+  sync.Live.Add(e);sync.Tick();
+  Check(sync.RefreshCalls==1,"Server discovers world entities once on a send frame, not twice");
+  var first=sync.Messages.Sent[0];
+  Check((uint)first.Values[0]==CoopPlanHandshake.Round&&(int)first.Values[1]==1,"World header remains compatible");
+  Check(((Unity.Collections.FixedString128Bytes)first.Values[2]).ToString()=="live"&&
+    (float)first.Values[3]==3&&(float)first.Values[4]==2&&(float)first.Values[5]==1&&
+    (float)first.Values[7]==37&&(float)first.Values[8]==12&&!(bool)first.Values[9]&&(int)first.Values[10]==0,
+    "World snapshot preserves identity, position, HP, shield, alive state and tombstone count");
+  object buffer=typeof(CoopWorldStateSync).GetField("live",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(sync);
+  for(int i=1;i<=60;i++){Time.unscaledTime=i/60f;sync.Tick();}
+  Check(sync.RefreshCalls==sync.Messages.Sent.Count,"No server entity discovery on nonsend frames");
+  Check(ReferenceEquals(buffer,typeof(CoopWorldStateSync).GetField("live",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(sync)),"Live snapshot buffer survives subsequent sends");
+  health.Current=21;health.IsDead=true;sync.Broadcast(NetworkManager.Singleton);
+  var changed=sync.Messages.Sent[^1];Check((float)changed.Values[7]==21&&(bool)changed.Values[9],"Reused buffers read current state rather than stale values");
+  sync.Live.Clear();sync.Broadcast(NetworkManager.Singleton);
+  Check((int)sync.Messages.Sent[^1].Values[2]==1&&sync.Messages.Sent[^1].Delivery==NetworkDelivery.ReliableSequenced,"Reused buffer cannot retain a removed entity");
+  int previous=sync.RefreshCalls;CoopAuthority.LocalHasServerAuthority=false;Time.unscaledTime=2;sync.Tick();
+  Check(sync.RefreshCalls==previous+1,"Client keeps its periodic entity discovery");
+  CoopAuthority.LocalHasServerAuthority=true;
+  var hero=new CoopHeroStateSync();hero.Slot(Actor(0));CoopPlanHandshake.Calls=0;hero.Broadcast(NetworkManager.Singleton);
+  Check(CoopPlanHandshake.Calls==1,"Hero snapshot reuses the identity checked by EnsurePoseRound");
+  var owner=new CoopHeroStateSync();owner.Slot(Actor(0,true),true);NetworkManager.Singleton=new NetworkManager();
+  CoopAuthority.LocalHasServerAuthority=false;CoopPlanHandshake.Calls=0;owner.Send(NetworkManager.Singleton);
+  Check(CoopPlanHandshake.Calls==1,"Owner movement reuses the current round identity");
+ }
+ static void Main(){HistoryCases();TransportCases();DashTransportCases();HealingAndStatusCases();WorldPacketCases();SnapshotWorkCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
 }

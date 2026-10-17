@@ -73,7 +73,7 @@ namespace Unity.Netcode
  public class NetworkManager
  {
   public static NetworkManager Singleton;public const ulong ServerClientId=0;
-  public bool IsServer;public readonly List<ulong> ConnectedClientsIds=new(){0,7};
+  public bool IsListening=true;public CustomMessagingManager CustomMessagingManager=new();public bool IsServer;public readonly List<ulong> ConnectedClientsIds=new(){0,7};
  }
 }
 namespace Alterverse.Match
@@ -133,7 +133,7 @@ namespace Alterverse.Multiplayer
  public sealed class Session {public MatchPlayerSlot[] Slots=new MatchPlayerSlot[8];}
  public sealed class CoopMatchPlan {public Session Session=new();}
  public static class CoopAuthority {public static bool Active=true,LocalHasServerAuthority,LocalIsHost;public static CoopMatchPlan ActivePlan=new();public static bool CanSimulateHostGameplay=>LocalHasServerAuthority;}
- public static class CoopPlanHandshake {public static uint Round=123;public static uint Fingerprint(CoopMatchPlan plan)=>Round;}
+ public static class CoopPlanHandshake {public static uint Round=123;public static int Calls;public static uint Fingerprint(CoopMatchPlan plan){Calls++;return Round;}}
  public static class CoopGameplayCommands {public static uint ProcessedCommand(int slot)=>0;}
  public static class MatchNetworkProtocol
  {
@@ -181,9 +181,13 @@ namespace Alterverse.Multiplayer
   private readonly Dictionary<string,CoopWorldEntityKey> entities=new();
   private readonly HashSet<string> previousHostKeys=new(),currentHostKeys=new();
   private readonly List<string> tombstones=new();
+  private readonly List<CoopWorldEntityKey> live=new(128);
+  private float nextSend,nextRefresh;public int RefreshCalls;
+  private void Attach(CustomMessagingManager value){}
+  public void Tick()=>Update();
   private readonly CustomMessagingManager messaging=new();
   public readonly List<CoopWorldEntityKey> Live=new();
-  private void RefreshEntities(){entities.Clear();foreach(var e in Live)entities.Add(e.Key,e);}
+  private void RefreshEntities(){RefreshCalls++;entities.Clear();foreach(var e in Live)entities.Add(e.Key,e);}
   public void Broadcast(NetworkManager manager)=>SendState(manager);public CustomMessagingManager Messages=>messaging;
  }
 }

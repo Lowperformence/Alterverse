@@ -12,6 +12,7 @@ partial class Regression {
   LobbyCases().GetAwaiter().GetResult();
   IdentityCases();
   TeamFormatCases();
+  FingerprintCases();
   var players=new List<OnlineMatchPlan.DedicatedMember>();
   for(int i=0;i<MatchSession.MaxPlayers;i++) players.Add(new(){PlayerId="t"+i,DisplayName="Hero"+i,TeamId=i<MatchSession.TeamSize?"red":"blue",Hero=HeroId.Veyr});
   var plan=OnlineMatchPlan.BuildDedicated("match",ArenaVariant.Moon,BotDifficulty.Hard,players,SessionMode.OnlineRanked);
