@@ -37,6 +37,7 @@ namespace Alterverse.Multiplayer
         private int localSlot=-1;
         private string localPlayerId="";
         private bool attached;
+        private CoopMatchPlan slotPlan;
 
         private void OnEnable()
         {
@@ -77,6 +78,13 @@ namespace Alterverse.Multiplayer
         {
             if(!CoopAuthority.Active)return;
             nextRefresh=Time.unscaledTime+(immediate?.05f:.5f);
+            // A round keeps the same actor objects through death/respawn. Once its roster
+            // is complete, avoid a global scene search and array allocation twice a second.
+            bool complete=object.ReferenceEquals(slotPlan,CoopAuthority.ActivePlan);
+            for(int i=0;i<slots.Length&&complete;i++)
+                complete=slots[i]!=null&&slots[i].Slot==i;
+            if(!immediate&&complete)return;
+            slotPlan=CoopAuthority.ActivePlan;
             for(int i=0;i<slots.Length;i++)slots[i]=null;
 
             CoopHeroSlot[] found=FindObjectsByType<CoopHeroSlot>(FindObjectsInactive.Exclude);
@@ -92,7 +100,7 @@ namespace Alterverse.Multiplayer
                     localPlayerId=slot.PlayerId??"";
                 }
 
-                if(slot.GetComponent<CoopHeroReplicaPresentation>()==null)
+                if(!CoopAuthority.LocalHasServerAuthority&&slot.GetComponent<CoopHeroReplicaPresentation>()==null)
                 {
                     CoopHeroReplicaPresentation presentation=slot.gameObject.AddComponent<CoopHeroReplicaPresentation>();
                     presentation.Refresh();
@@ -344,3 +352,4 @@ namespace Alterverse.Multiplayer
 
     }
 }
+

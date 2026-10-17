@@ -64,12 +64,13 @@ namespace Alterverse.Multiplayer
             bool cancellation=cue==HeroVfxCue.CancelWarnings||cue==HeroVfxCue.CancelProjectiles;
             if(!cancellation&&elapsed>Mathf.Max(.5f,duration+.5f))return;
             Health target=null;
+            string targetWorldKey=worldKey.ToString();
             if(targetSlot>=0)target=slots[targetSlot]!=null?slots[targetSlot].GetComponent<Health>():null;
-            else if(worldKey.ToString().Length>0)
+            else if(targetWorldKey.Length>0)
                 for(int i=0;i<Health.Active.Count;i++)
                 {
                     Health hp=Health.Active[i];if(hp==null)continue;
-                    if(hp.GetComponent<CoopWorldEntityKey>()?.Key==worldKey.ToString()){target=hp;break;}
+                    if(hp.GetComponent<CoopWorldEntityKey>()?.Key==targetWorldKey){target=hp;break;}
                 }
             Vector3 point=new(x,y,z),origin=new(ox,oy,oz);
             // Contact flashes align with receipt of authoritative health. Flights and warnings
@@ -106,3 +107,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
