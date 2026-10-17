@@ -10,11 +10,11 @@ static class Regression
  static void Main()
  {
   Near(ArenaLayout.CoreX*2f,79.2f*1.1f,"another ten percent between base centres");
-  Near(ArenaLayout.CoreX-ArenaLayout.SpawnX,8.6f,"spawn follows the pad toward centre");
+  Near(ArenaLayout.CoreX-ArenaLayout.SpawnX,11.6f,"spawn follows the pad toward centre");
   Near(ArenaLayout.HealingX-ArenaLayout.SpawnX,1f,"plate-to-spawn spacing preserved");
-  Near(ArenaLayout.BunkerX-ArenaLayout.HealingX,4f,"plate moved forward independently of bunkers");
-  Near(ArenaLayout.TrenchX-ArenaLayout.HealingX,5f,"plate moved forward independently of trenches");
-  Near(ArenaLayout.HealingX,37.96f-2f,"pad moves exactly two units toward centre");
+  Near(ArenaLayout.BunkerX-ArenaLayout.HealingX,7f,"plate moved forward independently of bunkers");
+  Near(ArenaLayout.TrenchX-ArenaLayout.HealingX,8f,"plate moved forward independently of trenches");
+  Near(ArenaLayout.HealingX,35.96f-3f,"pad moves another three units to marked open ground");
   Near(ArenaLayout.BunkerX,39.96f,"bunker anchor unchanged");
   Near(ArenaLayout.TrenchX,40.96f,"trench anchor unchanged");
   Near(ArenaLayout.HalfLength*2f,92.4f*1.1f,"floor length");Near(ArenaLayout.HalfBreadth*2f,72f,"unchanged breadth");
@@ -51,6 +51,8 @@ static class Regression
   Check(ArenaLayout.HealingX-ArenaLayout.HealingRadius>ArenaLayout.HalfLength*.5f,"entire healing area stays in team-end quarter");
   Check(ArenaLayout.SpawnX>ArenaLayout.HalfLength*.5f,"compact formation stays at team map end");
   Check(ArenaLayout.CoreX-ArenaLayout.HealingX>1.62f+ArenaLayout.HealingPlateRadius,"healing plate clears solid core");
+  Check(ArenaLayout.CoreX-ArenaLayout.HealingX>4.75f+ArenaLayout.HealingPlateRadius+1f,"visible plate is separate from outer base deck");
+  Check(ArenaLayout.CoreX-ArenaLayout.HealingX>(5f+2.55f*ArenaLayout.HealingPlateScale)*ArenaLayout.LengthScale+.5f,"terrain foundation rings have visible open-ground clearance");
   foreach(var point in DefenseBunker.Positions)
   {
    Check(MathF.Abs(point.x)+2.575f<ArenaLayout.HalfLength,"bunker footprint remains on floor");

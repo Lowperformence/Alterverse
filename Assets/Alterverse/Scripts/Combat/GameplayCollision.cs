@@ -12,8 +12,8 @@ namespace Alterverse.Combat
         public const float HalfBreadth=36f;
         // Shared team-end anchors. Healing and spawn positions can move independently of defenses.
         public const float CoreX=36f*LengthScale;
-        // Move the pad and its compact hero line two units farther toward the centre.
-        public const float HealingX=CoreX-7.6f;
+        // Keep the enlarged pad clear of the base deck and both terrain foundation rings.
+        public const float HealingX=CoreX-10.6f;
         public const float SpawnX=HealingX-1f;
         public const float HealingPlateScale=1.30f;
         public const float HealingPlateRadius=2.15f*HealingPlateScale;
