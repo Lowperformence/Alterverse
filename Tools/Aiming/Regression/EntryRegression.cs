@@ -64,7 +64,7 @@ partial class Regression
 
    Reset();
    sivra=Hero(HeroId.Nyra,0,Vector3.zero);
-   sivra.GetComponent<HeroCombatStatus>().Stun(.5f);
+   (sivra.GetComponent<HeroCombatStatus>()??sivra.AddComponent<HeroCombatStatus>()).Stun(.5f);
    Check(!sivra.GetComponent<PlayerHeroAbilities>().CastAimed(1,
        new AimPose(Vector3.forward,Vector3.forward*3)),
        "stunned Sivra cannot activate dash");
