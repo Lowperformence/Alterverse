@@ -6,11 +6,13 @@ namespace Alterverse.Combat
     /// <summary>Shared map dimensions and deterministic team formation for every arena and peer.</summary>
     public static class ArenaLayout
     {
-        public const float LengthScale=1.10f;
+        // Two successive 10% extensions along the axis between the base centres.
+        public const float LengthScale=1.10f*1.10f;
         public const float HalfLength=42f*LengthScale;
         public const float HalfBreadth=36f;
-        // The old roster's main spawn line was at +/-30. The new line is exactly 10% farther apart.
-        public const float SpawnX=30f*LengthScale;
+        // Move each complete base group outward, preserving the marked internal spacing.
+        public const float CoreX=36f*LengthScale;
+        public const float SpawnX=CoreX-6.6f;
         // The marked layout places the plate forward of the core, with the hero line on its front half.
         public const float HealingX=SpawnX+1f;
         public const float HealingPlateScale=1.30f;
@@ -18,9 +20,8 @@ namespace Alterverse.Combat
         public const float HealingRadius=4.5f*HealingPlateScale;
         public const float HealingGuardOffset=HealingPlateRadius+1.25f;
         // Identical defense anchors on every map, including the frontier planets.
-        public const float BunkerX=36f,BunkerZ=21.5f;
-        public const float TrenchX=37f,TrenchZ=10.75f;
-        public const float CoreX=36f*LengthScale;
+        public const float BunkerX=HealingX+2f,BunkerZ=21.5f;
+        public const float TrenchX=HealingX+3f,TrenchZ=10.75f;
         public const float SpawnSpacing=1.4f;
         public static Vector3 Stretch(Vector3 point)
         {point.x*=LengthScale;return point;}

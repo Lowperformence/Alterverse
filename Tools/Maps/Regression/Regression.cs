@@ -9,8 +9,12 @@ static class Regression
  static float Distance(Vector3 a,Vector3 b)=>MathF.Sqrt((a.x-b.x)*(a.x-b.x)+(a.z-b.z)*(a.z-b.z));
  static void Main()
  {
-  Near(ArenaLayout.SpawnX*2f,60f*1.1f,"spawn-to-spawn length");
-  Near(ArenaLayout.HalfLength*2f,84f*1.1f,"floor length");Near(ArenaLayout.HalfBreadth*2f,72f,"unchanged breadth");
+  Near(ArenaLayout.CoreX*2f,79.2f*1.1f,"another ten percent between base centres");
+  Near(ArenaLayout.CoreX-ArenaLayout.SpawnX,6.6f,"base-to-spawn spacing preserved");
+  Near(ArenaLayout.HealingX-ArenaLayout.SpawnX,1f,"plate-to-spawn spacing preserved");
+  Near(ArenaLayout.BunkerX-ArenaLayout.HealingX,2f,"bunker-to-plate spacing preserved");
+  Near(ArenaLayout.TrenchX-ArenaLayout.HealingX,3f,"trench-to-plate spacing preserved");
+  Near(ArenaLayout.HalfLength*2f,92.4f*1.1f,"floor length");Near(ArenaLayout.HalfBreadth*2f,72f,"unchanged breadth");
   foreach(int teamSize in new[]{4,5})for(int team=0;team<2;team++)for(int slot=0;slot<teamSize;slot++)
   {
    var p=ArenaLayout.HeroSpawn(team,slot,teamSize);var other=ArenaLayout.HeroSpawn(1-team,slot,teamSize);
@@ -40,6 +44,22 @@ static class Regression
    Check(MathF.Abs(bunker.z)>MathF.Abs(trench.z),"outer and inner defensive flanks retained");
    var mirror=DefenseBunker.Positions[(1-team)*2+flank];Near(bunker.x,-mirror.x,"mirrored bunker X");Near(bunker.z,-mirror.z,"mirrored bunker Z");
   }
+  Check(ArenaLayout.CoreX+4.75f<ArenaLayout.HalfLength,"complete base deck fits enlarged floor");
+  Check(ArenaLayout.HealingX-ArenaLayout.HealingRadius>ArenaLayout.HalfLength*.5f,"entire healing area stays in team-end quarter");
+  Check(ArenaLayout.SpawnX>ArenaLayout.HalfLength*.5f,"compact formation stays at team map end");
+  Check(ArenaLayout.CoreX-ArenaLayout.HealingX>1.62f+ArenaLayout.HealingPlateRadius,"healing plate clears solid core");
+  foreach(var point in DefenseBunker.Positions)
+  {
+   Check(MathF.Abs(point.x)+2.575f<ArenaLayout.HalfLength,"bunker footprint remains on floor");
+   Check(MathF.Abs(point.x)-2.575f>ArenaLayout.HalfLength*.5f,"bunker stays at owning map end");
+   Check(MathF.Abs(point.z)+3.225f<ArenaLayout.HalfBreadth,"bunker lateral footprint remains on floor");
+  }
+  foreach(var point in DefenseTrench.Positions)
+  {
+   Check(MathF.Abs(point.x)-2.55f>ArenaLayout.HalfLength*.5f,"trench stays at owning map end");
+   Check(MathF.Abs(point.z)+3.625f<ArenaLayout.HalfBreadth,"trench lateral footprint remains on floor");
+   Check(MathF.Abs(point.z)-3.625f>ArenaLayout.HealingRadius,"trench stays clear of whole healing area");
+  }
   // Run the production healing component: every angle/radius on the visible enlarged disc,
   // including its edge, must actually heal on the authoritative peer.
   var zone=new SpawnHealingZone();zone.InitializeTeam(0);zone.transform.position=ArenaLayout.HealingPosition(0);
@@ -61,7 +81,7 @@ static class Regression
   var friendly=((TeamMember)UnityEngine.Object.Scene[0]).Health;float received=friendly.Received;
   update.Invoke(zone,null);Near(friendly.Received,received,"client cannot independently heal");
   var border=GameplayCollision.ClampToRoundedArena(new Vector3(100,1,0),40,33);
-  Near(border.x,44f,"extended movement/dash/network clamp");Near(border.z,0,"width axis unaffected");
+  Near(border.x,48.4f,"extended movement/dash/network clamp");Near(border.z,0,"width axis unaffected");
   Near(GameplayCollision.ClampToRoundedArena(new Vector3(0,1,100),40,33).z,33,"unchanged lateral boundary");
   // Corners remain inside the physical rounded floor, including collision radius clearance.
   for(int x=-100;x<=100;x+=2)for(int z=-100;z<=100;z+=2)
@@ -73,9 +93,9 @@ static class Regression
   }
   var mesh=GameplayCollision.CreateRoundedPrismMesh(Vector3.zero,ArenaLayout.HalfLength*2,.2f,ArenaLayout.HalfBreadth*2,4,8);
   float maxX=0,maxZ=0;foreach(var v in mesh.vertices){maxX=MathF.Max(maxX,MathF.Abs(v.x));maxZ=MathF.Max(maxZ,MathF.Abs(v.z));}
-  Near(maxX,46.2f,"actual floor mesh X extent");Near(maxZ,36f,"actual floor mesh Z extent");
+  Near(maxX,50.82f,"actual floor mesh X extent");Near(maxZ,36f,"actual floor mesh Z extent");
   var terrain=new Transform();ArenaLayout.StretchTerrain(terrain);ArenaLayout.StretchTerrain(terrain);
-  Near(terrain.localScale.x,1.1f,"terrain scaling is idempotent");Near(terrain.localScale.y,1f,"unchanged height");Near(terrain.localScale.z,1f,"unchanged breadth");
+  Near(terrain.localScale.x,1.21f,"terrain scaling is idempotent");Near(terrain.localScale.y,1f,"unchanged height");Near(terrain.localScale.z,1f,"unchanged breadth");
   Console.WriteLine("PASS: "+checks+" arena layout checks (4/5 heroes per team, spawn spacing, healing, bounds, floor geometry)");
  }
 }
