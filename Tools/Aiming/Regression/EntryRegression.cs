@@ -24,11 +24,62 @@ partial class Regression
   }
   FirstScratchContact();
   LiveConeCases();
+  SivraVectorShiftPassive();
   TimmyCases();TimmyVfxCases();IndependentConeDirection();EndedOnlyReverseDirection();CapturedPointNetwork();
   SupportTargeting();SelfShieldPreviews();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   Console.WriteLine("PASS "+checks+" skill-entry and existing combat assertions. Deterministic engine fixtures; no native Unity/Android/latency test.");
+ }
+
+ static void SivraVectorShiftPassive()
+ {
+  foreach(int fps in new[]{30,60,120})
+  {
+   Reset();
+   var sivra=Hero(HeroId.Nyra,0,Vector3.zero);
+   var bystander=Hero(HeroId.Veyr,0,Vector3.right*8);
+   var skill=sivra.GetComponent<PlayerHeroAbilities>();
+   Near(HeroCombatStatus.Speed(sivra),1f,"Sivra starts without dash passive");
+   Check(skill.CastAimed(1,new AimPose(Vector3.forward,Vector3.forward*3)),
+       "Sivra Vector Shift accepted at "+fps+" FPS");
+   // The engine fixture resolves the 0.16s dash instantly. Production's
+   // HeroLocomotion keeps the speed effect pending until IsDashing becomes false.
+   Check(sivra.GetComponent<HeroAbilityExecution>().Remaining(1)>0,
+       "Sivra dash still has its normal cooldown");
+   Step(1f/fps);
+   Near(HeroCombatStatus.Speed(sivra),HeroAbilityKit.SivraDashSpeedMultiplier,
+       "Vector Shift grants exactly +10 percent movement after dash at "+fps+" FPS");
+   Near(HeroCombatStatus.Speed(bystander),1f,
+       "Sivra passive does not affect another hero");
+   // A rejected repeat cast may not stack or refresh the effect.
+   Check(!skill.CastAimed(1,new AimPose(Vector3.forward,Vector3.forward*3)),
+       "Vector Shift respects cooldown");
+   Run(1.70f);
+   Near(HeroCombatStatus.Speed(sivra),HeroAbilityKit.SivraDashSpeedMultiplier,
+       "passive remains active before 1.8 seconds at "+fps+" FPS");
+   Run(.15f);
+   Near(HeroCombatStatus.Speed(sivra),1f,
+       "passive expires after 1.8 seconds at "+fps+" FPS");
+
+   Reset();
+   sivra=Hero(HeroId.Nyra,0,Vector3.zero);
+   (sivra.GetComponent<HeroCombatStatus>()??sivra.AddComponent<HeroCombatStatus>()).Stun(.5f);
+   Check(!sivra.GetComponent<PlayerHeroAbilities>().CastAimed(1,
+       new AimPose(Vector3.forward,Vector3.forward*3)),
+       "stunned Sivra cannot activate dash");
+   Run(2.1f);
+   Near(HeroCombatStatus.Speed(sivra),1f,"rejected dash grants no passive");
+
+   Reset();
+   var veyr=Hero(HeroId.Veyr,0,Vector3.zero);
+   Check(veyr.GetComponent<PlayerHeroAbilities>().CastAimed(2,
+       new AimPose(Vector3.forward,Vector3.forward*4)),
+       "Zhaev dash still casts");
+   Run(.2f);
+   Near(HeroCombatStatus.Speed(veyr),1f,
+       "Sivra passive does not leak into other mobility skills");
+  }
  }
 
  static void LiveConeCases()

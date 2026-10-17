@@ -24,6 +24,9 @@ namespace Alterverse.Characters
         public const float PhaseFoldShieldSeconds = 2.25f;
         // Supplemental passive: Auren restores health each second in addition to Frontline.
         public const float AurenPassiveRegenPerSecond = 2f;
+        // Sivra's Vector Shift grants a brief movement-speed passive after the dash ends.
+        public const float SivraDashSpeedMultiplier = 1.10f;
+        public const float SivraDashSpeedSeconds = 1.8f;
         public HeroId Hero { get; private set; }
         public AbilitySpec Passive { get; private set; }
         public AbilitySpec Q { get; private set; }

@@ -30,6 +30,51 @@ namespace Alterverse.EditorChecks
                 .StartCoroutine("RunAurenPassive");
         }
 
+        [MenuItem("DIMENSIONS FRONT/Checks/Sivra dash passive (Play mode)")]
+        public static void LaunchSivraDashPassive()
+        {
+            if(!Application.isPlaying||Time.timeScale<=0||!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)
+                throw new InvalidOperationException("Use a running disposable offline or host match.");
+            new GameObject("DF_SivraDashRegression").AddComponent<HeroAbilityExecutionRegression>()
+                .StartCoroutine("RunSivraDashPassive");
+        }
+
+        private IEnumerator RunSivraDashPassive()
+        {
+            try
+            {
+                GameObject sivra=Hero(HeroId.Nyra,0,new Vector3(0,80,0));
+                HeroAbilityExecution ability=sivra.GetComponent<HeroAbilityExecution>();
+                HeroLocomotion locomotion=sivra.GetComponent<HeroLocomotion>();
+                HeroCombatStatus status=sivra.GetComponent<HeroCombatStatus>()??sivra.AddComponent<HeroCombatStatus>();
+                Unlock(ability);
+                Check(Mathf.Approximately(status.MoveMultiplier,1f),"Sivra starts at unmodified run speed");
+                Check(ability.TryCastAimed(1,new AimPose(Vector3.forward,
+                    sivra.transform.position+Vector3.forward*3f)),"Vector Shift failed to start");
+                Check(locomotion.IsDashing,"dash must travel before the passive starts");
+                Check(Mathf.Approximately(status.MoveMultiplier,1f),
+                    "passive must not shorten or accelerate the dash itself");
+
+                float deadline=Time.time+1f;
+                while(locomotion.IsDashing&&Time.time<deadline)yield return null;
+                Check(!locomotion.IsDashing,"dash did not complete");
+                yield return null; // HeroAbilityExecution observes completed locomotion.
+                Check(Mathf.Abs(status.MoveMultiplier-HeroAbilityKit.SivraDashSpeedMultiplier)<.001f,
+                    "successful dash must grant exactly +10% running speed");
+                Check(!ability.TryCastAimed(1,new AimPose(Vector3.forward,
+                    sivra.transform.position+Vector3.forward*3f)),
+                    "dash cooldown must prevent passive refresh");
+                yield return new WaitForSeconds(1.7f);
+                Check(Mathf.Abs(status.MoveMultiplier-HeroAbilityKit.SivraDashSpeedMultiplier)<.001f,
+                    "Sivra passive ended before its 1.8-second window");
+                yield return new WaitForSeconds(.2f);
+                Check(Mathf.Approximately(status.MoveMultiplier,1f),
+                    "Sivra passive persisted beyond its 1.8-second window");
+                Debug.Log("DF: Sivra Vector Shift dash completion, +10% move speed, 1.8s expiry and cooldown isolation passed.");
+            }
+            finally {ClearUnits();Destroy(gameObject);}
+        }
+
         private IEnumerator RunAurenPassive()
         {
             try

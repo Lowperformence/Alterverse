@@ -18,6 +18,7 @@ namespace Alterverse.Characters
         private readonly System.Collections.Generic.HashSet<Health> resolvedTargets=new();
         private int life;
         private bool wasStunned;
+        private bool sivraDashPassivePending;
         private readonly RaycastHit[] sightHits=new RaycastHit[16];
         private void Awake()
         {
@@ -34,11 +35,23 @@ namespace Alterverse.Characters
                 // Interrupt preparation/channels, not projectiles already in flight or an
                 // incoming forced displacement owned by another hero (for example the hook).
                 GetComponent<HeroAttackDelivery>()?.CancelWindups();
+                sivraDashPassivePending=false;
                 EndTimmyScratch();CancelVoidKnight();life++;HeroSkillVfx.CancelWarnings(gameObject);StopAllCoroutines();
             }
             wasStunned=stunned;
+            // Only a completed, authoritative Vector Shift activates Sivra's
+            // post-dash run speed. This does not alter dash distance or travel speed.
+            if(sivraDashPassivePending&&!locomotion.IsDashing)
+            {
+                sivraDashPassivePending=false;
+                if(isActiveAndEnabled&&!self.IsDead&&!stunned&&
+                    Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)
+                    (GetComponent<HeroCombatStatus>()??gameObject.AddComponent<HeroCombatStatus>())
+                        .BoostSpeed(HeroAbilityKit.SivraDashSpeedMultiplier,
+                            HeroAbilityKit.SivraDashSpeedSeconds);
+            }
         }
-        private void CancelPending() { EndTimmyScratch();CancelVoidKnight();GetComponent<HeroAttackDelivery>()?.Cancel(); life++; HeroSkillVfx.CancelWarnings(gameObject); StopAllCoroutines(); if(locomotion!=null)locomotion.ResetMotion(); }
+        private void CancelPending() { sivraDashPassivePending=false; EndTimmyScratch();CancelVoidKnight();GetComponent<HeroAttackDelivery>()?.Cancel(); life++; HeroSkillVfx.CancelWarnings(gameObject); StopAllCoroutines(); if(locomotion!=null)locomotion.ResetMotion(); }
         private void OnDisable() => CancelPending();
         private void OnDestroy() { if (self != null) self.Died -= CancelPending; }
         public float Remaining(int slot) => Mathf.Max(0, ready[Mathf.Clamp(slot, 0, 3)] - Time.time);
@@ -119,6 +132,9 @@ namespace Alterverse.Characters
                 end = GameplayCollision.ClampToRoundedArena(end,40f,33f);
                 if ((end-from).sqrMagnitude < .01f || (mover != null && !mover.CanRepositionTo(end))) return false;
                 if(!locomotion.BeginDash(end))return false;
+                // Apply the speed passive after Vector Shift ends, not during dash
+                // travel; cancelled or interrupted dashes cannot grant it.
+                if(hero==HeroId.Nyra&&slot==1)sivraDashPassivePending=true;
                 HeroCombatAudio.Cast(gameObject,slot);
                 mover?.ResetSteering(); HeroSkillVfx.Dash(gameObject, from, locomotion.DashDestination);
                 // Zhaev is intentionally still a low-HP assassin. The short shield protects only
