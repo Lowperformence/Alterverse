@@ -25,7 +25,7 @@ namespace Alterverse.Visuals
         private float elapsed;
         private Scene isolatedScene;
         private PhysicsScene physicsWorld;
-        private int ownerSceneHandle;
+        private Scene ownerScene;
         private static int nextScene;
         private bool quitting;
 
@@ -65,7 +65,7 @@ namespace Alterverse.Visuals
             GameObject host = new GameObject("DF_DeathBody");
             SceneManager.MoveGameObjectToScene(host, actor.scene);
             HeroDeathBody body = host.AddComponent<HeroDeathBody>();
-            body.ownerSceneHandle = actor.scene.handle;
+            body.ownerScene = actor.scene;
             host.transform.rotation = actor.transform.rotation;
             var copies = new Dictionary<Transform, Transform>();
             Transform root = CopyHierarchy(visual, host.transform, copies, true);
@@ -359,7 +359,7 @@ namespace Alterverse.Visuals
 
         private void OnSceneUnloaded(Scene scene)
         {
-            if (scene.handle == ownerSceneHandle) Destroy(gameObject);
+            if (scene == ownerScene) Destroy(gameObject);
         }
 
         private void OnApplicationQuit() => quitting = true;
