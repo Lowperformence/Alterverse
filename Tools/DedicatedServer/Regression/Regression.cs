@@ -88,11 +88,25 @@ static class Regression
    Reset();EditorBuildSettings.scenes=Array.Empty<EditorBuildSettingsScene>();
    Reject(DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer,"No enabled scenes");Check(builds==0,"Do not start a build without scenes");
    Reset();var energy=Shader.Find(Names[2]);Resources.Assets["Shader:CombatVfx/HeroEnergy"]=energy;Resources.Assets["Material:CombatVfx/HeroEnergy"]=new Material{shader=energy};
+   string[] glow={"VoidArmorEnergy","VoidArmorHalo"};
+   foreach(string resource in glow)
+   {
+    var shader=new Shader{name="DimensionsFront/"+resource};
+    Shader.Available[shader.name]=shader;Resources.Assets["Shader:HeroArt/"+resource]=shader;
+   }
    new AndroidRuntimeShaderPreserver().OnPreprocessBuild(new BuildReport{summary=new BuildSummary{platform=BuildTarget.Android}});
-   Check(HeroPresentationChecks.Checks==1&&AssetDatabase.Settings.Included.Count==Names.Length,"Android preflight still preserves shaders and validates hero presentation");
+   Check(HeroPresentationChecks.Checks==1&&AssetDatabase.Settings.Included.Count==Names.Length+glow.Length,"Android preflight still preserves shaders and validates hero presentation");
+   foreach(string resource in glow)
+   {
+    Check(AssetDatabase.Settings.Included.Contains(Shader.Find("DimensionsFront/"+resource)),"Android includes the client-only glow shader "+resource);
+    Resources.Assets.Remove("Shader:HeroArt/"+resource);
+    Reject(()=>new AndroidRuntimeShaderPreserver().OnPreprocessBuild(new BuildReport{summary=new BuildSummary{platform=BuildTarget.Android}}),"Void Knight armor glow shader is missing or has compiler errors: "+resource);
+    Resources.Assets["Shader:HeroArt/"+resource]=Shader.Find("DimensionsFront/"+resource);
+   }
    RuntimeSuppressionCases();
    Console.WriteLine("PASS: "+checks+" dedicated server build checks (Unity editor substitutes; no native player build)");
   }
   finally{Directory.Delete(directory,true);}
  }
 }
+
