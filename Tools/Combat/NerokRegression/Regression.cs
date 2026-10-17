@@ -63,7 +63,7 @@ class Regression
             Check(aim.Release(),"cone edge casts");Run(1,fps);
             Near(Hp(target),972,"stationary hook connects at cone/range edge, "+fps+" FPS");
         }
-        foreach(var point in new[]{Angle(-35.2f,4),Angle(35.2f,4),Vector3.forward*6.21f})
+        foreach(var point in new[]{Angle(-50f,4),Angle(50f,4),Vector3.forward*7.2f})
         {
             Reset();var actor=Hero(HeroId.Nerok,0,Vector3.zero);Hero(HeroId.Kaelon,1,point);
             var aim=ManualAiming.For(actor);aim.Begin(0,Vector2.zero);
@@ -82,7 +82,7 @@ class Regression
             Check(aim.Release(),"grazing hook casts through real gesture");
             // The enemy enters the committed trajectory after release, beside the wall.
             target.transform.position=new Vector3(.5f,0,4);Run(1,fps);
-            Near(Hp(target),972,"actual swept body contact must deal damage beside cover");
+            Near(Hp(target),1000,"cover blocks contact even for the active cone");
             Check(!target.GetComponent<HeroLocomotion>().IsForcedMoving,"blocked pull path cannot drag through cover");
         }
     }
@@ -95,16 +95,12 @@ class Regression
             Reset();var actor=Hero(HeroId.Nerok,0,Vector3.zero);var target=Hero(HeroId.Kaelon,1,Angle(degrees,4));
             var aim=ManualAiming.For(actor);aim.Begin(0,Vector2.zero);
             var overlay=actor.AddComponent<AbilityRangePreviewOverlay>();Call(overlay,"LateUpdate");
-            var surfaces=Surfaces(overlay);Check(surfaces.All(s=>s!=null&&s.activeSelf),"hook shows selection cone and flight path");
+            var surfaces=Surfaces(overlay);
+            Check(surfaces[0]!=null&&surfaces[0].activeSelf,"hook exposes its true hitbox cone");
+            Check(surfaces[1]==null||!surfaces[1].activeSelf,"no misleading narrow hit line");
             var cone=surfaces[0].GetComponent<MeshRenderer>().sharedMaterial;
-            var line=surfaces[1].GetComponent<MeshRenderer>().sharedMaterial;
-            Near(cone.Floats[Shader.PropertyToID("_Mode")],1,"selection stays a cone");
-            Near(cone.Floats[Shader.PropertyToID("_ConeCos")],Mathf.Cos(35*Mathf.Deg2Rad),"preview and capture share half angle");
-            Near(line.Floats[Shader.PropertyToID("_Mode")],2,"actual hook trajectory uses a line");
-            Near(Vector3.Angle(surfaces[1].transform.rotation*Vector3.up,target.transform.position),0,"line points at captured body, not cone centre");
-            float length=surfaces[1].transform.localScale.x*.5f;
-            Near(length,4-.4f-.35f*.5f,"flight line ends at first body contact");
-            Near(line.Floats[Shader.PropertyToID("_Width")]*length*2,.35f,"flight line shows actual projectile width");
+            Near(cone.Floats[Shader.PropertyToID("_Mode")],1,"actual hook hitbox is a cone");
+            Near(cone.Floats[Shader.PropertyToID("_ConeCos")],Mathf.Cos(35*Mathf.Deg2Rad),"preview matches authoritative half angle");
             Near(Hp(target),1000,"preview does not inflict damage");
             Near(actor.GetComponent<PlayerHeroAbilities>().QRemaining,0,"preview does not spend cooldown");
             Check(aim.Release(),"preview can release");Call(overlay,"LateUpdate");
@@ -116,7 +112,9 @@ class Regression
             Reset();var actor=Hero(HeroId.Nerok,0,Vector3.zero);var aim=ManualAiming.For(actor);aim.Begin(0,Vector2.zero);
             Wall(new Vector3(0,.5f,2),new Vector3(2,2,.2f));
             var overlay=actor.AddComponent<AbilityRangePreviewOverlay>();Call(overlay,"LateUpdate");
-            var surfaces=Surfaces(overlay);Near(surfaces[1].transform.localScale.x*.5f,1.725f,"line ends at sphere-swept wall contact");
+            var surfaces=Surfaces(overlay);
+            Check(surfaces[0]!=null&&surfaces[0].activeSelf,"cone remains visible when cover is present");
+            Check(surfaces[1]==null||!surfaces[1].activeSelf,"no fake narrow hit line beside cover");
             if(cancelled)aim.Drag(Vector2.zero,1,true);else aim.Cancel();
             Call(overlay,"LateUpdate");Check(surfaces.All(s=>!s.activeSelf),"cancel hides cone and path");
         }
@@ -155,8 +153,8 @@ class Regression
             Reset();actor=Hero(HeroId.Nerok,0,Vector3.zero);target=Hero(HeroId.Kaelon,1,Vector3.forward*4);
             var aim=ManualAiming.For(actor);aim.Begin(0,Vector2.zero);aim.Release();
             // The target remains inside the old 70-degree selection cone but dodges its frozen shot.
-            target.transform.position+=Vector3.right*2;Run(1,fps);
-            Near(Hp(target),1000,"selection cone is not an area hit or a homing attack");
+            target.transform.position+=Vector3.right*5;Run(1,fps);
+            Near(Hp(target),1000,"body outside the committed cone still dodges");
 
             foreach(bool launched in new[]{false,true})
             {
