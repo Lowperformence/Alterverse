@@ -6,21 +6,50 @@ public sealed class MatchScoreboard:MonoBehaviour
 private MatchResultScreen resultScreen;
 private FrontEndTheme boardTheme;
 private GUIStyle scoreValue;
+private CoopHeroSlot localHeroSlot;
+private CoopMatchPlan localHeroPlan;
+private float nextLocalRespawnSearch,nextRespawnBoardRefresh;
+private readonly List<Entry> respawnZero=new(4),respawnLumen=new(4);
+private static readonly string[] respawnHeadings={"K","D","A","SCORE"};
+private bool respawnBoardReady;
+private string zeroFrontLabel,lumenFrontLabel,respawnCountdownLabel;
+private int respawnCountdownSecond=-1;
+
 public bool ResultCommitted => matchEnded && rewardGranted;
 private bool resultSnapshotReady,resultSnapshotWarning;
 private int battlePassXpBefore;
 private BotDifficulty resultDifficulty;
 private string rewardId=System.Guid.NewGuid().ToString("N");private float nextRewardAttempt;private bool saveWarningShown;
-private sealed class Entry{public Health Health;public TeamMember Member;public string Name;public int Kills,Deaths,Assists;public int Score=>Kills*100+Assists*50-Deaths*15;}public static MatchScoreboard Instance{get;private set;}[SerializeField]private float refreshInterval=.5f,assistWindow=8f;private readonly Dictionary<Health,Entry> entries=new();private readonly Dictionary<Health,Dictionary<TeamMember,float>> damageCredit=new();private float nextRefresh;private HeroRespawn playerRespawn;private CoopRespawnReplica coopRespawn;private DimensionsFront front;private bool matchEnded,rewardGranted,rewardPending;private int winningTeam,matchReward,matchXp,matchBaseReward,matchShardBonus,matchBaseXp,matchXpBonus,matchBonusPercent,playerKills,playerDeaths,playerAssists,playerObjectives,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,battlePassLevelBefore=1;private float playerDamageDealt,playerDamageTaken,playerHealing,playerFrontContribution;private UniversalHeroCosmetic matchBonusCosmetic=UniversalHeroCosmetic.Original;private BattleItemType matchItemDrop;
+private sealed class Entry{public Health Health;public TeamMember Member;public string Name;public int Kills,Deaths,Assists;public int Score=>Kills*100+Assists*50-Deaths*15;
+public float BoardPerformance;public bool BoardOwn;
+public string BoardName,BoardKills,BoardDeaths,BoardAssists,BoardScore;
+}public static MatchScoreboard Instance{get;private set;}[SerializeField]private float refreshInterval=.5f,assistWindow=8f;private readonly Dictionary<Health,Entry> entries=new();private readonly Dictionary<Health,Dictionary<TeamMember,float>> damageCredit=new();private float nextRefresh;private HeroRespawn playerRespawn;private CoopRespawnReplica coopRespawn;private DimensionsFront front;private bool matchEnded,rewardGranted,rewardPending;private int winningTeam,matchReward,matchXp,matchBaseReward,matchShardBonus,matchBaseXp,matchXpBonus,matchBonusPercent,playerKills,playerDeaths,playerAssists,playerObjectives,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,battlePassLevelBefore=1;private float playerDamageDealt,playerDamageTaken,playerHealing,playerFrontContribution;private UniversalHeroCosmetic matchBonusCosmetic=UniversalHeroCosmetic.Original;private BattleItemType matchItemDrop;
 private void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;rewardGranted=false;matchEnded=false;MatchClock.Set(PauseReason.Result,false);}
 private void Start(){RefreshRoster();RefreshLocalRespawn();front=Object.FindAnyObjectByType<DimensionsFront>();if(front!=null)front.MatchEnded+=OnMatchEnded;}
-private void Update(){if(Time.unscaledTime>=nextRefresh){nextRefresh=Time.unscaledTime+refreshInterval;RefreshRoster();RefreshLocalRespawn();if(front==null){front=Object.FindAnyObjectByType<DimensionsFront>();if(front!=null)front.MatchEnded+=OnMatchEnded;}}if(matchEnded)RefreshResultPresentation();}
+private void Update(){if(Time.unscaledTime>=nextRefresh){nextRefresh=Time.unscaledTime+refreshInterval;RefreshRoster();RefreshLocalRespawn();if(front==null){front=Object.FindAnyObjectByType<DimensionsFront>();if(front!=null)front.MatchEnded+=OnMatchEnded;}}if(matchEnded)RefreshResultPresentation();else UpdateRespawnBoard();}
 private void RefreshLocalRespawn()
 {
-if(!CoopAuthority.Active){playerRespawn??=Object.FindAnyObjectByType<HeroRespawn>();return;}
+if(!CoopAuthority.Active)
+{
+localHeroSlot=null;localHeroPlan=null;
+if(playerRespawn==null)playerRespawn=Object.FindAnyObjectByType<HeroRespawn>();
+coopRespawn=null;return;
+}
+bool samePlan=object.ReferenceEquals(localHeroPlan,CoopAuthority.ActivePlan);
+if(samePlan&&localHeroSlot!=null&&localHeroSlot.IsLocalHuman)
+{
+playerRespawn=localHeroSlot.GetComponent<HeroRespawn>();
+coopRespawn=localHeroSlot.GetComponent<CoopRespawnReplica>();return;
+}
+if(samePlan&&Time.unscaledTime<nextLocalRespawnSearch)return;
+localHeroPlan=CoopAuthority.ActivePlan;nextLocalRespawnSearch=Time.unscaledTime+.5f;
+localHeroSlot=null;playerRespawn=null;coopRespawn=null;
 CoopHeroSlot[] slots=Object.FindObjectsByType<CoopHeroSlot>(FindObjectsInactive.Exclude);
 for(int i=0;i<slots.Length;i++)if(slots[i]!=null&&slots[i].IsLocalHuman)
-{playerRespawn=slots[i].GetComponent<HeroRespawn>();coopRespawn=slots[i].GetComponent<CoopRespawnReplica>();return;}
+{
+localHeroSlot=slots[i];playerRespawn=slots[i].GetComponent<HeroRespawn>();
+coopRespawn=slots[i].GetComponent<CoopRespawnReplica>();return;
+}
 }
 private static bool IsHero(TeamMember member)=>member!=null&&(member.GetComponent<HeroRespawn>()!=null||member.GetComponent<MobaBotRespawn>()!=null||member.GetComponent<CoopHeroSlot>()!=null);public void RecordDamage(Health victim,GameObject source){if(victim==null||source==null)return;TeamMember attacker=source.GetComponentInParent<TeamMember>(),victimTeam=victim.GetComponent<TeamMember>();if(!IsHero(attacker)||!IsHero(victimTeam)||attacker==victimTeam||attacker.Team==victimTeam.Team)return;if(!damageCredit.TryGetValue(victim,out Dictionary<TeamMember,float> credits)){credits=new Dictionary<TeamMember,float>();damageCredit[victim]=credits;}credits[attacker]=Time.time;}
 private void RefreshRoster(){foreach(TeamMember member in Object.FindObjectsByType<TeamMember>()){if(!IsHero(member))continue;Health health=member.GetComponent<Health>();if(health==null||entries.ContainsKey(health))continue;HeroIdentity identity=member.GetComponent<HeroIdentity>();CoopHeroSlot coop=member.GetComponent<CoopHeroSlot>();string n=coop!=null?CoopDisplayName(coop):(member.GetComponent<HeroRespawn>()!=null?PlayerProfile.PlayerName:(identity!=null?identity.DisplayName:DisplayName(member.gameObject.name)));entries.Add(health,new Entry{Health=health,Member=member,Name=n});health.DiedWithSource+=OnHeroDied;}}private void OnHeroDied(Health victim,GameObject source){if(victim==null||!entries.TryGetValue(victim,out Entry victimEntry))return;victimEntry.Deaths++;TeamMember killer=source!=null?source.GetComponentInParent<TeamMember>():null;if(IsHero(killer)&&victimEntry.Member!=null&&killer.Team!=victimEntry.Member.Team){Entry killerEntry=FindEntry(killer);if(killerEntry!=null)killerEntry.Kills++;if(damageCredit.TryGetValue(victim,out Dictionary<TeamMember,float> credits))foreach(var credit in credits)if(IsHero(credit.Key)&&credit.Key!=killer&&Time.time-credit.Value<=assistWindow&&credit.Key.Team==killer.Team){Entry assist=FindEntry(credit.Key);if(assist!=null){assist.Assists++;MatchTelemetry.Instance?.RecordAssist(assist.Health);}}}damageCredit.Remove(victim);}private Entry FindEntry(TeamMember member){foreach(Entry e in entries.Values)if(e.Member==member)return e;return null;}
@@ -41,7 +70,12 @@ public void ApplyNetworkScore(Health health,int kills,int deaths,int assists)
  entry.Kills=Mathf.Max(0,kills);entry.Deaths=Mathf.Max(0,deaths);entry.Assists=Mathf.Max(0,assists);
 }
 private static string CoopDisplayName(CoopHeroSlot slot){CoopMatchPlan plan=CoopAuthority.ActivePlan;if(slot!=null&&plan?.Session?.Slots!=null&&slot.Slot>=0&&slot.Slot<plan.Session.Slots.Length){MatchPlayerSlot data=plan.Session.Slots[slot.Slot];if(data!=null&&!string.IsNullOrWhiteSpace(data.DisplayName))return data.DisplayName;}HeroIdentity identity=slot!=null?slot.GetComponent<HeroIdentity>():null;return identity!=null?identity.DisplayName:"PLAYER";}
-private TeamMember LocalPlayerMember(){if(CoopAuthority.Active){CoopHeroSlot[] slots=Object.FindObjectsByType<CoopHeroSlot>(FindObjectsInactive.Exclude);for(int i=0;i<slots.Length;i++)if(slots[i]!=null&&slots[i].IsLocalHuman)return slots[i].GetComponent<TeamMember>();}playerRespawn??=Object.FindAnyObjectByType<HeroRespawn>();return playerRespawn!=null?playerRespawn.GetComponent<TeamMember>():null;}
+private TeamMember LocalPlayerMember()
+{
+RefreshLocalRespawn();
+return CoopAuthority.Active?(localHeroSlot!=null?localHeroSlot.GetComponent<TeamMember>():null):
+    playerRespawn!=null?playerRespawn.GetComponent<TeamMember>():null;
+}
 private static string DisplayName(string raw)=>raw.Replace("AV_","").Replace("Bot_"," ");public int KillsForTeam(int team)=>TeamKills(team);private int TeamKills(int team){int total=0;foreach(Entry e in entries.Values)if(e.Member!=null&&e.Member.Team==team)total+=e.Kills;return total;}private void OnMatchEnded(int team){if(matchEnded)return;winningTeam=team;battlePassLevelBefore=BattlePassProgress.Level;battlePassXpBefore=BattlePassProgress.Xp;resultDifficulty=BotDifficultySettings.Current;matchEnded=true;rewardPending=true;TeamMember player=LocalPlayerMember();bool won=player!=null&&player.Team==winningTeam;DimensionAudio.Play(won?DimensionSound.Victory:DimensionSound.Defeat,1f);MatchClock.Set(PauseReason.Result,true);}private void LateUpdate()
 {
 if(!rewardPending||rewardGranted||Time.unscaledTime<nextRewardAttempt)return;
@@ -71,6 +105,38 @@ private float Performance(Entry e){MatchTelemetry.HeroStats s=MatchTelemetry.Ins
 private float HudScale=>Mathf.Max(.1f,Mathf.Min(Screen.safeArea.height/720f,Screen.safeArea.width/960f));
 private float HudWidth=>Screen.safeArea.width/HudScale;private float HudHeight=>Screen.safeArea.height/HudScale;
 private void OnGUI(){if(MainMenuController.IsVisible)return;Matrix4x4 matrix=GUI.matrix;Color color=GUI.color;bool enabled=GUI.enabled;try{Rect safe=Screen.safeArea;GUI.matrix=Matrix4x4.TRS(new Vector3(safe.x,Screen.height-safe.yMax,0),Quaternion.identity,Vector3.one*(matchEnded?MatchResultLayout.Scale(safe):HudScale));DrawHud();}finally{GUI.matrix=matrix;GUI.color=color;GUI.enabled=enabled;}}
+// IMGUI calls DrawHud multiple times per frame. Build the changing scoreboard view
+// at four Hz in Update, keeping discovery, list allocation and sorting out of painting.
+private void UpdateRespawnBoard()
+{
+    bool waiting=playerRespawn!=null&&playerRespawn.IsRespawning||coopRespawn!=null&&coopRespawn.IsRespawning;
+    if(!waiting){respawnBoardReady=false;return;}
+    if(respawnBoardReady&&Time.unscaledTime<nextRespawnBoardRefresh)return;
+    RefreshRespawnBoard();
+}
+private void RefreshRespawnBoard()
+{
+    nextRespawnBoardRefresh=Time.unscaledTime+.25f;
+    respawnZero.Clear();respawnLumen.Clear();
+    TeamMember local=LocalPlayerMember();
+    foreach(Entry e in entries.Values)
+    {
+        if(e.Member==null)continue;
+        e.BoardPerformance=Performance(e);e.BoardOwn=e.Member==local;
+        e.BoardName=(e.BoardOwn&&FounderEntitlement.Owned?"◆ ":"")+e.Name;
+        e.BoardKills=e.Kills.ToString();e.BoardDeaths=e.Deaths.ToString();
+        e.BoardAssists=e.Assists.ToString();e.BoardScore=e.BoardPerformance.ToString("0");
+        (e.Member.Team==0?respawnZero:respawnLumen).Add(e);
+    }
+    respawnZero.Sort((a,b)=>b.BoardPerformance.CompareTo(a.BoardPerformance));
+    respawnLumen.Sort((a,b)=>b.BoardPerformance.CompareTo(a.BoardPerformance));
+    if(front!=null)
+    {
+        zeroFrontLabel=$"ZERO  •  FRONT {front.ZeroControl:0.0}%";
+        lumenFrontLabel=$"LUMEN  •  FRONT {front.LumenControl:0.0}%";
+    }
+    respawnBoardReady=true;
+}
 private void DrawHud()
 {
     if(MainMenuController.IsVisible)return;
@@ -82,22 +148,18 @@ private void DrawHud()
     if(!authoredRespawn&&!replicatedRespawn)return;
 
     float width=Mathf.Min(820,HudWidth*.88f),x=(HudWidth-width)*.5f,y=Mathf.Max(90,HudHeight*.15f);
-    var zero=new List<Entry>();var lumen=new List<Entry>();
-    foreach(Entry e in entries.Values)
-        if(e.Member!=null)(e.Member.Team==0?zero:lumen).Add(e);
-    zero.Sort((a,b)=>Performance(b).CompareTo(Performance(a)));
-    lumen.Sort((a,b)=>Performance(b).CompareTo(Performance(a)));
-    float boardHeight=198+Mathf.Max(zero.Count,lumen.Count)*42;
+    if(!respawnBoardReady)RefreshRespawnBoard();
+    float boardHeight=198+Mathf.Max(respawnZero.Count,respawnLumen.Count)*42;
     boardTheme.Panel(new Rect(x,y,width,boardHeight));
     boardTheme.Label(new Rect(x+22,y+12,width-44,34),"TEAM SCOREBOARD",boardTheme.Heading);
     if(front!=null)
     {
         float controlWidth=(width-52)*.5f;
-        boardTheme.StatusBadge(new Rect(x+22,y+52,controlWidth,26),$"ZERO  •  FRONT {front.ZeroControl:0.0}%",FrontEndTheme.Zero);
-        boardTheme.StatusBadge(new Rect(x+30+controlWidth,y+52,controlWidth,26),$"LUMEN  •  FRONT {front.LumenControl:0.0}%",FrontEndTheme.Positive);
+        boardTheme.StatusBadge(new Rect(x+22,y+52,controlWidth,26),zeroFrontLabel,FrontEndTheme.Zero);
+        boardTheme.StatusBadge(new Rect(x+30+controlWidth,y+52,controlWidth,26),lumenFrontLabel,FrontEndTheme.Positive);
     }
-    DrawTeam(zero,x+22,y+90,width*.5f-32,"ZERO");
-    DrawTeam(lumen,x+width*.5f+10,y+90,width*.5f-32,"LUMEN");
+    DrawTeam(respawnZero,x+22,y+90,width*.5f-32,"ZERO");
+    DrawTeam(respawnLumen,x+width*.5f+10,y+90,width*.5f-32,"LUMEN");
     Rect action=new Rect(x+width*.25f,y+boardHeight-62,width*.5f,46);
     if(authoredRespawn&&playerRespawn.RespawnReady)
     {
@@ -106,7 +168,10 @@ private void DrawHud()
     else
     {
         float remaining=authoredRespawn?playerRespawn.RemainingSeconds:coopRespawn.RemainingSeconds;
-        boardTheme.StatusBadge(action,$"RESPAWN IN {Mathf.CeilToInt(remaining)}s",FrontEndTheme.Warning);
+        int seconds=Mathf.CeilToInt(remaining);
+        if(seconds!=respawnCountdownSecond||respawnCountdownLabel==null)
+        {respawnCountdownSecond=seconds;respawnCountdownLabel=$"RESPAWN IN {seconds}s";}
+        boardTheme.StatusBadge(action,respawnCountdownLabel,FrontEndTheme.Warning);
     }
 }
 private void RefreshResultPresentation()
@@ -188,26 +253,26 @@ private void DrawTeam(List<Entry> team,float x,float y,float width,string title)
     Color tint=title=="ZERO"?FrontEndTheme.Zero:FrontEndTheme.Positive;
     float nameWidth=width-152;
     boardTheme.Label(new Rect(x,y,nameWidth,28),title,boardTheme.Body);
-    string[] headings={"K","D","A","SCORE"};
+
     for(int column=0;column<4;column++)
-        boardTheme.Label(new Rect(x+nameWidth+column*32,y,column==3?52:28,28),headings[column],scoreValue,true);
-    TeamMember local=LocalPlayerMember();
+        boardTheme.Label(new Rect(x+nameWidth+column*32,y,column==3?52:28,28),respawnHeadings[column],scoreValue,true);
     for(int i=0;i<team.Count;i++)
     {
         Entry e=team[i];float rowY=y+34+i*42;
         Rect r=new Rect(x,rowY,width,38);boardTheme.Panel(r);
-        bool own=e.Member==local;
-        if(own)boardTheme.Frame(r,true);
+        if(e.BoardOwn)boardTheme.Frame(r,true);
         FrontEndTheme.Fill(new Rect(x+1,rowY+9,2,20),tint);
-        bool founder=LocalHeroContext.IsLocal(e.Member.gameObject)&&FounderEntitlement.Owned;
-        boardTheme.FitLabel(new Rect(x+10,rowY,nameWidth-14,38),(founder?"◆ ":"")+e.Name,boardTheme.Small);
-        string[] values={e.Kills.ToString(),e.Deaths.ToString(),e.Assists.ToString(),$"{Performance(e):0}"};
+        boardTheme.FitLabel(new Rect(x+10,rowY,nameWidth-14,38),e.BoardName,boardTheme.Small);
         for(int column=0;column<4;column++)
-            boardTheme.Label(new Rect(x+nameWidth+column*32,rowY,column==3?48:28,38),values[column],scoreValue);
+        {
+            string value=column==0?e.BoardKills:column==1?e.BoardDeaths:column==2?e.BoardAssists:e.BoardScore;
+            boardTheme.Label(new Rect(x+nameWidth+column*32,rowY,column==3?48:28,38),value,scoreValue);
+        }
     }
 }
 private void OnDestroy(){foreach(var pair in entries)if(pair.Key!=null)pair.Key.DiedWithSource-=OnHeroDied;if(front!=null)front.MatchEnded-=OnMatchEnded;entries.Clear();if(Instance==this)Instance=null;}
 }
 }
+
 
 
