@@ -11,6 +11,16 @@ s=s.replace('public static bool CanSimulateHostGameplay=>','public static bool C
 s=s.replace('float shield=Math.Min(Shield,n);','n=GetComponent<Alterverse.Characters.VoidKnightState>()?.ReduceFrontalDamage(n,source)??n;float shield=Math.Min(Shield,n);').replace('UnityEngine.GameObject actor=null)=>HeroVfxPool.Emit','UnityEngine.GameObject actor=null,bool warning=false)=>HeroVfxPool.Emit')
 s=s.replace('public enum DimensionSound{Kill}','public enum DimensionSound{Kill,Purchase}')
 s=s.replace('public static void BroadcastTimmyEffect(','public static void BroadcastVoidKnightEffect(UnityEngine.GameObject actor,int kind,UnityEngine.Vector3 from,UnityEngine.Vector3 to,float radius,float duration){}public static void BroadcastTimmyEffect(')
+# Keep the visual dependencies in this combat fixture in sync with production.
+# Exercise the real pure math helpers instead of replacing them with no-op solvers.
+motion=(src/'Visuals/CombatMotion.cs').read_text()
+ease=motion[motion.index('public static float Ease('):motion.index('public static float Curve(')]
+solve=motion[motion.index('public static void Solve('):motion.index('public static event ')]
+s='using UnityEngine;\n'+s
+s=s.replace('public static class CombatMotion {','public static class CombatMotion {'+ease+solve)
+s=s.replace('public Vector3 InverseTransformPoint(', 'public Vector3 up=>rotation*Vector3.up;public Vector3 InverseTransformPoint(')
+s=s.replace('public static Vector3 ClampMagnitude(', 'public static Vector3 ProjectOnPlane(Vector3 v,Vector3 n)=>n.sqrMagnitude<1e-12f?v:v-n*(Dot(v,n)/n.sqrMagnitude);public static Vector3 ClampMagnitude(')
+s=s.replace('public static Quaternion Euler(', 'public static Quaternion FromToRotation(Vector3 a,Vector3 b){if(a.sqrMagnitude<1e-12f||b.sqrMagnitude<1e-12f)return identity;a=a.normalized;b=b.normalized;float d=Mathf.Clamp(Vector3.Dot(a,b),-1,1);if(d>.999999f)return identity;Vector3 axis=Vector3.Cross(a,b);if(d<-.999999f){axis=Vector3.Cross(a,Mathf.Abs(a.y)<.9f?Vector3.up:Vector3.right);return AngleAxis(180,axis);}return AngleAxis(Mathf.Acos(d)*Mathf.Rad2Deg,axis);}public static Quaternion Euler(')
 refs=next((dotnet/'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'));csc=next((dotnet/'sdk').glob('*/Roslyn/bincore/csc.dll'))
 with tempfile.TemporaryDirectory(prefix='void-knight-regression-') as tmp:
  tmp=Path(tmp);(tmp/'EngineStubs.cs').write_text(s);out=tmp/'Regression.dll'
@@ -27,3 +37,4 @@ with tempfile.TemporaryDirectory(prefix='void-knight-regression-') as tmp:
  subprocess.run([str(dotnet/'dotnet'),str(csc),'-nologo','-noconfig','-langversion:latest','-out:'+str(release_out),*[f'-r:{x}' for x in refs.glob('*.dll')],str(tmp/'EngineStubs.cs'),str(here/'ExtraStubs.cs'),str(here/'PurchaseRegression.cs'),*release_sources],check=True)
  (tmp/'PurchaseRegression.runtimeconfig.json').write_text((tmp/'Regression.runtimeconfig.json').read_text())
  subprocess.run([str(dotnet/'dotnet'),str(release_out)],check=True)
+
