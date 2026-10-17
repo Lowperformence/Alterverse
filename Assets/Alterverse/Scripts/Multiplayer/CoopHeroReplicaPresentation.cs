@@ -31,6 +31,7 @@ namespace Alterverse.Multiplayer
         public void Apply(bool dead)
         {
             if(dead==hidden)return;
+            if(dead)Alterverse.Visuals.HeroDeathBody.Spawn(gameObject);
             hidden=dead;
             if(dead)Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.HeroDeath,transform.position,.78f);
             if(renderers==null||renderers.Length==0)Refresh();
@@ -49,5 +50,6 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 
 

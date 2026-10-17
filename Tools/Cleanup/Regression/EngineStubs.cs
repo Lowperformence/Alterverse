@@ -185,3 +185,7 @@ private void BuildArena(){ArenaBuilds++;new UnityEngine.GameObject("Fixture terr
 private static UnityEngine.GameObject CreateLocalPlayer(Alterverse.Characters.HeroId hero,UnityEngine.Vector3 p,bool r,int t){var player=new UnityEngine.GameObject("AV_Player");player.AddComponent<Alterverse.Combat.Health>();if(FailPlayer)throw new InvalidOperationException("injected hero failure");return player;}
 }
 }
+
+// Lifecycle fixtures replace render-only construction; real death-body isolation is checked in Unity.
+namespace Alterverse.Visuals { public static class HeroDeathBody { public static void Spawn(UnityEngine.GameObject actor) {} } }
+

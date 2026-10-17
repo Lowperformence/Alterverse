@@ -13,6 +13,7 @@ Shader "DimensionsFront/HeroEnergy"
    #pragma vertex vert
    #pragma fragment frag
    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+   #include "Assets/Resources/DF_DeathFade.hlsl"
    #include "Assets/Alterverse/Resources/CombatVfx/HeroEnergySurface.hlsl"
    struct A { float4 position:POSITION; half4 color:COLOR; float3 normal:NORMAL; };
    struct V { float4 position:SV_POSITION; half4 color:COLOR; half heat:TEXCOORD0; float3 local:TEXCOORD1; float2 surfaceUV:TEXCOORD2; half facing:TEXCOORD3; };
@@ -38,6 +39,7 @@ Shader "DimensionsFront/HeroEnergy"
    }
    half4 frag(V i):SV_Target
    {
+    DFApplyDeathFade(i.position);
     if(_SurfaceStyle>4.5h)
     {
      // Slow broad cloud billows, independent of decorative quality and global clocks.
@@ -60,4 +62,5 @@ Shader "DimensionsFront/HeroEnergy"
   }
  }
 }
+
 

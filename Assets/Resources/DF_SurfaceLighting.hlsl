@@ -1,5 +1,6 @@
 #ifndef DF_SURFACE_LIGHTING_INCLUDED
 #define DF_SURFACE_LIGHTING_INCLUDED
+#include "Assets/Resources/DF_DeathFade.hlsl"
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
@@ -9,6 +10,7 @@
 half3 DFSurfaceLighting(float3 positionWS, half3 normalWS, half3 albedo,
     half metallic, half smoothness, half occlusion, half3 emission, float4 rasterPosition)
 {
+    DFApplyDeathFade(rasterPosition);
     InputData lighting = (InputData)0;
     lighting.positionWS = positionWS;
     lighting.normalWS = normalize(normalWS);
@@ -79,8 +81,8 @@ DFDepthVaryings DFDepthVert(DFDepthAttributes input)
     output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
     return output;
 }
-half4 DFShadowFrag(DFDepthVaryings input) : SV_Target { return 0; }
-half4 DFDepthFrag(DFDepthVaryings input) : SV_Target { return input.positionCS.z; }
+half4 DFShadowFrag(DFDepthVaryings input) : SV_Target { DFApplyDeathFade(input.positionCS); return 0; }
+half4 DFDepthFrag(DFDepthVaryings input) : SV_Target { DFApplyDeathFade(input.positionCS); return input.positionCS.z; }
 
 struct DFNormalVaryings
 {
@@ -99,6 +101,7 @@ DFNormalVaryings DFNormalVert(DFDepthAttributes input)
 }
 half4 DFNormalFrag(DFNormalVaryings input) : SV_Target
 {
+    DFApplyDeathFade(input.positionCS);
     half3 normal = normalize(input.normalWS);
     #if defined(_GBUFFER_NORMALS_OCT)
         float2 oct = PackNormalOctQuadEncode(normal);
@@ -109,3 +112,4 @@ half4 DFNormalFrag(DFNormalVaryings input) : SV_Target
     #endif
 }
 #endif
+

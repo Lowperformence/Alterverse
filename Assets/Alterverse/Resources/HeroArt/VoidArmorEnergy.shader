@@ -18,6 +18,7 @@ Shader "DimensionsFront/VoidArmorEnergy"
             #pragma vertex Vert
             #pragma fragment Frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+   #include "Assets/Resources/DF_DeathFade.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor;
                 half4 _EmissionColor;
@@ -34,6 +35,7 @@ Shader "DimensionsFront/VoidArmorEnergy"
             }
             half4 Frag(Varyings input):SV_Target
             {
+    DFApplyDeathFade(input.positionCS);
                 half rim=pow(1.0h-saturate(abs(dot(normalize(input.normalWS),GetWorldSpaceNormalizeViewDir(input.positionWS)))),2.0h);
                 // Explicit self illumination: independent of scene lights and stripped Lit keywords.
                 // Retain a violet core when an LDR portrait clamps the blue channel.
@@ -44,3 +46,4 @@ Shader "DimensionsFront/VoidArmorEnergy"
     }
     Fallback Off
 }
+

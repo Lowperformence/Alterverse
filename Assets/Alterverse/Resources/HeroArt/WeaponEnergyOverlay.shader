@@ -23,6 +23,7 @@ Shader "DimensionsFront/WeaponEnergyOverlay"
    #pragma vertex vert
    #pragma fragment frag
    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+   #include "Assets/Resources/DF_DeathFade.hlsl"
    struct Attributes { float4 position:POSITION; float3 normal:NORMAL; float3 pattern:TEXCOORD2; };
    struct Varyings { float4 position:SV_POSITION; float3 world:TEXCOORD0; half3 normal:TEXCOORD1; float3 pattern:TEXCOORD2; };
    CBUFFER_START(UnityPerMaterial)
@@ -66,6 +67,7 @@ float Ornament(float2 p)
    float Engraving(float2 p){return Ornament(p*2.4+_PatternOffset);}
    half4 frag(Varyings i):SV_Target
    {
+    DFApplyDeathFade(i.position);
     half3 n=normalize(i.normal);
     half3 view=SafeNormalize(GetWorldSpaceViewDir(i.world));
     half rim=pow(1-saturate(dot(n,view)),2.8h);
@@ -84,3 +86,4 @@ float Ornament(float2 p)
   }
  }
 }
+

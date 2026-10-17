@@ -26,6 +26,7 @@ Shader "Alterverse/RuntimeUnlit"
             #pragma multi_compile_fog
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+   #include "Assets/Resources/DF_DeathFade.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor;
@@ -53,6 +54,7 @@ Shader "Alterverse/RuntimeUnlit"
 
             half4 Frag(Varyings input) : SV_Target
             {
+    DFApplyDeathFade(input.positionHCS);
                 half4 color = _BaseColor;
                 color.rgb += _EmissionColor.rgb;
                 color.rgb = MixFog(color.rgb, input.fogFactor);
@@ -64,3 +66,4 @@ Shader "Alterverse/RuntimeUnlit"
 
     Fallback Off
 }
+

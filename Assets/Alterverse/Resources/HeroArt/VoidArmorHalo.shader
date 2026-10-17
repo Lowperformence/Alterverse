@@ -20,6 +20,7 @@ Shader "DimensionsFront/VoidArmorHalo"
             #pragma vertex Vert
             #pragma fragment Frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+   #include "Assets/Resources/DF_DeathFade.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor;
                 float _HaloWidth;
@@ -38,6 +39,7 @@ Shader "DimensionsFront/VoidArmorHalo"
             }
             half4 Frag(Varyings input):SV_Target
             {
+    DFApplyDeathFade(input.positionCS);
                 half edge=1.0h-saturate(abs(dot(normalize(input.normalWS),GetWorldSpaceNormalizeViewDir(input.positionWS))));
                 half alpha=_BaseColor.a*input.opacity*smoothstep(.03h,.85h,edge);
                 return half4(_BaseColor.rgb,alpha);
@@ -47,3 +49,4 @@ Shader "DimensionsFront/VoidArmorHalo"
     }
     Fallback Off
 }
+
