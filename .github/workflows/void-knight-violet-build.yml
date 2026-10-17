@@ -40,7 +40,7 @@ jobs:
           set -euo pipefail
           blender=/tmp/blender-5.0.1-linux-x64/blender
           source=ArtSource/Heroes/VoidKnight
-          for script in build_violet_armor.py validate_violet_armor.py export_void_knight.py validate_fbx.py export_modules.py validate_modules.py validate_refinement.py render_reference.py; do
+          for script in build_violet_armor.py validate_violet_armor.py export_void_knight.py validate_fbx.py export_modules.py validate_modules.py validate_refinement.py render_reference.py render_violet_details.py; do
             "$blender" --background --threads 2 --python-exit-code 1 --python "$source/$script"
           done
       - uses: actions/upload-artifact@v4

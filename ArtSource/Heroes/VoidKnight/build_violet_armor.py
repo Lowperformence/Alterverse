@@ -34,13 +34,15 @@ def mesh(name, vertices, faces, material, bone, bevel=.0015, frame=None):
     obj.select_set(True); bpy.context.view_layer.objects.active = obj
     if bevel:
         modifier = obj.modifiers.new('Machined micro bevel', 'BEVEL')
-        modifier.width = bevel; modifier.segments = 2
+        modifier.width = bevel; modifier.segments = 2 if bone == 'Head' else 1
         bpy.ops.object.modifier_apply(modifier=modifier.name)
+        data = obj.data
         for polygon in data.polygons: polygon.use_smooth = True
         data.set_sharp_from_angle(angle=math.radians(42))
         modifier = obj.modifiers.new('Weighted plate normals', 'WEIGHTED_NORMAL')
         modifier.keep_sharp = True
         bpy.ops.object.modifier_apply(modifier=modifier.name)
+        data = obj.data
     group = obj.vertex_groups.new(name=bone)
     group.add(list(range(len(data.vertices))), 1.0, 'REPLACE')
     modifier = obj.modifiers.new('Original animation rig', 'ARMATURE')
@@ -108,7 +110,8 @@ def bone_frame(name):
 # Remove obsolete fine inlays where the concept calls for one readable light panel.
 remove_prefixes=('VK3_ShoulderSignal_', 'VK2_BracerInlay_', 'VK2_ShinLight_',
                  'VK2_VambraceFace_', 'VK3_VambraceLame_', 'VK3_VambraceLip_',
-                 'VK2_ShinRidge_', 'VK3_GreaveFlute_', 'VK2_ThighLight_', 'VK3_ChestInset_')
+                 'VK2_ShinRidge_', 'VK3_GreaveFlute_', 'VK2_ThighLight_', 'VK3_ChestInset_',
+                 'VK2_Knee_', 'VK2_KneeEdge_')
 for obj in list(bpy.data.objects):
     if obj.type!='MESH': continue
     if (obj.get('bone')=='Head' and obj.name!='VK_Neck') or obj.name.startswith(remove_prefixes):
