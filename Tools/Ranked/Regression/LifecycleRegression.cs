@@ -164,6 +164,17 @@ partial class Regression
   group="next-search";party.SetProperty("edgegapGroup",new SessionProperty(group,VisibilityPropertyOptions.Member));Invoke(flow,"Update");
   await Until(()=>flow.IsSearching,"guest can join a fresh search from same lobby");
   Check(joins==2&&OnlinePartyService.Instance.LocalJoinedGroupId==group,"fresh search receives a fresh guest acknowledgement");
+  Invoke(flow,"OnCancelMessage",0UL,new FastBufferReader(true));
+  Check(flow.IsSearching,"delayed Relay cancel cannot stop a new session-owned search");
+  // The session can coalesce cancel + a new search before the guest's next frame.
+  group="quick-replacement";party.SetProperty("edgegapGroup",new SessionProperty(group,VisibilityPropertyOptions.Member));Invoke(flow,"Update");
+  await Until(()=>!flow.Busy&&!flow.IsSearching,"new group supersedes previous guest search even if unlock update was missed");
+  Invoke(flow,"Update");await Until(()=>flow.IsSearching,"guest follows replacement group");
+  Check(joins==3&&OnlinePartyService.Instance.LocalJoinedGroupId==group,"rapid re-search cannot strand guest in old group");
+  EdgegapMatchmakerClient.Instance.AcceptRankedAssignment("{\"group_id\":\"quick-replacement\",\"member_id\":\"guest\",\"assignment\":{\"fqdn\":\"server.example.invalid\",\"ports\":{\"gameport\":{\"external\":7777}}}}");
+  Check(EdgegapMatchmakerClient.Instance.HasAssignment,"assigned handoff fixture is active");
+  party.SetProperty("edgegapSearch",new SessionProperty("0",VisibilityPropertyOptions.Member));Invoke(flow,"Update");
+  await Until(()=>!flow.Busy&&!flow.IsSearching,"leader cancel also stops an assigned guest handoff through session state");
   await flow.CompleteMatchAsync();
   Check(OnlinePartyService.Instance.InParty,"completed match cleanup keeps guest session");
  }

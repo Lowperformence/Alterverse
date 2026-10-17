@@ -106,8 +106,8 @@ namespace Alterverse.Multiplayer
                 if (!Busy && !online.Busy && !searching && online.MatchmakingLocked && !string.IsNullOrEmpty(sharedGroup) &&
                     sharedGroup != online.LocalJoinedGroupId)
                     _ = JoinFriendGroupAsync(sharedGroup);
-                else if (searching && !cleanupRunning && !online.MatchmakingLocked &&
-                         EdgegapMatchmakerClient.Instance?.HasAssignment != true)
+                else if (searching && !cleanupRunning && (!online.MatchmakingLocked ||
+                         !string.IsNullOrEmpty(sharedGroup) && sharedGroup != activeGroupId))
                     _ = StopSearchAsync("PARTY LEADER CANCELLED SEARCH", false);
             }
             if (searching && !CoopAuthority.Active && EdgegapMatchmakerClient.Instance?.HasAssignment != true)
@@ -402,6 +402,9 @@ namespace Alterverse.Multiplayer
         {
             NetworkManager manager = NetworkManager.Singleton;
             if (manager == null || manager.IsServer || senderClientId != NetworkManager.ServerClientId) return;
+            // Session state is authoritative across searches; an old Relay cancellation
+            // has no group id and must not cancel a newer locked group.
+            if (OnlinePartyService.Instance?.MatchmakingLocked == true) return;
             if (reader.TryBeginRead(sizeof(bool))) reader.ReadValueSafe(out bool _);
             if (searching || joiningGroup || busy)
                 _ = StopSearchAsync("PARTY LEADER CANCELLED SEARCH", false);
@@ -409,7 +412,7 @@ namespace Alterverse.Multiplayer
 
         private Task<bool> JoinFriendGroupAsync(string groupId)
         {
-            if (Busy) return Task.FromResult(false);
+            if (Busy || searching) return Task.FromResult(false);
             preparation = JoinFriendGroupCoreAsync(groupId);
             return preparation;
         }
