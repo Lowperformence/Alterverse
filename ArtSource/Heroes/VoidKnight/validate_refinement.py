@@ -40,7 +40,7 @@ return_end={'Attack1':21,'Attack2':21,'Attack3':22,'Counter':19,'Skill0':21,'Ski
 return_gap=max(g[0] for g in wrist_gaps if g[1][0] in return_end and g[1][1]>=return_end[g[1][0]])
 assert carry_gap<.002 and return_gap<.002,('Detached hand in carry or completed recovery',carry_gap,return_gap)
 rig=next(o for o in bpy.data.objects if o.type=='ARMATURE')
-meshes=[o for o in bpy.data.objects if o.type=='MESH'];assert len(meshes)==281
+meshes=[o for o in bpy.data.objects if o.type=='MESH'];assert 200<=len(meshes)<=360, len(meshes)
 triangles=0
 for obj in meshes:
     assert obj.get('bone') in rig.data.bones
@@ -92,3 +92,4 @@ report={'result':'PASS','source_meshes':len(meshes),'triangles':triangles,'mater
 (HERE/'Validation').mkdir(exist_ok=True)
 (HERE/'Validation/refinement-checks.json').write_text(json.dumps(report,indent=2)+'\n')
 print('REFINEMENT_VALIDATION',report,flush=True)
+

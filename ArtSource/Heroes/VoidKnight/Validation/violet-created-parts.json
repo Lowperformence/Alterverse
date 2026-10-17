@@ -1,0 +1,266 @@
+[
+  {
+    "part": "VK4_HelmetSkull",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_SagittalCrest",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_Forehead",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_VisorGasket_L",
+    "bone": "Head"
+  },
+  {
+    "part": "VK_Eye_L",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_VisorHighlight_L",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_BrowRail_L",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_CheekShell_L",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_CheekSeam_L",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_JawGuard_L",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_EarRim_L",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_EarInset_L",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_TemplePanel_L",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_JawVent_L_0",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_JawVent_L_1",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_JawVent_L_2",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_RearHelmetPanel_L",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_RearHelmetSeam_L",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_VisorGasket_R",
+    "bone": "Head"
+  },
+  {
+    "part": "VK_Eye_R",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_VisorHighlight_R",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_BrowRail_R",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_CheekShell_R",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_CheekSeam_R",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_JawGuard_R",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_EarRim_R",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_EarInset_R",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_TemplePanel_R",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_JawVent_R_0",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_JawVent_R_1",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_JawVent_R_2",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_RearHelmetPanel_R",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_RearHelmetSeam_R",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_ChinKeel",
+    "bone": "Head"
+  },
+  {
+    "part": "VK4_ShoulderSocket_L",
+    "bone": "UpperArmL"
+  },
+  {
+    "part": "VK4_ShoulderV_L",
+    "bone": "UpperArmL"
+  },
+  {
+    "part": "VK4_ShoulderVCore_L",
+    "bone": "UpperArmL"
+  },
+  {
+    "part": "VK4_ShoulderRearV_L",
+    "bone": "UpperArmL"
+  },
+  {
+    "part": "VK4_VambraceFrame_L",
+    "bone": "ForearmL"
+  },
+  {
+    "part": "VK4_VambracePlate_L",
+    "bone": "ForearmL"
+  },
+  {
+    "part": "VK4_BracerSocket_L",
+    "bone": "ForearmL"
+  },
+  {
+    "part": "VK4_BracerLight_L",
+    "bone": "ForearmL"
+  },
+  {
+    "part": "VK4_BracerCore_L",
+    "bone": "ForearmL"
+  },
+  {
+    "part": "VK4_BracerEdge_L-1",
+    "bone": "ForearmL"
+  },
+  {
+    "part": "VK4_BracerEdge_L1",
+    "bone": "ForearmL"
+  },
+  {
+    "part": "VK4_GreaveFrame_L",
+    "bone": "ShinL"
+  },
+  {
+    "part": "VK4_GreavePlate_L",
+    "bone": "ShinL"
+  },
+  {
+    "part": "VK4_ShinSocket_L",
+    "bone": "ShinL"
+  },
+  {
+    "part": "VK4_ShinLight_L",
+    "bone": "ShinL"
+  },
+  {
+    "part": "VK4_ShinCore_L",
+    "bone": "ShinL"
+  },
+  {
+    "part": "VK4_ShoulderSocket_R",
+    "bone": "UpperArmR"
+  },
+  {
+    "part": "VK4_ShoulderV_R",
+    "bone": "UpperArmR"
+  },
+  {
+    "part": "VK4_ShoulderVCore_R",
+    "bone": "UpperArmR"
+  },
+  {
+    "part": "VK4_ShoulderRearV_R",
+    "bone": "UpperArmR"
+  },
+  {
+    "part": "VK4_VambraceFrame_R",
+    "bone": "ForearmR"
+  },
+  {
+    "part": "VK4_VambracePlate_R",
+    "bone": "ForearmR"
+  },
+  {
+    "part": "VK4_BracerSocket_R",
+    "bone": "ForearmR"
+  },
+  {
+    "part": "VK4_BracerLight_R",
+    "bone": "ForearmR"
+  },
+  {
+    "part": "VK4_BracerCore_R",
+    "bone": "ForearmR"
+  },
+  {
+    "part": "VK4_BracerEdge_R-1",
+    "bone": "ForearmR"
+  },
+  {
+    "part": "VK4_BracerEdge_R1",
+    "bone": "ForearmR"
+  },
+  {
+    "part": "VK4_GreaveFrame_R",
+    "bone": "ShinR"
+  },
+  {
+    "part": "VK4_GreavePlate_R",
+    "bone": "ShinR"
+  },
+  {
+    "part": "VK4_ShinSocket_R",
+    "bone": "ShinR"
+  },
+  {
+    "part": "VK4_ShinLight_R",
+    "bone": "ShinR"
+  },
+  {
+    "part": "VK4_ShinCore_R",
+    "bone": "ShinR"
+  }
+]

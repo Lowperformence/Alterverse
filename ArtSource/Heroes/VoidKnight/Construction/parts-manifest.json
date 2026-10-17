@@ -224,14 +224,6 @@
     ]
   },
   {
-    "part": "VK3_ChestInset_L",
-    "bone": "Chest",
-    "vertices": 6,
-    "materials": [
-      "Void energy"
-    ]
-  },
-  {
     "part": "VK3_CuirassRim_R",
     "bone": "Chest",
     "vertices": 85,
@@ -253,14 +245,6 @@
     "vertices": 6,
     "materials": [
       "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_ChestInset_R",
-    "bone": "Chest",
-    "vertices": 6,
-    "materials": [
-      "Void energy"
     ]
   },
   {
@@ -360,6 +344,278 @@
     ]
   },
   {
+    "part": "VK4_HelmetSkull",
+    "bone": "Head",
+    "vertices": 176,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_SagittalCrest",
+    "bone": "Head",
+    "vertices": 71,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_Forehead",
+    "bone": "Head",
+    "vertices": 103,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_VisorGasket_L",
+    "bone": "Head",
+    "vertices": 12,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK_Eye_L",
+    "bone": "Head",
+    "vertices": 12,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK4_VisorHighlight_L",
+    "bone": "Head",
+    "vertices": 12,
+    "materials": [
+      "Void core energy"
+    ]
+  },
+  {
+    "part": "VK4_BrowRail_L",
+    "bone": "Head",
+    "vertices": 12,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_CheekShell_L",
+    "bone": "Head",
+    "vertices": 83,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_CheekSeam_L",
+    "bone": "Head",
+    "vertices": 12,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK4_JawGuard_L",
+    "bone": "Head",
+    "vertices": 63,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_EarRim_L",
+    "bone": "Head",
+    "vertices": 88,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK4_EarInset_L",
+    "bone": "Head",
+    "vertices": 120,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_TemplePanel_L",
+    "bone": "Head",
+    "vertices": 62,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_JawVent_L_0",
+    "bone": "Head",
+    "vertices": 8,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK4_JawVent_L_1",
+    "bone": "Head",
+    "vertices": 8,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK4_JawVent_L_2",
+    "bone": "Head",
+    "vertices": 8,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK4_RearHelmetPanel_L",
+    "bone": "Head",
+    "vertices": 85,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_RearHelmetSeam_L",
+    "bone": "Head",
+    "vertices": 12,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK4_VisorGasket_R",
+    "bone": "Head",
+    "vertices": 12,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK_Eye_R",
+    "bone": "Head",
+    "vertices": 12,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK4_VisorHighlight_R",
+    "bone": "Head",
+    "vertices": 12,
+    "materials": [
+      "Void core energy"
+    ]
+  },
+  {
+    "part": "VK4_BrowRail_R",
+    "bone": "Head",
+    "vertices": 12,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_CheekShell_R",
+    "bone": "Head",
+    "vertices": 83,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_CheekSeam_R",
+    "bone": "Head",
+    "vertices": 12,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK4_JawGuard_R",
+    "bone": "Head",
+    "vertices": 63,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_EarRim_R",
+    "bone": "Head",
+    "vertices": 88,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK4_EarInset_R",
+    "bone": "Head",
+    "vertices": 120,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_TemplePanel_R",
+    "bone": "Head",
+    "vertices": 62,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_JawVent_R_0",
+    "bone": "Head",
+    "vertices": 8,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK4_JawVent_R_1",
+    "bone": "Head",
+    "vertices": 8,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK4_JawVent_R_2",
+    "bone": "Head",
+    "vertices": 8,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK4_RearHelmetPanel_R",
+    "bone": "Head",
+    "vertices": 85,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_RearHelmetSeam_R",
+    "bone": "Head",
+    "vertices": 12,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK4_ChinKeel",
+    "bone": "Head",
+    "vertices": 75,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
     "part": "VK_Neck",
     "bone": "Head",
     "vertices": 20,
@@ -368,243 +624,35 @@
     ]
   },
   {
-    "part": "VK_HelmetShell",
-    "bone": "Head",
-    "vertices": 108,
+    "part": "VK4_ShoulderSocket_L",
+    "bone": "UpperArmL",
+    "vertices": 12,
     "materials": [
-      "Void black metal"
+      "Void woven undersuit"
     ]
   },
   {
-    "part": "VK_ClosedFace",
-    "bone": "Head",
-    "vertices": 85,
+    "part": "VK4_ShoulderV_L",
+    "bone": "UpperArmL",
+    "vertices": 12,
     "materials": [
-      "Void black metal"
+      "Void energy"
     ]
   },
   {
-    "part": "VK_FaceRidge",
-    "bone": "Head",
-    "vertices": 47,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK_Eye_L",
-    "bone": "Head",
-    "vertices": 69,
+    "part": "VK4_ShoulderVCore_L",
+    "bone": "UpperArmL",
+    "vertices": 12,
     "materials": [
       "Void core energy"
     ]
   },
   {
-    "part": "VK_Brow_L",
-    "bone": "Head",
-    "vertices": 73,
+    "part": "VK4_ShoulderRearV_L",
+    "bone": "UpperArmL",
+    "vertices": 12,
     "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK_Crown_L",
-    "bone": "Head",
-    "vertices": 63,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK_CrownEdge_L",
-    "bone": "Head",
-    "vertices": 10,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK_Eye_R",
-    "bone": "Head",
-    "vertices": 69,
-    "materials": [
-      "Void core energy"
-    ]
-  },
-  {
-    "part": "VK_Brow_R",
-    "bone": "Head",
-    "vertices": 73,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK_Crown_R",
-    "bone": "Head",
-    "vertices": 63,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK_CrownEdge_R",
-    "bone": "Head",
-    "vertices": 10,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK_CenterCrown",
-    "bone": "Head",
-    "vertices": 63,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK_ForeheadFrame",
-    "bone": "Head",
-    "vertices": 73,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK_ForeheadGem",
-    "bone": "Head",
-    "vertices": 73,
-    "materials": [
-      "Void core energy"
-    ]
-  },
-  {
-    "part": "VK3_CheekFrame_L",
-    "bone": "Head",
-    "vertices": 86,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_CheekPanel_L",
-    "bone": "Head",
-    "vertices": 86,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_JawVent_L_0",
-    "bone": "Head",
-    "vertices": 4,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK3_JawVent_L_1",
-    "bone": "Head",
-    "vertices": 4,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK3_JawVent_L_2",
-    "bone": "Head",
-    "vertices": 4,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK3_Temple_L",
-    "bone": "Head",
-    "vertices": 62,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_CheekFrame_R",
-    "bone": "Head",
-    "vertices": 86,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_CheekPanel_R",
-    "bone": "Head",
-    "vertices": 86,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_JawVent_R_0",
-    "bone": "Head",
-    "vertices": 4,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK3_JawVent_R_1",
-    "bone": "Head",
-    "vertices": 4,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK3_JawVent_R_2",
-    "bone": "Head",
-    "vertices": 4,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK3_Temple_R",
-    "bone": "Head",
-    "vertices": 62,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_Occipital_L",
-    "bone": "Head",
-    "vertices": 77,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_RearHelmetSeam_L",
-    "bone": "Head",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_Occipital_R",
-    "bone": "Head",
-    "vertices": 77,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_RearHelmetSeam_R",
-    "bone": "Head",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
+      "Void energy"
     ]
   },
   {
@@ -680,14 +728,6 @@
     ]
   },
   {
-    "part": "VK3_ShoulderSignal_L",
-    "bone": "UpperArmL",
-    "vertices": 6,
-    "materials": [
-      "Void energy"
-    ]
-  },
-  {
     "part": "VK3_ScapularGuard_L",
     "bone": "UpperArmL",
     "vertices": 71,
@@ -701,6 +741,62 @@
     "vertices": 69,
     "materials": [
       "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_VambraceFrame_L",
+    "bone": "ForearmL",
+    "vertices": 39,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK4_VambracePlate_L",
+    "bone": "ForearmL",
+    "vertices": 39,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_BracerSocket_L",
+    "bone": "ForearmL",
+    "vertices": 32,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK4_BracerLight_L",
+    "bone": "ForearmL",
+    "vertices": 33,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK4_BracerCore_L",
+    "bone": "ForearmL",
+    "vertices": 8,
+    "materials": [
+      "Void core energy"
+    ]
+  },
+  {
+    "part": "VK4_BracerEdge_L-1",
+    "bone": "ForearmL",
+    "vertices": 8,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK4_BracerEdge_L1",
+    "bone": "ForearmL",
+    "vertices": 8,
+    "materials": [
+      "Void bevel metal"
     ]
   },
   {
@@ -725,54 +821,6 @@
     "vertices": 200,
     "materials": [
       "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_VambraceFace_L",
-    "bone": "ForearmL",
-    "vertices": 83,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_BracerInlay_L",
-    "bone": "ForearmL",
-    "vertices": 6,
-    "materials": [
-      "Void energy"
-    ]
-  },
-  {
-    "part": "VK3_VambraceLame_L_0",
-    "bone": "ForearmL",
-    "vertices": 71,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_VambraceLip_L_0",
-    "bone": "ForearmL",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_VambraceLame_L_1",
-    "bone": "ForearmL",
-    "vertices": 71,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_VambraceLip_L_1",
-    "bone": "ForearmL",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
     ]
   },
   {
@@ -808,11 +856,43 @@
     ]
   },
   {
-    "part": "VK2_ThighLight_L",
-    "bone": "ThighL",
-    "vertices": 4,
+    "part": "VK4_GreaveFrame_L",
+    "bone": "ShinL",
+    "vertices": 45,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK4_GreavePlate_L",
+    "bone": "ShinL",
+    "vertices": 41,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_ShinSocket_L",
+    "bone": "ShinL",
+    "vertices": 30,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK4_ShinLight_L",
+    "bone": "ShinL",
+    "vertices": 31,
     "materials": [
       "Void energy"
+    ]
+  },
+  {
+    "part": "VK4_ShinCore_L",
+    "bone": "ShinL",
+    "vertices": 8,
+    "materials": [
+      "Void core energy"
     ]
   },
   {
@@ -840,46 +920,6 @@
     ]
   },
   {
-    "part": "VK2_Knee_L",
-    "bone": "ShinL",
-    "vertices": 113,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_KneeEdge_L",
-    "bone": "ShinL",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK2_ShinRidge_L",
-    "bone": "ShinL",
-    "vertices": 69,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK2_ShinLight_L-1",
-    "bone": "ShinL",
-    "vertices": 6,
-    "materials": [
-      "Void energy"
-    ]
-  },
-  {
-    "part": "VK2_ShinLight_L1",
-    "bone": "ShinL",
-    "vertices": 6,
-    "materials": [
-      "Void energy"
-    ]
-  },
-  {
     "part": "VK3_KneeRim_L",
     "bone": "ShinL",
     "vertices": 97,
@@ -891,22 +931,6 @@
     "part": "VK3_KneeShield_L",
     "bone": "ShinL",
     "vertices": 97,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_GreaveFlute_L-1",
-    "bone": "ShinL",
-    "vertices": 55,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_GreaveFlute_L1",
-    "bone": "ShinL",
-    "vertices": 55,
     "materials": [
       "Void black metal"
     ]
@@ -1256,6 +1280,38 @@
     ]
   },
   {
+    "part": "VK4_ShoulderSocket_R",
+    "bone": "UpperArmR",
+    "vertices": 12,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK4_ShoulderV_R",
+    "bone": "UpperArmR",
+    "vertices": 12,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK4_ShoulderVCore_R",
+    "bone": "UpperArmR",
+    "vertices": 12,
+    "materials": [
+      "Void core energy"
+    ]
+  },
+  {
+    "part": "VK4_ShoulderRearV_R",
+    "bone": "UpperArmR",
+    "vertices": 12,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
     "part": "VK_Undersuit_UpperArmR",
     "bone": "UpperArmR",
     "vertices": 176,
@@ -1328,14 +1384,6 @@
     ]
   },
   {
-    "part": "VK3_ShoulderSignal_R",
-    "bone": "UpperArmR",
-    "vertices": 6,
-    "materials": [
-      "Void energy"
-    ]
-  },
-  {
     "part": "VK3_ScapularGuard_R",
     "bone": "UpperArmR",
     "vertices": 71,
@@ -1349,6 +1397,62 @@
     "vertices": 69,
     "materials": [
       "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_VambraceFrame_R",
+    "bone": "ForearmR",
+    "vertices": 39,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK4_VambracePlate_R",
+    "bone": "ForearmR",
+    "vertices": 39,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_BracerSocket_R",
+    "bone": "ForearmR",
+    "vertices": 32,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK4_BracerLight_R",
+    "bone": "ForearmR",
+    "vertices": 33,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK4_BracerCore_R",
+    "bone": "ForearmR",
+    "vertices": 8,
+    "materials": [
+      "Void core energy"
+    ]
+  },
+  {
+    "part": "VK4_BracerEdge_R-1",
+    "bone": "ForearmR",
+    "vertices": 8,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK4_BracerEdge_R1",
+    "bone": "ForearmR",
+    "vertices": 8,
+    "materials": [
+      "Void bevel metal"
     ]
   },
   {
@@ -1373,54 +1477,6 @@
     "vertices": 200,
     "materials": [
       "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_VambraceFace_R",
-    "bone": "ForearmR",
-    "vertices": 83,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_BracerInlay_R",
-    "bone": "ForearmR",
-    "vertices": 6,
-    "materials": [
-      "Void energy"
-    ]
-  },
-  {
-    "part": "VK3_VambraceLame_R_0",
-    "bone": "ForearmR",
-    "vertices": 71,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_VambraceLip_R_0",
-    "bone": "ForearmR",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_VambraceLame_R_1",
-    "bone": "ForearmR",
-    "vertices": 71,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_VambraceLip_R_1",
-    "bone": "ForearmR",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
     ]
   },
   {
@@ -1456,11 +1512,43 @@
     ]
   },
   {
-    "part": "VK2_ThighLight_R",
-    "bone": "ThighR",
-    "vertices": 4,
+    "part": "VK4_GreaveFrame_R",
+    "bone": "ShinR",
+    "vertices": 45,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK4_GreavePlate_R",
+    "bone": "ShinR",
+    "vertices": 41,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VK4_ShinSocket_R",
+    "bone": "ShinR",
+    "vertices": 30,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK4_ShinLight_R",
+    "bone": "ShinR",
+    "vertices": 31,
     "materials": [
       "Void energy"
+    ]
+  },
+  {
+    "part": "VK4_ShinCore_R",
+    "bone": "ShinR",
+    "vertices": 8,
+    "materials": [
+      "Void core energy"
     ]
   },
   {
@@ -1488,46 +1576,6 @@
     ]
   },
   {
-    "part": "VK2_Knee_R",
-    "bone": "ShinR",
-    "vertices": 113,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_KneeEdge_R",
-    "bone": "ShinR",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK2_ShinRidge_R",
-    "bone": "ShinR",
-    "vertices": 69,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK2_ShinLight_R-1",
-    "bone": "ShinR",
-    "vertices": 6,
-    "materials": [
-      "Void energy"
-    ]
-  },
-  {
-    "part": "VK2_ShinLight_R1",
-    "bone": "ShinR",
-    "vertices": 6,
-    "materials": [
-      "Void energy"
-    ]
-  },
-  {
     "part": "VK3_KneeRim_R",
     "bone": "ShinR",
     "vertices": 97,
@@ -1539,22 +1587,6 @@
     "part": "VK3_KneeShield_R",
     "bone": "ShinR",
     "vertices": 97,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_GreaveFlute_R-1",
-    "bone": "ShinR",
-    "vertices": 55,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_GreaveFlute_R1",
-    "bone": "ShinR",
-    "vertices": 55,
     "materials": [
       "Void black metal"
     ]
