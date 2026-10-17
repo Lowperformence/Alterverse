@@ -37,7 +37,7 @@ namespace Alterverse.Combat
             Color dark=zero?StylizedArtDirection.ZeroDark:StylizedArtDirection.LumenDark;
 
             // Offset beside the plate so the healing plus and arriving heroes stay unobstructed.
-            Vector3 spawn=healingPlate+new Vector3(0,.86f,zero?2.75f:-2.75f);
+            Vector3 spawn=healingPlate+new Vector3(0,.86f,zero?ArenaLayout.HealingGuardOffset:-ArenaLayout.HealingGuardOffset);
             GameObject mech=GameObject.CreatePrimitive(PrimitiveType.Capsule);
             mech.name=zero?"DF_ZeroHealingGuardMech":"DF_LumenHealingGuardMech";
             mech.transform.position=spawn;
@@ -430,5 +430,6 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 

@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 namespace UnityEngine
 {
- public class Object {public static void Destroy(Object o){}}
- public class MonoBehaviour:Object {}
- public class Transform {public Vector3 localScale=Vector3.one;}
+ public class Object {public static void Destroy(Object o){}public static readonly List<object> Scene=new();public static T[] FindObjectsByType<T>()=>Scene.OfType<T>().ToArray();}
+ public class MonoBehaviour:Object {public Transform transform=new();}
+ public class Transform {public Vector3 position;public Vector3 localScale=Vector3.one;}
+ public class SerializeField:Attribute {}
+ public static class Time {public static float time,deltaTime=1f;}
  public class DisallowMultipleComponent:Attribute {}
  public enum RuntimeInitializeLoadType {SubsystemRegistration}
  public class RuntimeInitializeOnLoadMethodAttribute:Attribute {public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType t){}}
@@ -35,4 +38,13 @@ namespace UnityEngine
   public void SetVertices(List<Vector3> v){vertices=v;}public void SetTriangles(List<int> t,int sub){triangles=t;}
   public void RecalculateNormals(){}public void RecalculateBounds(){}
  }
+}
+
+namespace Alterverse.Multiplayer {public static class CoopAuthority {public static bool CanSimulateHostGameplay=true;}}
+namespace Alterverse.Combat
+{
+ public class Health:UnityEngine.MonoBehaviour {public bool IsDead;public float Received;public TeamMember Member;public T GetComponent<T>() where T:class=>Member as T;public void Heal(float amount){Received+=amount;}}
+ public class TeamMember {public int Team;public Health Health;public T GetComponent<T>() where T:class=>Health as T;}
+ public static class DefenseBunker {public static readonly System.Collections.Generic.List<UnityEngine.Vector3> Positions=new();public static void Spawn(int team,UnityEngine.Vector3 p,string flank){Positions.Add(p);}}
+ public static class DefenseTrench {public static readonly System.Collections.Generic.List<UnityEngine.Vector3> Positions=new();public static void Spawn(int team,UnityEngine.Vector3 p,string flank){Positions.Add(p);}}
 }

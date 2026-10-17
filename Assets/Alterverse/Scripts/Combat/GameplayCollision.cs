@@ -11,13 +11,32 @@ namespace Alterverse.Combat
         public const float HalfBreadth=36f;
         // The old roster's main spawn line was at +/-30. The new line is exactly 10% farther apart.
         public const float SpawnX=30f*LengthScale;
-        public const float HealingX=SpawnX+3f;
+        // The marked layout places the plate forward of the core, with the hero line on its front half.
+        public const float HealingX=SpawnX+1f;
+        public const float HealingPlateScale=1.30f;
+        public const float HealingPlateRadius=2.15f*HealingPlateScale;
+        public const float HealingRadius=4.5f*HealingPlateScale;
+        public const float HealingGuardOffset=HealingPlateRadius+1.25f;
+        // Identical defense anchors on every map, including the frontier planets.
+        public const float BunkerX=36f,BunkerZ=21.5f;
+        public const float TrenchX=37f,TrenchZ=10.75f;
         public const float CoreX=36f*LengthScale;
         public const float SpawnSpacing=1.4f;
         public static Vector3 Stretch(Vector3 point)
         {point.x*=LengthScale;return point;}
         public static Vector3 HealingPosition(int team,float y=.14f)
             =>new Vector3(team==0?-HealingX:HealingX,y,0f);
+        public static Vector3 DefensePosition(int team,bool bunker,int flank)
+        {
+            float side=team==0?-1f:1f;
+            float lateral=(team==0?1f:-1f)*(flank==0?1f:-1f);
+            return new Vector3(side*(bunker?BunkerX:TrenchX),0f,lateral*(bunker?BunkerZ:TrenchZ));
+        }
+        public static bool IsInsideHealingArea(Vector3 point,Vector3 center)
+        {
+            float dx=point.x-center.x,dz=point.z-center.z;
+            return dx*dx+dz*dz<=HealingRadius*HealingRadius;
+        }
         public static Vector3 HeroSpawn(int team,int teamSlot,int teamSize)
         {
             int size=Mathf.Max(1,teamSize);

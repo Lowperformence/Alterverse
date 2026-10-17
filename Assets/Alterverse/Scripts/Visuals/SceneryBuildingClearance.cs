@@ -16,17 +16,17 @@ namespace Alterverse.Visuals
         {
             this.candidateLengthScale=candidateLengthScale;
             // Layout fallback also protects builds that run before the structure visuals exist.
-            Vector2 bunker = FrontierPlanetLayout.Active ? FrontierPlanetLayout.BunkerPosition : new Vector2(26.25f,21.5f);
-            Vector2 trench = FrontierPlanetLayout.Active ? FrontierPlanetLayout.TrenchPosition : new Vector2(25.25f,10.75f);
-            for (int side=-1; side<=1; side+=2)
+            for(int team=0;team<2;team++)
             {
-                Add(new Vector3(side*ArenaLayout.CoreX,0,0), new Vector3(11f,1,11f));
-                Add(new Vector3(side*ArenaLayout.HealingX,0,0), new Vector3(10f,1,10f));
-                for (int flank=-1; flank<=1; flank+=2)
+                float side=team==0?-1f:1f;
+                Add(new Vector3(side*ArenaLayout.CoreX,0,0),new Vector3(11f,1,11f));
+                float diameter=ArenaLayout.HealingRadius*2f;
+                Add(ArenaLayout.HealingPosition(team,0f),new Vector3(diameter,1f,diameter));
+                for(int flank=0;flank<2;flank++)
                 {
-                    // Bunkers/trenches face along X: their local width lies on world Z.
-                    Add(new Vector3(side*bunker.x*ArenaLayout.LengthScale,0,flank*bunker.y), new Vector3(10f,1,9f));
-                    Add(new Vector3(side*trench.x*ArenaLayout.LengthScale,0,flank*trench.y), new Vector3(7f,1,9f));
+                    // Use the very same world-space anchors as the structure builder.
+                    Add(ArenaLayout.DefensePosition(team,true,flank),new Vector3(10f,1f,9f));
+                    Add(ArenaLayout.DefensePosition(team,false,flank),new Vector3(7f,1f,9f));
                 }
             }
             foreach (var building in Object.FindObjectsByType<DefenseBunker>(FindObjectsSortMode.None)) AddBuilding(building.transform);

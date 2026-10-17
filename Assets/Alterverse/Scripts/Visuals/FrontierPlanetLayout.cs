@@ -4,12 +4,12 @@ using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Independent, deterministic geology and defensive layouts for the two exoplanets.</summary>
+    /// <summary>Independent geology with the shared defensive layout for the two exoplanets.</summary>
     public static class FrontierPlanetLayout
     {
         public static bool Active=>ArenaVariantRuntime.IsGJ504b||ArenaVariantRuntime.IsDiamondCore;
-        public static Vector2 BunkerPosition=>ArenaVariantRuntime.IsGJ504b?new Vector2(24f,23.5f):new Vector2(22f,25f);
-        public static Vector2 TrenchPosition=>ArenaVariantRuntime.IsGJ504b?new Vector2(21.5f,11.5f):new Vector2(23.5f,13f);
+        public static Vector2 BunkerPosition=>new Vector2(ArenaLayout.BunkerX/ArenaLayout.LengthScale,ArenaLayout.BunkerZ);
+        public static Vector2 TrenchPosition=>new Vector2(ArenaLayout.TrenchX/ArenaLayout.LengthScale,ArenaLayout.TrenchZ);
 
         public static int ObstacleCount=>ArenaVariantRuntime.IsGJ504b?8:10;
         public static Vector3 ObstaclePosition(int index)

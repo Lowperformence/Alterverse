@@ -17,8 +17,17 @@ with tempfile.TemporaryDirectory(prefix='df-map-layout-') as d:
   text=(root/'Assets/Alterverse/Scripts'/path).read_text()
   method=re.search(r'(?:private|public) static Vector3 SafeSpawn\(int team,int index\)\s*\{([^}]+)\}',text).group(1)
   parts.append('public static class '+name+' {public static Vector3 SafeSpawn(int team,int index) {'+method.replace('MatchSession.TeamSize','Alterverse.Multiplayer.MatchSession.TeamSize')+'}}')
+ # Exercise the actual shared structure creation loops rather than duplicating placement formulas.
+ bootstrap=(root/'Assets/Alterverse/Scripts/Prototype/PrototypeBootstrap.cs').read_text()
+ methods=[]
+ for name in ['CreateDefenseBunkers','CreateDefenseTrenches']:
+  start=bootstrap.index('private static void '+name+'()');opening=bootstrap.index('{',start);end=opening+1;depth=1
+  while depth:
+   depth+=(bootstrap[end]=='{')-(bootstrap[end]=='}');end+=1
+  methods.append(bootstrap[start:end])
+ parts.append('public static class Structures {'+''.join(methods)+' public static void Build(){CreateDefenseBunkers();CreateDefenseTrenches();}}')
  wrappers.write_text('\n'.join(parts))
- rsp.write_text('\n'.join(['-nologo','-target:exe','-langversion:9','-out:'+str(out),*['-r:'+str(f) for f in runtime.glob('*.dll')],str(source),str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(wrappers)]))
+ rsp.write_text('\n'.join(['-nologo','-target:exe','-langversion:9','-out:'+str(out),*['-r:'+str(f) for f in runtime.glob('*.dll')],str(source),str(root/'Assets/Alterverse/Scripts/Combat/SpawnHealingZone.cs'),str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(wrappers)]))
  subprocess.run([str(dotnet/'dotnet'),str(sdk/'Roslyn/bincore/csc.dll'),'@'+str(rsp)],check=True)
  out.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))
  subprocess.run([str(dotnet/'dotnet'),str(out)],check=True)

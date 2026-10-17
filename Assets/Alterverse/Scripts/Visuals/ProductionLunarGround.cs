@@ -125,8 +125,8 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
 
     void BuildHealingIntegration(float x)
     {
-        Disc("DF_HealingGroundInset",new Vector3(x,.062f,0),2.55f,28,darkRegolith);
-        Ring("DF_HealingGroundRim",new Vector3(x,.078f,0),2.35f,2.52f,28,rimMat);
+        Disc("DF_HealingGroundInset",new Vector3(x,.062f,0),2.55f*ArenaLayout.HealingPlateScale,28,darkRegolith);
+        Ring("DF_HealingGroundRim",new Vector3(x,.078f,0),2.35f*ArenaLayout.HealingPlateScale,2.52f*ArenaLayout.HealingPlateScale,28,rimMat);
     }
 
     void BuildFractures()

@@ -365,7 +365,7 @@ namespace Alterverse.Combat
                 Vector3 d=coordinator.Destination;d.y=transform.position.y;return d;
             }
 
-            Vector3 home=new(team==0?-25.25f:25.25f,transform.position.y,0);
+            Vector3 home=new(team==0?-ArenaLayout.TrenchX:ArenaLayout.TrenchX,transform.position.y,0);
             return home+(team==0?Vector3.right:Vector3.left)*9f;
         }
 
@@ -757,3 +757,4 @@ namespace Alterverse.Combat
         }
     }
 }
+
