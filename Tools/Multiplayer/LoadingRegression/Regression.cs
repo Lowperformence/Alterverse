@@ -1,0 +1,81 @@
+using System;
+using System.Reflection;
+using Alterverse.Match;
+using Alterverse.Multiplayer;
+using Alterverse.Prototype;
+using Alterverse.UI;
+using Unity.Netcode;
+using UnityEngine;
+static class Regression {
+ static int checks;
+ static void Check(bool b,string s){if(!b)throw new Exception(s);checks++;}
+ static void Call(object target,string method)=>target.GetType().GetMethod(method,BindingFlags.Instance|BindingFlags.NonPublic).Invoke(target,null);
+ static OnlineMatchPlan Reset(bool server=false){
+  typeof(OnlineMatchLoadingScreen).GetMethod("Reset",BindingFlags.Static|BindingFlags.NonPublic).Invoke(null,null);
+  GameObject.All.Clear();MatchExit.Leaving=false;MatchExit.Error=null;Time.frameCount=0;
+  FrontEndTheme.Labels.Clear();FrontEndTheme.Click=false;Screen.safeArea=new Rect(20,0,1560,720);
+  EdgegapOnlineFlow.Instance=new();EdgegapMatchmakerClient.Instance=new();
+  NetworkManager.Singleton=new(){IsListening=true,IsServer=server,IsConnectedClient=!server};
+  CoopRosterBuilder.LocalSlot=server?-1:0;CoopAuthority.LocalHasServerAuthority=server;
+  CoopAuthority.ActivePlan=new();UnityEngine.Object.Found=new PrototypeBootstrap();new GameObject("DF_MainMenu");return CoopAuthority.ActivePlan;
+ }
+ static OnlineMatchLoadingScreen ScreenComponent()=>new GameObject("TestLoading").AddComponent<OnlineMatchLoadingScreen>();
+ static void Main(){
+  Reset();var screen=ScreenComponent();
+  Check(!OnlineMatchLoadingScreen.IsVisible,"No loading overlay during ordinary menu");
+  EdgegapOnlineFlow.Instance.IsSearching=true;
+  Check(!OnlineMatchLoadingScreen.IsVisible,"Player search keeps party UI");
+  EdgegapMatchmakerClient.Instance.HasAssignment=true;
+  Check(OnlineMatchLoadingScreen.IsVisible,"Assignment immediately displays loading");
+  GUI.depth=42;GUI.enabled=false;GUI.color=new Color(0,0,0,.4f);GUI.matrix=new Matrix4x4{value=18};
+  Call(screen,"OnGUI");
+  Check(FrontEndTheme.Labels.Contains("MATCH FOUND"),"Assigned loading explains real connection phase");
+  Check(FrontEndTheme.Cover.width==Screen.width&&FrontEndTheme.Cover.height==Screen.height,"Opaque surface covers mobile unsafe area");
+  Check(GUI.depth==42&&!GUI.enabled&&GUI.color.a==.4f&&GUI.matrix.value==18,"Loading restores caller GUI state");
+  EdgegapOnlineFlow.Instance.LastError="disconnected";
+  Check(!OnlineMatchLoadingScreen.IsVisible,"Errors expose existing recovery UI");
+  EdgegapOnlineFlow.Instance.LastError="";FrontEndTheme.Click=true;Call(screen,"OnGUI");
+  Check(MatchExit.Leaving&&!OnlineMatchLoadingScreen.IsVisible,"Return button leaves through normal cleanup and hides loading");
+  var plan=Reset();screen=ScreenComponent();var bootstrap=(PrototypeBootstrap)UnityEngine.Object.Found;
+  var autoStart=(System.Collections.IEnumerator)typeof(PrototypeBootstrap).GetMethod("Start",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(bootstrap,null);
+  autoStart.MoveNext();
+  Check(OnlineMatchRuntime.Enter(plan),"Verified client starts loading");
+  Check(bootstrap.Builds==0&&bootstrap.Pending!=null&&OnlineMatchLoadingScreen.IsVisible,"Client paints loading frame before synchronous construction");
+  autoStart.MoveNext();Check(bootstrap.Builds==0,"Automatic bootstrap cannot race client loading frame");
+  Check(!GameObject.All.Find(g=>g.name=="DF_MainMenu").activeInHierarchy,"Old menu hidden for online handoff");
+  Call(screen,"OnGUI");Check(FrontEndTheme.Labels.Contains("PREPARING BATTLEFIELD"),"Building phase has its own label");
+  bootstrap.Pending.MoveNext();Check(bootstrap.Builds==1&&OnlineMatchLoadingScreen.IsVisible,"Construction keeps loading until camera is ready");
+  var camera=bootstrap.pendingArenaCamera;Call(bootstrap,"LateUpdate");
+  Check(camera.cullingMask==0&&OnlineMatchLoadingScreen.IsVisible,"Loading remains before reveal frame");
+  Time.frameCount++;Call(bootstrap,"LateUpdate");
+  Check(camera.cullingMask!=0&&!OnlineMatchLoadingScreen.IsVisible,"Actual bootstrap reveal completes loading");
+  MatchExit.Leaving=true;autoStart.MoveNext();Check(bootstrap.Builds==1,"Automatic bootstrap cannot construct during asynchronous exit cleanup");
+  plan=Reset();bootstrap=(PrototypeBootstrap)UnityEngine.Object.Found;
+  OnlineMatchRuntime.Enter(plan);NetworkManager.Singleton.IsConnectedClient=false;bootstrap.Pending.MoveNext();
+  Check(bootstrap.Builds==0&&MatchExit.Error.Contains("disconnected")&&!OnlineMatchLoadingScreen.IsVisible,"Disconnect before construction recovers with visible error");
+  plan=Reset();bootstrap=(PrototypeBootstrap)UnityEngine.Object.Found;OnlineMatchRuntime.Enter(plan);
+  CoopAuthority.EndMatch();bootstrap.Pending.MoveNext();
+  Check(bootstrap.Builds==0&&!OnlineMatchLoadingScreen.IsVisible,"Cancelled plan cannot build stale arena");
+  plan=Reset();bootstrap=(PrototypeBootstrap)UnityEngine.Object.Found;OnlineMatchRuntime.Enter(plan);
+  CoopAuthority.ActivePlan=new();bootstrap.Pending.MoveNext();
+  Check(bootstrap.Builds==0&&!OnlineMatchLoadingScreen.IsVisible,"Replaced plan cannot launch old client world");
+  plan=Reset();bootstrap=(PrototypeBootstrap)UnityEngine.Object.Found;bootstrap.Success=false;
+  OnlineMatchRuntime.Enter(plan);bootstrap.Pending.MoveNext();
+  Check(MatchExit.Leaving&&!OnlineMatchLoadingScreen.IsVisible,"Construction failure never traps loading");
+  plan=Reset();bootstrap=(PrototypeBootstrap)UnityEngine.Object.Found;OnlineMatchRuntime.Enter(plan);bootstrap.Pending.MoveNext();
+  bootstrap.pendingArenaWorld.activeInHierarchy=false;Time.frameCount++;Call(bootstrap,"LateUpdate");
+  Check(MatchExit.Leaving&&!OnlineMatchLoadingScreen.IsVisible,"Arena lost before reveal recovers");
+  plan=Reset(true);bootstrap=(PrototypeBootstrap)UnityEngine.Object.Found;
+  Check(OnlineMatchRuntime.Enter(plan)&&bootstrap.Builds==1&&bootstrap.Pending==null&&!OnlineMatchLoadingScreen.IsVisible,"Dedicated server builds immediately without presentation delay");
+  plan=Reset(true);bootstrap=(PrototypeBootstrap)UnityEngine.Object.Found;bootstrap.Success=false;
+  Check(!OnlineMatchRuntime.Enter(plan),"Dedicated startup failure remains synchronous");
+  plan=Reset();bootstrap=(PrototypeBootstrap)UnityEngine.Object.Found;new GameObject("DF_MatchWorld");
+  OnlineMatchRuntime.Enter(plan);bootstrap.Pending.MoveNext();
+  var restart=bootstrap.Pending.Current as System.Collections.IEnumerator;
+  Check(restart!=null&&OnlineMatchLoadingScreen.IsVisible,"Existing client world uses loading and restart routine");
+  restart.MoveNext();restart.MoveNext();Time.frameCount++;Call(bootstrap,"LateUpdate");
+  Check(bootstrap.Restarts==1&&bootstrap.Builds==1&&!OnlineMatchLoadingScreen.IsVisible,"Repeat match finishes loading after replacement reveal");
+  Reset();Check(!OnlineMatchRuntime.Enter(null),"Unverified plan cannot enter loading");
+  Console.WriteLine("PASS: "+checks+" online loading checks (controlled engine/network fixtures, no native rendering)");
+ }
+}

@@ -146,7 +146,7 @@ namespace Alterverse.UI
         private void OnDestroy() { collection?.Dispose();backdrop?.Dispose(); if (instance == this) instance = null; }
         private void Update()
         {
-            if (!visible || suspended) return;
+            if (!visible || suspended || OnlineMatchLoadingScreen.IsVisible) return;
             EdgegapOnlineFlow onlineFlow = EdgegapOnlineFlow.Instance;
             if (page == Page.Play && onlineFlow != null &&
                 (onlineFlow.Busy || onlineFlow.IsSearching || !string.IsNullOrEmpty(onlineFlow.LastError)))
@@ -183,7 +183,7 @@ namespace Alterverse.UI
         }
         private void OnGUI()
         {
-            if (!visible || OnlinePartyOverlay.IsOpen || RankedPanel.Visible) return;
+            if (!visible || OnlinePartyOverlay.IsOpen || RankedPanel.Visible || OnlineMatchLoadingScreen.IsVisible) return;
             Matrix4x4 oldMatrix = GUI.matrix; Color oldColor = GUI.color; bool oldEnabled = GUI.enabled;
             try
             {
@@ -1520,3 +1520,4 @@ namespace Alterverse.UI
         }
     }
 }
+

@@ -54,12 +54,43 @@ namespace Alterverse.Multiplayer
             GameObject menu = GameObject.Find("DF_MainMenu");
             if (menu != null) menu.SetActive(false);
 
+            if (!serverOnly)
+            {
+                Alterverse.UI.OnlineMatchLoadingScreen.Begin(plan);
+                bootstrap.StartCoroutine(BuildClientAfterLoadingFrame(bootstrap, plan, restarting));
+                return true; // As with restart, the coroutine owns build failure recovery.
+            }
+
             if (restarting)
             {
                 bootstrap.StartCoroutine(bootstrap.RestartPrototype());
                 return true; // The coroutine owns recovery if the next-round build fails.
             }
             return bootstrap.BuildPrototype();
+        }
+
+        private static System.Collections.IEnumerator BuildClientAfterLoadingFrame(
+            Alterverse.Prototype.PrototypeBootstrap bootstrap, OnlineMatchPlan plan, bool restarting)
+        {
+            // Let the loading surface paint before synchronous arena construction blocks a frame.
+            // The dedicated authority continues immediately; only client presentation waits.
+            yield return null;
+            NetworkManager manager = NetworkManager.Singleton;
+            if (Alterverse.Match.MatchExit.Leaving || !CoopAuthority.Active ||
+                !ReferenceEquals(CoopAuthority.ActivePlan, plan))
+            {
+                Alterverse.UI.OnlineMatchLoadingScreen.Cancel();
+                yield break;
+            }
+            if (manager == null || !manager.IsConnectedClient)
+            {
+                Alterverse.UI.OnlineMatchLoadingScreen.Cancel();
+                _ = Alterverse.Match.MatchExit.ReturnToMenuAsync("Game server disconnected while loading. Please try again.");
+                yield break;
+            }
+            if (restarting) yield return bootstrap.RestartPrototype();
+            else if (!bootstrap.BuildPrototype()) Alterverse.UI.OnlineMatchLoadingScreen.Cancel();
+            // The bootstrap completes the loading surface when the initialized arena camera reveals.
         }
     }
 }

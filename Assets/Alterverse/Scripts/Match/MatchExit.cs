@@ -14,6 +14,7 @@ namespace Alterverse.Match
         {
             if (Leaving) return;
             Leaving = true;
+            OnlineMatchLoadingScreen.Cancel();
             GameObject world = GameObject.Find("DF_MatchWorld");
             if (world != null) world.SetActive(false);
             try
@@ -58,4 +59,3 @@ namespace Alterverse.Match
         }
     }
 }
-

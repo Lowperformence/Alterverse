@@ -25,4 +25,4 @@ jobs:
 
 
       - run: python Tools/Multiplayer/VfxRegression/run.py --dotnet-root "$DOTNET_ROOT"
-
+      - run: python Tools/Multiplayer/LoadingRegression/run.py --dotnet-root "$DOTNET_ROOT"
