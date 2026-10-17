@@ -18,7 +18,7 @@ namespace Alterverse.Combat
             public HeroAbilityExecution Execution;
             public AimSpec Spec;
             public int Slot, VisualId;
-            public float Damage, ReleaseAt, SampleTime, Traveled, FlightDuration, FlightElapsed;
+            public float Damage, ReleaseAt, SampleTime, Traveled, FlightDuration, FlightElapsed, ConeUntil;
         }
         private Pending[] pending;
         private readonly RaycastHit[] blockers = new RaycastHit[32];
@@ -93,7 +93,8 @@ namespace Alterverse.Combat
                 pending[i] = new Pending { Active = true, Basic = slot < 0, Slot = slot, Damage = damage,
                     TargetedBasic = slot < 0 && spec.targetingMode == TargetingMode.AutoBasic && pose.Target != null,
                     Execution = execution, Volley = volley, Hook = identity.Hero == HeroId.Nerok && slot == 0,
-                    Direction = spec.aimType == AimType.Melee && slot >= 0 ? pose.Direction : pose.CastDirection(transform.position),
+                    Direction = spec.targetingMode == TargetingMode.Cone ? pose.Direction :
+                        spec.aimType == AimType.Melee && slot >= 0 ? pose.Direction : pose.CastDirection(transform.position),
                     Point = pose.Point, ReleaseOrigin = transform.position, HasAimPoint = pose.HasAimPoint, Spec = spec,
                     Target = spec.targetingMode == TargetingMode.Homing || slot < 0 && spec.targetingMode == TargetingMode.AutoBasic ? pose.Target : null, ReleaseAt = Time.time + windup };
                 hasPending = true;
@@ -209,6 +210,54 @@ namespace Alterverse.Combat
         private static bool AutomaticBasic(Pending p)
             => p.TargetedBasic;
 
+        private static bool LiveCone(Pending p)
+            => !p.Basic && p.Spec.targetingMode == TargetingMode.Cone &&
+               (p.Spec.aimType == AimType.Melee || p.Spec.aimType == AimType.Beam ||
+                p.Spec.aimType == AimType.Projectile || p.Spec.aimType == AimType.Homing);
+
+        // Every server update uses the same wedge as the player's visible aiming preview.
+        // Select a SINGLE body per direct attack; a hero always beats a closer minion
+        // or Hot Zone creature while both occupy the active cone.
+        private Health ConeContact(Pending p)
+        {
+            Health best = null;
+            float bestScore = float.MaxValue;
+            for (int i = 0; i < Health.Active.Count; i++)
+            {
+                Health target = Health.Active[i];
+                if (!HeroCombatRules.Enemy(gameObject, target) ||
+                    !AimGeometry.ConeBody(target, p.LaunchOrigin, p.Direction,
+                        p.Spec.castRange, p.Spec.coneAngle, true)) continue;
+
+                Vector3 delta = AimGeometry.Flat(target.transform.position - p.LaunchOrigin);
+                float distance = delta.magnitude;
+                float radius = AimGeometry.BodyRadius(target);
+                // The cone is not permission to strike through scenery. The body surface
+                // must be visible along this ray, even if its centre is behind cover.
+                if (distance > .001f && BlockDistance(p.LaunchOrigin, AimGeometry.Direction(delta),
+                    distance, .01f) < Mathf.Max(0f, distance - radius) - .01f) continue;
+
+                float score = distance + (target.GetComponent<HeroIdentity>() != null ? -100000f : 0f);
+                if (score < bestScore) { best = target; bestScore = score; }
+            }
+            return best;
+        }
+
+        // Kept visible until the SAME authoritative active hit interval closes.
+        public bool TryActiveCone(out Vector3 origin, out Vector3 direction, out AimSpec spec)
+        {
+            if (pending != null)
+                for (int i = 0; i < pending.Length; i++)
+                {
+                    Pending p = pending[i];
+                    if (!p.Active || !p.Launched || !LiveCone(p) || Time.time > p.ConeUntil) continue;
+                    origin = p.LaunchOrigin; direction = p.Direction; spec = p.Spec;
+                    return true;
+                }
+            origin = Vector3.zero; direction = Vector3.forward; spec = default;
+            return false;
+        }
+
         // Use the same stationary body and wall queries as delivery for the held hook preview.
         // This is a current-position preview; targets can still dodge after the cast commits.
         internal Vector3 PreviewProjectileEnd(AimPose pose, AimSpec spec)
@@ -281,24 +330,9 @@ namespace Alterverse.Combat
                 {
                     if (automatic) FaceBasicTarget(p);
                     if (Time.time < p.ReleaseAt) continue;
-                    // Empty manual cones remain open to entrants during anticipation.
-                    // Keep the released field in world space, then freeze one point at
-                    // launch. Already captured points and launched shots never retarget.
-                    if (!p.Basic && !p.HasAimPoint && p.Spec.targetingMode == TargetingMode.Cone)
-                    {
-                        Health entrant = AimGeometry.Select(gameObject, p.ReleaseOrigin, p.Direction,
-                            p.Spec.castRange, p.Spec.coneAngle * .5f);
-                        if (entrant != null)
-                        {
-                            Vector3 delta = AimGeometry.Flat(entrant.transform.position - transform.position);
-                            // Keep the committed free trajectory when steering toward the
-                            // entrant's centre would hit cover. Its body can still enter the
-                            // original swept path beside that cover.
-                            if (BlockDistance(transform.position, AimGeometry.Direction(delta), delta.magnitude,
-                                    Mathf.Max(.01f, p.Spec.projectileWidth)) >= delta.magnitude - .01f)
-                            { p.Point = entrant.transform.position; p.HasAimPoint = true; }
-                        }
-                    }
+                    // The manually directed cone remains fixed in world space. Targets are
+                    // checked as bodies ENTER the cone for the entire active strike/flight;
+                    // a single captured point must never narrow or redirect its hitbox.
                     p.Launched = true; p.LaunchOrigin = transform.position; p.Position = p.LaunchOrigin; p.SampleTime = Time.time;
                     if (automatic)
                     {
@@ -308,13 +342,26 @@ namespace Alterverse.Combat
                     }
                     // Rebase melee as well: strafing during a longer preparation must not rotate
                     // the captured stationary point outside a cone with an obsolete origin.
-                    if (p.HasAimPoint)
+                    if (p.HasAimPoint && !LiveCone(p))
                         p.Direction = new AimPose(p.Direction, p.Point, null, true).CastDirection(p.LaunchOrigin);
                     float distance = automatic ? HeroCombatRules.Distance(p.LaunchOrigin, p.Point) : p.Spec.castRange;
                     float length = BlockDistance(p.LaunchOrigin, p.Direction, distance, p.Spec.projectileWidth);
                     Vector3 endpoint = p.LaunchOrigin + p.Direction * length;
                     if (p.Spec.aimType == AimType.Melee || p.Spec.aimType == AimType.Beam)
                     {
+                        if (LiveCone(p))
+                        {
+                            p.ConeUntil = Time.time + (p.Spec.aimType == AimType.Beam ? .18f : .20f);
+                            p.VisualId = Present(p, endpoint, p.Spec.aimType == AimType.Beam ? .12f : 0f);
+                            Health entered = ConeContact(p);
+                            if (entered != null)
+                            {
+                                pending[i] = default;
+                                Impact(p, entered);
+                            }
+                            else pending[i] = p;
+                            continue;
+                        }
                         float fraction; Health target = Contact(p, p.LaunchOrigin, endpoint, false, out fraction);
                         if (target != null) endpoint = p.Spec.aimType == AimType.Melee ? target.transform.position
                             : Vector3.Lerp(p.LaunchOrigin, endpoint, Mathf.Clamp01(fraction));
@@ -330,6 +377,40 @@ namespace Alterverse.Combat
                     p.FlightDuration = Mathf.Max(.01f, distance / p.Spec.projectileSpeed);
                     p.VisualId = Present(p, automatic ? p.Point : endpoint,
                         automatic ? p.FlightDuration : Mathf.Max(.01f, length / p.Spec.projectileSpeed));
+                    if (LiveCone(p))
+                    {
+                        p.ConeUntil = Time.time + Mathf.Max(.08f, length / p.Spec.projectileSpeed);
+                        Health entered = ConeContact(p);
+                        if (entered != null)
+                        {
+                            pending[i] = default;
+                            HeroVfxPool.CancelDelivery(p.VisualId);
+                            Impact(p, entered);
+                            continue;
+                        }
+                    }
+                }
+                if (LiveCone(p))
+                {
+                    if (Time.time > p.ConeUntil)
+                    {
+                        pending[i] = default;
+                        HeroVfxPool.CancelDelivery(p.VisualId);
+                        continue;
+                    }
+                    Health entrant = ConeContact(p);
+                    if (entrant != null)
+                    {
+                        pending[i] = default;
+                        HeroVfxPool.CancelDelivery(p.VisualId);
+                        Impact(p, entrant);
+                        continue;
+                    }
+                    if (p.Spec.aimType == AimType.Melee || p.Spec.aimType == AimType.Beam)
+                    {
+                        pending[i] = p;
+                        continue;
+                    }
                 }
                 float dt = Mathf.Max(0f, Time.time - p.SampleTime); p.SampleTime = Time.time;
                 if (dt <= 0f) { pending[i] = p; continue; }
@@ -349,7 +430,8 @@ namespace Alterverse.Combat
                 float allowed = BlockDistance(p.Position, p.Direction, step, p.Spec.projectileWidth);
                 Vector3 end = p.Position + p.Direction * allowed;
                 // A wall/range endpoint can end this frame's flight early. Do not sample later target movement.
-                float contactFraction; Health hit = Contact(p, p.Position, end, true, out contactFraction,
+                float contactFraction = 0f;
+                Health hit = LiveCone(p) ? null : Contact(p, p.Position, end, true, out contactFraction,
                     allowed / Mathf.Max(.0001f, automatic ? step : p.Spec.projectileSpeed * dt));
                 p.Traveled += allowed; p.Position = end;
                 if (hit != null || allowed < step - .0001f ||
