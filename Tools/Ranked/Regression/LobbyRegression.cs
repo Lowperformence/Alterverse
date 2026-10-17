@@ -19,7 +19,7 @@ partial class Regression
   typeof(EdgegapMatchmakerClient).GetProperty("Instance").SetValue(null,null);
   MultiplayerService.Instance=new();UnityServices.Initialize=null;UnityWebRequest.Handler=null;
   CoopAuthority.Active=false;CoopAuthority.PreparedPlan=CoopAuthority.ActivePlan=null;
-  Time.unscaledTime=Time.realtimeSinceStartup=0;NetworkRoundLoop.IsBetweenRounds=false;PlayerHeroSelection.Selected=HeroId.Veyr;
+  Time.unscaledTime=Time.realtimeSinceStartup=0;UnityEngine.Object.Found.Clear();PlayerHeroSelection.Selected=HeroId.Veyr;
   var manager=new NetworkManager{IsHost=true,IsServer=true,IsClient=true,IsListening=true,IsConnectedClient=true};manager.ConnectedClientsIds.Add(0);
   NetworkManager.Singleton=CoopNetworkBootstrap.Manager=manager;CoopNetworkBootstrap.Connects=0;
   Environment.SetEnvironmentVariable(EdgegapMatchmakerClient.TokenEnvironmentVariable,"fixture-token");
@@ -140,7 +140,7 @@ partial class Regression
    UnityWebRequest.Handler=r=>{if(r.method=="PATCH")readyCalls++;return Reply(r,Membership());};
    var pendingSearch=current.BeginSearchAsync();
    Check(!pendingSearch.IsCompleted&&readyCalls==0,"leader stays unready until all "+humans+" friends acknowledge");
-   for(ulong id=1;id<(ulong)humans;id++)Invoke(current,"OnJoinAck",id,new FastBufferReader(new FixedString128Bytes("g1")));
+   for(int id=1;id<humans;id++)((Player)party.Players[id]).SetProperty("edgegapGroup",new PlayerProperty("g1",VisibilityPropertyOptions.Member));
    await Finish(pendingSearch,"friend party start");
    Check(await pendingSearch&&readyCalls==1&&current.IsSearching,"complete friend group starts matchmaking exactly once");
    await current.CancelSearchAsync();
@@ -340,20 +340,24 @@ partial class Regression
   await Until(()=>!retryFlow.IsSearching&&!retryFlow.Busy,"solo retry completes terminal cleanup");
   Check(!retryFlow.LastError.Contains("RELAY"),"solo retry does not report a friend Relay dependency");
 
-  // Multi-person parties still require an actual live host link to carry the group id.
-  ResetLobby();var friendFlow=EdgegapOnlineFlow.Instance;var friendParty=Room(2);
-  Put(OnlinePartyService.Instance,"session",friendParty);Put(friendFlow,"expectedPartyPlayers",2);
-  Put(friendFlow,"expectedRoster",OnlinePartyService.Instance.ReadyRosterKey);
-  NetworkManager.Singleton.IsHost=NetworkManager.Singleton.IsListening=false;
-  var relayWait=(Task<bool>)friendFlow.GetType().GetMethod("WaitForFriendRelayAsync",Flags).Invoke(friendFlow,new object[]{2,2f,0});
-  Check(!relayWait.IsCompleted,"multi-person retry still waits for Relay");
-  Time.realtimeSinceStartup=3;await Finish(relayWait,"missing friend Relay deadline");
-  Check(!await relayWait,"missing Relay cannot silently strand friends");
-  Time.realtimeSinceStartup=0;NetworkManager.Singleton.IsHost=NetworkManager.Singleton.IsListening=true;NetworkManager.Singleton.ConnectedClientsIds.Add(1);
-  relayWait=(Task<bool>)friendFlow.GetType().GetMethod("WaitForFriendRelayAsync",Flags).Invoke(friendFlow,new object[]{2,2f,0});
-  Check(await relayWait,"connected friend Relay still passes readiness");
-  relayWait=(Task<bool>)friendFlow.GetType().GetMethod("WaitForFriendRelayAsync",Flags).Invoke(friendFlow,new object[]{1,2f,99});
-  Check(!await relayWait,"cancelled solo generation cannot bypass readiness");
+  // Re-searching with friends works after the dedicated match has replaced Relay.
+  for(int humans=2;humans<=4;humans++)
+  {
+   ResetLobby();var friendFlow=EdgegapOnlineFlow.Instance;var friendParty=Room(humans);
+   Put(OnlinePartyService.Instance,"session",friendParty);
+   NetworkManager.Singleton.IsHost=NetworkManager.Singleton.IsServer=NetworkManager.Singleton.IsListening=false;
+   int readyCalls=0;
+   UnityWebRequest.Handler=r=>{if(r.method=="PATCH")readyCalls++;return Reply(r,Membership("second"));};
+   var second=friendFlow.BeginSearchAsync();
+   Check(OnlinePartyService.Instance.MatchmakingGroupId=="second"&&!second.IsCompleted&&readyCalls==0,"new group shared through surviving party without Relay");
+   for(int i=1;i<humans;i++)((Player)friendParty.Players[i]).SetProperty("edgegapGroup",new PlayerProperty("old",VisibilityPropertyOptions.Member));
+   Check(!OnlinePartyService.Instance.AllFriendsJoinedGroup("second"),"old match acknowledgements cannot start another search");
+   for(int i=1;i<humans;i++)((Player)friendParty.Players[i]).SetProperty("edgegapGroup",new PlayerProperty("second",VisibilityPropertyOptions.Member));
+   await Finish(second,"friend re-search without Relay");
+   Check(await second&&readyCalls==1,"friends can search together again without an old Relay transport");
+   await friendFlow.CancelSearchAsync();
+   Check(OnlinePartyService.Instance.InParty&&OnlinePartyService.Instance.MatchmakingGroupId=="","cancel clears shared group and retains friend lobby");
+  }
 
   ResetLobby();var progress=EdgegapOnlineFlow.Instance;Put(progress,"searching",true);
   foreach(var phase in new[]{("SEARCHING","SEARCHING FOR OPPONENTS"),("TEAM_FOUND","TEAM FOUND"),("MATCH_FOUND","STARTING GAME SERVER")})

@@ -57,4 +57,4 @@ namespace Alterverse.Shop {
  public static class ArenaShopCatalog {public static ArenaShopItem[] Items={new(){Variant=Alterverse.Match.ArenaVariant.Moon,Name="Moon"},new(){Variant=Alterverse.Match.ArenaVariant.Earth,Name="Earth"}};public static int IndexOf(Alterverse.Match.ArenaVariant a)=>(int)a;}
 }
 namespace Alterverse.UI {public static class OnlinePartyOverlay {public static int Shows;public static void Show(){Shows++;}}}
-namespace Alterverse.Multiplayer {public static class NetworkRoundLoop {public static bool IsBetweenRounds;}}
+

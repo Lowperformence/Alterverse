@@ -10,9 +10,18 @@ namespace Alterverse.Match
         public static bool Leaving { get; private set; }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void Reset() => Leaving = false;
-        public static async Task ReturnToMenuAsync(string failureMessage=null)
+        public static Task ReturnToMenuAsync(string failureMessage=null) => ExitAsync(false, failureMessage);
+        public static Task ReturnToOnlineLobbyAsync(string failureMessage=null) => ExitAsync(true, failureMessage);
+
+        private static async Task ExitAsync(bool keepOnlineParty, string failureMessage)
         {
             if (Leaving) return;
+            // Never discard an authoritative result while its local reward transaction is pending.
+            // The regular result button/countdown already enforces this; this also covers the
+            // server disconnecting during the result screen.
+            if (keepOnlineParty && Object.FindAnyObjectByType<DimensionsFront>()?.HasEnded == true &&
+                CoopMatchResultSync.Instance?.ResultReady == true && MatchScoreboard.Instance?.ResultCommitted != true)
+                return;
             Leaving = true;
             OnlineMatchLoadingScreen.Cancel();
             GameObject world = GameObject.Find("DF_MatchWorld");
@@ -33,7 +42,12 @@ namespace Alterverse.Match
                 // EdgegapOnlineFlow owns matchmaking cleanup. Always route the online exit through
                 // it when available so pending assignments, direct connects and group membership
                 // are cancelled before the Unity party is left.
-                if (edgegap != null)
+                if (keepOnlineParty)
+                {
+                    if (edgegap != null) await edgegap.CompleteMatchAsync();
+                    if (online != null && online.InParty) await online.ResetLocalReadyAsync();
+                }
+                else if (edgegap != null)
                     await edgegap.LeavePartyAsync();
                 else if (online != null && online.InParty)
                     await online.LeavePartyAsync();
@@ -52,8 +66,16 @@ namespace Alterverse.Match
                 // Keep the old battlefield/skybox hidden while the menu poster and video warm up.
                 // Gameplay camera visibility is restored by the next arena build, not by menu exit.
                 Alterverse.Prototype.PrototypeBootstrap.PrepareTransitionFrame();
-                MainMenuController.ShowHome();
-                if(!string.IsNullOrEmpty(failureMessage))MainMenuController.ShowLaunchFailure(failureMessage);
+                if (keepOnlineParty)
+                {
+                    MainMenuController.ShowCoopAfterMatch(failureMessage);
+                    OnlinePartyOverlay.Show();
+                }
+                else
+                {
+                    MainMenuController.ShowHome();
+                    if(!string.IsNullOrEmpty(failureMessage))MainMenuController.ShowLaunchFailure(failureMessage);
+                }
                 Leaving = false;
             }
         }

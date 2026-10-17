@@ -9,7 +9,8 @@ namespace Alterverse.Multiplayer
 {
     /// <summary>
     /// Bridges the existing private Unity friend party into Edgegap Group Up matchmaking.
-    /// Relay is used only while friends assemble and to distribute the Edgegap group id.
+    /// Session properties distribute the group id and join receipts even after the match
+    /// has replaced the party Relay link with a dedicated connection.
     /// The owner creates the Edgegap group NOT READY, waits until every friend has joined,
     /// then becomes ready last so matchmaking cannot lock the group too early.
     /// </summary>
@@ -99,6 +100,16 @@ namespace Alterverse.Multiplayer
                 Detach();
 
             OnlinePartyService online = OnlinePartyService.Instance;
+            if (!CoopAuthority.Active && !Alterverse.Match.MatchExit.Leaving && online != null && online.InParty && !online.IsHost)
+            {
+                string sharedGroup = online.MatchmakingGroupId;
+                if (!Busy && !online.Busy && !searching && online.MatchmakingLocked && !string.IsNullOrEmpty(sharedGroup) &&
+                    sharedGroup != online.LocalJoinedGroupId)
+                    _ = JoinFriendGroupAsync(sharedGroup);
+                else if (searching && !cleanupRunning && !online.MatchmakingLocked &&
+                         EdgegapMatchmakerClient.Instance?.HasAssignment != true)
+                    _ = StopSearchAsync("PARTY LEADER CANCELLED SEARCH", false);
+            }
             if (searching && !CoopAuthority.Active && EdgegapMatchmakerClient.Instance?.HasAssignment != true)
             {
                 if (!cleanupRunning && (online == null || !online.InParty))
@@ -151,6 +162,7 @@ namespace Alterverse.Multiplayer
 
         private async Task<bool> BeginSearchCoreAsync()
         {
+            if (CoopAuthority.Active || Alterverse.Match.MatchExit.Leaving) return Fail("RETURN TO PARTY BEFORE SEARCHING AGAIN");
             OnlinePartyService online = OnlinePartyService.Instance;
             EdgegapMatchmakerClient edgegap = EdgegapMatchmakerClient.Instance;
             if (online == null || !online.InParty || !online.IsHost)
@@ -175,8 +187,6 @@ namespace Alterverse.Multiplayer
                 if (generation != searchGeneration) return false;
                 if (!await online.SetMatchmakingLockedAsync(true)) return Fail("COULD NOT LOCK FRIEND PARTY");
                 if (generation != searchGeneration) return false;
-                if (!await WaitForFriendRelayAsync(expectedPartyPlayers, 12f, generation))
-                    return generation == searchGeneration && Fail("FRIEND PARTY RELAY IS NOT READY");
                 if (!await edgegap.CreateGroupAsync(false))
                     return generation == searchGeneration && Fail(edgegap.LastError);
                 if (generation != searchGeneration) return false;
@@ -184,6 +194,8 @@ namespace Alterverse.Multiplayer
                     return Fail("FRIEND PARTY CHANGED DURING MATCHMAKING");
                 activeGroupId = edgegap.GroupId;
                 if (string.IsNullOrWhiteSpace(activeGroupId)) return Fail("EDGEGAP DID NOT RETURN A GROUP ID");
+                if (!await online.PublishMatchmakingGroupAsync(activeGroupId)) return Fail("COULD NOT SHARE MATCHMAKING GROUP");
+                if (generation != searchGeneration) return false;
                 nextGroupBroadcast = 0f;
                 SetStatus("FRIENDS JOINING EDGEGAP GROUP");
                 NetworkManager manager = NetworkManager.Singleton;
@@ -274,6 +286,8 @@ namespace Alterverse.Multiplayer
             if (online != null && online.InParty) await online.LeavePartyAsync();
         }
 
+        public Task<bool> CompleteMatchAsync() => StopSearchAsync("MATCH COMPLETE • READY FOR ANOTHER SEARCH", false);
+
         public static void MarkMatchStarted()
         {
             EdgegapOnlineFlow flow = Instance;
@@ -288,32 +302,8 @@ namespace Alterverse.Multiplayer
             flow.expectedRoster = "";
             flow.activeGroupId = "";
             flow.joinedGuestClients.Clear();
+            _ = OnlinePartyService.Instance?.ResetLocalReadyAsync();
             flow.SetStatus("DEDICATED MATCH CONNECTED");
-        }
-
-        private async Task<bool> WaitForFriendRelayAsync(int expectedPlayers, float timeoutSeconds, int generation)
-        {
-            float deadline = Time.realtimeSinceStartup + Mathf.Max(2f, timeoutSeconds);
-            expectedPlayers = Mathf.Clamp(expectedPlayers, 1, OnlinePartyService.MaxPartyPlayers);
-            while (Time.realtimeSinceStartup < deadline)
-            {
-                if (generation != searchGeneration) return false;
-                OnlinePartyService online = OnlinePartyService.Instance;
-                if (!PartyUnchanged(online) || online.PlayerCount != expectedPlayers) return false;
-
-                // A solo party has no guests to notify. Its former Relay transport is
-                // deliberately shut down when switching to the dedicated server, and is
-                // not restarted after a failed assignment. Do not require that dead Relay
-                // for a solo retry; party/roster/generation validation above still applies.
-                if (expectedPlayers == 1) return true;
-
-                NetworkManager manager = NetworkManager.Singleton;
-                if (manager != null && manager.IsListening && manager.IsHost &&
-                    CoopNetworkBootstrap.IsLinkReadyForPlayers(expectedPlayers))
-                    return true;
-                await Task.Delay(100);
-            }
-            return false;
         }
 
         private async Task<bool> WaitForGuestJoinAcksAsync(int expectedGuests, float timeoutSeconds, int generation)
@@ -325,13 +315,12 @@ namespace Alterverse.Multiplayer
                 if (generation != searchGeneration) return false;
                 OnlinePartyService online = OnlinePartyService.Instance;
                 if (!PartyUnchanged(online)) return false;
-                if (joinedGuestClients.Count >= expectedGuests) return true;
+                if (online.AllFriendsJoinedGroup(activeGroupId)) return true;
                 NetworkManager manager = NetworkManager.Singleton;
-                if (manager == null || !manager.IsHost || !manager.IsListening) return false;
-                BroadcastGroup(manager);
+                if (manager != null && manager.IsHost && manager.IsListening) BroadcastGroup(manager);
                 await Task.Delay(200);
             }
-            return generation == searchGeneration && joinedGuestClients.Count >= expectedGuests;
+            return generation == searchGeneration && OnlinePartyService.Instance?.AllFriendsJoinedGroup(activeGroupId) == true;
         }
 
         private void BroadcastGroup(NetworkManager manager)
@@ -394,12 +383,13 @@ namespace Alterverse.Multiplayer
             NetworkManager manager = NetworkManager.Singleton;
             OnlinePartyService online = OnlinePartyService.Instance;
             if (manager == null || manager.IsServer || senderClientId != NetworkManager.ServerClientId ||
-                online == null || !online.InParty || joiningGroup)
+                online == null || !online.InParty || online.IsHost || joiningGroup || CoopAuthority.Active || Alterverse.Match.MatchExit.Leaving)
                 return;
 
             reader.ReadValueSafe(out FixedString128Bytes fixedGroupId);
             string groupId = fixedGroupId.ToString();
-            if (string.IsNullOrWhiteSpace(groupId)) return;
+            if (string.IsNullOrWhiteSpace(groupId) || !online.MatchmakingLocked || online.MatchmakingGroupId != groupId) return;
+            if (!searching && online.LocalJoinedGroupId == groupId) return;
             if (searching && string.Equals(activeGroupId, groupId, StringComparison.Ordinal))
             {
                 if (EdgegapMatchmakerClient.Instance?.HasMembership == true) SendJoinAck();
@@ -438,6 +428,9 @@ namespace Alterverse.Multiplayer
                 if (edgegap == null || !edgegap.IsConfigured) return Fail("EDGEGAP MATCHMAKER TOKEN NOT CONFIGURED");
                 SetStatus("JOINING FRIENDS IN EDGEGAP");
                 if (!await edgegap.JoinGroupAsync(groupId, true)) return generation == searchGeneration && Fail(edgegap.LastError);
+                if (generation != searchGeneration) return false;
+                if (!await OnlinePartyService.Instance.AcknowledgeMatchmakingGroupAsync(groupId))
+                    return Fail("COULD NOT CONFIRM FRIEND GROUP JOIN");
                 if (generation != searchGeneration) return false;
                 searching = true; started = true;
                 SetStatus("EDGEGAP GROUP JOINED • WAITING FOR LEADER");

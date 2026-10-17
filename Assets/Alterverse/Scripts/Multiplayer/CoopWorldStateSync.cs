@@ -25,6 +25,7 @@ namespace Alterverse.Multiplayer
         private CustomMessagingManager messaging;
         private bool attached;
         private float nextSend,nextRefresh;
+        private int lastRefreshFrame=-1,lastHealthCount=-1;
 
         private void OnDisable(){Detach();}
 
@@ -50,8 +51,13 @@ namespace Alterverse.Multiplayer
 
         private void RefreshEntities()
         {
-            entities.Clear();
             IReadOnlyList<Health> active=Health.Active;
+            // A world snapshot arrives in several packets. Rebuilding the complete entity
+            // lookup for every chunk repeats the same component scan in one rendered frame.
+            // Still discover entities spawned by another event in that frame immediately.
+            if(lastRefreshFrame==Time.frameCount&&lastHealthCount==active.Count)return;
+            lastRefreshFrame=Time.frameCount;lastHealthCount=active.Count;
+            entities.Clear();
             for(int i=0;i<active.Count;i++)
             {
                 Health health=active[i];
@@ -126,11 +132,10 @@ namespace Alterverse.Multiplayer
         {
             NetworkManager manager=NetworkManager.Singleton;
             if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsClient||sender!=NetworkManager.ServerClientId)return;
-            RefreshEntities();
-
             if (!MatchNetworkProtocol.ReadRound(ref reader)) return;
             reader.ReadValueSafe(out int count);
             if (count < 0 || count > 96) return;
+            RefreshEntities();
             for(int i=0;i<count;i++)
             {
                 reader.ReadValueSafe(out FixedString128Bytes fixedId);

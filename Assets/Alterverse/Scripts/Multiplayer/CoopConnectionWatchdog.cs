@@ -48,7 +48,7 @@ namespace Alterverse.Multiplayer
             bool localLost=!current.IsServer&&clientId==current.LocalClientId;
             if (localLost && CoopAuthority.ActivePlan is OnlineMatchPlan && !MatchExit.Leaving)
             {
-                _ = MatchExit.ReturnToMenuAsync();
+                _ = MatchExit.ReturnToOnlineLobbyAsync();
                 return;
             }
             if(lobby==null||!lobby.InLobby)return;

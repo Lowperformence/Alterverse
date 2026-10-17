@@ -18,7 +18,7 @@ root=here.parents[2]
 source=root/'Assets/Alterverse/Scripts'
 names=['Profile/SafeIdentityCatalog.cs','Profile/PlayerProfile.cs','Profile/AccountProfilePrefs.cs','Profile/SocialService.cs','Multiplayer/MatchSession.cs','Multiplayer/CoopLobbyService.cs','Multiplayer/OnlinePartyService.cs','Multiplayer/OnlinePlanHandshake.cs','Multiplayer/EdgegapOnlineFlow.cs','Multiplayer/MultiplayerGate.cs','Multiplayer/CoopMatchPlan.cs','Multiplayer/OnlineMatchPlan.cs','Prototype/FiveVsFiveTestRoster.cs','Combat/TeamMember.cs','Multiplayer/CoopPlanHandshake.cs',
        'Multiplayer/RankedAvailability.cs','Multiplayer/RankedService.cs','Multiplayer/RankedMatchReporter.cs','Multiplayer/EdgegapMatchmakerClient.cs',
-       'Multiplayer/DedicatedOnlineMatchHandshake.cs','Multiplayer/EdgegapDedicatedServerLifecycle.cs','UI/RankedPanel.cs']
+       'Multiplayer/DedicatedOnlineMatchHandshake.cs','Multiplayer/EdgegapDedicatedServerLifecycle.cs','UI/RankedPanel.cs','Match/MatchExit.cs','Match/PostMatchAutoLoop.cs','Multiplayer/NetworkRoundLoop.cs','Multiplayer/CoopConnectionWatchdog.cs','Multiplayer/CoopWorldStateSync.cs']
 with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
     # Keep roster fixtures on the production layout rather than duplicating spawn formulas.
     geometry=(source/'Combat/GameplayCollision.cs').read_text()
@@ -33,6 +33,28 @@ with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
     end=menu.index('        private async System.Threading.Tasks.Task BeginOfflineMatchAsync()',start)
     ui=Path(directory)/'OnlineMenuEntry.cs'
     ui.write_text('using Alterverse.Multiplayer;using UnityEngine;namespace Alterverse.UI {public sealed partial class MainMenuController {'+menu[start:end]+'}}')
+    # Compile real Hotzone state transitions and their server/client message handlers.
+    # Terrain mesh generation and physics scoring are controlled boundaries, not native tests.
+    import re
+    def method(text, declaration):
+        start=text.index(declaration);end=text.index('{',start)+1;depth=1
+        while depth:
+            depth+=(text[end]=='{')-(text[end]=='}');end+=1
+        return text[start:end]
+    hot=(source/'Match/HotZoneDirector.cs').read_text()
+    net=(source/'Multiplayer/CoopWorldEventSync.cs').read_text()
+    hotcode=Path(directory)/'HotzoneTransitions.cs'
+    hotcode.write_text('using UnityEngine;using Alterverse.Combat;namespace Alterverse.Match {public sealed partial class HotZoneDirector {'+
+        ''.join(re.findall(r'public const (?:float|int) [^;]+;',hot))+
+        ''.join(re.findall(r'public static event [^;]+;',hot))+
+        ''.join(method(hot,d) for d in ['private void Open()','private void Resolve()','public void ApplyNetworkOpen(',
+            'public void ApplyNetworkResolve(','public void ApplyNetworkProgress('])+'}}'+
+        'namespace Alterverse.Multiplayer {using Unity.Collections;using Unity.Netcode;using Alterverse.Match;public sealed partial class CoopWorldEventSync {'+
+        ''.join(re.findall(r'private const string Hot[^;]+;',net))+
+        ''.join(method(net,d) for d in ['private void OnHostHotOpened(','private void OnHostHotResolved(',
+            'private void OnHostHotProgress(','private bool CanBroadcast()','private void SendAll(',
+            'private void OnHotOpen(','private void OnHotResolve(','private void OnHotProgress(',
+            'private static bool ValidServerMessage('])+'}}')
     if not a.dotnet_root:
         runtime=a.mono_root/'usr/lib/mono/4.5'
         env=dict(os.environ, DF_TEST_IDENTITY_CATALOG=str(root/'Assets/Alterverse/Resources/Social/SafeIdentityCatalog.json'), MONO_PATH=str(runtime)+':'+str(runtime/'Facades'),
@@ -44,7 +66,7 @@ with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
             '-r:'+str(runtime/'System.dll'),'-r:'+str(runtime/'System.Core.dll'),
             '-r:'+str(runtime/'System.Runtime.Serialization.dll'),
             '-r:'+str(runtime/'System.Xml.dll'),
-            str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'FingerprintRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(ui),str(layout),
+            str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'FingerprintRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(here/'LifecycleFixtures.cs'),str(here/'LifecycleRegression.cs'),str(hotcode),str(ui),str(layout),
             *[str(source/name) for name in names]],env=env,check=True)
         subprocess.run([str(a.mono_root/'usr/bin/mono-sgen'),str(output)],env=env,check=True)
         raise SystemExit(0)
@@ -53,7 +75,7 @@ with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
     output=Path(directory)/'RankedRegression.dll'
     response=Path(directory)/'compile.rsp'
     response.write_text('\n'.join(['-nologo','-nowarn:0649,0067','-target:exe','-langversion:9','-out:'+str(output),
-        *['-r:'+str(path) for path in runtime.glob('*.dll')],str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'FingerprintRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(ui),str(layout),
+        *['-r:'+str(path) for path in runtime.glob('*.dll')],str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'FingerprintRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(here/'LifecycleFixtures.cs'),str(here/'LifecycleRegression.cs'),str(hotcode),str(ui),str(layout),
         *[str(source/name) for name in names]]))
     subprocess.run([str(a.dotnet_root/'dotnet'),str(sdk/'Roslyn/bincore/csc.dll'),'@'+str(response)],check=True)
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))

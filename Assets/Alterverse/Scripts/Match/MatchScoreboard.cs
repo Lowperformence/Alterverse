@@ -119,6 +119,7 @@ private void RefreshResultPresentation()
     var snapshot=new MatchResultScreenData
     {
         Won=player!=null&&player.Team==winningTeam,Ready=rewardGranted,Retrying=saveWarningShown,
+        ExitLabel=NetworkRoundLoop.OnlineReturnsToLobby?"BACK TO LOBBY":"BACK TO MENU",
         Difficulty=BotDifficultySettings.Label(resultDifficulty),Hero=hero!=null?hero.DisplayName:"PLAYER",
         Kills=CoopAuthority.Active?playerKills:(entry?.Kills??0),Deaths=CoopAuthority.Active?playerDeaths:(entry?.Deaths??0),Assists=CoopAuthority.Active?playerAssists:(entry?.Assists??0),Objectives=CoopAuthority.Active?playerObjectives:(stats?.Objectives??0),
         Xp=matchXp,Shards=matchReward,BaseXp=matchBaseXp,XpBonus=matchXpBonus,BaseShards=matchBaseReward,ShardBonus=matchShardBonus,
@@ -179,7 +180,7 @@ private void DrawResult()
     float scale=MatchResultLayout.Scale(Screen.safeArea);
     if(resultScreen.Draw(Screen.safeArea.width/scale,Screen.safeArea.height/scale)&&rewardGranted)
     {
-        _ = MatchExit.ReturnToMenuAsync();
+        _ = NetworkRoundLoop.OnlineReturnsToLobby ? MatchExit.ReturnToOnlineLobbyAsync() : MatchExit.ReturnToMenuAsync();
     }
 }
 private void DrawTeam(List<Entry> team,float x,float y,float width,string title)

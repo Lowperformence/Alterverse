@@ -14,6 +14,9 @@ namespace Alterverse.Multiplayer
         const string ReadyMessage = "DF_ROUND_READY_V1", PlanMessage = "DF_ROUND_PLAN_V1",
             AckMessage = "DF_ROUND_ACK_V1", ClockMessage = "DF_ROUND_CLOCK_V1", LaunchMessage = "DF_ROUND_LAUNCH_V1";
         public static NetworkRoundLoop Instance { get; private set; }
+        public static bool OnlineReturnsToLobby => CoopAuthority.ActivePlan is OnlineMatchPlan ||
+            CoopAuthority.ActivePlan?.Session?.Mode == SessionMode.OnlineCasual ||
+            CoopAuthority.ActivePlan?.Session?.Mode == SessionMode.OnlineRanked;
         public static bool IsBetweenRounds => CoopAuthority.Active && FindAnyObjectByType<DimensionsFront>()?.HasEnded == true;
         public double Deadline { get; private set; } = -1;
         public bool Transitioning { get; private set; }
@@ -33,8 +36,8 @@ namespace Alterverse.Multiplayer
         void Update()
         {
             if (MatchExit.Leaving || !CoopAuthority.Active) { Reset(); Detach(); return; }
-            if (CoopAuthority.ActivePlan?.Session?.Mode == SessionMode.OnlineRanked)
-            { Reset(); Detach(); Status = "RANKED COMPLETE • RETURN TO MENU"; return; }
+            if (OnlineReturnsToLobby)
+            { Reset(); Detach(); Status = "MATCH COMPLETE • RETURN TO PARTY"; return; }
             NetworkManager manager = NetworkManager.Singleton;
             if (manager == null || !manager.IsListening) return;
             Attach(manager.CustomMessagingManager);
@@ -105,7 +108,7 @@ namespace Alterverse.Multiplayer
         }
         static bool Authorized(ulong id, string player) =>
             MatchNetworkProtocol.Authorized(id, player);
-        bool Current(string id) => !MatchExit.Leaving && CoopAuthority.Active && id == CoopAuthority.ActivePlan.MatchId;
+        bool Current(string id) => !MatchExit.Leaving && CoopAuthority.Active && !OnlineReturnsToLobby && id == CoopAuthority.ActivePlan.MatchId;
         void OnReady(ulong sender, FastBufferReader reader)
         {
             var manager = NetworkManager.Singleton;
@@ -188,7 +191,7 @@ namespace Alterverse.Multiplayer
         void Launch()
         {
             var bootstrap = FindAnyObjectByType<PrototypeBootstrap>();
-            if (bootstrap == null || proposed == null || MatchExit.Leaving) return;
+            if (bootstrap == null || proposed == null || MatchExit.Leaving || OnlineReturnsToLobby) return;
             Transitioning = true;
             CoopAuthority.Prepare(proposed);
             if (!CoopAuthority.BeginPreparedMatch(NetworkManager.Singleton.IsHost)) { Transitioning = false; return; }

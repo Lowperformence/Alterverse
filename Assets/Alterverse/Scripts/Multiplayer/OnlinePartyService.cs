@@ -45,6 +45,7 @@ namespace Alterverse.Multiplayer
         private const string PlayerReadyKey = "ready";
         private const string SearchKey = "playerSearch";
         private const string MatchmakingKey = "edgegapSearch";
+        private const string MatchmakingGroupKey = "edgegapGroup";
         private const string ModeKey = "mode";
         private const string ArenaKey = "arena";
         private const string PartyIdsKey = "partyIds";
@@ -71,6 +72,63 @@ namespace Alterverse.Multiplayer
         public string Status => status;
         public string LastError => lastError;
         public bool MatchmakingLocked => ReadSession(MatchmakingKey, "0") == "1";
+        public string MatchmakingGroupId => ReadSession(MatchmakingGroupKey, "");
+        public string LocalJoinedGroupId => session?.CurrentPlayer == null ? "" : ReadPlayer(session.CurrentPlayer, MatchmakingGroupKey, "");
+
+        public bool AllFriendsJoinedGroup(string groupId)
+        {
+            if (session == null || string.IsNullOrEmpty(groupId)) return false;
+            foreach (IReadOnlyPlayer player in session.Players)
+                if (player.Id != session.Host && ReadPlayer(player, MatchmakingGroupKey, "") != groupId) return false;
+            return true;
+        }
+
+        public async Task<bool> PublishMatchmakingGroupAsync(string groupId)
+        {
+            if (session == null || !IsHost || busy || !MatchmakingLocked) return false;
+            try
+            {
+                busy = true;
+                var host = session.AsHost();
+                host.SetProperty(MatchmakingGroupKey, new SessionProperty(groupId, VisibilityPropertyOptions.Member));
+                await host.SavePropertiesAsync();
+                return true;
+            }
+            catch (Exception ex) { Fail("COULD NOT SHARE MATCHMAKING GROUP", ex); return false; }
+            finally { busy = false; RaiseChanged(); }
+        }
+
+        public async Task<bool> AcknowledgeMatchmakingGroupAsync(string groupId)
+        {
+            if (session?.CurrentPlayer == null || busy || string.IsNullOrEmpty(groupId) || !MatchmakingLocked || MatchmakingGroupId != groupId) return false;
+            try
+            {
+                busy = true;
+                session.CurrentPlayer.SetProperties(new Dictionary<string, PlayerProperty>
+                { { MatchmakingGroupKey, new PlayerProperty(groupId, VisibilityPropertyOptions.Member) } });
+                await session.SaveCurrentPlayerDataAsync();
+                return true;
+            }
+            catch (Exception ex) { Fail("COULD NOT CONFIRM MATCHMAKING GROUP", ex); return false; }
+            finally { busy = false; RaiseChanged(); }
+        }
+
+        // Works while matchmaking is locked or gameplay is active. Every new search requires
+        // a fresh Ready click in the lobby, including friends still viewing their result.
+        public async Task<bool> ResetLocalReadyAsync()
+        {
+            if (session?.CurrentPlayer == null || busy) return false;
+            try
+            {
+                busy = true;
+                session.CurrentPlayer.SetProperties(new Dictionary<string, PlayerProperty>
+                { { PlayerReadyKey, new PlayerProperty("0", VisibilityPropertyOptions.Member) } });
+                await session.SaveCurrentPlayerDataAsync();
+                return true;
+            }
+            catch (Exception ex) { Fail("COULD NOT RESET PARTY READY STATE", ex); return false; }
+            finally { busy = false; RaiseChanged(); }
+        }
         public bool CanEditParty => InParty && !Busy && !CoopAuthority.Active && !MatchmakingLocked && !IsSearching &&
             EdgegapOnlineFlow.Instance?.Busy != true && EdgegapOnlineFlow.Instance?.IsSearching != true && !OnlinePlanHandshake.Preparing;
         public bool IsSearching => ReadSession(SearchKey, "0") == "1";
@@ -395,6 +453,7 @@ namespace Alterverse.Multiplayer
                 IHostSession host = session.AsHost();
                 host.IsLocked = locked;
                 host.SetProperty(MatchmakingKey, new SessionProperty(locked ? "1" : "0", VisibilityPropertyOptions.Member));
+                host.SetProperty(MatchmakingGroupKey, new SessionProperty("", VisibilityPropertyOptions.Member));
                 await host.SavePropertiesAsync();
                 return true;
             }

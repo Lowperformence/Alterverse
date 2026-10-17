@@ -21,6 +21,7 @@ namespace Alterverse.UI
         }
         public DropReward[] Drops;
         public string DropButton;
+        public string ExitLabel="BACK TO MENU";
         public bool Won, Ready, Retrying;
         public string Difficulty, Hero, BonusName;
         public int Kills, Deaths, Assists, Objectives, Xp, Shards, BaseXp, XpBonus, BaseShards, ShardBonus, BonusPercent;
@@ -130,7 +131,7 @@ namespace Alterverse.UI
             if(Action(new Rect(layout.Footer.x+smallWidth+8,layout.Footer.y,smallWidth,52),page==Page.Details?"SUMMARY":"DETAILS",false,true))
             {page=page==Page.Details?Page.Summary:Page.Details;pointerDown=dragging=false;}
             // Animation and alternate pages cannot bypass the receipt-completion gate.
-            return Action(new Rect(layout.Footer.x+smallWidth*2+16,layout.Footer.y,layout.Footer.width-smallWidth*2-16,52),data.Ready?"BACK TO MENU":"FINALIZING…",true,data.Ready);
+            return Action(new Rect(layout.Footer.x+smallWidth*2+16,layout.Footer.y,layout.Footer.width-smallWidth*2-16,52),data.Ready?data.ExitLabel:"FINALIZING…",true,data.Ready);
         }
         private void EnsureStyles()
         {

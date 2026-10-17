@@ -1,5 +1,19 @@
 # Ranked production-code regression
 
+`LifecycleRegression.cs` also executes the production online result exit, auto-return,
+round-loop guards and world-entity registry. Hotzone open/resolve/progress methods and
+their message handlers are extracted verbatim from production; physics scoring, terrain
+meshes and monster rendering are controlled boundaries. It verifies dedicated-server
+authority, client objective/monster presentation, stale-event rejection, reward-commit
+gating, retained host/guest parties and repeated 2–4 friend searches without the former
+Relay connection. Guest join receipts and cancellation use the surviving Unity session.
+The full online-party and Edgegap-flow classes are compiled unmodified.
+
+The world registry case verifies one scan across 19 chunks in the same frame, discovering
+a newly spawned entity in that frame and rejecting stale round packets before scanning.
+These checks run in the existing ranked CI job; they do not prove native frame time,
+Unity package compatibility, real service propagation, or Android/Edgegap end-to-end play.
+
 The invitation/lobby audit adds production co-op/online service and Edgegap-flow execution, plus the actual online menu-entry method extracted verbatim. `LobbyServiceStubs.cs` supplies controlled Unity Services sessions, and `LobbyRegression.cs` tests invitation codes, room capacity, readiness/staging, guest departure, cancellation, late HTTP responses, roster changes and Relay/dedicated transitions. Local result: **1,839 checks passed on .NET 8**. See `Docs/Invitations-Matchmaking-Audit-2026-10-16.md` for scope and live-test limits.
 
 The runner compiles production offline, co-op, Ranked, roster, handshake and UI classes against

@@ -27,13 +27,21 @@ namespace Alterverse.Match
         }
         void Update()
         {
+            if (DedicatedServerNetworkRuntime.Requested) return;
             if (MatchExit.Leaving || MainMenuController.IsVisible) { trackedFront = null; restartAt = -1; return; }
-            if (restarting || CoopAuthority.Active) return;
+            if (restarting) return;
+            if (CoopAuthority.Active && !NetworkRoundLoop.OnlineReturnsToLobby) return;
+            // Dedicated servers have no local reward receipt or party to return to.
+            if (CoopAuthority.Active && CoopRosterBuilder.FindLocalHumanSlot(CoopAuthority.ActivePlan) < 0) return;
             var current = FindAnyObjectByType<DimensionsFront>();
             if (current != trackedFront) { trackedFront = current; restartAt = -1; }
             if (trackedFront == null || !trackedFront.HasEnded || MatchScoreboard.Instance == null || !MatchScoreboard.Instance.ResultCommitted) return;
             if (restartAt < 0) restartAt = Time.unscaledTime + 12;
-            if (Time.unscaledTime >= restartAt) StartCoroutine(RestartLocal());
+            if (Time.unscaledTime >= restartAt)
+            {
+                if (CoopAuthority.Active) _ = MatchExit.ReturnToOnlineLobbyAsync();
+                else StartCoroutine(RestartLocal());
+            }
         }
         IEnumerator RestartLocal()
         {
@@ -57,8 +65,8 @@ namespace Alterverse.Match
             if (CoopAuthority.Active)
             {
                 var loop = NetworkRoundLoop.Instance;
-                text = CoopAuthority.ActivePlan?.Session?.Mode == SessionMode.OnlineRanked
-                    ? "RANKED COMPLETE • BACK TO MENU"
+                text = NetworkRoundLoop.OnlineReturnsToLobby
+                    ? restartAt < 0 ? "FINALIZING REWARDS…" : "BACK TO PARTY IN " + Mathf.Max(0, Mathf.CeilToInt(restartAt - Time.unscaledTime))
                     : loop != null && loop.Seconds >= 0 ? "NEXT ROUND IN " + loop.Seconds : loop?.Status ?? "WAITING FOR TEAM…";
             }
             else text = restartAt < 0 ? "FINALIZING REWARDS…" : "NEXT ROUND IN " + Mathf.Max(0, Mathf.CeilToInt(restartAt - Time.unscaledTime));

@@ -5,15 +5,15 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 namespace UnityEngine {
- public class Object { public static void Destroy(Object o){} public static void DontDestroyOnLoad(Object o){} public static T FindAnyObjectByType<T>() where T:class=>null; }
- public class MonoBehaviour:Object { public GameObject gameObject=new GameObject(); public bool isActiveAndEnabled=true; public void StartCoroutine(IEnumerator e){} public void StopAllCoroutines(){} }
+ public class Object { public static void Destroy(Object o){if(o is GameObject g)GameObject.All.Remove(g);} public static void DontDestroyOnLoad(Object o){} public static readonly Dictionary<Type,object> Found=new(); public static T FindAnyObjectByType<T>() where T:class=>Found.TryGetValue(typeof(T),out var o)?o as T:null; }
+ public class MonoBehaviour:Object { public GameObject gameObject=new GameObject(); public T GetComponent<T>() where T:class=>gameObject.GetComponent<T>();public bool isActiveAndEnabled=true;public Transform transform=>gameObject.transform; public void StartCoroutine(IEnumerator e){} public void StopAllCoroutines(){} }
  public class GameObject:Object {
   public static readonly List<GameObject> All=new();public string name;public Transform transform=new();readonly Dictionary<Type,object> components=new();
-  public GameObject(string n=""){name=n;All.Add(this);}public static GameObject Find(string n)=>All.Find(g=>g.name==n);
+  public bool activeSelf=true;public void SetActive(bool active){activeSelf=active;}public GameObject(string n=""){name=n;All.Add(this);}public static GameObject Find(string n)=>All.Find(g=>g.name==n);
   public T GetComponent<T>() where T:class=>components.TryGetValue(typeof(T),out var o)?o as T:null;
   public T AddComponent<T>() where T:new(){var o=new T();components[typeof(T)]=o;if(o is MonoBehaviour b)b.gameObject=this;typeof(T).GetMethod("Awake",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic)?.Invoke(o,null);return o;}
  }
- public class Transform {public Vector3 position,localScale;public void SetParent(Transform t,bool world){}}
+ public class Transform {public Vector3 position,localScale,eulerAngles;public void SetParent(Transform t,bool world){}}
  public class CapsuleCollider {public float height,radius;}
  public class SerializeField:Attribute {}
  public static class Random {public static int Range(int min,int max)=>min;}
@@ -47,17 +47,17 @@ namespace UnityEngine {
  }
  public class DefaultExecutionOrder:Attribute {public DefaultExecutionOrder(int n){}}
  public class RuntimeInitializeOnLoadMethodAttribute:Attribute {public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType t){}}
- public enum RuntimeInitializeLoadType {BeforeSceneLoad,AfterSceneLoad}
- public static class Time {public static float unscaledTime,realtimeSinceStartup;}
+ public enum RuntimeInitializeLoadType {BeforeSceneLoad,AfterSceneLoad,SubsystemRegistration}
+ public static class Time {public static int frameCount;public static float unscaledTime,realtimeSinceStartup,deltaTime,timeScale=1f;}
  public static class Debug {public static readonly List<string> Messages=new();public static void Log(object o){Messages.Add(o?.ToString()??"");}public static void LogWarning(object o){Log(o);}public static void LogError(object o){Log(o);}}
- public static class Mathf {public static int Clamp(int n,int lo,int hi)=>Math.Max(lo,Math.Min(hi,n));public static int Max(int a,int b)=>Math.Max(a,b);public static float Max(float a,float b)=>Math.Max(a,b);public static int Min(int a,int b)=>Math.Min(a,b);public static float Min(float a,float b)=>Math.Min(a,b);public static float Clamp01(float a)=>Math.Max(0,Math.Min(1,a));}
+ public static class Mathf {public static int CeilToInt(float v)=>(int)Math.Ceiling(v);public static float Clamp(float v,float lo,float hi)=>Math.Max(lo,Math.Min(hi,v));public static int Clamp(int n,int lo,int hi)=>Math.Max(lo,Math.Min(hi,n));public static int Max(int a,int b)=>Math.Max(a,b);public static float Max(float a,float b)=>Math.Max(a,b);public static int Min(int a,int b)=>Math.Min(a,b);public static float Min(float a,float b)=>Math.Min(a,b);public static float Clamp01(float a)=>Math.Max(0,Math.Min(1,a));}
  public struct Vector2 {}
  public struct Vector3 {public float x,y,z;public Vector3(float x,float y,float z){this.x=x;this.y=y;this.z=z;}public static Vector3 one=>new(); public static Vector3 operator*(Vector3 v,float f)=>v;}
  public struct Quaternion {public static Quaternion identity=>new();}
  public struct Matrix4x4 {public static Matrix4x4 TRS(Vector3 v,Quaternion q,Vector3 s)=>new();}
  public struct Rect {public float x,y,width,height;public float yMax=>y+height; public Rect(float x,float y,float w,float h){this.x=x;this.y=y;width=w;height=h;}}
  public static class Screen {public static Rect safeArea=>new(0,0,1280,720);public static int height=720;}
- public class GUIStyle {}
+ public enum TextAnchor {MiddleCenter}public enum FontStyle {Bold}public class GUIStyle {public GUIStyle(){}public GUIStyle(GUIStyle o){}public TextAnchor alignment;public FontStyle fontStyle;}
  public static class GUI {public static Matrix4x4 matrix;public static int depth;public static Vector2 BeginScrollView(Rect r,Vector2 s,Rect inner)=>s;public static void EndScrollView(){}}
 }
 namespace UnityEngine.Networking {
@@ -77,11 +77,11 @@ namespace Unity.Collections {
  public struct FixedString4096Bytes {string s;public FixedString4096Bytes(string v){s=v;}public override string ToString()=>s;}
 }
 namespace Unity.Netcode {
- public enum NetworkDelivery {ReliableSequenced}
- public class FastBufferWriter:IDisposable {public FastBufferWriter(int n,Unity.Collections.Allocator a){}public void WriteValueSafe<T>(T v){}public void Dispose(){}}
+ public enum NetworkDelivery {ReliableSequenced,UnreliableSequenced}
+ public class FastBufferWriter:IDisposable {public readonly List<object> Values=new();public FastBufferWriter(int n,Unity.Collections.Allocator a){}public void WriteValueSafe<T>(T v){Values.Add(v);}public void Dispose(){}}
  public class FastBufferReader {readonly Queue<object> values;public FastBufferReader(params object[] data){values=new(data);}public bool TryBeginRead(int n)=>true;public void ReadValueSafe<T>(out T v){v=values.Count>0?(T)values.Dequeue():default;}}
- public class CustomMessagingManager {public void RegisterNamedMessageHandler(string n,Action<ulong,FastBufferReader> a){}public void UnregisterNamedMessageHandler(string n){}public void SendNamedMessage(string n,ulong id,FastBufferWriter w,NetworkDelivery d){}}
- public class NetworkManager {public static NetworkManager Singleton;public const ulong ServerClientId=0;public bool IsServer,IsClient,IsHost,IsListening,IsConnectedClient;public List<ulong> ConnectedClientsIds=new();public CustomMessagingManager CustomMessagingManager=new();public void DisconnectClient(ulong i){ConnectedClientsIds.Remove(i);}}
+ public class CustomMessagingManager {public readonly List<(string Name,ulong Id,object[] Values)> Sent=new();public void RegisterNamedMessageHandler(string n,Action<ulong,FastBufferReader> a){}public void UnregisterNamedMessageHandler(string n){}public void SendNamedMessage(string n,ulong id,FastBufferWriter w,NetworkDelivery d){Sent.Add((n,id,w.Values.ToArray()));}}
+ public class NetworkManager {public static NetworkManager Singleton;public const ulong ServerClientId=0;public class Clock {public double Time;}public Clock ServerTime=new();public ulong LocalClientId=1;public event Action<ulong> OnClientDisconnectCallback;public bool IsServer,IsClient,IsHost,IsListening,IsConnectedClient;public List<ulong> ConnectedClientsIds=new();public CustomMessagingManager CustomMessagingManager=new();public void DisconnectClient(ulong i){ConnectedClientsIds.Remove(i);}}
 }
 namespace Alterverse.AI {public enum BotDifficulty {Easy,Medium,Hard} public static class BotDifficultySettings {public const BotDifficulty OnlineDifficulty=BotDifficulty.Hard;public static BotDifficulty Selected;public static BotDifficulty Clamp(BotDifficulty b)=>b;public static BotDifficulty Cycle(BotDifficulty b,int n)=>b;public static string Label(BotDifficulty b)=>b.ToString();}}
 namespace Alterverse.Characters {public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok}public static class PlayerHeroSelection {public static HeroId Selected;public static bool Select(HeroId h){Selected=h;return true;}}
@@ -89,22 +89,22 @@ namespace Alterverse.Characters {public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,
  public class HeroCombatProfile:MonoBehaviour {public float Health=100;public void Configure(HeroId h){}}
  public class HeroAbilityKit:MonoBehaviour {public void Configure(HeroId h){}}
 }
-namespace Alterverse.Combat {public class Health:MonoBehaviour {public void Configure(float n){}}public class CombatFeedback:MonoBehaviour {}}
+namespace Alterverse.Combat {public class Health:MonoBehaviour {public static readonly List<Health> Active=new();public static int Lookups;public new T GetComponent<T>() where T:class{Lookups++;return gameObject.GetComponent<T>();}public float Current,Shield;public bool IsDead;public void Configure(float n){}public void ApplyNetworkSnapshot(float hp,float shield,bool dead){Current=hp;Shield=shield;IsDead=dead;}}public class CombatFeedback:MonoBehaviour {}}
 namespace Alterverse.Visuals {public class StylizedHeroVisual:MonoBehaviour {public void Build(){}}}
 namespace Alterverse.AI {
  public class BotPersonality:MonoBehaviour {public enum Style {One,Two,Three,Four,Five,Six}public float Aggression,Caution;public void Configure(Style s){}}
  public class BotTargetSensor:MonoBehaviour {}public class MobaBotBrain:MonoBehaviour {public void Initialize(int t,float f,float a,float c){}public void RefreshPersonality(){}}
  public class BotLanePlan:MonoBehaviour {public void Initialize(int t,float f){}}public class MobaBotMover:MonoBehaviour {}public class MobaBotCombat:MonoBehaviour {}public class HeroBotAbilities:MonoBehaviour {}public class MobaBotRespawn:MonoBehaviour {}
 }
-namespace Alterverse.Match {public enum ArenaVariant{Moon,Earth}public static class ArenaVariantRuntime {public static ArenaVariant Selected;public static bool ShuffleEnabled;public static ArenaVariant RandomOwnedArena(ArenaVariant a)=>a;}public class DimensionsFront {public event Action<int> MatchEnded;}public static class MatchExit {public static Task ReturnToMenuAsync()=>Task.CompletedTask;}}
+namespace Alterverse.Match {public enum ArenaVariant{Moon,Earth}public static class ArenaVariantRuntime {public static ArenaVariant Selected;public static bool ShuffleEnabled;public static ArenaVariant RandomOwnedArena(ArenaVariant a)=>a;}public class DimensionsFront {public bool HasEnded;public event Action<int> MatchEnded;}}
 namespace Alterverse.Profile {public enum BattleItemType{None,Shield}public static class BattleItemInventory {public static BattleItemType Equipped;}public class AccountServerBootstrap {public static AccountServerBootstrap Instance;public Task<bool> EnsureAuthenticatedAsync()=>Task.FromResult(true);}}
-namespace Alterverse.UI {public sealed partial class MainMenuController {public static bool IsVisible=true;public static void ShowCoopAfterMatch(string s){}public bool launching,choosingMatchMode;public string launchMessage;bool PrepareSelectedMatch()=>true;}public class FrontEndTheme {public static object Background;public GUIStyle Title=new(),Heading=new(),Body=new(),Small=new();public static void Fill(UnityEngine.Rect r,object c){}public void Panel(UnityEngine.Rect r){}public void Label(UnityEngine.Rect r,string s,GUIStyleShim t,bool muted=false){}public void Label(UnityEngine.Rect r,string s,UnityEngine.GUIStyle t,bool muted=false){}public bool Action(UnityEngine.Rect r,string s,bool primary=false,bool enabled=true)=>false;} public class GUIStyleShim {} }
+namespace Alterverse.UI {public sealed partial class MainMenuController {public static bool IsVisible=true;public static int PartyReturns,HomeReturns;public static void ShowCoopAfterMatch(string s){PartyReturns++;IsVisible=true;}public static void ShowHome(){HomeReturns++;IsVisible=true;}public static void ShowLaunchFailure(string s){}public bool launching,choosingMatchMode;public string launchMessage;bool PrepareSelectedMatch()=>true;}public class FrontEndTheme {public static object Background,Surface;public GUIStyle Title=new(),Heading=new(),Body=new(),Small=new();public static void Fill(UnityEngine.Rect r,object c){}public void Panel(UnityEngine.Rect r){}public void Label(UnityEngine.Rect r,string s,GUIStyleShim t,bool muted=false){}public void Label(UnityEngine.Rect r,string s,UnityEngine.GUIStyle t,bool muted=false){}public bool Action(UnityEngine.Rect r,string s,bool primary=false,bool enabled=true)=>false;} public class GUIStyleShim {} }
 namespace Alterverse.Multiplayer {
- public static class CoopAuthority {public static bool Active;public static CoopMatchPlan PreparedPlan,ActivePlan;public static bool BeginPreparedMatch(bool b)=>true;public static void Prepare(CoopMatchPlan p){PreparedPlan=p;}public static void ClearPrepared(){PreparedPlan=null;}public static void EndMatch(){}}
- public static class CoopRosterBuilder {public static int FindLocalHumanSlot(CoopMatchPlan p)=>0;}
+ public static class CoopAuthority {public static bool Active,LocalIsHost,LocalHasServerAuthority;public static bool CanSimulateHostGameplay=>!Active||LocalHasServerAuthority;public static CoopMatchPlan PreparedPlan,ActivePlan;public static bool BeginPreparedMatch(bool b)=>true;public static void Prepare(CoopMatchPlan p){PreparedPlan=p;}public static void ClearPrepared(){PreparedPlan=null;}public static void EndMatch(){Active=false;ActivePlan=PreparedPlan=null;}}
+ public static class CoopRosterBuilder {public static int LocalSlot;public static int FindLocalHumanSlot(CoopMatchPlan p)=>LocalSlot;}
  public static class DedicatedServerNetworkRuntime {public static bool Requested;public static void ReleaseMatchBootstrap(){}}
  public static class EdgegapInjectedMatchContext {public static bool IsEdgegapDeployment;public static int AssignedTicketCount;public static string InjectedMatchId;public static bool TryValidateTicket(string t,string c,string m,out string team,out string match,out string reason){team=c;match=m;reason="";return true;}}
- public static class CoopNetworkBootstrap {public static Unity.Netcode.NetworkManager Manager;public static string DirectServerStatus="";public static bool IsListening=>Manager?.IsListening==true;public static bool IsLinkReadyForPlayers(int n)=>Manager?.IsListening==true&&(Manager.IsHost?Manager.ConnectedClientsIds.Count>=n:Manager.IsConnectedClient);public static string LinkStateForPlayers(int n)=>"CONNECTED";public static void ShutdownLocalNetwork(){}public static int Connects,Cancels;public static bool ConnectToDedicatedServer(string s,ushort p){Connects++;return true;}public static void CancelDedicatedConnection(){Cancels++;}}
+ public static class CoopNetworkBootstrap {public static Unity.Netcode.NetworkManager Manager;public static string DirectServerStatus="";public static bool IsListening=>Manager?.IsListening==true;public static bool IsLinkReadyForPlayers(int n)=>Manager?.IsListening==true&&(Manager.IsHost?Manager.ConnectedClientsIds.Count>=n:Manager.IsConnectedClient);public static string LinkStateForPlayers(int n)=>"CONNECTED";public static int Shutdowns;public static void ShutdownLocalNetwork(){Shutdowns++;if(Manager!=null)Manager.IsListening=false;}public static int Connects,Cancels;public static bool ConnectToDedicatedServer(string s,ushort p){Connects++;return true;}public static void CancelDedicatedConnection(){Cancels++;}}
  public static class OnlineMatchRuntime {public static bool Enter(OnlineMatchPlan p)=>true;}
 }
 

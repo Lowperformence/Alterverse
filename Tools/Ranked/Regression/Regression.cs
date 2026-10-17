@@ -10,6 +10,7 @@ partial class Regression {
  static void Rejected(Action a,string message){bool rejected=false;try{a();}catch(InvalidOperationException){rejected=true;}Check(rejected,message);}
  static void Main(){
   LobbyCases().GetAwaiter().GetResult();
+  LifecycleCases().GetAwaiter().GetResult();
   IdentityCases();
   TeamFormatCases();
   FingerprintCases();

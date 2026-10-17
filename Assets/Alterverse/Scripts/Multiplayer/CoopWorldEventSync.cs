@@ -18,6 +18,7 @@ namespace Alterverse.Multiplayer
         private const string MonsterLaserMessage="DF_COOP_MONSTER_LASER_V1";
         private const string HotOpenMessage="DF_COOP_HOT_OPEN_V2";
         private const string HotResolveMessage="DF_COOP_HOT_RESOLVE_V2";
+        private const string HotProgressMessage="DF_COOP_HOT_PROGRESS_V1";
         private const string PlanetMessage="DF_COOP_PLANET_V2";
         private const string BomberMessage="DF_COOP_BOMBER_V2";
         private const string PlanetMeteorMessage="DF_COOP_PLANET_METEOR_V2";
@@ -50,6 +51,7 @@ namespace Alterverse.Multiplayer
             if(eventsBound)return;
             HotZoneDirector.NetworkZoneOpened+=OnHostHotOpened;
             HotZoneDirector.NetworkZoneResolved+=OnHostHotResolved;
+            HotZoneDirector.NetworkZoneProgress+=OnHostHotProgress;
             DimensionPlanetDirector.NetworkPlanetSpawned+=OnHostPlanetSpawned;
             SpaceBomberDirector.NetworkFlyoverSpawned+=OnHostBomberSpawned;
             PlanetMeteorShower.NetworkMeteorSpawned+=OnHostPlanetMeteor;
@@ -72,6 +74,7 @@ namespace Alterverse.Multiplayer
             if(!eventsBound)return;
             HotZoneDirector.NetworkZoneOpened-=OnHostHotOpened;
             HotZoneDirector.NetworkZoneResolved-=OnHostHotResolved;
+            HotZoneDirector.NetworkZoneProgress-=OnHostHotProgress;
             DimensionPlanetDirector.NetworkPlanetSpawned-=OnHostPlanetSpawned;
             SpaceBomberDirector.NetworkFlyoverSpawned-=OnHostBomberSpawned;
             PlanetMeteorShower.NetworkMeteorSpawned-=OnHostPlanetMeteor;
@@ -235,6 +238,16 @@ namespace Alterverse.Multiplayer
             SendAll(HotResolveMessage,writer);
         }
 
+        private void OnHostHotProgress(int occurrence,float active,float zero,float lumen,int zeroInside,int lumenInside)
+        {
+            if(!CanBroadcast())return;
+            using FastBufferWriter writer=new(40,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            writer.WriteValueSafe(occurrence);writer.WriteValueSafe(active);writer.WriteValueSafe(zero);writer.WriteValueSafe(lumen);
+            writer.WriteValueSafe(zeroInside);writer.WriteValueSafe(lumenInside);
+            SendAll(HotProgressMessage,writer);
+        }
+
         private void OnHostPlanetSpawned(int variant)
         {
             if(!CanBroadcast())return;
@@ -378,6 +391,15 @@ namespace Alterverse.Multiplayer
             FindAnyObjectByType<HotZoneDirector>()?.ApplyNetworkResolve(winner,zero,lumen,occurrence);
         }
 
+        private void OnHotProgress(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
+            reader.ReadValueSafe(out int occurrence);reader.ReadValueSafe(out float active);
+            reader.ReadValueSafe(out float zero);reader.ReadValueSafe(out float lumen);
+            reader.ReadValueSafe(out int zeroInside);reader.ReadValueSafe(out int lumenInside);
+            FindAnyObjectByType<HotZoneDirector>()?.ApplyNetworkProgress(occurrence,active,zero,lumen,zeroInside,lumenInside);
+        }
+
         private void OnPlanet(ulong sender,FastBufferReader reader)
         {
             if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
@@ -482,6 +504,7 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(MonsterLaserMessage,OnMonsterLaserMessage);
             messaging.RegisterNamedMessageHandler(HotOpenMessage,OnHotOpen);
             messaging.RegisterNamedMessageHandler(HotResolveMessage,OnHotResolve);
+            messaging.RegisterNamedMessageHandler(HotProgressMessage,OnHotProgress);
             messaging.RegisterNamedMessageHandler(PlanetMessage,OnPlanet);
             messaging.RegisterNamedMessageHandler(BomberMessage,OnBomber);
             messaging.RegisterNamedMessageHandler(PlanetMeteorMessage,OnPlanetMeteor);
@@ -504,6 +527,7 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(MonsterLaserMessage);
             messaging.UnregisterNamedMessageHandler(HotOpenMessage);
             messaging.UnregisterNamedMessageHandler(HotResolveMessage);
+            messaging.UnregisterNamedMessageHandler(HotProgressMessage);
             messaging.UnregisterNamedMessageHandler(PlanetMessage);
             messaging.UnregisterNamedMessageHandler(BomberMessage);
             messaging.UnregisterNamedMessageHandler(PlanetMeteorMessage);

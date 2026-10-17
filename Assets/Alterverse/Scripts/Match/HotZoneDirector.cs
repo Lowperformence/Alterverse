@@ -39,6 +39,7 @@ namespace Alterverse.Match
         private bool rewardIssued,openingAnnounced;
         private int occurrence;
         private float elapsed,nextOpenAt=SpawnInterval,activeElapsed,zeroTime,lumenTime,nextScan;
+        private float nextNetworkProgress;
         private int zeroInside,lumenInside;
         private GameObject zoneRoot;
         private Mesh outerRingMesh,innerRingMesh;
@@ -54,6 +55,7 @@ namespace Alterverse.Match
         public static event System.Action<int,float,float> HotZoneResolved;
         public static event System.Action<Vector3,int> NetworkZoneOpened;
         public static event System.Action<int,float,float,int> NetworkZoneResolved;
+        public static event System.Action<int,float,float,float,int,int> NetworkZoneProgress;
 
         public int Occurrence=>occurrence+1;
         public float ZeroControlSeconds=>zeroTime;
@@ -80,7 +82,11 @@ namespace Alterverse.Match
         {
             if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)
             {
-                if(state==State.Active&&Time.timeScale>0f)AnimateZone();
+                if(Time.timeScale>0f)
+                {
+                    elapsed+=Time.deltaTime;
+                    if(state==State.Active){activeElapsed+=Time.deltaTime;AnimateZone();}
+                }
                 return;
             }
             if(Time.timeScale<=0f||state==State.Finished)return;
@@ -106,6 +112,11 @@ namespace Alterverse.Match
             Vector2 scoreDelta=ScoreDelta(zeroInside,lumenInside,Time.deltaTime);
             zeroTime+=scoreDelta.x;
             lumenTime+=scoreDelta.y;
+            if(Alterverse.Multiplayer.CoopAuthority.Active&&Time.unscaledTime>=nextNetworkProgress)
+            {
+                nextNetworkProgress=Time.unscaledTime+.5f;
+                NetworkZoneProgress?.Invoke(occurrence,activeElapsed,zeroTime,lumenTime,zeroInside,lumenInside);
+            }
 
             AnimateZone();
             if(activeElapsed>=ActiveDuration)Resolve();
@@ -119,7 +130,7 @@ namespace Alterverse.Match
             transform.position=ChooseSpawnPosition();
             BuildZoneVisual();
             HotZoneOpened?.Invoke();
-            if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+            if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)
                 NetworkZoneOpened?.Invoke(transform.position,occurrence);
         }
 
@@ -251,7 +262,7 @@ namespace Alterverse.Match
                 rewardIssued=HotZoneTank.Spawn(winner);
 
             HotZoneResolved?.Invoke(winner,zeroTime,lumenTime);
-            if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+            if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)
                 NetworkZoneResolved?.Invoke(winner,zeroTime,lumenTime,occurrence);
             DestroyZoneVisual(1.2f);
 
@@ -290,6 +301,7 @@ namespace Alterverse.Match
         public void ApplyNetworkOpen(Vector3 position,int occurrenceIndex)
         {
             if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
+            if(occurrenceIndex<occurrence||state==State.Active&&occurrenceIndex==occurrence)return;
             occurrence=Mathf.Max(0,occurrenceIndex);
             state=State.Active;
             rewardIssued=false;
@@ -302,6 +314,7 @@ namespace Alterverse.Match
         public void ApplyNetworkResolve(int winner,float zeroScore,float lumenScore,int occurrenceIndex)
         {
             if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
+            if(occurrenceIndex<occurrence)return;
             occurrence=Mathf.Max(0,occurrenceIndex);
             zeroTime=Mathf.Max(0,zeroScore);lumenTime=Mathf.Max(0,lumenScore);
             rewardIssued=winner>=0;
@@ -314,6 +327,15 @@ namespace Alterverse.Match
             zeroInside=lumenInside=0;
             occurrence++;
             state=State.Waiting;
+            nextOpenAt=elapsed+SpawnInterval-ActiveDuration;
+        }
+
+        public void ApplyNetworkProgress(int occurrenceIndex,float activeSeconds,float zeroScore,float lumenScore,int zeroCount,int lumenCount)
+        {
+            if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay||state!=State.Active||occurrenceIndex!=occurrence)return;
+            activeElapsed=Mathf.Clamp(activeSeconds,0f,ActiveDuration);
+            zeroTime=Mathf.Max(0f,zeroScore);lumenTime=Mathf.Max(0f,lumenScore);
+            zeroInside=Mathf.Clamp(zeroCount,0,MaxScoringHeroesPerTeam);lumenInside=Mathf.Clamp(lumenCount,0,MaxScoringHeroesPerTeam);
         }
 
         private void ResolveNoReward()
@@ -324,6 +346,9 @@ namespace Alterverse.Match
 
         private void BuildZoneVisual()
         {
+            // The headless server owns capture/rewards but does not render the two
+            // terrain-conforming meshes or their materials.
+            if(Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested)return;
             if(zoneMaterial==null)
                 zoneMaterial=RuntimeShaderLibrary.CreateGroundTelegraph(HotZoneGreen,0f,RingAlpha,.055f);
             if(zoneMaterial==null)return;
