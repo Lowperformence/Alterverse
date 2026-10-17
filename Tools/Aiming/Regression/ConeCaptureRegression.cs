@@ -39,7 +39,7 @@ partial class Regression
    Near(material.Floats[Shader.PropertyToID("_Opacity")],.5625f,"requested transparency preserved "+hero+slot);
    Check(aim.Release(),"edge release casts "+hero+slot);Call(overlay,"LateUpdate");Check(!surfaces[0].activeSelf,"release removes cone "+hero+slot);
    Run(1);Near(1000-Total(enemy),HeroAbilityKit.LoadoutFor(hero).Spec(slot).Power*(hero==HeroId.Rook?1.05f:1f),"stationary cone edge connects "+hero+slot);
-   Reset();actor=Hero(hero,0,Vector3.zero);enemy=Hero(HeroId.Kaelon,1,Angle(spec.coneAngle*.5f+2,2));
+   Reset();actor=Hero(hero,0,Vector3.zero);enemy=Hero(HeroId.Kaelon,1,Angle(spec.coneAngle*.5f+25,2));
    aim=ManualAiming.For(actor);aim.Begin(slot,new Vector2(700,100));aim.Drag(new Vector2(700,196),1,false);
    Check(actor.GetComponent<SoftTargeting>().Current==null&&!aim.Pose.HasAimPoint,"outside cone never captured "+hero+slot);
    Check(aim.Release(),"empty cone permits free cast "+hero+slot);Run(1);Near(Total(enemy),1000,"outside cone misses "+hero+slot);
