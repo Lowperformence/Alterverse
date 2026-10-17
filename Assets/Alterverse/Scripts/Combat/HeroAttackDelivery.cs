@@ -324,6 +324,7 @@ namespace Alterverse.Combat
                 if (!p.Active) continue;
                 if (!p.Basic && (p.Execution == null || !p.Execution.isActiveAndEnabled)) { pending[i] = default; continue; }
                 bool automatic = AutomaticBasic(p);
+                bool justLaunched = false;
                 if (automatic && !HeroCombatRules.Enemy(gameObject, p.Target))
                 { pending[i] = default; HeroVfxPool.CancelDelivery(p.VisualId); continue; }
                 if (!p.Launched)
@@ -333,7 +334,8 @@ namespace Alterverse.Combat
                     // The manually directed cone remains fixed in world space. Targets are
                     // checked as bodies ENTER the cone for the entire active strike/flight;
                     // a single captured point must never narrow or redirect its hitbox.
-                    p.Launched = true; p.LaunchOrigin = transform.position; p.Position = p.LaunchOrigin; p.SampleTime = Time.time;
+                    p.Launched = true; justLaunched = true;
+                    p.LaunchOrigin = transform.position; p.Position = p.LaunchOrigin; p.SampleTime = Time.time;
                     if (automatic)
                     {
                         p.Point = p.Target.transform.position;
@@ -379,15 +381,10 @@ namespace Alterverse.Combat
                         automatic ? p.FlightDuration : Mathf.Max(.01f, length / p.Spec.projectileSpeed));
                     if (LiveCone(p))
                     {
+                        // Projectile collision begins on the flight update, not at the
+                        // exact launch instant. Cover can still interrupt the shot
+                        // before a distant body is resolved.
                         p.ConeUntil = Time.time + Mathf.Max(.08f, length / p.Spec.projectileSpeed);
-                        Health entered = ConeContact(p);
-                        if (entered != null)
-                        {
-                            pending[i] = default;
-                            HeroVfxPool.CancelDelivery(p.VisualId);
-                            Impact(p, entered);
-                            continue;
-                        }
                     }
                 }
                 if (LiveCone(p))
@@ -398,7 +395,7 @@ namespace Alterverse.Combat
                         HeroVfxPool.CancelDelivery(p.VisualId);
                         continue;
                     }
-                    Health entrant = ConeContact(p);
+                    Health entrant = justLaunched ? null : ConeContact(p);
                     if (entrant != null)
                     {
                         pending[i] = default;
