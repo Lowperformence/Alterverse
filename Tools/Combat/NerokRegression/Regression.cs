@@ -74,7 +74,7 @@ class Regression
     {
         foreach(int fps in new[]{30,60,120})
         {
-            Reset();var actor=Hero(HeroId.Nerok,0,Vector3.zero);var target=Hero(HeroId.Kaelon,1,new Vector3(3,0,4));
+            Reset();var actor=Hero(HeroId.Nerok,0,Vector3.zero);var target=Hero(HeroId.Kaelon,1,new Vector3(5,0,4));
             // The flight at x=0 is clear; the target's centre sightline clips cover.
             Wall(new Vector3(.35f,.5f,2),new Vector3(.25f,2,.2f));
             var aim=ManualAiming.For(actor);aim.Begin(0,Vector2.zero);
