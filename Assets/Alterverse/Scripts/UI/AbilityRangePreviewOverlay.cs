@@ -19,7 +19,19 @@ namespace Alterverse.UI
         {
             shown = 0;
             aiming = aiming != null ? aiming : GetComponent<ManualAiming>();
-            if (aiming == null || !aiming.Active || aiming.Slot > 3 || aiming.Cancelled) { Hide(); return; }
+            if (aiming == null || !aiming.Active || aiming.Slot > 3 || aiming.Cancelled)
+            {
+                HeroAttackDelivery delivery = GetComponent<HeroAttackDelivery>();
+                if (delivery != null && delivery.TryActiveCone(out Vector3 activeOrigin,
+                    out Vector3 activeDirection, out AimSpec activeSpec))
+                {
+                    Show(0, activeOrigin, activeDirection, activeSpec.castRange, 1,
+                        activeSpec, AimingSettings.Current.previewColor);
+                    if (surfaces[1] != null) surfaces[1].SetActive(false);
+                }
+                else Hide();
+                return;
+            }
             AimSpec spec = aiming.Spec; AimPose pose = aiming.Pose;
             // Self-only abilities have no target geometry. Area effects still show their radius.
             if (spec.aimType == AimType.Self) { Hide(); return; }
@@ -33,17 +45,6 @@ namespace Alterverse.UI
             }
             else if (spec.aimType == AimType.SelfArea)
                 Show(0, origin, pose.Direction, Mathf.Max(.7f, spec.aoeRadius), 0, spec, color);
-            else if (aiming.Slot == 0 && spec.aimType == AimType.Projectile &&
-                GetComponent<HeroIdentity>()?.Hero == HeroId.Nerok)
-            {
-                // The cone chooses one point. The anchor itself only hits along this narrow
-                // path, which may turn toward that point and stop at a body or real cover.
-                Color selection = color; selection.a *= .5f;
-                Show(0, origin, pose.Direction, spec.castRange, 1, spec, selection);
-                Vector3 end = HeroAttackDelivery.For(gameObject).PreviewProjectileEnd(pose, spec);
-                Color flight = color; flight.a = Mathf.Min(1f, color.a + .25f);
-                Show(1, origin, pose.CastDirection(origin), HeroCombatRules.Distance(origin, end), 2, spec, flight);
-            }
             else
             {
                 Show(0, origin, pose.Direction, spec.castRange, spec.aimType == AimType.Dash && spec.targetingMode != TargetingMode.Cone ? 2 : 1, spec, color);

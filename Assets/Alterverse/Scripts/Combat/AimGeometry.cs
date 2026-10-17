@@ -21,6 +21,72 @@ namespace Alterverse.Combat
                 (delta.sqrMagnitude < .000001f || Vector3.Dot(Direction(direction), delta.normalized) >= Mathf.Cos(angle * .5f * Mathf.Deg2Rad));
         }
 
+        // The visible ground cone is the gameplay region. A target's physical body can
+        // overlap its edge even when its pivot lies just outside the preview.
+        public static float BodyRadius(Health target)
+        {
+            HeroIdentity hero = target.GetComponent<HeroIdentity>();
+            if (hero != null)
+                return hero.Hero == HeroId.Timmy ? TimmyBalance.CollisionRadius : HeroIdentity.HeroCollisionRadius;
+            Collider collider = target.GetComponent<Collider>() ?? target.GetComponentInChildren<Collider>();
+            if (collider != null && collider.enabled)
+                return Mathf.Max(.25f, Mathf.Max(collider.bounds.extents.x, collider.bounds.extents.z));
+            return target.GetComponent<LaneMinion>() != null ? .35f : .4f;
+        }
+
+        public static bool ConeCircle(Vector3 origin, Vector3 direction, Vector3 point,
+            float range, float angle, float bodyRadius)
+        {
+            Vector3 delta = Flat(point - origin);
+            float distance = delta.magnitude, radius = Mathf.Max(0f, bodyRadius);
+            if (distance <= radius) return true;
+            if (distance > range + radius) return false;
+
+            Vector3 forward = Direction(direction);
+            float half = Mathf.Clamp(angle * .5f, 0f, 90f) * Mathf.Deg2Rad;
+            float cosine = Mathf.Cos(half), sine = Mathf.Sin(half);
+            if (Vector3.Dot(forward, delta) >= cosine * distance)
+                return true;
+
+            Vector3 side = new Vector3(-forward.z, 0f, forward.x);
+            Vector3 left = forward * cosine + side * sine;
+            Vector3 right = forward * cosine - side * sine;
+            Vector3 l = delta - left * Mathf.Clamp(Vector3.Dot(delta, left), 0f, range);
+            Vector3 r = delta - right * Mathf.Clamp(Vector3.Dot(delta, right), 0f, range);
+            return Mathf.Min(l.sqrMagnitude, r.sqrMagnitude) <= radius * radius;
+        }
+
+        // Movement is swept through the wedge, not sampled at the release instant.
+        // Adaptive substeps are normally one per frame; faster dashes add samples so
+        // a body cannot cross the narrow cone without occupying its hit region.
+        public static bool SweptConeCircle(Vector3 origin, Vector3 direction,
+            Vector3 previous, Vector3 current, float range, float angle, float radius)
+        {
+            if (ConeCircle(origin, direction, previous, range, angle, radius) ||
+                ConeCircle(origin, direction, current, range, angle, radius)) return true;
+            Vector3 displacement = Flat(current - previous);
+            int steps = Mathf.Clamp(Mathf.CeilToInt(displacement.magnitude /
+                Mathf.Max(.12f, radius * .5f)), 1, 64);
+            for (int i = 1; i < steps; i++)
+                if (ConeCircle(origin, direction, previous + displacement * (i / (float)steps),
+                        range, angle, radius)) return true;
+            return false;
+        }
+
+        public static bool ConeBody(Health target, Vector3 origin, Vector3 direction,
+            float range, float angle, bool moving = false)
+        {
+            if (target == null || target.IsDead || !target.isActiveAndEnabled) return false;
+            Vector3 current = target.transform.position;
+            float radius = BodyRadius(target);
+            if (!moving) return ConeCircle(origin, direction, current, range, angle, radius);
+            HeroLocomotion locomotion = target.GetComponent<HeroLocomotion>();
+            Vector3 previous = locomotion != null ? locomotion.FrameStartPosition : current;
+            // Ignore non-physical teleports/respawns when comparing movement within a frame.
+            if (Flat(current - previous).sqrMagnitude > 64f * 64f) previous = current;
+            return SweptConeCircle(origin, direction, previous, current, range, angle, radius);
+        }
+
         // Continuous relative-motion circle sweep: moving targets cannot tunnel through a fast shot.
         public static bool Sweep(Vector3 from, Vector3 to, Vector3 targetFrom, Vector3 targetTo, float radius, out float fraction)
         {
@@ -88,11 +154,17 @@ namespace Alterverse.Combat
                 }
                 else if (!HeroCombatRules.Enemy(actor, h)) continue;
                 float distance = HeroCombatRules.TargetDistance(origin, h);
-                if (distance > range) continue;
                 Vector3 delta = Flat(h.transform.position - origin);
                 float degrees = delta.sqrMagnitude > .0001f ? Vector3.Angle(Direction(direction), delta) : 0f;
-                if (degrees > angle) continue;
-                float score = degrees * 4f + distance + (h.GetComponent<HeroIdentity>() == null ? 1f : 0f);
+                if (ally)
+                {
+                    if (distance > range || degrees > angle) continue;
+                }
+                else if (!ConeBody(h, origin, direction, range, angle * 2f)) continue;
+                // Hero class wins before any distance/angle tie-break. Minions, monsters,
+                // structures and objectives are considered only when no hero is eligible.
+                float score = degrees * 4f + distance;
+                if (!ally && h.GetComponent<HeroIdentity>() != null) score -= 100000f;
                 if (ally) score += h.Normalized * 2f;
                 if (score < bestScore) { bestScore = score; best = h; }
             }

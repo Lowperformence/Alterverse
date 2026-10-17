@@ -192,7 +192,8 @@ namespace Alterverse.Characters
                 else if (!HeroAttackDelivery.For(gameObject).AbilityAimed(this, slot, attackAim)) return false;
             }
             HeroSkillVfx.Cast(gameObject,slot,presentationWindup);
-            if (!mobility) locomotion.FaceAction(attackAim.CastDirection(transform.position));
+            if (!mobility) locomotion.FaceAction(aimSpec.targetingMode == TargetingMode.Cone ?
+                attackAim.Direction : attackAim.CastDirection(transform.position));
             ready[slot] = Time.time + Cooldown(slot);
             GetComponent<HeroVisualMotion>()?.PulseAbility(slot,presentationWindup);
             return true;

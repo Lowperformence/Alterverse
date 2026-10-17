@@ -23,11 +23,73 @@ partial class Regression
    ScratchWarningEdgeAndTap(fps);
   }
   FirstScratchContact();
+  LiveConeCases();
   TimmyCases();TimmyVfxCases();IndependentConeDirection();EndedOnlyReverseDirection();CapturedPointNetwork();
   SupportTargeting();SelfShieldPreviews();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   Console.WriteLine("PASS "+checks+" skill-entry and existing combat assertions. Deterministic engine fixtures; no native Unity/Android/latency test.");
+ }
+
+ static void LiveConeCases()
+ {
+  // Ranged and melee direct skill cones share the same authoritative hit region.
+  foreach(HeroId hero in new[]{HeroId.Nyra,HeroId.Veyr})
+  {
+   int slot=hero==HeroId.Nyra?2:0;
+   Reset();var a=Hero(hero,0,Vector3.zero);
+   var victim=Hero(HeroId.Kaelon,1,Vector3.forward*3);
+   var fallback=new GameObject("HotZone-style fallback");
+   fallback.transform.position=Vector3.forward*1.7f;
+   fallback.AddComponent<TeamMember>().Initialize(1);
+   fallback.AddComponent<Health>().Configure(1000);
+   Check(a.GetComponent<PlayerHeroAbilities>().CastAimed(slot,Forward(a)),
+    "live cone casts "+hero);
+   Run(.8f);
+   Check(Total(victim)<1000,"hero beats closer fallback "+hero);
+   Near(Total(fallback),1000,"one hit never split with monster fallback "+hero);
+
+   Reset();a=Hero(hero,0,Vector3.zero);
+   fallback=new GameObject("HotZone-style fallback");
+   fallback.transform.position=Vector3.forward*1.7f;
+   fallback.AddComponent<TeamMember>().Initialize(1);
+   fallback.AddComponent<Health>().Configure(1000);
+   Check(a.GetComponent<PlayerHeroAbilities>().CastAimed(slot,Forward(a)),
+    "fallback cone cast "+hero);
+   Run(.8f);
+   Check(Total(fallback)<1000,"monster fallback if no enemy hero "+hero);
+  }
+  foreach(int fps in new[]{30,60,120})
+  {
+   Reset();var actor=Hero(HeroId.Nyra,0,Vector3.zero);
+   var opponent=Hero(HeroId.Kaelon,1,new Vector3(5,0,4));
+   Check(actor.GetComponent<PlayerHeroAbilities>().CastAimed(2,Forward(actor)),
+    "late entry cast starts");
+   float windup=HeroAttackDelivery.AbilityWindup(HeroId.Nyra,2,
+       actor.GetComponent<HeroAbilityKit>().Spec(2));
+   for(int i=0;i<Mathf.CeilToInt((windup+.02f)*fps);i++)Step(1f/fps);
+   HeroAttackDelivery delivery=HeroAttackDelivery.For(actor);
+   Check(delivery.TryActiveCone(out _,out Vector3 dir,out AimSpec active) &&
+        Vector3.Angle(dir,Vector3.forward)<.001f &&
+        Mathf.Approximately(active.coneAngle,AimingSettings.Current.For(HeroId.Nyra,2).coneAngle),
+        "shown active cone must equal server hitbox "+fps);
+   Step(1f/fps,()=>opponent.transform.position=Vector3.forward*4);
+   float hit=Total(opponent);
+   Check(hit<1000,"opponent crossing active cone must be hit "+fps);
+   Run(.8f);Near(Total(opponent),hit,"no repeated cone damage "+fps);
+
+   Reset();actor=Hero(HeroId.Nyra,0,Vector3.zero);
+   opponent=Hero(HeroId.Kaelon,1,new Vector3(5,0,4));
+   Check(actor.GetComponent<PlayerHeroAbilities>().CastAimed(2,Forward(actor)),
+    "expired cone cast starts");
+   Run(1f);
+   opponent.transform.position=Vector3.forward*4;
+   Run(.2f);
+   Near(Total(opponent),1000,"expired cone does not hit "+fps);
+  }
+  Check(AimGeometry.SweptConeCircle(Vector3.zero,Vector3.forward,
+   new Vector3(-5,0,4),new Vector3(5,0,4),6f,35f,.35f),
+   "a frame-spanning dash crosses the active hitbox");
  }
 
  static void EmptyDirectedSkills(int fps)
@@ -166,9 +228,13 @@ partial class Regression
     if(scenario==0){a.transform.position=Vector3.right*2;b.transform.position=new Vector3(3,0,4);}
     if(scenario==1&&Time.time>.2f)b.transform.position=Angle(16,4);
     if(scenario==2)b.transform.position=Angle(16,4);
-    if(scenario==3)b.transform.position=new Vector3(-2,0,4);
+    if(scenario==3)b.transform.position=new Vector3(-5,0,4);
    });
-   Near(Total(b),1000,"no shifted-field capture, in-flight capture, geometry-mode capture or snapshot retarget "+scenario+" at "+fps);
+   if(scenario==0 || scenario==1)
+    Near(1000-Total(b),a.GetComponent<HeroAbilityKit>().Spec(2).Power,
+     "live cone accepts moving entrant after launch "+scenario+" at "+fps);
+   else Near(Total(b),1000,
+     "non-cone geometry and true off-field dodge stay safe "+scenario+" at "+fps);
   }
  }
 
