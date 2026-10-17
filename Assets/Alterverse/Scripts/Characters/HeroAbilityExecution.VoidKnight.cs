@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using Alterverse.Audio;
 using Alterverse.Combat;
 using Alterverse.Multiplayer;
@@ -34,18 +35,34 @@ namespace Alterverse.Characters
             if(!VoidValid(castLife)){voidPending=false;yield break;}
             HeroCombatAudio.Cast(gameObject,3);HeroSkillVfx.VoidKnightField(gameObject,direction,kit.Ultimate.Range,.3f,false);
             bool confirmed=false;
-            for(int i=Health.Active.Count-1;i>=0;i--)
+            Vector3 fieldOrigin=transform.position;
+            float activeUntil=Time.time+.30f;
+            // The cleave's visible 0.30-second cone IS its active hitbox. Units
+            // entering from either side during this interval are eligible; each
+            // receives the ultimate at most once, regardless of frame rate.
+            HashSet<Health> struck=new HashSet<Health>();
+            do
             {
-                Health target=Health.Active[i];
-                if(!HeroCombatRules.Enemy(gameObject,target)||!AimGeometry.Cone(transform.position,direction,target.transform.position,kit.Ultimate.Range,80f)||!SharkSight(target))continue;
-                float before=target.Current+target.Shield,healthBefore=target.Current;
-                HeroCombatRules.Damage(gameObject,target,kit.Ultimate.Power+VoidKnightBalance.UltimateLifeDrain);
-                if(target.Current+target.Shield>=before)continue;
-                float absorbed=Mathf.Min(VoidKnightBalance.UltimateLifeDrain,Mathf.Max(0,healthBefore-target.Current));
-                if(absorbed>0)self.Heal(absorbed,false);
-                confirmed=true;HeroCombatStatus.Apply(target,.75f,1.2f);HeroSkillVfx.Impact(gameObject,target,3);
+                if(!VoidValid(castLife))break;
+                for(int i=Health.Active.Count-1;i>=0;i--)
+                {
+                    Health target=Health.Active[i];
+                    if(!HeroCombatRules.Enemy(gameObject,target)||struck.Contains(target)||
+                        !AimGeometry.ConeBody(target,fieldOrigin,direction,kit.Ultimate.Range,80f,true)||
+                        !SharkSight(target))continue;
+                    struck.Add(target);
+                    float before=target.Current+target.Shield,healthBefore=target.Current;
+                    HeroCombatRules.Damage(gameObject,target,kit.Ultimate.Power+VoidKnightBalance.UltimateLifeDrain);
+                    if(target.Current+target.Shield>=before)continue;
+                    float absorbed=Mathf.Min(VoidKnightBalance.UltimateLifeDrain,Mathf.Max(0,healthBefore-target.Current));
+                    if(absorbed>0)self.Heal(absorbed,false);
+                    confirmed=true;HeroCombatStatus.Apply(target,.75f,1.2f);HeroSkillVfx.Impact(gameObject,target,3);
+                }
+                if(Time.time>=activeUntil)break;
+                yield return null;
             }
-            if(confirmed){VoidState.RecordSkillHit();HeroCombatAudio.Impact(gameObject,3,transform.position+direction*2f);}voidPending=false;
+            while(Time.time<=activeUntil);
+            if(confirmed){VoidState.RecordSkillHit();HeroCombatAudio.Impact(gameObject,3,fieldOrigin+direction*2f);}voidPending=false;
         }
         private IEnumerator VoidLunge(Vector3 direction,int castLife)
         {
