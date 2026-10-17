@@ -38,6 +38,8 @@ namespace Alterverse.Visuals
             HeroVisualMotion motion=actor.GetComponent<HeroVisualMotion>();
             Vector3 muzzle = motion!=null?motion.ReleasePoint:Chest(actor)+actor.transform.forward*.5f;
             Vector3? origin = actor.GetComponent<HeroAttackDelivery>()?.VisualOrigin;
+            Vector3? networkOrigin=HeroVfxEvents.ReplayOrigin;
+            if(networkOrigin.HasValue)return new Vector3(networkOrigin.Value.x,muzzle.y,networkOrigin.Value.z);
             return origin.HasValue ? new Vector3(origin.Value.x,muzzle.y,origin.Value.z) : muzzle;
         }
         private static void Projectile(GameObject actor,Vector3 end,int slot,float travel=0,Transform target=null)
@@ -290,10 +292,13 @@ namespace Alterverse.Visuals
             Fx(HeroFxShape.Burst,p,Accent(actor),size*.8f,.14f,rotation:facing);
             HeroVfxPool.Emit(HeroFxShape.Rift,p-facing*Vector3.forward*.015f,p,new Vector3(size*.55f,size*.9f,.9f),DarkCore,life,HeroFxMotion.Contract,facing,actor);
         }
-        public static void CancelWarnings(GameObject actor)=>HeroVfxPool.CancelWarnings(actor);
-        public static void CancelProjectiles(GameObject actor)=>HeroVfxPool.CancelProjectiles(actor);
+        public static void CancelWarnings(GameObject actor)
+        {using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelWarnings,actor);HeroVfxPool.CancelWarnings(actor);}
+        public static void CancelProjectiles(GameObject actor)
+        {using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelProjectiles,actor);HeroVfxPool.CancelProjectiles(actor);}
         public static void Cast(GameObject actor,int slot)
         {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Cast,actor,slot:slot);
             if(actor==null)return;
             if(Hero(actor)==HeroId.Timmy){TimmyCast(actor,slot);return;}
             HeroId h=Hero(actor);Color c=h==HeroId.Mira&&(slot==1||slot==2||slot==3)?new Color(.24f,1f,.42f):Accent(actor);float size=slot==3?.45f:.22f;Vector3 p=Muzzle(actor);
@@ -414,6 +419,7 @@ namespace Alterverse.Visuals
         }
         public static void TargetWarning(GameObject actor,Health target,float seconds)
         {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.TargetWarning,actor,duration:seconds,target:target!=null?target.gameObject:null);
             if(actor==null||target==null)return;
             Vector3 p=Ground(target.transform.position);
             Fx(HeroFxShape.Hex,p,new Color(1,.48f,.16f),.82f,seconds,HeroFxMotion.Hold,actor:actor,follow:target.transform,warning:true);
@@ -459,6 +465,7 @@ namespace Alterverse.Visuals
         }
         public static void Area(GameObject actor,Vector3 center,float radius,float duration,bool warning,bool beneficial=false,int slot=-1)
         {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Area,actor,center,slot,duration,radius,flag:warning,secondary:beneficial);
             if(actor==null)return;
             HeroId hero=Hero(actor);
             if(hero==HeroId.Timmy&&slot==1)
@@ -635,6 +642,7 @@ namespace Alterverse.Visuals
         }
         public static void Spell(GameObject actor,Vector3 impact,int slot,float travelTime=0,Transform target=null)
         {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Spell,actor,impact,slot,duration:travelTime,target:target!=null?target.gameObject:null);
             if(actor==null)return;HeroId h=Hero(actor);
             if(h==HeroId.Timmy)
             {
@@ -714,7 +722,8 @@ namespace Alterverse.Visuals
         }
 
         public static void Ultimate(GameObject actor,Vector3 target)
-        {if(actor!=null)Cast(actor,3);}
+        {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Ultimate,actor,target,slot:3);if(actor!=null)Cast(actor,3);}
         // A short second beat distinguishes metal, shadow, magic and sacred energy.
         // These cached meshes are optional: contact cores and danger markers keep priority.
         private static void ImpactAftermath(GameObject actor,Vector3 point,HeroId hero,int slot,float strength)
@@ -756,6 +765,7 @@ namespace Alterverse.Visuals
 
         public static void Impact(GameObject actor,Health target,int slot)
         {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Impact,actor,slot:slot,target:target!=null?target.gameObject:null);
             if(actor==null||target==null)return;
             Vector3 p=target.transform.position+Vector3.up*.35f;Color c=Accent(actor);
             float strength=slot<0?.35f:slot==3?.90f:.62f;
@@ -848,6 +858,7 @@ namespace Alterverse.Visuals
         }
         public static void ShieldContact(GameObject victim,GameObject source)
         {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.ShieldContact,victim,target:source);
             if(victim==null)return;
             Vector3 p=victim.transform.position+Vector3.up*.35f;
             Quaternion face=source!=null?Face(source.transform.position,p):Quaternion.identity;
@@ -856,6 +867,7 @@ namespace Alterverse.Visuals
         }
         public static void Support(GameObject actor,Health target,bool shield,float duration)
         {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Support,actor,duration:duration,target:target!=null?target.gameObject:null,flag:shield);
             if(actor==null||target==null)return;
             HeroId hero=Hero(actor);
             Color c=hero==HeroId.Mira?new Color(.22f,1f,.52f):Accent(actor);
@@ -896,6 +908,7 @@ namespace Alterverse.Visuals
         }
         public static void SupportLink(GameObject actor,Health target)
         {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.SupportLink,actor,target:target!=null?target.gameObject:null);
             if(actor==null||target==null)return;
             Vector3 from=Muzzle(actor),to=target.transform.position+Vector3.up*.3f;
             Color link=Hero(actor)==HeroId.Mira?new Color(.22f,1f,.52f):new Color(.25f,1,.55f);
@@ -906,17 +919,20 @@ namespace Alterverse.Visuals
         }
         public static void Debuff(GameObject actor,Health target)
         {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Debuff,actor,target:target!=null?target.gameObject:null);
             if(actor==null||target==null||target.GetComponent<HeroIdentity>()==null)return;
             HeroId h=Hero(actor);if(h==HeroId.Nyra)return; // Dedicated snare bands already show this effect.
             Ring(actor,Ground(target.transform.position),.6f,.35f,h==HeroId.Elyra,h==HeroId.Kaelon,follow:target.transform);
         }
         public static void PlayerHit(GameObject victim,GameObject source)
         {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.PlayerHit,victim,target:source);
             if(victim==null||source==null)return;
             Fx(HeroFxShape.Slash,Chest(victim),new Color(1,.50f,.28f),.43f,.10f,HeroFxMotion.Contract,Face(victim.transform.position,source.transform.position));
         }
         public static void Basic(GameObject actor,Vector3 impact,float travelTime=0,Transform target=null,bool animate=true)
         {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Basic,actor,impact,slot:-1,duration:travelTime,target:target!=null?target.gameObject:null,flag:animate);
             if(actor==null)return;if(animate)actor.GetComponent<HeroVisualMotion>()?.PulseAttack(false);
             if(Hero(actor)==HeroId.Timmy){TimmyClaws(actor,impact,-1);return;}
             switch(Hero(actor))
@@ -932,6 +948,7 @@ namespace Alterverse.Visuals
         {Basic(actor,impact);if(ultimate)Spell(actor,impact,3);}
         public static void Dash(GameObject actor,Vector3 from,Vector3 to,int slot=2,float duration=.16f)
         {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Dash,actor,to,slot,duration,origin:from);
             if(actor==null)return;Color c=Accent(actor);HeroId h=Hero(actor);
             if(h==HeroId.Timmy){TimmyEffect(actor,slot==3?3:2,from,to,0,duration);return;}
             Quaternion face=Face(from,to);float distance=Vector3.Distance(from,to);
@@ -968,3 +985,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

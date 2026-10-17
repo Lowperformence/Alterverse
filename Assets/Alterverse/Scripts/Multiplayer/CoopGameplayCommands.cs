@@ -31,6 +31,25 @@ namespace Alterverse.Multiplayer
 
         private CustomMessagingManager messaging;
         private bool attached;
+        private int receivedCombat,authorizedCombat,acceptedCombat,damagingHits,humanDamagingHits;
+        private float removedHealthAndShield,humanHealthAndShieldRemoved,nextCombatReport;
+
+        public static void RecordAuthoritativeDamage(GameObject actor,float amount)
+        {
+            NetworkManager manager=NetworkManager.Singleton;
+            if(amount<=0||!MatchNetworkProtocol.Finite(amount)||Instance==null||!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer)return;
+            Instance.damagingHits++;Instance.removedHealthAndShield+=amount;
+            if(actor!=null&&actor.GetComponent<CoopHeroSlot>()?.IsHuman==true)
+            {Instance.humanDamagingHits++;Instance.humanHealthAndShieldRemoved+=amount;}
+        }
+        private void ReportServerCombat(NetworkManager manager)
+        {
+            if(!manager.IsServer||!CoopAuthority.LocalHasServerAuthority||Time.unscaledTime<nextCombatReport)return;
+            nextCombatReport=Time.unscaledTime+10f;
+            if(receivedCombat==0&&damagingHits==0)return;
+            Debug.Log($"DIMENSIONS FRONT COMBAT: received={receivedCombat}, authorized={authorizedCombat}, accepted={acceptedCombat}, damagingHits={damagingHits}, healthAndShieldRemoved={removedHealthAndShield:F1}, humanDamagingHits={humanDamagingHits}, humanHealthAndShieldRemoved={humanHealthAndShieldRemoved:F1}.");
+            receivedCombat=authorizedCombat=acceptedCombat=damagingHits=humanDamagingHits=0;removedHealthAndShield=humanHealthAndShieldRemoved=0;
+        }
         private readonly Dictionary<ulong,string> senderOwners=new();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -51,6 +70,7 @@ namespace Alterverse.Multiplayer
             NetworkManager manager=NetworkManager.Singleton;
             if(manager==null||!manager.IsListening||!CoopAuthority.Active){Detach();return;}
             Attach(manager.CustomMessagingManager);
+            ReportServerCombat(manager);
         }
 
         public static bool ShouldRouteClientCommand(GameObject actor)
@@ -136,20 +156,24 @@ namespace Alterverse.Multiplayer
 
         private void OnBasic(ulong senderClientId,FastBufferReader reader)
         {
+            receivedCombat++;
             if(!TryReadAuthorizedActor(senderClientId,ref reader,out GameObject actor))return;
+            authorizedCombat++;
             if(!TryReadTarget(actor,ref reader,out Health requestedTarget))return;
             if (!TryReadAim(ref reader, requestedTarget, out AimPose pose)) return;
-            actor.GetComponent<BasicAttack>()?.TryAttackNetworkAuthoritative(pose);
+            if(actor.GetComponent<BasicAttack>()?.TryAttackNetworkAuthoritative(pose)==true)acceptedCombat++;
         }
 
         private void OnAbility(ulong senderClientId,FastBufferReader reader)
         {
+            receivedCombat++;
             if(!TryReadAuthorizedActor(senderClientId,ref reader,out GameObject actor))return;
+            authorizedCombat++;
             if(!TryReadTarget(actor,ref reader,out Health requestedTarget))return;
             if (!reader.TryBeginRead(sizeof(int))) return;
             reader.ReadValueSafe(out int slot);
             if (slot < 0 || slot > 3 || !TryReadAim(ref reader, requestedTarget, out AimPose pose)) return;
-            actor.GetComponent<PlayerHeroAbilities>()?.CastNetworkAuthoritative(slot, pose);
+            if(actor.GetComponent<PlayerHeroAbilities>()?.CastNetworkAuthoritative(slot, pose)==true)acceptedCombat++;
         }
 
         private static bool TryReadAim(ref FastBufferReader reader, Health target, out AimPose pose)
@@ -280,4 +304,5 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 

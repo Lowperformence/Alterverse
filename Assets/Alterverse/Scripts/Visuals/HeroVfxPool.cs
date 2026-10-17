@@ -21,7 +21,7 @@ namespace Alterverse.Visuals
             public Color Color;public float Start,Duration,SurfaceStyle,MaxRange;public bool Active,Warning,Decorative,CancelOnOwnerDeath;
             public int DeliveryId;public HeroFxMotion Motion;public Transform Follow,EndFollow;public bool Follows,TracksEnd;
             public Vector3 EndOffset;public Health EndHealth;
-            public GameObject Owner;public Health OwnerHealth,Shield;public bool ShieldBound;
+            public GameObject Owner;public Health OwnerHealth,Shield;public bool ShieldBound;public float ShieldGraceUntil;
         }
         private static HeroVfxPool instance;
         private static int nextDeliveryId, deliveryScope;
@@ -65,7 +65,11 @@ namespace Alterverse.Visuals
         }
         private void Awake()
         {
-            instance=this;material=Resources.Load<Material>("CombatVfx/HeroEnergy");
+            instance=this;
+            // A dedicated server has no graphics device. Publishing semantic cues happens
+            // before rendering; combat must continue without constructing any meshes.
+            if(SystemInfo.graphicsDeviceType==GraphicsDeviceType.Null){material=null;enabled=false;return;}
+            material=Resources.Load<Material>("CombatVfx/HeroEnergy");
             if(material==null||material.shader==null||!material.shader.isSupported||
                 material.shader.name!="DimensionsFront/HeroEnergy")
             {
@@ -105,6 +109,7 @@ namespace Alterverse.Visuals
             // Warnings are never decorative; flourishes cannot consume the last core slots.
             if(warning)decorative=false;
             if(decorative&&!AdaptiveVfxBudget.AllowDecorative)return;
+            elapsed+=HeroVfxEvents.ReplayElapsed;
             Warm();if(instance==null||instance.material==null)return;
             instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay,endFollow,decorative,elapsed,cancelOnOwnerDeath,maxRange);
         }
@@ -138,6 +143,7 @@ namespace Alterverse.Visuals
             slot.DeliveryId=deliveryScope;slot.Active=true;slot.Warning=warning;slot.Decorative=decorative;slot.CancelOnOwnerDeath=cancelOnOwnerDeath||owner!=null&&owner.GetComponent<HeroIdentity>()?.Hero==HeroId.Nerok;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
             slot.Follow=follow;slot.Follows=follow!=null;slot.Offset=slot.Follows?from-follow.position:Vector3.zero;
             slot.Shield=shield;slot.ShieldBound=shield!=null;
+            slot.ShieldGraceUntil=shield!=null&&shield.Shield<=0&&HeroVfxEvents.ReplayOrigin.HasValue?Time.time+.5f:0f;
             slot.EndFollow=endFollow;slot.TracksEnd=endFollow!=null;
             slot.EndOffset=endFollow!=null?to-endFollow.position:Vector3.zero;
             slot.EndHealth=endFollow!=null?endFollow.GetComponent<Health>():null;
@@ -197,10 +203,11 @@ namespace Alterverse.Visuals
             for(int i=0;i<slots.Length;i++)
             {
                 Slot s=slots[i];if(s==null||!s.Active)continue;
+                if(s.ShieldBound&&s.Shield!=null&&s.Shield.Shield>0)s.ShieldGraceUntil=0;
                 if(s.CancelOnOwnerDeath&&(s.Owner==null||!s.Owner.activeInHierarchy||s.OwnerHealth!=null&&s.OwnerHealth.IsDead)||
                     s.Warning&&(s.Owner==null||!s.Owner.activeInHierarchy||s.OwnerHealth!=null&&s.OwnerHealth.IsDead)||
                     s.TracksEnd&&(s.EndFollow==null||!s.EndFollow.gameObject.activeInHierarchy||s.EndHealth!=null&&s.EndHealth.IsDead)||
-                    s.Follows&&s.Follow==null||s.ShieldBound&&(s.Shield==null||s.Shield.IsDead||s.Shield.Shield<=0))
+                    s.Follows&&s.Follow==null||s.ShieldBound&&(s.Shield==null||s.Shield.IsDead||s.Shield.Shield<=0&&Time.time>=s.ShieldGraceUntil))
                 {Hide(s);continue;}
                 float age=Time.time-s.Start;if(age<0)continue;
                 if(age>=s.Duration){Hide(s);continue;}Draw(s,age/s.Duration);
@@ -629,3 +636,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

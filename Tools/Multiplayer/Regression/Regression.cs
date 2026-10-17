@@ -63,6 +63,7 @@ static class Regression
   Check(client.Messages.Sent.Count==5,"Owner sends movement predictions through the production writer");
   CoopAuthority.LocalHasServerAuthority=true;NetworkManager.Singleton=serverManager;Time.unscaledTime=.05f;
   server.ReceiveOwner(7,client.Messages.Sent[0].Values);Position(serverActor.transform.position,P(.325f),"Server validates and accepts normal movement");
+  serverActor.GetComponent<Health>().Current=62;serverActor.GetComponent<Health>().Shield=18;
   MatchScoreboard.Instance=serverBoard;server.Broadcast(serverManager);
   var snapshot=server.Messages.Sent[^1].Values;
   Check((int)snapshot[1]==1,"Snapshot count includes only actors with serializable health");
@@ -72,6 +73,7 @@ static class Regression
   CoopAuthority.LocalHasServerAuthority=false;NetworkManager.Singleton=clientManager;MatchScoreboard.Instance=clientBoard;
   client.ReceiveSnapshot(0,snapshot);
   Position(clientActor.transform.position,P(1.625f),"Full transport preserves four newer movement predictions in flight");
+  Check(clientActor.GetComponent<Health>().Current==62&&clientActor.GetComponent<Health>().Shield==18,"Server health and shield loss reaches the client's real snapshot reader");
   Check(clientBoard.Read(clientActor.GetComponent<Health>())==(3,1,2),"Live K/D/A reaches the scoreboard before the match ends");
   client.ReceiveSnapshot(0,snapshot);Position(clientActor.transform.position,P(1.625f),"Duplicate server snapshot does not double-correct");
   var hp=clientActor.GetComponent<Health>();hp.Current=77;client.ReceiveSnapshot(99,snapshot);

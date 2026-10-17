@@ -38,7 +38,12 @@ namespace Alterverse.Multiplayer
         private string localPlayerId="";
         private bool attached;
 
-        private void OnEnable(){audioRelay=this;RefreshSlots(true);}
+        private void OnEnable()
+        {
+            audioRelay=this;RefreshSlots(true);
+            NetworkManager manager=NetworkManager.Singleton;
+            if(manager!=null&&manager.IsListening)Attach(manager.CustomMessagingManager);
+        }
         private void OnDisable(){if(audioRelay==this)audioRelay=null;Detach();}
 
         private void Update()
@@ -100,6 +105,8 @@ namespace Alterverse.Multiplayer
             if(value==null||messaging==value&&attached)return;
             Detach();
             messaging=value;
+            HeroVfxEvents.Emitted+=OnHostHeroVfx;
+            messaging.RegisterNamedMessageHandler(HeroVfxMessage,OnHeroVfx);
             messaging.RegisterNamedMessageHandler(OwnerPoseMessage,OnOwnerPose);
             messaging.RegisterNamedMessageHandler(HeroSnapshotMessage,OnHeroSnapshot);
             messaging.RegisterNamedMessageHandler(CombatSoundMessage,OnCombatSound);
@@ -113,7 +120,9 @@ namespace Alterverse.Multiplayer
 
         private void Detach()
         {
+            HeroVfxEvents.Emitted-=OnHostHeroVfx;
             if(!attached||messaging==null){messaging=null;attached=false;return;}
+            messaging.UnregisterNamedMessageHandler(HeroVfxMessage);
             messaging.UnregisterNamedMessageHandler(OwnerPoseMessage);
             messaging.UnregisterNamedMessageHandler(HeroSnapshotMessage);
             messaging.UnregisterNamedMessageHandler(CombatSoundMessage);
@@ -179,6 +188,7 @@ namespace Alterverse.Multiplayer
 
         public static void BroadcastOrunOverdrive(GameObject actor,Vector3 center)
         {
+            if(HeroVfxEvents.InsideSemanticEffect)return;
             var service=audioRelay;var manager=NetworkManager.Singleton;
             if(actor==null||service==null||service.messaging==null||!CoopAuthority.Active||
                 !CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer)return;
@@ -209,6 +219,7 @@ namespace Alterverse.Multiplayer
 
         public static void BroadcastSharkEffect(GameObject actor,int kind,Vector3 center,float radius,float duration,Health target=null)
         {
+            if(HeroVfxEvents.InsideSemanticEffect)return;
             var service=audioRelay;var manager=NetworkManager.Singleton;
             if(service==null||service.messaging==null||!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer)return;
             var slot=actor.GetComponent<CoopHeroSlot>();if(slot==null||slot.Slot<0||slot.Slot>=MatchSession.MaxPlayers)return;
@@ -261,6 +272,7 @@ namespace Alterverse.Multiplayer
 
         public static void BroadcastTimmyEffect(GameObject actor,int kind,Vector3 from,Vector3 to,float radius,float duration)
         {
+            if(HeroVfxEvents.InsideSemanticEffect)return;
             var service=audioRelay;var manager=NetworkManager.Singleton;
             if(actor==null||service==null||service.messaging==null||!CoopAuthority.Active||
                 !CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer||actor.GetComponent<HeroIdentity>()?.Hero!=HeroId.Timmy)return;
@@ -294,6 +306,7 @@ namespace Alterverse.Multiplayer
         }
         public static void BroadcastVoidKnightEffect(GameObject actor,int kind,Vector3 from,Vector3 to,float radius,float duration)
         {
+            if(HeroVfxEvents.InsideSemanticEffect)return;
             var service=audioRelay;var manager=NetworkManager.Singleton;
             if(actor==null||service==null||service.messaging==null||!CoopAuthority.Active||
                 !CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer||actor.GetComponent<HeroIdentity>()?.Hero!=HeroId.VoidKnight)return;

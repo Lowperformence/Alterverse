@@ -40,7 +40,9 @@ namespace Alterverse.Combat
         {
             if (!Enemy(actor, target)) return 0;
             float before = target.Current;
+            float beforeTotal=target.Current+target.Shield;
             target.TakeDamage(amount, actor);
+            Alterverse.Multiplayer.CoopGameplayCommands.RecordAuthoritativeDamage(actor,Mathf.Max(0,beforeTotal-target.Current-target.Shield));
             return Mathf.Max(0, before - target.Current);
         }
         public static float Interval(GameObject actor, float baseline)
@@ -63,3 +65,4 @@ namespace Alterverse.Combat
         }
     }
 }
+
