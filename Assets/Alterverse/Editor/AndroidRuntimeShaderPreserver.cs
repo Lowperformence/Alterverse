@@ -19,7 +19,9 @@ namespace Alterverse.EditorChecks
         {
             "Universal Render Pipeline/Lit",
             "Universal Render Pipeline/Unlit",
-            "DimensionsFront/HeroEnergy"
+            "DimensionsFront/HeroEnergy",
+            "DimensionsFront/VoidArmorEnergy",
+            "DimensionsFront/VoidArmorHalo"
         };
 
         public int callbackOrder=>-100;
@@ -29,6 +31,7 @@ namespace Alterverse.EditorChecks
             if(report.summary.platform!=BuildTarget.Android)return;
             EnsureRequiredShaders(true);
             ValidateCombatMaterial();
+            ValidateVoidArmorShaders();
             HeroPresentationChecks.CheckCombatLineTransforms();
         }
 
@@ -39,6 +42,16 @@ namespace Alterverse.EditorChecks
             if(material==null||shader==null||material.shader!=shader||
                 shader.name!="DimensionsFront/HeroEnergy"||ShaderUtil.ShaderHasError(shader))
                 throw new BuildFailedException("HeroEnergy material/shader is missing, mismatched or has compiler errors. Android spell VFX cannot be validated.");
+        }
+
+        private static void ValidateVoidArmorShaders()
+        {
+            foreach(string resource in new[]{"VoidArmorEnergy","VoidArmorHalo"})
+            {
+                Shader shader=Resources.Load<Shader>("HeroArt/"+resource);
+                if(shader==null||ShaderUtil.ShaderHasError(shader))
+                    throw new BuildFailedException("Void Knight armor glow shader is missing or has compiler errors: "+resource);
+            }
         }
 
         [InitializeOnLoadMethod]
@@ -108,4 +121,5 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+
 

@@ -130,6 +130,7 @@ namespace Alterverse.Visuals
             BrakkForearmTrim.ApplyLegs(instance.transform, hero);
             BrakkUtilityBeltAppearance.Apply(instance.transform, hero);
             BrakkArmorAppearance.Apply(instance.transform, hero);
+            if (hero == HeroId.VoidKnight) VoidKnightArmorGlow.Apply(instance.transform);
             presentation.Initialize(root, instance.transform);
             if(hero==HeroId.VoidKnight)(actor.GetComponent<VoidKnightPresentation>()??actor.AddComponent<VoidKnightPresentation>()).Initialize(instance.transform);
             return true;

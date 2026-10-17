@@ -1,10 +1,10 @@
 name: Void Knight model regression
 on:
   pull_request:
-    paths: ['ArtSource/Heroes/VoidKnight/**', 'Assets/Alterverse/Resources/AuthoredHeroes/VoidKnight*', 'Assets/Alterverse/Resources/AuthoredHeroes/VoidKnightTextures/**', 'Assets/Alterverse/Editor/AuthoredHeroImporter.cs', 'Tools/Combat/VoidKnightRegression/**', 'Assets/Alterverse/Editor/VoidKnight*.cs', '.github/workflows/void-knight-art.yml']
+    paths: ['ArtSource/Heroes/VoidKnight/**', 'Assets/Alterverse/Resources/AuthoredHeroes/VoidKnight*', 'Assets/Alterverse/Resources/AuthoredHeroes/VoidKnightTextures/**', 'Assets/Alterverse/Editor/AuthoredHeroImporter.cs', 'Assets/Alterverse/Editor/AndroidRuntimeShaderPreserver.cs', 'Assets/Alterverse/Scripts/Visuals/VoidKnightArmorGlow.cs', 'Assets/Alterverse/Scripts/Visuals/AuthoredHeroPresentation.cs', 'Assets/Alterverse/Resources/HeroArt/VoidArmor*.shader', 'Tools/Visuals/VoidArmorGlowRegression/**', 'Tools/Combat/VoidKnightRegression/**', 'Assets/Alterverse/Editor/VoidKnight*.cs', '.github/workflows/void-knight-art.yml']
   push:
     branches: ['dev/vertical-slice']
-    paths: ['ArtSource/Heroes/VoidKnight/**', 'Assets/Alterverse/Resources/AuthoredHeroes/VoidKnight*', 'Assets/Alterverse/Resources/AuthoredHeroes/VoidKnightTextures/**', 'Assets/Alterverse/Editor/AuthoredHeroImporter.cs', 'Tools/Combat/VoidKnightRegression/**', 'Assets/Alterverse/Editor/VoidKnight*.cs', '.github/workflows/void-knight-art.yml']
+    paths: ['ArtSource/Heroes/VoidKnight/**', 'Assets/Alterverse/Resources/AuthoredHeroes/VoidKnight*', 'Assets/Alterverse/Resources/AuthoredHeroes/VoidKnightTextures/**', 'Assets/Alterverse/Editor/AuthoredHeroImporter.cs', 'Assets/Alterverse/Editor/AndroidRuntimeShaderPreserver.cs', 'Assets/Alterverse/Scripts/Visuals/VoidKnightArmorGlow.cs', 'Assets/Alterverse/Scripts/Visuals/AuthoredHeroPresentation.cs', 'Assets/Alterverse/Resources/HeroArt/VoidArmor*.shader', 'Tools/Visuals/VoidArmorGlowRegression/**', 'Tools/Combat/VoidKnightRegression/**', 'Assets/Alterverse/Editor/VoidKnight*.cs', '.github/workflows/void-knight-art.yml']
 jobs:
   art:
     runs-on: ubuntu-latest
@@ -26,4 +26,7 @@ jobs:
           dotnet-version: '8.0.x'
       - name: Check combat, shop price and release lock
         run: python3 Tools/Combat/VoidKnightRegression/run.py --dotnet-root "$DOTNET_ROOT"
+
+      - name: Check local armor glow, skin bindings and dedicated-server bypass
+        run: python3 Tools/Visuals/VoidArmorGlowRegression/run.py --dotnet-root "$DOTNET_ROOT"
 
