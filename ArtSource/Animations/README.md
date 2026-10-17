@@ -12,7 +12,8 @@ blender -b --python Tools/CombatAnimation/bake_combat_library.py -- /path/to/ext
 
 | Hero | Guard and attack |
 | --- | --- |
-| Zhaev / Veyr | Blades rest beside the thighs; Regular A plus recovery, mirrored on alternate attacks; free arm stays to the side |
+| Zhaev / Veyr | Blades rest beside the thighs; alternating side-to-front horizontal cuts with a fitted wrist arc; free arm stays to the side |
+| Andromeda Timmy | Alternating side-to-front claw cuts using the same horizontal hand/wrist path; scratch channel timing remains owned by gameplay |
 | Auren / Kaelon | Shield left, hammer right; limited Heavy Combo torso, authored horizontal hand/shaft path |
 | Brakk / Rook | Hands and elbows relaxed beside the body; fists turn and extend only for alternating Punch Jab / Cross |
 | Nerok | Low anchor guard; horizontal hand/shaft path, heavy recovery and free left arm |
@@ -26,6 +27,10 @@ blender -b --python Tools/CombatAnimation/bake_combat_library.py -- /path/to/ext
 Six Quaternius clips are shipped, plus the user-supplied Mixamo standing baseline described below. `idle_relaxed` remains the previous fallback. The fitted weapon guard is captured before blending into an attack, so resting grip correction and attack recovery share the same baseline. Contact indices: jab 7, cross 10, slash 8, heavy 15, spell 17 (1-based). Spell is composed from Enter + Shoot + Exit, with release at the end of Enter. Clips are retimed to `HeroAttackDelivery.Windup`, not vice versa. Damage, cooldowns, projectile simulation and movement speed rules are unchanged. The original source heavy combo is trimmed to its first swing; body rotation is limited and the actual hammer/anchor trajectory is authored separately to prevent a full-body spin and underhand swings.
 
 Character locomotion remains in control of legs. Combat preserves foot positions **and orientations** during torso adjustments. Death/disabled components release pose ownership. Ability poses blend back into guard. Multiplayer uses the existing timestamped attack event and Seek.
+
+Zhaev and Timmy use `slash_a` for limited body motion only. Their attacking hand loads at the side, travels forward on a level plane through the existing contact time, follows across the body and returns to the captured guard. The opposite hand stays at its guard. Wrist direction is calibrated from the imported anatomical frame, so the fitted blade/claws follow the forward cut instead of inheriting the source clip's upward pull. Both hands alternate through the existing mirror flag. Damage, attack intervals, ability poses and network event timing are unchanged.
+
+2026-10-17 validation: the production combat pose writer, IK solver and actual compressed clip bank compile and pass numerical forward-cut sampling with native Veyr source-rest and rotated synthetic rigs, both hands, standing/moving input and short/normal windups. The previous code reproduces the rejected strike direction. The existing upper-body/guard/lifecycle suite also passes. These substitute-engine checks do not render the fitted meshes or load Timmy's FBX; inspect final blade/claw clearance and playback in Unity/Android.
 
 Validation performed outside Unity: Blender import/sampling, numerical frame/quaternion checks, C# parsing, source pose review and code review. Unity is unavailable in this environment. Run `DIMENSIONS FRONT > Checks > All authored hero combat clips` and inspect all eight heroes in Play Mode for final weapon/shield clearance, ability interruption, moving attacks and remote timing. These Unity checks are supplied but have **not** been executed here.
 

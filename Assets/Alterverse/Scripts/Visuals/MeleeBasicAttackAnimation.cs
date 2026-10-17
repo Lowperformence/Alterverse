@@ -298,6 +298,7 @@ namespace Alterverse.Visuals
             Vector3 kneeL = bones[11].Transform.position, kneeR = bones[14].Transform.position;
             Quaternion footRotationL = bones[12].Transform.rotation, footRotationR = bones[15].Transform.rotation;
             bool heavy = identity.Hero == HeroId.Kaelon || identity.Hero == HeroId.Nerok;
+            bool forwardSlash = identity.Hero == HeroId.Veyr || identity.Hero == HeroId.Timmy;
             float tail = duration - contact;
             // Heavy source contains another windup after frame23: our own recovery begins BEFORE that.
             float sourceEnd = heavy ? contact + tail * .48f : duration;
@@ -308,6 +309,9 @@ namespace Alterverse.Visuals
             float weight = entry * exit;
             for (int i = 0; i < 10; i++)
             {
+                // The shared source slash lifts the hand from below. Keep its body motion,
+                // but let the fitted arm/wrist path below own both assassins' strike direction.
+                if (forwardSlash && i >= 4) continue;
                 if (identity.Hero == HeroId.Mira && i >= 7 || (identity.Hero == HeroId.Elyra || identity.Hero == HeroId.Traveler) && i >= 4 && i <= 6) continue;
                 if (heavy && i >= 4 && i <= 6) continue;
                 Quaternion desired = model.rotation * SourceRotation(i, frame) * bones[i].AnatomicalOffset;
@@ -338,11 +342,27 @@ namespace Alterverse.Visuals
             CombatMotion.Solve(bones[13].Transform, bones[14].Transform, bones[15].Transform, footR, kneeR);
             bones[12].Transform.rotation = footRotationL; bones[15].Transform.rotation = footRotationR;
             if (heavy) ApplyHeavySweep(age);
-            else if (identity.Hero == HeroId.Veyr)
-            {
-                int off = mirror ? 7 : 4;
-                SolveArm(off, bones[off+2].GuardPosition); bones[off+2].Transform.rotation = bones[off+2].GuardWorld;
-            }
+            else if (forwardSlash) ApplyForwardSlash(age);
+        }
+        private void ApplyForwardSlash(float age)
+        {
+            int upper = mirror ? 4 : 7, hand = upper + 2, off = mirror ? 7 : 4;
+            float side = mirror ? -1f : 1f, length = Reach(upper);
+            Vector3 shoulder = bones[upper].Transform.position;
+            Vector3 draw = shoulder + transform.TransformDirection(new Vector3(side * .54f, -.22f, -.20f)) * length;
+            Vector3 hit = shoulder + transform.TransformDirection(new Vector3(-side * .12f, -.22f, .86f)) * length;
+            Vector3 through = shoulder + transform.TransformDirection(new Vector3(-side * .50f, -.22f, .66f)) * length;
+            // Raise into the side windup, then cut forward on one level through the contact
+            // frame. SmoothSweep shares velocity at contact and returns to this frame's guard.
+            SolveArm(upper, SmoothSweep(age, bones[hand].GuardPosition, draw, hit, through));
+            SolveArm(off, bones[off + 2].GuardPosition);
+            bones[off + 2].Transform.rotation = bones[off + 2].GuardWorld;
+            // Calibrate from the imported hand rather than assuming an FBX wrist axis.
+            // Rotate the whole fitted grip with the cut; never replay the source uppercut.
+            Vector3 guardAxis = bones[hand].GuardWorld * Quaternion.Inverse(bones[hand].AnatomicalOffset) * Vector3.forward;
+            Vector3 axis = SmoothSweep(age, guardAxis, transform.right * (side * .90f) - transform.forward * .36f,
+                transform.forward, -transform.right * (side * .78f) + transform.forward * .62f).normalized;
+            bones[hand].Transform.rotation = Quaternion.FromToRotation(guardAxis, axis) * bones[hand].GuardWorld;
         }
         private void ApplyHeavySweep(float age)
         {
@@ -363,7 +383,7 @@ namespace Alterverse.Visuals
         private Vector3 SmoothSweep(float age, Vector3 guard, Vector3 draw, Vector3 hit, Vector3 through)
         {
             float load = contact*.58f, follow = contact+(duration-contact)*.34f;
-            if (age < load) return Vector3.Lerp(guard, draw, CombatMotion.Ease(age/Mathf.Max(.001f,load)));
+            if (age < load) return Vector3.Lerp(guard, draw, CombatMotion.Ease(age/load));
             // Cubic Hermite with a shared contact velocity: no stop or kink at the damage frame.
             Vector3 velocity = (through-draw) / Mathf.Max(.001f, follow-load);
             if (age < contact) return Hermite(draw, hit, Vector3.zero, velocity*(contact-load), (age-load)/(contact-load));
