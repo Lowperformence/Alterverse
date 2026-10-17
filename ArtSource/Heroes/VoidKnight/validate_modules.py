@@ -4,6 +4,10 @@ import bpy,json
 HERE=Path(__file__).resolve().parent
 manifest=json.loads((HERE/'Modules/manifest.json').read_text())
 assert len(manifest)==17
+bpy.ops.wm.open_mainfile(filepath=str(HERE/'VoidKnight.blend'))
+expected={o.name for o in bpy.data.objects if o.type=='MESH'}
+listed=[name for item in manifest for name in item['parts']]
+assert len(listed)==len(set(listed)) and set(listed)==expected, 'Missing or duplicated assembly parts'
 count=0
 for item in manifest:
     bpy.ops.wm.open_mainfile(filepath=str(HERE/'Modules'/item['file']))
@@ -18,7 +22,8 @@ for item in manifest:
         assert any(m.type=='ARMATURE' and m.object==rig for m in mesh.modifiers)
     assert all(image.packed_file is not None for image in bpy.data.images if image.type=='IMAGE')
     count+=len(meshes)
-assert count==281,count
+assert count==len(expected),(count,len(expected))
 report={'result':'PASS','opened_blend_modules':len(manifest),'editable_parts':count,'rest_bones_per_module':19,'textures_packed':True}
 (HERE/'Validation/modules-checks.json').write_text(json.dumps(report,indent=2)+'\n')
 print('MODULE_VALIDATION',report,flush=True)
+
