@@ -61,7 +61,9 @@ namespace Alterverse.EditorChecks
                 new AimPose(Vector3.forward, shooter.transform.position + Vector3.forward * 5)),
                 "unable to queue live cone projectile");
             SetPendingTime(delivery, "ReleaseAt", Time.time - 1f);
-            Tick(delivery);
+            Tick(delivery); // Release, without instantly resolving a distant projectile.
+            SetPendingTime(delivery, "SampleTime", Time.time - .02f);
+            Tick(delivery); // First flight collision sample.
             return delivery;
         }
 
