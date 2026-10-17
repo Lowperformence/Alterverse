@@ -9,6 +9,8 @@ namespace Alterverse.Visuals
         private readonly Sample[] samples = new Sample[8];
         private int count;
         public const float Delay = .10f;
+        private readonly float interpolationDelay;
+        public HeroPresentationBuffer(float delay = Delay) => interpolationDelay = Mathf.Max(0f, delay);
         public bool Ready => count > 0;
         public void Clear() => count = 0;
         public void Push(Vector3 position, Quaternion rotation, float time, bool reset)
@@ -23,7 +25,7 @@ namespace Alterverse.Visuals
         {
             position = Vector3.zero; rotation = Quaternion.identity;
             if (!Ready) return false;
-            float time = now - Delay;
+            float time = now - interpolationDelay;
             Sample first = samples[0], last = samples[count - 1];
             if (time <= first.time) { position = first.position; rotation = first.rotation; return true; }
             for (int i = 1; i < count; i++)
@@ -40,3 +42,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

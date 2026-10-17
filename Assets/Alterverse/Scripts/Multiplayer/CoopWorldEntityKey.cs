@@ -1,14 +1,17 @@
 using Alterverse.Combat;
+using Alterverse.Visuals;
 using UnityEngine;
 
 namespace Alterverse.Multiplayer
 {
     /// <summary>Stable identifier and interpolation target for non-hero replicated Health owners.</summary>
+    [DefaultExecutionOrder(-50)]
     public sealed class CoopWorldEntityKey : MonoBehaviour
     {
         [SerializeField]private string key="";
-        private Vector3 targetPosition;
-        private Quaternion targetRotation;
+        // World snapshots arrive at 8 Hz. Interpolate between two received poses instead
+        // of easing toward each new goal, which repeatedly accelerates the creature gait.
+        private readonly HeroPresentationBuffer presentation=new(.15f);
         private bool hasTarget;
         private Renderer[] renderers=System.Array.Empty<Renderer>();
         private Collider[] colliders=System.Array.Empty<Collider>();
@@ -30,19 +33,18 @@ namespace Alterverse.Multiplayer
                 int x=Mathf.RoundToInt(p.x*10f),z=Mathf.RoundToInt(p.z*10f);
                 key=$"{gameObject.name}|T{teamId}|X{x}|Z{z}";
             }
-            targetPosition=transform.position;
-            targetRotation=transform.rotation;
+            presentation.Clear();hasTarget=false;
             CachePresentation();
             configured=true;
         }
 
         public void ApplyTarget(Vector3 position,float yaw,bool immediate)
         {
-            targetPosition=position;
-            targetRotation=Quaternion.Euler(0,yaw,0);
+            Quaternion rotation=Quaternion.Euler(0,yaw,0);
+            bool reset=immediate||!hasTarget||(transform.position-position).sqrMagnitude>36f;
+            presentation.Push(position,rotation,Time.unscaledTime,reset);
             hasTarget=true;
-            if(immediate||(transform.position-position).sqrMagnitude>36f)
-                transform.SetPositionAndRotation(position,targetRotation);
+            if(reset)transform.SetPositionAndRotation(position,rotation);
         }
 
         public void ApplyAlivePresentation(bool alive)
@@ -66,13 +68,13 @@ namespace Alterverse.Multiplayer
             for(int i=0;i<colliders.Length;i++)colliderStates[i]=colliders[i]!=null&&colliders[i].enabled;
         }
 
-        private void LateUpdate()
+        // Run before HotZoneTank.Update samples root travel for its feet and gait.
+        private void Update()
         {
-            if(!hasTarget||!CoopAuthority.Active||CoopAuthority.LocalIsHost)return;
-            float positionBlend=1f-Mathf.Exp(-16f*Time.unscaledDeltaTime);
-            float rotationBlend=1f-Mathf.Exp(-18f*Time.unscaledDeltaTime);
-            transform.position=Vector3.Lerp(transform.position,targetPosition,positionBlend);
-            transform.rotation=Quaternion.Slerp(transform.rotation,targetRotation,rotationBlend);
+            if(!hasTarget||!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority)return;
+            if(presentation.Evaluate(Time.unscaledTime,out Vector3 position,out Quaternion rotation))
+                transform.SetPositionAndRotation(position,rotation);
         }
     }
 }
+
