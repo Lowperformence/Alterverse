@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -19,9 +20,7 @@ namespace Alterverse.EditorChecks
         {
             "Universal Render Pipeline/Lit",
             "Universal Render Pipeline/Unlit",
-            "DimensionsFront/HeroEnergy",
-            "DimensionsFront/VoidArmorEnergy",
-            "DimensionsFront/VoidArmorHalo"
+            "DimensionsFront/HeroEnergy"
         };
 
         public int callbackOrder=>-100;
@@ -64,9 +63,9 @@ namespace Alterverse.EditorChecks
         [MenuItem("DIMENSIONS FRONT/Release/Ensure Android runtime shaders")]
         public static void EnsureFromMenu()=>EnsureRequiredShaders(true);
 
-        public static void EnsureForDedicatedServer()=>EnsureRequiredShaders(true,"dedicated server");
+        public static void EnsureForDedicatedServer()=>EnsureRequiredShaders(true,"dedicated server",false);
 
-        private static void EnsureRequiredShaders(bool failIfMissing,string buildKind="Android")
+        private static void EnsureRequiredShaders(bool failIfMissing,string buildKind="Android",bool includeArmorGlow=true)
         {
             GraphicsSettings settings=AssetDatabase.LoadAssetAtPath<GraphicsSettings>("ProjectSettings/GraphicsSettings.asset");
             if(settings==null)
@@ -85,7 +84,10 @@ namespace Alterverse.EditorChecks
             }
 
             bool changed=false;
-            foreach(string shaderName in RequiredShaders)
+            var required=new List<string>(RequiredShaders);
+            // Dedicated servers construct arena materials but never create the client-only armor halo.
+            if(includeArmorGlow)required.AddRange(new[]{"DimensionsFront/VoidArmorEnergy","DimensionsFront/VoidArmorHalo"});
+            foreach(string shaderName in required)
             {
                 Shader shader=Shader.Find(shaderName);
                 if(shader==null)
