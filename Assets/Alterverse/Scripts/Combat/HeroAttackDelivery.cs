@@ -237,7 +237,9 @@ namespace Alterverse.Combat
                 if (distance > .001f && BlockDistance(p.LaunchOrigin, AimGeometry.Direction(delta),
                     distance, .01f) < Mathf.Max(0f, distance - radius) - .01f) continue;
 
-                float score = distance + (target.GetComponent<HeroIdentity>() != null ? -100000f : 0f);
+                float alignment = distance > .0001f ? Vector3.Angle(p.Direction, delta) : 0f;
+                float score = alignment * 4f + distance +
+                    (target.GetComponent<HeroIdentity>() != null ? -100000f : 0f);
                 if (score < bestScore) { best = target; bestScore = score; }
             }
             return best;
