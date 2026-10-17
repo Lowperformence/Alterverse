@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>A render-only limp collapse. No gameplay scripts, colliders or network objects are copied.</summary>
+    /// <summary>A passive ragdoll in an isolated physics scene. Never drives gameplay bones or collisions.</summary>
     public sealed class HeroDeathBody : MonoBehaviour
     {
         public const float CollapseSeconds = 1.1f;
@@ -17,21 +17,27 @@ namespace Alterverse.Visuals
         private static readonly RaycastHit[] groundHits = new RaycastHit[64];
         private static readonly int FadeId = Shader.PropertyToID("_DFDeathFade");
         private readonly List<Renderer> renderers = new();
-        private readonly List<BonePose> poses = new();
-        private readonly List<Transform> contacts = new();
+        private readonly List<BodyPart> parts = new();
+        private readonly List<Collider> ragdollColliders = new();
+        private readonly List<int> materialCounts = new();
         private MaterialPropertyBlock block;
-        private Vector3 startPosition, fallDirection;
-        private Quaternion startRotation;
-        private float groundY, elapsed, side;
+        private Vector3 startPosition, groundPoint, groundNormal = Vector3.up;
+        private float elapsed;
+        private Scene isolatedScene;
+        private PhysicsScene physicsWorld;
+        private int ownerSceneHandle;
+        private static int nextScene;
+        private bool quitting;
 
         // Native Unity objects must be created on the main thread after AddComponent.
         private void Awake() => block = new MaterialPropertyBlock();
 
-        private struct BonePose
+        private sealed class BodyPart
         {
             public Transform Bone;
-            public Quaternion Start, End;
-            public float Delay;
+            public Rigidbody Body;
+            public BodyPart Parent;
+            public float Swing, Twist, LowTwist;
         }
 
         public static void Spawn(GameObject actor)
@@ -59,8 +65,8 @@ namespace Alterverse.Visuals
             GameObject host = new GameObject("DF_DeathBody");
             SceneManager.MoveGameObjectToScene(host, actor.scene);
             HeroDeathBody body = host.AddComponent<HeroDeathBody>();
-            body.startRotation = actor.transform.rotation;
-            host.transform.rotation = body.startRotation;
+            body.ownerSceneHandle = actor.scene.handle;
+            host.transform.rotation = actor.transform.rotation;
             var copies = new Dictionary<Transform, Transform>();
             Transform root = CopyHierarchy(visual, host.transform, copies, true);
             foreach (var pair in copies)
@@ -72,13 +78,18 @@ namespace Alterverse.Visuals
             host.transform.position = pivot;
             root.SetParent(host.transform, true);
             body.startPosition = pivot;
-            body.groundY = body.FindGround(actor);
-            body.fallDirection = actor.transform.forward;
-            // Stable visual variation without deprecated object IDs or gameplay RNG.
-            body.side = actor.transform.position.x < 0f ? -1f : 1f;
-            body.BuildPose(root, actor.transform.right, actor.transform.forward);
-            foreach (BonePose pose in body.poses) body.contacts.Add(pose.Bone);
-            if (hips != null) body.contacts.Add(hips);
+            body.FindGround(actor);
+            body.isolatedScene = SceneManager.CreateScene("DF_DeathPhysics_" + (++nextScene),
+                new CreateSceneParameters(LocalPhysicsMode.Physics3D));
+            body.physicsWorld = body.isolatedScene.GetPhysicsScene();
+            SceneManager.MoveGameObjectToScene(host, body.isolatedScene);
+            SceneManager.sceneUnloaded += body.OnSceneUnloaded;
+            if (!body.BuildRagdoll(root, actor))
+            {
+                Debug.LogError("DF: Hero skeleton is incomplete for a death ragdoll.", actor);
+                Destroy(host);
+                return;
+            }
             bodies.Add(body);
 #endif
         }
@@ -151,9 +162,10 @@ namespace Alterverse.Visuals
                 if (!block.isEmpty) { block.SetFloat(FadeId, 0f); copy.SetPropertyBlock(block, i); }
             }
             renderers.Add(copy);
+            materialCounts.Add(original.sharedMaterials.Length);
         }
 
-        private float FindGround(GameObject actor)
+        private void FindGround(GameObject actor)
         {
             float fallback = float.PositiveInfinity;
             foreach (Renderer renderer in renderers) fallback = Mathf.Min(fallback, renderer.bounds.min.y);
@@ -168,8 +180,9 @@ namespace Alterverse.Visuals
                     hit.collider.GetComponentInParent<Health>() != null || hit.distance >= closest) continue;
                 closest = hit.distance;
                 ground = hit.point.y;
+                groundNormal = hit.normal;
             }
-            return ground + .015f;
+            groundPoint = new Vector3(actor.transform.position.x, ground + .015f, actor.transform.position.z);
         }
 
         private static Transform Find(Transform root, string name)
@@ -179,65 +192,163 @@ namespace Alterverse.Visuals
             return null;
         }
 
-        private void BuildPose(Transform root, Vector3 right, Vector3 forward)
+        private bool BuildRagdoll(Transform root, GameObject actor)
         {
-            Fold(root, "Spine", "DF_SpineLower", right, 18f, .04f);
-            Fold(root, "Chest", "DF_SpineUpper", right, 14f, .08f);
-            Fold(root, "Head", "DF_NeckJoint", right, 28f, .19f);
-            foreach (string suffix in new[] { "L", "R" })
+            Transform Bone(string name, string legacy) => Find(root, name) ?? Find(root, legacy);
+            Transform hips = Bone("Hips", "DF_PelvisJoint");
+            Transform spine = Bone("Spine", "DF_SpineLower");
+            Transform chest = Bone("Chest", "DF_SpineUpper");
+            Transform head = Bone("Head", "DF_NeckJoint");
+            Transform foot = Bone("FootL", "DF_AnkleJointL");
+            if (hips == null || spine == null || chest == null || head == null || foot == null) return false;
+            float scale = Mathf.Clamp((head.position.y - foot.position.y) / 1.65f, .6f, 2f);
+            BodyPart pelvis = Segment(hips, spine.position, null, 12f, .16f * scale);
+            BodyPart lower = Segment(spine, chest.position, pelvis, 8f, .13f * scale, 40f, 25f);
+            BodyPart upper = Segment(chest, head.position, lower, 18f, .17f * scale, 55f, 35f);
+            Segment(head, head.position + actor.transform.up * (.20f * scale), upper, 4f, .12f * scale, 65f, 55f);
+            foreach (string side in new[] { "L", "R" })
             {
-                float s = suffix == "L" ? -1f : 1f;
-                Fold(root, "Thigh" + suffix, "DF_Leg" + suffix, right, -38f + s * 9f, 0f);
-                Fold(root, "Shin" + suffix, "DF_KneeJoint" + suffix, right, 88f + s * 12f, .03f);
-                Fold(root, "Foot" + suffix, "DF_AnkleJoint" + suffix, right, -20f, .12f);
-                Fold(root, "UpperArm" + suffix, "DF_Arm" + suffix, forward, s * 24f, .10f);
-                Fold(root, "Forearm" + suffix, "DF_ElbowJoint" + suffix, right, -30f + s * 12f, .16f);
-                Fold(root, "Hand" + suffix, "DF_WristJoint" + suffix, right, 22f, .23f);
+                Transform arm = Bone("UpperArm" + side, "DF_Arm" + side);
+                Transform elbow = Bone("Forearm" + side, "DF_ElbowJoint" + side);
+                Transform hand = Bone("Hand" + side, "DF_WristJoint" + side);
+                Transform thigh = Bone("Thigh" + side, "DF_Leg" + side);
+                Transform knee = Bone("Shin" + side, "DF_KneeJoint" + side);
+                Transform ankle = Bone("Foot" + side, "DF_AnkleJoint" + side);
+                if (arm == null || elbow == null || hand == null || thigh == null || knee == null || ankle == null) return false;
+                BodyPart shoulder = Segment(arm, elbow.position, upper, 4f, .075f * scale, 110f, 80f);
+                BodyPart forearm = Segment(elbow, hand.position, shoulder, 2f, .06f * scale, 35f, 15f);
+                forearm.LowTwist = -135f;
+                Segment(hand, hand.position + (hand.position - elbow.position).normalized * (.12f * scale),
+                    forearm, .7f, .055f * scale, 65f, 45f);
+                BodyPart leg = Segment(thigh, knee.position, pelvis, 8f, .10f * scale, 65f, 85f);
+                BodyPart shin = Segment(knee, ankle.position, leg, 5f, .08f * scale, 15f, 135f);
+                shin.LowTwist = -10f;
+                Segment(ankle, ankle.position + actor.transform.forward * (.18f * scale), shin, 1f, .065f * scale, 50f, 25f);
+                // Start a knee buckle instead of balancing an upright statue on its feet.
+                leg.Body.AddTorque(-actor.transform.right * .9f, ForceMode.VelocityChange);
+                shin.Body.AddTorque(actor.transform.right * .7f, ForceMode.VelocityChange);
+            }
+
+            GameObject ground = new GameObject("DF_RagdollGround");
+            ground.transform.SetParent(transform, false);
+            ground.transform.SetPositionAndRotation(groundPoint - groundNormal * .15f,
+                Quaternion.FromToRotation(Vector3.up, groundNormal));
+            ground.transform.localScale = Vector3.one;
+            BoxCollider floor = ground.AddComponent<BoxCollider>();
+            floor.size = new Vector3(10f, .3f, 10f);
+
+            foreach (BodyPart part in parts)
+            {
+                if (part.Parent == null) continue;
+                CharacterJoint joint = part.Body.gameObject.AddComponent<CharacterJoint>();
+                joint.connectedBody = part.Parent.Body;
+                joint.anchor = Vector3.zero;
+                joint.autoConfigureConnectedAnchor = false;
+                joint.connectedAnchor = part.Parent.Body.transform.InverseTransformPoint(part.Body.position);
+                joint.axis = part.Body.transform.InverseTransformDirection(actor.transform.right);
+                joint.swingAxis = part.Body.transform.InverseTransformDirection(actor.transform.forward);
+                joint.lowTwistLimit = new SoftJointLimit { limit = part.LowTwist };
+                joint.highTwistLimit = new SoftJointLimit { limit = part.Twist };
+                joint.swing1Limit = new SoftJointLimit { limit = part.Swing };
+                joint.swing2Limit = new SoftJointLimit { limit = part.Swing };
+                joint.enableProjection = true;
+                joint.projectionDistance = .05f;
+                joint.projectionAngle = 15f;
+                joint.enableCollision = false;
+                // No motors, springs or pose targets: every joint is passive under gravity.
+            }
+            // Avoid self-collision explosions from armor and overlapping limb capsules.
+            for (int i = 0; i < ragdollColliders.Count; i++)
+                for (int j = 0; j < i; j++) Physics.IgnoreCollision(ragdollColliders[i], ragdollColliders[j]);
+            Vector3 inherited = Vector3.zero;
+            CharacterController controller = actor.GetComponent<CharacterController>();
+            if (controller != null && controller.enabled) inherited = Vector3.ClampMagnitude(controller.velocity, 6f) * .45f;
+            foreach (BodyPart part in parts) part.Body.linearVelocity = inherited + Vector3.down * .25f;
+            pelvis.Body.AddForce(Vector3.down * .65f, ForceMode.VelocityChange);
+            upper.Body.AddTorque(actor.transform.right * 1.5f + actor.transform.forward * .3f, ForceMode.VelocityChange);
+            AttachRigidDetails(root);
+            return true;
+        }
+
+        private BodyPart Segment(Transform bone, Vector3 end, BodyPart parent, float mass, float radius,
+            float swing = 75f, float twist = 45f)
+        {
+            // Unscaled independent proxies avoid nested/nonuniform skeleton scales in PhysX.
+            GameObject proxy = new GameObject("DF_Ragdoll_" + bone.name);
+            proxy.transform.SetParent(transform, false);
+            proxy.transform.SetPositionAndRotation(bone.position, bone.rotation);
+            Rigidbody body = proxy.AddComponent<Rigidbody>();
+            body.mass = mass;
+            body.linearDamping = .15f;
+            body.angularDamping = .25f;
+            body.solverIterations = 8;
+            body.solverVelocityIterations = 2;
+            body.maxAngularVelocity = 12f;
+            body.maxDepenetrationVelocity = 2f;
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            Vector3 delta = end - bone.position;
+            GameObject shape = new GameObject("Capsule");
+            shape.transform.SetParent(proxy.transform, false);
+            shape.transform.position = bone.position + delta * .5f;
+            shape.transform.rotation = Quaternion.FromToRotation(Vector3.up, delta.sqrMagnitude > .00001f ? delta.normalized : Vector3.up);
+            CapsuleCollider capsule = shape.AddComponent<CapsuleCollider>();
+            capsule.direction = 1;
+            capsule.radius = radius;
+            capsule.height = Mathf.Max(radius * 2f, delta.magnitude * .9f);
+            ragdollColliders.Add(capsule);
+            BodyPart result = new BodyPart { Bone = bone, Body = body, Parent = parent, Swing = swing, Twist = twist, LowTwist = -twist };
+            parts.Add(result);
+            return result;
+        }
+
+        private void AttachRigidDetails(Transform root)
+        {
+            Transform rifleDetails = Find(root, "DF_SivraRifleDetails");
+            Transform rightHand = Find(root, "HandR");
+            if (rifleDetails != null && rightHand != null) rifleDetails.SetParent(rightHand, true);
+            foreach (Renderer renderer in renderers)
+            {
+                if (!(renderer is MeshRenderer)) continue;
+                bool attached = false;
+                foreach (BodyPart part in parts)
+                    if (renderer.transform == part.Bone || renderer.transform.IsChildOf(part.Bone)) { attached = true; break; }
+                if (attached) continue;
+                BodyPart nearest = parts[0];
+                float distance = float.PositiveInfinity;
+                foreach (BodyPart part in parts)
+                {
+                    float candidate = (renderer.bounds.center - part.Bone.position).sqrMagnitude;
+                    if (candidate < distance) { nearest = part; distance = candidate; }
+                }
+                if (!nearest.Bone.IsChildOf(renderer.transform)) renderer.transform.SetParent(nearest.Bone, true);
             }
         }
 
-        private void Fold(Transform root, string name, string fallback, Vector3 axis, float degrees, float delay)
+        private void FixedUpdate()
         {
-            Transform bone = Find(root, name) ?? Find(root, fallback);
-            if (bone == null) return;
-            Quaternion start = bone.localRotation;
-            poses.Add(new BonePose { Bone = bone, Start = start,
-                End = start * Quaternion.AngleAxis(degrees, bone.InverseTransformDirection(axis)), Delay = delay });
+            if (physicsWorld.IsValid() && Time.timeScale > 0f) physicsWorld.Simulate(Time.fixedDeltaTime);
         }
 
         private void LateUpdate()
         {
             elapsed += Time.deltaTime;
             if (elapsed >= CollapseSeconds + HoldSeconds + FadeSeconds) { Destroy(gameObject); return; }
-            float t = Mathf.Clamp01(elapsed / CollapseSeconds);
-            float fall = t * t * (3f - 2f * t);
-            float settle = Mathf.Sin(t * Mathf.PI * 3f) * (1f - t) * t * 4f;
-            transform.rotation = startRotation * Quaternion.Euler(fall * 83f + settle * 3f, 0f, side * fall * 13f);
-            transform.position = Vector3.Lerp(startPosition,
-                new Vector3(startPosition.x, groundY + .24f, startPosition.z) + fallDirection * .30f, fall);
-            foreach (BonePose pose in poses)
-            {
-                float p = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((t - pose.Delay) / (1f - pose.Delay)));
-                pose.Bone.localRotation = Quaternion.Slerp(pose.Start, pose.End, p);
-            }
-            // Ground the fallen silhouette without letting it sink through the arena floor.
-            float lowest = float.PositiveInfinity;
-            // Skinned localBounds often include animation safety margins, so use bone contacts
-            // rather than that oversized box when grounding the articulated model.
-            foreach (Transform contact in contacts) if (contact != null) lowest = Mathf.Min(lowest, contact.position.y - .09f);
-            foreach (Renderer renderer in renderers)
-                if (renderer is MeshRenderer) lowest = Mathf.Min(lowest, renderer.bounds.min.y);
-            if (lowest < groundY) transform.position += Vector3.up * (groundY - lowest);
+            // Proxies run in a separate physics world. Copy their final world poses in
+            // parent-first order; nothing writes a fixed collapse pose onto these bones.
+            foreach (BodyPart part in parts)
+                if (part.Bone != null && part.Body != null)
+                    part.Bone.SetPositionAndRotation(part.Body.position, part.Body.rotation);
 
             float fade = Mathf.Clamp01((elapsed - CollapseSeconds - HoldSeconds) / FadeSeconds);
             if (fade <= 0f) return;
-            foreach (Renderer renderer in renderers)
+            for (int r = 0; r < renderers.Count; r++)
             {
+                Renderer renderer = renderers[r];
                 if (renderer == null) continue;
                 renderer.GetPropertyBlock(block);
                 block.SetFloat(FadeId, fade);
                 renderer.SetPropertyBlock(block);
-                for (int i = 0; i < renderer.sharedMaterials.Length; i++)
+                for (int i = 0; i < materialCounts[r]; i++)
                 {
                     block.Clear();
                     renderer.GetPropertyBlock(block, i);
@@ -246,6 +357,19 @@ namespace Alterverse.Visuals
             }
         }
 
-        private void OnDestroy() => bodies.Remove(this);
+        private void OnSceneUnloaded(Scene scene)
+        {
+            if (scene.handle == ownerSceneHandle) Destroy(gameObject);
+        }
+
+        private void OnApplicationQuit() => quitting = true;
+
+        private void OnDestroy()
+        {
+            bodies.Remove(this);
+            SceneManager.sceneUnloaded -= OnSceneUnloaded;
+            if (!quitting && Application.isPlaying && isolatedScene.IsValid() && isolatedScene.isLoaded)
+                SceneManager.UnloadSceneAsync(isolatedScene);
+        }
     }
 }
