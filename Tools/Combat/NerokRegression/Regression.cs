@@ -104,7 +104,7 @@ class Regression
             Near(Hp(target),1000,"preview does not inflict damage");
             Near(actor.GetComponent<PlayerHeroAbilities>().QRemaining,0,"preview does not spend cooldown");
             Check(aim.Release(),"preview can release");Call(overlay,"LateUpdate");
-            Check(surfaces.All(s=>!s.activeSelf),"release hides both surfaces");
+            Check(surfaces.All(s=>s==null||!s.activeSelf),"release hides both surfaces");
             Run(1);Near(Hp(target),972,"shown path connects");
         }
         foreach(bool cancelled in new[]{false,true})
@@ -116,7 +116,7 @@ class Regression
             Check(surfaces[0]!=null&&surfaces[0].activeSelf,"cone remains visible when cover is present");
             Check(surfaces[1]==null||!surfaces[1].activeSelf,"no fake narrow hit line beside cover");
             if(cancelled)aim.Drag(Vector2.zero,1,true);else aim.Cancel();
-            Call(overlay,"LateUpdate");Check(surfaces.All(s=>!s.activeSelf),"cancel hides cone and path");
+            Call(overlay,"LateUpdate");Check(surfaces.All(s=>s==null||!s.activeSelf),"cancel hides cone and path");
         }
         Reset();var other=Hero(HeroId.Nyra,0,Vector3.zero);ManualAiming.For(other).Begin(2,Vector2.zero);
         var otherOverlay=other.AddComponent<AbilityRangePreviewOverlay>();Call(otherOverlay,"LateUpdate");
