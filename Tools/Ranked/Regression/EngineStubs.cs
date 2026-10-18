@@ -109,12 +109,12 @@ namespace Alterverse.Multiplayer {
 }
 
 namespace Alterverse.Shop {
- public readonly struct ArenaShopItem {public readonly Alterverse.Match.ArenaVariant Variant;public readonly int Price;public ArenaShopItem(Alterverse.Match.ArenaVariant variant,int price){Variant=variant;Price=price;}}
+ public readonly struct ArenaShopItem {public readonly Alterverse.Match.ArenaVariant Variant;public readonly int Price;public string Name=>Variant.ToString();public ArenaShopItem(Alterverse.Match.ArenaVariant variant,int price){Variant=variant;Price=price;}}
  public static class ArenaShopCatalog {public static readonly ArenaShopItem[] Items={
   new(Alterverse.Match.ArenaVariant.Moon,0),
   new(Alterverse.Match.ArenaVariant.Mars,0),
   new(Alterverse.Match.ArenaVariant.Earth,900)
- };}
+ };public static int IndexOf(Alterverse.Match.ArenaVariant arena)=>Array.FindIndex(Items,item=>item.Variant==arena);}
  public static class ArenaUnlockInventory {
   public static readonly HashSet<Alterverse.Match.ArenaVariant> Unlocked=new();
   public static bool Owned(Alterverse.Match.ArenaVariant arena)=>Unlocked.Contains(arena);
@@ -131,4 +131,5 @@ namespace Alterverse.Shop {
   public void Refresh(){}
  }
 }
+
 

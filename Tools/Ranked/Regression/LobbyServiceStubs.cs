@@ -52,9 +52,7 @@ namespace Unity.Services.Multiplayer {
 }
 namespace Alterverse.Shop {
  public static class HeroUnlockInventory {public static bool Owned(Alterverse.Characters.HeroId h)=>true;}
- public static class ArenaUnlockInventory {public static bool Owned(Alterverse.Match.ArenaVariant a)=>true;}
- public class ArenaShopItem {public Alterverse.Match.ArenaVariant Variant;public string Name;}
- public static class ArenaShopCatalog {public static ArenaShopItem[] Items={new(){Variant=Alterverse.Match.ArenaVariant.Moon,Name="Moon"},new(){Variant=Alterverse.Match.ArenaVariant.Earth,Name="Earth"}};public static int IndexOf(Alterverse.Match.ArenaVariant a)=>(int)a;}
 }
 namespace Alterverse.UI {public static class OnlinePartyOverlay {public static int Shows;public static void Show(){Shows++;}}}
+
 
