@@ -102,7 +102,8 @@ namespace Alterverse.Match
 }
 namespace Alterverse.Combat
 {
- public sealed class LaneMinion:Component {}
+ public sealed class LaneMinion:Component {public static readonly List<LaneMinion> Active=new();}
+ public sealed class HotZoneTank:Component {public static readonly List<HotZoneTank> Active=new();public Health TankHealth;}
  public sealed class Health:Component
  {
   public float Current=100,Shield,Max=100;public bool IsDead;public float Normalized=>Current/Max;public void Heal(float value){Current=Math.Min(Max,Current+value);}
@@ -189,7 +190,7 @@ namespace Alterverse.Multiplayer
   private readonly HashSet<string> previousHostKeys=new(),currentHostKeys=new();
   private readonly List<string> tombstones=new();
   private readonly List<CoopWorldEntityKey> live=new(128);
-  private float nextSend,nextRefresh;public int RefreshCalls;
+  private float nextSend,nextMovingSend,nextRefresh;public int RefreshCalls;
   private void Attach(CustomMessagingManager value){}
   public void Tick()=>Update();
   private readonly CustomMessagingManager messaging=new();
