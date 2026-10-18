@@ -16,6 +16,7 @@ namespace Alterverse.Multiplayer
     {
         private const string StateMessage="DF_COOP_WORLD_STATE_V2";
         private const float SendInterval=.125f;
+        private const float MovingSendInterval=1f/20f;
 
         private readonly Dictionary<string,CoopWorldEntityKey> entities=new();
         private readonly HashSet<string> previousHostKeys=new();
@@ -24,7 +25,7 @@ namespace Alterverse.Multiplayer
         private readonly List<CoopWorldEntityKey> live=new(128);
         private CustomMessagingManager messaging;
         private bool attached;
-        private float nextSend,nextRefresh;
+        private float nextSend,nextMovingSend,nextRefresh;
         private int lastRefreshFrame=-1,lastHealthCount=-1;
 
         private void OnDisable(){Detach();}
@@ -44,9 +45,20 @@ namespace Alterverse.Multiplayer
                 RefreshEntities();
             }
 
-            if(!CoopAuthority.LocalHasServerAuthority||Time.unscaledTime<nextSend)return;
-            nextSend=Time.unscaledTime+SendInterval;
-            SendState(manager);
+            if(!CoopAuthority.LocalHasServerAuthority)return;
+            float now=Time.unscaledTime;
+            if(now>=nextSend)
+            {
+                nextSend=now+SendInterval;
+                // A full snapshot also carries every moving creature.
+                nextMovingSend=now+MovingSendInterval;
+                SendState(manager);
+            }
+            else if(now>=nextMovingSend)
+            {
+                nextMovingSend=now+MovingSendInterval;
+                SendState(manager,true);
+            }
         }
 
         private void RefreshEntities()
@@ -68,22 +80,41 @@ namespace Alterverse.Multiplayer
             }
         }
 
-        private void SendState(NetworkManager manager)
+        private void SendState(NetworkManager manager,bool movingOnly=false)
         {
             if(manager==null||!manager.IsServer||messaging==null||manager.ConnectedClientsIds==null)return;
-            RefreshEntities();
-            currentHostKeys.Clear();
-            foreach(string key in entities.Keys)currentHostKeys.Add(key);
-
+            if(!movingOnly)RefreshEntities();
+            // Partial movement packets must not change the complete-world lifecycle set.
             tombstones.Clear();
-            foreach(string old in previousHostKeys)if(!currentHostKeys.Contains(old))tombstones.Add(old);
+            if(!movingOnly)
+            {
+                currentHostKeys.Clear();
+                foreach(string key in entities.Keys)currentHostKeys.Add(key);
+                foreach(string old in previousHostKeys)
+                    if(!currentHostKeys.Contains(old))tombstones.Add(old);
+            }
 
             // Keep each unfragmented state message below the transport MTU, even with
             // maximum-length keys. Each chunk is an independent partial snapshot.
             const int chunkSize=6;
             live.Clear();
-            foreach(CoopWorldEntityKey entity in entities.Values)
-                if(entity!=null&&entity.GetComponent<Health>()!=null)live.Add(entity);
+            if(movingOnly)
+            {
+                // Use the small creature registry; do not rescan the entire world at 20 Hz.
+                var creatures=HotZoneTank.Active;
+                for(int i=0;i<creatures.Count;i++)
+                {
+                    HotZoneTank creature=creatures[i];
+                    if(creature==null||creature.TankHealth==null)continue;
+                    CoopWorldEntityKey entity=creature.GetComponent<CoopWorldEntityKey>();
+                    if(entity!=null&&!string.IsNullOrEmpty(entity.Key))live.Add(entity);
+                }
+            }
+            else
+            {
+                foreach(CoopWorldEntityKey entity in entities.Values)
+                    if(entity!=null&&entity.GetComponent<Health>()!=null)live.Add(entity);
+            }
             uint round=CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan);
             for(int offset=0;offset<live.Count;offset+=chunkSize)
             {
@@ -115,8 +146,11 @@ namespace Alterverse.Multiplayer
                 for(int i=0;i<count;i++)writer.WriteValueSafe(new FixedString128Bytes(tombstones[offset+i]));
                 SendChunk(manager,writer,NetworkDelivery.ReliableSequenced);
             }
-            previousHostKeys.Clear();
-            foreach(string key in currentHostKeys)previousHostKeys.Add(key);
+            if(!movingOnly)
+            {
+                previousHostKeys.Clear();
+                foreach(string key in currentHostKeys)previousHostKeys.Add(key);
+            }
         }
 
         private void SendChunk(NetworkManager manager,FastBufferWriter writer,NetworkDelivery delivery)
