@@ -16,8 +16,6 @@ namespace Alterverse.Profile
     {
         [Serializable] sealed class Configuration { public string httpsEndpoint; }
         public static AccountServerBootstrap Instance { get; private set; }
-        // Remembers that this installation has already used an account, even if its session token is later lost.
-        const string KnownAccountOnDeviceKey = "DF_KnownUnityAccountOnDevice_v1";
         public string Status { get; private set; } = "Account server not configured.";
         public bool Busy { get; private set; }
         string endpoint,connectedPlayer;
@@ -142,11 +140,6 @@ namespace Alterverse.Profile
             var auth=AuthenticationService.Instance;
             if(string.IsNullOrEmpty(endpoint)||!auth.IsAuthorized||connectedPlayer==auth.PlayerId&&PaidShardCommerce.Instance!=null)return;
             connectedPlayer=auth.PlayerId;
-            if(GooglePlayAccountSession.Supported && PlayerPrefs.GetInt(KnownAccountOnDeviceKey,0)==0)
-            {
-                PlayerPrefs.SetInt(KnownAccountOnDeviceKey,1);
-                PlayerPrefs.Save();
-            }
             using var hash=SHA256.Create();
             string account=BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(auth.PlayerId))).Replace("-","").ToLowerInvariant();
             ProfileTransaction.Recover();
@@ -243,6 +236,12 @@ namespace Alterverse.Profile
                 Busy=true;
                 try
                 {
+                    string configuration=GooglePlayAccountSession.ConfigurationError;
+                    if(!string.IsNullOrEmpty(configuration))
+                    {
+                        GoogleStatus=configuration;
+                        return false;
+                    }
                     string code=await GooglePlayAccountSession.AuthorizationCodeAsync(true);
                     if(string.IsNullOrEmpty(code))
                     {
