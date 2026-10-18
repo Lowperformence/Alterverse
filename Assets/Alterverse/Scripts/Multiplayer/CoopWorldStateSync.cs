@@ -100,13 +100,22 @@ namespace Alterverse.Multiplayer
             live.Clear();
             if(movingOnly)
             {
-                // Use the small creature registry; do not rescan the entire world at 20 Hz.
+                // Use moving-unit registries; do not rescan the entire world at 20 Hz.
                 var creatures=HotZoneTank.Active;
                 for(int i=0;i<creatures.Count;i++)
                 {
                     HotZoneTank creature=creatures[i];
                     if(creature==null||creature.TankHealth==null)continue;
                     CoopWorldEntityKey entity=creature.GetComponent<CoopWorldEntityKey>();
+                    if(entity!=null&&!string.IsNullOrEmpty(entity.Key))live.Add(entity);
+                }
+                var minions=LaneMinion.Active;
+                for(int i=0;i<minions.Count;i++)
+                {
+                    LaneMinion minion=minions[i];
+                    if(minion==null)continue;
+                    CoopWorldEntityKey entity=minion.GetComponent<CoopWorldEntityKey>();
+                    // A newly spawned minion joins after the next full snapshot assigns its key.
                     if(entity!=null&&!string.IsNullOrEmpty(entity.Key))live.Add(entity);
                 }
             }
