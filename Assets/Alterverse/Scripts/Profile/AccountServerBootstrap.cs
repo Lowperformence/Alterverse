@@ -68,35 +68,50 @@ namespace Alterverse.Profile
                     AuthenticationService.Instance.Expired+=OnExpired;subscribed=true;
                 }
                 var auth=AuthenticationService.Instance;
-                // Fresh installs sign in to Google first, recovering the same Unity ID.
-                // Cached installs link in place so existing paid balances keep their owner.
-                if(!auth.IsSignedIn&&!auth.SessionTokenExists&&GooglePlayAccountSession.Supported)
-                {
-                    string code=await GooglePlayAccountSession.AuthorizationCodeAsync();
-                    if(!string.IsNullOrEmpty(code))
-                    {
-                        try{await auth.SignInWithGooglePlayGamesAsync(code);}
-                        catch(Exception){GoogleStatus="Google account sign-in failed. Check the Unity Google Play Games identity provider.";}
-                    }
-                }
                 if(!auth.IsSignedIn)
                 {
-                    // A cached Unity session restores the same player. Without one, anonymous
-                    // sign-in creates a *new* player; do that at most once per installation.
-                    // Never manufacture another guest after a previously used account loses
-                    // its cached token or Google sign-in temporarily fails.
-                    if(auth.SessionTokenExists ||
-                        !GooglePlayAccountSession.Supported ||
-                        PlayerPrefs.GetInt(KnownAccountOnDeviceKey,0)==0)
-                        await auth.SignInAnonymouslyAsync();
+                    if(GooglePlayAccountSession.Supported)
+                    {
+                        // Google Play Games is the primary Android identity. Always try
+                        // the existing Google-linked Unity account before restoring a
+                        // possibly temporary cached Unity account from an older build.
+                        bool cachedSession=auth.SessionTokenExists;
+                        string code=await GooglePlayAccountSession.AuthorizationCodeAsync();
+                        if(!string.IsNullOrEmpty(code))
+                        {
+                            try
+                            {
+                                // With a cached player, NEVER create a second Google account:
+                                // a missing Google link must instead leave the old cached
+                                // identity available for safe in-place linking.
+                                await auth.SignInWithGooglePlayGamesAsync(code,
+                                    new SignInOptions{CreateAccount=!cachedSession});
+                            }
+                            catch(Exception)
+                            {
+                                GoogleStatus="Google account sign-in failed. Reconnect Google Play to retry.";
+                            }
+                        }
+                        if(!auth.IsSignedIn&&cachedSession&&auth.SessionTokenExists)
+                        {
+                            // SignInAnonymously restores the cached Unity session here;
+                            // it must never run without a token on Android.
+                            await auth.SignInAnonymouslyAsync();
+                        }
+                        if(!auth.IsSignedIn)
+                        {
+                            Status="Google Play sign-in required. Existing progress is safe.";
+                            GoogleStatus="Unable to sign in to Google Play. Tap CONNECT GOOGLE to retry. No guest account was created.";
+                            return false;
+                        }
+                    }
                     else
                     {
-                        Status="Existing account session missing. Reconnect Google Play from Profile.";
-                        GoogleStatus="Session missing. Tap CONNECT GOOGLE to recover your existing account; no guest account was created.";
-                        return false;
+                        // Other platforms retain the existing guest sign-in flow.
+                        await auth.SignInAnonymouslyAsync();
                     }
                 }
-                else OnSignedIn();
+                OnSignedIn();
                 if(GooglePlayAccountSession.Supported)await ConnectGoogleCoreAsync(false,false);
                 return auth.IsAuthorized;
             }
@@ -162,7 +177,15 @@ namespace Alterverse.Profile
                 if(register)
                 {
                     // Link the existing guest instead of creating a new identity and losing progress.
-                    if(!auth.IsSignedIn)await auth.SignInAnonymouslyAsync();
+                    if(!auth.IsSignedIn)
+                    {
+                        if(GooglePlayAccountSession.Supported)
+                        {
+                            Status="Connect Google Play before registering a login.";
+                            return false;
+                        }
+                        await auth.SignInAnonymouslyAsync();
+                    }
                     await auth.AddUsernamePasswordAsync(username.Trim(),password);
                     Status="Account secured. Use this login on your other devices.";
                 }
