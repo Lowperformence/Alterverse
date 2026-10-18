@@ -61,10 +61,19 @@ namespace Alterverse.UI
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreate()
         {
+            if (DedicatedServerNetworkRuntime.Requested) return;
             if (FindAnyObjectByType<MainMenuController>() == null) new GameObject("DF_MainMenu").AddComponent<MainMenuController>();
         }
         private void Awake()
         {
+            // Headless servers must never initialize profile, video or hero preview UI.
+            if (DedicatedServerNetworkRuntime.Requested)
+            {
+                visible = false;
+                enabled = false;
+                Destroy(gameObject);
+                return;
+            }
             if (instance != null && instance != this) { Destroy(gameObject); return; }
             instance = this;
             selectedHero = Mathf.Clamp((int)PlayerHeroSelection.Selected,0,HeroIdentity.HeroCount-1);
