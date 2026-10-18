@@ -259,7 +259,7 @@ namespace Alterverse.Match
             RecordWinningParticipants(winner);
 
             if(winner>=0&&!rewardIssued)
-                rewardIssued=HotZoneTank.Spawn(winner);
+                rewardIssued=HotZoneTank.Spawn(winner,occurrence);
 
             HotZoneResolved?.Invoke(winner,zeroTime,lumenTime);
             if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)
@@ -319,7 +319,7 @@ namespace Alterverse.Match
             zeroTime=Mathf.Max(0,zeroScore);lumenTime=Mathf.Max(0,lumenScore);
             rewardIssued=winner>=0;
             RecordWinningParticipants(winner);
-            if(winner>=0)HotZoneTank.Spawn(winner);
+            if(winner>=0)HotZoneTank.Spawn(winner,occurrenceIndex);
 
             HotZoneResolved?.Invoke(winner,zeroTime,lumenTime);
 
