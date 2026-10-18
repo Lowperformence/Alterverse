@@ -20,6 +20,9 @@ partial class Regression
   Check(PlayerProfile.TryUseGooglePlayName("google-display",alias),"Google name saved on matching profile");
   Check(PlayerProfile.PlayerName==alias&&AccountProfilePrefs.GetString("DF_PlayerName")==initial[0].text,"display name preserves canonical account name");
   Check(!PlayerProfile.TryUseGooglePlayName("google-display",alias),"unchanged alias does not resave profile");
+  Check(PlayerProfile.TryUseGooglePlayName("google-display","Changed Play Name"),"verified changed Google name updates its cloud alias");
+  Check(PlayerProfile.PlayerName=="Changed Play Name","updated Google name is visible immediately");
+  Check(PlayerProfile.TryUseGooglePlayName("google-display",alias),"updated Google name can be synchronized again");
   Check(!PlayerProfile.TryUseGooglePlayName("google-display",null)&&PlayerProfile.PlayerName==alias,"empty Google reply keeps previous display");
   var snapshot=new SocialService.Snapshot{me=new SocialService.Player{playerId="google-display",name=alias}};
   SocialService.CleanSnapshot(snapshot);
