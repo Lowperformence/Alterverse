@@ -127,7 +127,12 @@ namespace Alterverse.Multiplayer
                     if(!await Alterverse.Profile.AccountServerBootstrap.Instance.EnsureAuthenticatedAsync())return false;
                 }
                 else if(!AuthenticationService.Instance.IsSignedIn)
+                {
+                    // Without the account bootstrap only recover an existing session.
+                    // A missing token must not silently create a second player identity.
+                    if(!AuthenticationService.Instance.SessionTokenExists)return false;
                     await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                }
                 SetStatus("ONLINE READY");
                 return true;
             }
@@ -764,7 +769,12 @@ namespace Alterverse.Multiplayer
                     if(!await Alterverse.Profile.AccountServerBootstrap.Instance.EnsureAuthenticatedAsync())return false;
                 }
                 else if(!AuthenticationService.Instance.IsSignedIn)
+                {
+                    // Without the account bootstrap only recover an existing session.
+                    // A missing token must not silently create a second player identity.
+                    if(!AuthenticationService.Instance.SessionTokenExists)return false;
                     await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                }
                 return true;
             }
             catch(Exception ex){Fail("ONLINE SERVICE UNAVAILABLE",ex);return false;}
