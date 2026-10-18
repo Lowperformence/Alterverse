@@ -17,17 +17,28 @@ namespace Alterverse.Multiplayer
         public readonly struct SlotResult
         {
             public readonly int Slot,Kills,Deaths,Assists,Objectives;
+            public readonly int QuestKills,HotZoneCaptures,SoldierKills;
+            public readonly bool HasQuestStats;
             public readonly float DamageDealt,DamageTaken,Healing,FrontContribution;
             public SlotResult(int slot,int kills,int deaths,int assists,int objectives,
-                float damageDealt,float damageTaken,float healing,float frontContribution)
+                float damageDealt,float damageTaken,float healing,float frontContribution,
+                int questKills=-1,int hotZoneCaptures=0,int soldierKills=0)
             {
                 Slot=slot;Kills=kills;Deaths=deaths;Assists=assists;Objectives=objectives;
                 DamageDealt=damageDealt;DamageTaken=damageTaken;Healing=healing;FrontContribution=frontContribution;
+                // The optional suffix is absent when connected to an older dedicated server.
+                HasQuestStats=questKills>=0;
+                QuestKills=Mathf.Max(0,questKills);
+                HotZoneCaptures=Mathf.Max(0,hotZoneCaptures);
+                SoldierKills=Mathf.Max(0,soldierKills);
             }
         }
 
         private const string ResultMessage="DF_COOP_MATCH_RESULT_V1";
         private const int ProtocolVersion=1;
+        // Append quest counters after the unchanged V1 result payload: old clients ignore
+        // the tail, and new clients can still accept results from an older server.
+        private const int QuestStatsExtensionVersion=0x44515131;
 
         public static CoopMatchResultSync Instance { get; private set; }
 
@@ -123,7 +134,10 @@ namespace Alterverse.Multiplayer
                     stats?.DamageDealt??0,
                     stats?.DamageTaken??0,
                     stats?.Healing??0,
-                    stats?.FrontContribution??0);
+                    stats?.FrontContribution??0,
+                    stats?.Kills??0,
+                    stats?.HotZoneCaptures??0,
+                    stats?.SoldierKills??0);
             }
             resultReady=true;
         }
@@ -145,6 +159,19 @@ namespace Alterverse.Multiplayer
                 writer.WriteValueSafe(s.Slot);
                 writer.WriteValueSafe(s.Kills);writer.WriteValueSafe(s.Deaths);writer.WriteValueSafe(s.Assists);writer.WriteValueSafe(s.Objectives);
                 writer.WriteValueSafe(s.DamageDealt);writer.WriteValueSafe(s.DamageTaken);writer.WriteValueSafe(s.Healing);writer.WriteValueSafe(s.FrontContribution);
+            }
+
+            // Quest statistics must come from the host's authoritative telemetry.
+            // Sending them as a suffix preserves compatibility with V1 clients.
+            writer.WriteValueSafe(QuestStatsExtensionVersion);
+            writer.WriteValueSafe(results.Count);
+            foreach(KeyValuePair<int,SlotResult> pair in results)
+            {
+                SlotResult s=pair.Value;
+                writer.WriteValueSafe(s.Slot);
+                writer.WriteValueSafe(s.QuestKills);
+                writer.WriteValueSafe(s.HotZoneCaptures);
+                writer.WriteValueSafe(s.SoldierKills);
             }
 
             for(int i=0;i<manager.ConnectedClientsIds.Count;i++)
@@ -176,6 +203,30 @@ namespace Alterverse.Multiplayer
                 reader.ReadValueSafe(out float dealt);reader.ReadValueSafe(out float taken);reader.ReadValueSafe(out float healing);reader.ReadValueSafe(out float frontContribution);
                 if(slot<0||slot>=MatchSession.MaxPlayers)continue;
                 results[slot]=new SlotResult(slot,kills,deaths,assists,objectives,dealt,taken,healing,frontContribution);
+            }
+
+            // The V1 payload ends above. Ignore a missing or incomplete extension
+            // rather than rejecting match rewards when the server is still on V1.
+            if(reader.TryBeginRead(sizeof(int)*2))
+            {
+                reader.ReadValueSafe(out int extensionVersion);
+                reader.ReadValueSafe(out int questCount);
+                if(extensionVersion==QuestStatsExtensionVersion &&
+                    questCount>=0 && questCount<=MatchSession.MaxPlayers &&
+                    reader.TryBeginRead(questCount*sizeof(int)*4))
+                {
+                    for(int i=0;i<questCount;i++)
+                    {
+                        reader.ReadValueSafe(out int slot);
+                        reader.ReadValueSafe(out int questKills);
+                        reader.ReadValueSafe(out int hotZoneCaptures);
+                        reader.ReadValueSafe(out int soldierKills);
+                        if(!results.TryGetValue(slot,out SlotResult old))continue;
+                        results[slot]=new SlotResult(old.Slot,old.Kills,old.Deaths,old.Assists,old.Objectives,
+                            old.DamageDealt,old.DamageTaken,old.Healing,old.FrontContribution,
+                            questKills,hotZoneCaptures,soldierKills);
+                    }
+                }
             }
 
             winningTeam=Mathf.Clamp(winner,0,1);
