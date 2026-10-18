@@ -1,4 +1,4 @@
-// Mechanical launcher layout export: keeps the existing logo artwork unchanged.
+// Export Android adaptive launcher layers from the approved round portal artwork.
 // Requires Node.js and sharp (npm install --no-save sharp).
 const fs = require('node:fs');
 const path = require('node:path');
@@ -6,26 +6,33 @@ const sharp = require('sharp');
 
 const root = path.resolve(__dirname, '../..');
 const branding = path.join(root, 'Assets/Alterverse/Branding');
-const source = fs.readFileSync(path.join(branding, 'DimensionsFrontAppIcon.png'));
-const image = `data:image/png;base64,${source.toString('base64')}`;
-const background = '<rect width="512" height="512" fill="#050813"/>';
-// Match the existing rounded frame and hide its baked-in light outer corners.
-const logo = (side) => {
-  const inset = (512-side)/2;
-  return `<defs><clipPath id="frame"><rect x="${inset}" y="${inset}" width="${side}" height="${side}" rx="${side/4}"/></clipPath></defs><image x="${inset}" y="${inset}" width="${side}" height="${side}" href="${image}" clip-path="url(#frame)"/>`;
-};
-const svg = (body) => Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">${body}</svg>`);
+const source = path.join(branding, 'DimensionsFrontAppIcon.png');
+const size = 512;
+const emblemSize = 300; // 88% of Android's 72/108 visible circular mask (342px).
 
 async function main() {
-  // All corners of the 216px square fit within Android's central 66/108 safe circle.
-  // The legacy image uses the equivalent size after the adaptive 72/108 mask crop.
-  for (const [name, body] of [
-    ['Background', background],
-    ['Foreground', logo(216)],
-    ['Legacy', background + logo(324)],
-  ]) {
-    await sharp(svg(body)).png().toFile(path.join(branding, `DimensionsFrontLauncher${name}.png`));
+  const raw = Buffer.alloc(size * size * 4);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const t = x / (size - 1);
+      const radial = Math.max(0, 1 - Math.hypot(x - 256, y - 256) / 370);
+      const i = (y * size + x) * 4;
+      raw[i] = Math.floor(3 + 12 * t + 5 * radial);
+      raw[i + 1] = Math.floor(9 + 5 * radial);
+      raw[i + 2] = Math.floor(38 + 27 * t + 9 * radial);
+      raw[i + 3] = 255;
+    }
   }
-  console.log('Exported Android launcher layers and legacy image from the original logo.');
+  const bg = await sharp(raw, { raw: { width: size, height: size, channels: 4 } }).png().toBuffer();
+  const fg = await sharp(source).resize(emblemSize, emblemSize).ensureAlpha().png().toBuffer();
+  const legacy = await sharp(source).resize(324, 324).ensureAlpha().png().toBuffer();
+  await fs.promises.writeFile(path.join(branding, 'DimensionsFrontLauncherBackground.png'), bg);
+  await sharp({ create: { width: size, height: size, channels: 4, background: '#00000000' } })
+    .composite([{ input: fg, left: 106, top: 106 }])
+    .png().toFile(path.join(branding, 'DimensionsFrontLauncherForeground.png'));
+  await sharp(bg).composite([{ input: legacy, left: 94, top: 94 }])
+    .png().toFile(path.join(branding, 'DimensionsFrontLauncherLegacy.png'));
+  console.log('Exported large circular Dimensions Front portal icon.');
 }
+
 main().catch(error => { console.error(error); process.exitCode = 1; });
