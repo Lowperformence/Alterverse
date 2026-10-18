@@ -207,6 +207,13 @@ namespace Alterverse.Characters
                 }
                 else if (!HeroAttackDelivery.For(gameObject).AbilityAimed(this, slot, attackAim)) return false;
             }
+            // Grant the entry shield only after Null Cut has been accepted.
+            // Cooldown, invalid aim and rejected delivery paths return before this point.
+            if(hero==HeroId.Veyr&&slot==0)
+            {
+                self.AddShield(20f,2f,false);
+                HeroSkillVfx.Support(gameObject,self,true,2f);
+            }
             HeroSkillVfx.Cast(gameObject,slot,presentationWindup);
             if (!mobility) locomotion.FaceAction(aimSpec.targetingMode == TargetingMode.Cone ?
                 attackAim.Direction : attackAim.CastDirection(transform.position));
