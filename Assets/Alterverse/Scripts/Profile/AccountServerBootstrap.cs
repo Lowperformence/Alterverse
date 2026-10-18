@@ -29,6 +29,13 @@ namespace Alterverse.Profile
         public bool GooglePlayAccountReady=>UnityServices.State==ServicesInitializationState.Initialized&&
             AuthenticationService.Instance.IsAuthorized&&AuthenticationService.Instance.PlayerId==linkedUnityPlayer&&
             !string.IsNullOrEmpty(linkedGooglePlayer)&&GooglePlayAccountSession.PlayerId==linkedGooglePlayer;
+        // The UI and match launcher must wait until the verified Google identity's
+        // cloud profile has been loaded, not just until Unity sign-in completes.
+        public static bool CloudProfileReady=>!GooglePlayAccountSession.Supported ||
+            (Instance?.GooglePlayAccountReady==true &&
+             PaidShardCommerce.Instance?.Ready==true &&
+             AccountProfilePrefs.Attached &&
+             AccountProfilePrefs.Account==PaidShardCommerce.Instance.AccountHash);
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Ensure()
         {
@@ -68,6 +75,18 @@ namespace Alterverse.Profile
                     AuthenticationService.Instance.Expired+=OnExpired;subscribed=true;
                 }
                 var auth=AuthenticationService.Instance;
+                if(!auth.IsSignedIn && GooglePlayAccountSession.Supported)
+                {
+                    // Do not fall back to an unrelated local account when the native
+                    // Google Play Games configuration is incomplete.
+                    string configuration=GooglePlayAccountSession.ConfigurationError;
+                    if(!string.IsNullOrEmpty(configuration))
+                    {
+                        Status="Google Play account setup incomplete.";
+                        GoogleStatus=configuration;
+                        return false;
+                    }
+                }
                 if(!auth.IsSignedIn)
                 {
                     if(GooglePlayAccountSession.Supported)
