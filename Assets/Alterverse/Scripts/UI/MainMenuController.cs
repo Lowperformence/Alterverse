@@ -418,7 +418,8 @@ namespace Alterverse.UI
             const float matchButtonGap = 8f;
             float matchButtonWidth = (w - matchButtonGap * 2) / 3f;
             bool heroReleaseLocked = !HeroUnlockCatalog.Released(deploymentHero);
-            bool matchButtonsEnabled = !choosingMatchMode && !OnlinePlanHandshake.Preparing &&
+            bool matchButtonsEnabled = AccountServerBootstrap.CloudProfileReady &&
+                !choosingMatchMode && !OnlinePlanHandshake.Preparing &&
                 !RankedPanel.Visible && RankedService.Instance?.Searching != true && RankedService.Instance?.Busy != true &&
                 (EdgegapOnlineFlow.Instance == null || !EdgegapOnlineFlow.Instance.Busy) &&
                 (OnlinePartyService.Instance == null || !OnlinePartyService.Instance.Busy) &&
@@ -431,6 +432,7 @@ namespace Alterverse.UI
             if (theme.Action(new Rect(Left+2*(matchButtonWidth+matchButtonGap),620,matchButtonWidth,58),"Play Offline",
                 enabled:matchButtonsEnabled,locked:heroReleaseLocked)) _ = BeginOfflineMatchAsync();
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
+                !AccountServerBootstrap.CloudProfileReady?"WAIT FOR CLOUD SYNC  /  PROFILE > GOOGLE ACCOUNT":
                 arenaShuffle?"ARENA SHUFFLE  /  RANDOM OWNED MAP":
                 $"SELECTED ARENA  /  {ArenaShopCatalog.For(selectedArena).Name}",theme.Small,true);
 
@@ -1341,6 +1343,11 @@ namespace Alterverse.UI
         }
         private bool PrepareSelectedMatch()
         {
+            if(!AccountServerBootstrap.CloudProfileReady)
+            {
+                launchMessage="Sign in via PROFILE > GOOGLE ACCOUNT and wait for cloud synchronization.";
+                return false;
+            }
             // The arena visible in the PLAY slider is the arena that starts.
             // Previously the slider could browse Kryon/Noxara while an older persisted arena
             // (often Moon) remained selected, so START MATCH launched the wrong battlefield.
@@ -1434,6 +1441,11 @@ namespace Alterverse.UI
         private void BeginCoopLaunch(CoopLobbyService coop)
         {
             if(coop==null||!coop.InLobby||!coop.IsLaunching||launching)return;
+            if(!AccountServerBootstrap.CloudProfileReady)
+            {
+                launchMessage="Wait for your Google Play cloud profile before joining this match.";
+                return;
+            }
             CoopMatchPlan prepared=CoopAuthority.PreparedPlan;
             if(prepared==null)
             {
