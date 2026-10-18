@@ -28,8 +28,9 @@ namespace Alterverse.Profile
                 if (AccountProfilePrefs.Attached) return "CONNECTING...";
                 // Never show or persist a fabricated local player identity on Android
                 // while the actual cloud account is being recovered.
-                if (GooglePlayAccountSession.Supported && AccountServerBootstrap.Instance != null)
-                    return AccountServerBootstrap.Instance.Busy ? "CONNECTING..." : "SIGN IN REQUIRED";
+                if (GooglePlayAccountSession.Supported)
+                    return AccountServerBootstrap.Instance==null || AccountServerBootstrap.Instance.Busy
+                        ? "CONNECTING..." : "SIGN IN REQUIRED";
                 value=SafeIdentityCatalog.GeneratePlayerName();
                 AccountProfilePrefs.SetString(NameKey,value); AccountProfilePrefs.Save();
                 return value;
