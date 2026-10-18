@@ -1173,7 +1173,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left+24,412,identityWidth-48,24),"DISPLAY NAME",theme.Small,true);
             theme.FitLabel(new Rect(Left+24,446,identityWidth-224,54),PlayerProfile.PlayerName,theme.Body);
             // Player identity is assigned automatically; no editable names or reroll controls.
-            theme.Label(new Rect(Left+24,510,identityWidth-48,58),profileMessage.Length>0?profileMessage:"Automatically assigned from an approved English name catalog.",theme.Small,true);
+            theme.Label(new Rect(Left+24,510,identityWidth-48,58),profileMessage.Length>0?profileMessage:"Your Google Play Games name is used after your cloud account is connected.",theme.Small,true);
             int count=FounderEntitlement.Owned?3:2;
             for(int i=0;i<count;i++)
             {
