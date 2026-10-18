@@ -14,7 +14,7 @@ namespace Alterverse.AI
         public const BotDifficulty InitialDifficulty=BotDifficulty.Normal;
         public const BotDifficulty Lowest=BotDifficulty.VeryEasy;
         public const BotDifficulty Highest=BotDifficulty.Nightmare;
-        public const BotDifficulty OnlineDifficulty=BotDifficulty.Hard;
+        public const BotDifficulty OnlineDifficulty=BotDifficulty.Normal;
 
         public static bool IsValid(BotDifficulty value)=>value>=Lowest&&value<=Highest;
         public static BotDifficulty Clamp(BotDifficulty value)=>(BotDifficulty)Mathf.Clamp((int)value,(int)Lowest,(int)Highest);
