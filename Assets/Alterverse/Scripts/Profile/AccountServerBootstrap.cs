@@ -16,6 +16,8 @@ namespace Alterverse.Profile
     {
         [Serializable] sealed class Configuration { public string httpsEndpoint; }
         public static AccountServerBootstrap Instance { get; private set; }
+        // Remembers that this installation has already used an account, even if its session token is later lost.
+        const string KnownAccountOnDeviceKey = "DF_KnownUnityAccountOnDevice_v1";
         public string Status { get; private set; } = "Account server not configured.";
         public bool Busy { get; private set; }
         string endpoint,connectedPlayer;
@@ -77,7 +79,23 @@ namespace Alterverse.Profile
                         catch(Exception){GoogleStatus="Google account sign-in failed. Check the Unity Google Play Games identity provider.";}
                     }
                 }
-                if(!auth.IsSignedIn)await auth.SignInAnonymouslyAsync();
+                if(!auth.IsSignedIn)
+                {
+                    // A cached Unity session restores the same player. Without one, anonymous
+                    // sign-in creates a *new* player; do that at most once per installation.
+                    // Never manufacture another guest after a previously used account loses
+                    // its cached token or Google sign-in temporarily fails.
+                    if(auth.SessionTokenExists ||
+                        !GooglePlayAccountSession.Supported ||
+                        PlayerPrefs.GetInt(KnownAccountOnDeviceKey,0)==0)
+                        await auth.SignInAnonymouslyAsync();
+                    else
+                    {
+                        Status="Existing account session missing. Reconnect Google Play from Profile.";
+                        GoogleStatus="Session missing. Tap CONNECT GOOGLE to recover your existing account; no guest account was created.";
+                        return false;
+                    }
+                }
                 else OnSignedIn();
                 if(GooglePlayAccountSession.Supported)await ConnectGoogleCoreAsync(false,false);
                 return auth.IsAuthorized;
@@ -90,6 +108,11 @@ namespace Alterverse.Profile
             var auth=AuthenticationService.Instance;
             if(string.IsNullOrEmpty(endpoint)||!auth.IsAuthorized||connectedPlayer==auth.PlayerId&&PaidShardCommerce.Instance!=null)return;
             connectedPlayer=auth.PlayerId;
+            if(GooglePlayAccountSession.Supported && PlayerPrefs.GetInt(KnownAccountOnDeviceKey,0)==0)
+            {
+                PlayerPrefs.SetInt(KnownAccountOnDeviceKey,1);
+                PlayerPrefs.Save();
+            }
             using var hash=SHA256.Create();
             string account=BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(auth.PlayerId))).Replace("-","").ToLowerInvariant();
             ProfileTransaction.Recover();
@@ -168,7 +191,34 @@ namespace Alterverse.Profile
             {GoogleStatus="Leave the match or party before connecting accounts.";return false;}
             if(GooglePlayShardStore.Instance?.Busy==true||PaidShardCommerce.Spending||restore&&GooglePlayShardStore.Instance?.PendingRecovery==true)
             {GoogleStatus="Finish purchase recovery before changing accounts.";return false;}
-            if(!await EnsureAuthenticatedAsync())return false;
+            if(!await EnsureAuthenticatedAsync())
+            {
+                // Manual recovery may be necessary when an existing installation lost its
+                // cached Unity session. Only sign in to an EXISTING Google-linked Unity
+                // account; never create a replacement identity during recovery.
+                if(UnityServices.State!=ServicesInitializationState.Initialized ||
+                    AuthenticationService.Instance.IsSignedIn || !GooglePlayAccountSession.Supported)return false;
+                Busy=true;
+                try
+                {
+                    string code=await GooglePlayAccountSession.AuthorizationCodeAsync(true);
+                    if(string.IsNullOrEmpty(code))
+                    {
+                        GoogleStatus="Google authorization unavailable. Check Play Games configuration.";
+                        return false;
+                    }
+                    await AuthenticationService.Instance.SignInWithGooglePlayGamesAsync(code,
+                        new SignInOptions{CreateAccount=false});
+                    OnSignedIn();
+                    return await VerifyGoogleLinkAsync();
+                }
+                catch(Exception)
+                {
+                    GoogleStatus="Existing Google account could not be restored. No new account was created.";
+                    return false;
+                }
+                finally{Busy=false;}
+            }
             if(Busy)return false;
             Busy=true;
             try{return await ConnectGoogleCoreAsync(true,restore);}
@@ -254,9 +304,13 @@ namespace Alterverse.Profile
                 {
                     try
                     {
-                        await auth.SignInAnonymouslyAsync();
-                        if(auth.PlayerId!=previousPlayer)GoogleStatus="Previous account could not be recovered. Contact support.";
-                        else GoogleStatus="Restore failed. Your previous account is still selected.";
+                        if(auth.SessionTokenExists)
+                        {
+                            await auth.SignInAnonymouslyAsync();
+                            if(auth.PlayerId!=previousPlayer)GoogleStatus="Previous account could not be recovered. Contact support.";
+                            else GoogleStatus="Restore failed. Your previous account is still selected.";
+                        }
+                        else GoogleStatus="Restore failed. Previous session unavailable; no new guest was created.";
                     }
                     catch(Exception){GoogleStatus="Restore failed. Retry sign-in before making purchases.";}
                 }
