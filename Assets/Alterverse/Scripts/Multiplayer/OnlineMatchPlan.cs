@@ -355,4 +355,54 @@ namespace Alterverse.Multiplayer
             IsHost = false
         };
     }
+
+    /// <summary>
+    /// Shared arena draw for Edgegap matches. A single participant's purchased arena
+    /// enters the common pool; free arenas are always available. The server draws once,
+    /// and its authoritative match plan distributes the result to all clients.
+    /// </summary>
+    public static class OnlineArenaPool
+    {
+        private static uint Bit(ArenaVariant arena)
+        {
+            int index = (int)arena;
+            return index >= 0 && index < 32 ? 1u << index : 0u;
+        }
+
+        public static uint LocalOwnedMask()
+        {
+            uint mask = 0;
+            foreach (var item in Alterverse.Shop.ArenaShopCatalog.Items)
+                if (item.Price <= 0 || Alterverse.Shop.ArenaUnlockInventory.Owned(item.Variant))
+                    mask |= Bit(item.Variant);
+            return Normalize(mask);
+        }
+
+        // Unknown arena bits never become playable. All free maps stay in the pool.
+        // Client-provided premium claims still require account-service validation
+        // before they can be treated as secure purchase evidence.
+        public static uint Normalize(uint reportedMask)
+        {
+            uint eligible = 0;
+            foreach (var item in Alterverse.Shop.ArenaShopCatalog.Items)
+            {
+                uint bit = Bit(item.Variant);
+                if (item.Price <= 0 || (reportedMask & bit) != 0u)
+                    eligible |= bit;
+            }
+            return eligible;
+        }
+
+        public static ArenaVariant Draw(uint pooledMask)
+        {
+            uint validPool = Normalize(pooledMask);
+            var candidates = new List<ArenaVariant>();
+            foreach (var item in Alterverse.Shop.ArenaShopCatalog.Items)
+                if ((validPool & Bit(item.Variant)) != 0u)
+                    candidates.Add(item.Variant);
+            return candidates.Count == 0
+                ? ArenaVariant.Moon
+                : candidates[UnityEngine.Random.Range(0, candidates.Count)];
+        }
+    }
 }
