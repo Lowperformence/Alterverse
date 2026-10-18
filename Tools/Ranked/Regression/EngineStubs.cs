@@ -16,7 +16,7 @@ namespace UnityEngine {
  public class Transform {public Vector3 position,localScale,eulerAngles;public void SetParent(Transform t,bool world){}}
  public class CapsuleCollider {public float height,radius;}
  public class SerializeField:Attribute {}
- public static class Random {public static int Range(int min,int max)=>min;}
+ public static class Random {public static int TestIndex;public static int Range(int min,int max)=>Math.Max(min,Math.Min(max-1,min+TestIndex));}
  public class TextAsset {public string text;}
  public static class Resources {
   public static TextAsset AccountConfig, RankedConfig;
@@ -96,7 +96,7 @@ namespace Alterverse.AI {
  public class BotTargetSensor:MonoBehaviour {}public class MobaBotBrain:MonoBehaviour {public void Initialize(int t,float f,float a,float c){}public void RefreshPersonality(){}}
  public class BotLanePlan:MonoBehaviour {public void Initialize(int t,float f){}}public class MobaBotMover:MonoBehaviour {}public class MobaBotCombat:MonoBehaviour {}public class HeroBotAbilities:MonoBehaviour {}public class MobaBotRespawn:MonoBehaviour {}
 }
-namespace Alterverse.Match {public enum ArenaVariant{Moon,Earth}public static class ArenaVariantRuntime {public static ArenaVariant Selected;public static bool ShuffleEnabled;public static ArenaVariant RandomOwnedArena(ArenaVariant a)=>a;}public class DimensionsFront {public bool HasEnded;public event Action<int> MatchEnded;}}
+namespace Alterverse.Match {public enum ArenaVariant{Moon=0,Mars=1,GreenPlanet=2,Noxara=3,Kryon=4,Earth=5,Pyraxis=6,Neptune=7,Dark00=8,DiamondCore=9,GJ504b=10,Wasp76b=11,Trappist1e=12,Toi715b=13}public static class ArenaVariantRuntime {public static ArenaVariant Selected;public static bool ShuffleEnabled;public static ArenaVariant RandomOwnedArena(ArenaVariant a)=>a;}public class DimensionsFront {public bool HasEnded;public event Action<int> MatchEnded;}}
 namespace Alterverse.Profile {public enum BattleItemType{None,Shield}public static class BattleItemInventory {public static BattleItemType Equipped;}public static class GooglePlayAccountSession {public static bool Supported=>false;}public class AccountServerBootstrap {public static AccountServerBootstrap Instance;public static bool CloudProfileReady=>true;public bool Busy;public Task<bool> EnsureAuthenticatedAsync()=>Task.FromResult(true);}}
 namespace Alterverse.UI {public sealed partial class MainMenuController {public static bool IsVisible=true;public static int PartyReturns,HomeReturns;public static void ShowCoopAfterMatch(string s){PartyReturns++;IsVisible=true;}public static void ShowHome(){HomeReturns++;IsVisible=true;}public static void ShowLaunchFailure(string s){}public bool launching,choosingMatchMode;public string launchMessage;bool PrepareSelectedMatch()=>true;}public class FrontEndTheme {public static object Background,Surface;public GUIStyle Title=new(),Heading=new(),Body=new(),Small=new();public static void Fill(UnityEngine.Rect r,object c){}public void Panel(UnityEngine.Rect r){}public void Label(UnityEngine.Rect r,string s,GUIStyleShim t,bool muted=false){}public void Label(UnityEngine.Rect r,string s,UnityEngine.GUIStyle t,bool muted=false){}public bool Action(UnityEngine.Rect r,string s,bool primary=false,bool enabled=true)=>false;} public class GUIStyleShim {} }
 namespace Alterverse.Multiplayer {
@@ -109,6 +109,16 @@ namespace Alterverse.Multiplayer {
 }
 
 namespace Alterverse.Shop {
+ public readonly struct ArenaShopItem {public readonly Alterverse.Match.ArenaVariant Variant;public readonly int Price;public ArenaShopItem(Alterverse.Match.ArenaVariant variant,int price){Variant=variant;Price=price;}}
+ public static class ArenaShopCatalog {public static readonly ArenaShopItem[] Items={
+  new(Alterverse.Match.ArenaVariant.Moon,0),
+  new(Alterverse.Match.ArenaVariant.Mars,0),
+  new(Alterverse.Match.ArenaVariant.Earth,900)
+ };}
+ public static class ArenaUnlockInventory {
+  public static readonly HashSet<Alterverse.Match.ArenaVariant> Unlocked=new();
+  public static bool Owned(Alterverse.Match.ArenaVariant arena)=>Unlocked.Contains(arena);
+ }
  public static class AvatarInventory {public static bool IsOwned(int id)=>id==0;}
  public static class FounderEntitlement {public static bool Owned=>false;}
  public static class FounderPackCatalog {public const string FounderTitle="FOUNDER";}
