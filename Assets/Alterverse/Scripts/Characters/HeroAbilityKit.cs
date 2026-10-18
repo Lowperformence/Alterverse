@@ -78,7 +78,7 @@ namespace Alterverse.Characters
                     new("Sightline Break",50,64,7.8f)),
                 HeroId.Elyra=>new HeroAbilityLoadout(
                     new("Field geometry",0,0,0),
-                    new("Orbit Fracture",8,55,7.3f,2f,.38f),
+                    new("Orbit Fracture",8,35,7.3f,2f,.38f),
                     new("Invert Field",12,26,6.5f,2.6f,.46f),
                     new("Phase Fold",16,0,2.3f),
                     new("Impossible Center",58,72,7f,2.5f,.68f)),
