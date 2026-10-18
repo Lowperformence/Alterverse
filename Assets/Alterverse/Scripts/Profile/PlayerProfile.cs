@@ -36,11 +36,12 @@ namespace Alterverse.Profile
         internal static bool TryUseGooglePlayName(string verifiedAccount,string displayName)
         {
             if(!AccountProfilePrefs.Attached||string.IsNullOrEmpty(verifiedAccount)||AccountProfilePrefs.Account!=verifiedAccount)return false;
-            // Import once per account. Later sign-ins must not replace an existing display name.
-            // A missing/invalid provider name leaves this unset so a later successful login can retry.
-            if(SafeIdentityCatalog.IsDisplayName(AccountProfilePrefs.GetString(PlayGamesNameKey, "")))return false;
+            // Use the verified Google Play Games display name for this account.
+            // If it changes in Google Play, update the game's public display alias too.
+            // The server-assigned internal identity remains unchanged.
             string value=SafeIdentityCatalog.NormalizePlayGamesName(displayName);
-            if(value==null)return false;
+            if(value==null||!SafeIdentityCatalog.IsDisplayName(value))return false;
+            if(AccountProfilePrefs.GetString(PlayGamesNameKey,"")==value)return false;
             AccountProfilePrefs.SetString(PlayGamesNameKey,value);AccountProfilePrefs.Save();
             return true;
         }
