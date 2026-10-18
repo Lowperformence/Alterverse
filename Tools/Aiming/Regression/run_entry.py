@@ -12,6 +12,7 @@ import tempfile
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dotnet-root', type=Path, required=True)
+    parser.add_argument('--all', action='store_true', help='Run the full aiming suite instead of only skill-entry cases')
     args = parser.parse_args()
     here = Path(__file__).resolve().parent
     root = here.parents[2]
@@ -42,13 +43,13 @@ public sealed partial class HeroSkillVfx {
 ''')
         output = directory / 'Regression.dll'
         tests = ['Regression.cs', 'TimmyRegression.cs', 'TimmyVfxRegression.cs', 'ConnectionTiming.cs',
-                 'ConeCaptureRegression.cs', 'MovingConnectionRegression.cs', 'EntryRegression.cs']
+                 'ConeCaptureRegression.cs', 'MovingConnectionRegression.cs', 'EntryRegression.cs', 'TemporalBeamRegression.cs']
         files = [fixtures, presentation, *[here / n for n in tests],
                  root / 'Assets/Alterverse/Editor/AttackDeliveryRegression.cs',
                  root / 'Assets/Alterverse/Editor/BasicAttackDeliveryRegression.cs',
                  *[root / 'Assets/Alterverse/Scripts' / n for n in names]]
         subprocess.run([str(dotnet / 'dotnet'), str(csc), '-nologo', '-noconfig', '-langversion:9',
-                        '-define:UNITY_EDITOR', '-main:EntryPoint', '-out:' + str(output),
+                        '-define:UNITY_EDITOR', '-main:' + ('Regression' if args.all else 'EntryPoint'), '-out:' + str(output),
                         *['-r:' + str(p) for p in refs.glob('*.dll')], *map(str, files)], check=True)
         output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions': {
             'tfm': 'net8.0', 'framework': {'name': 'Microsoft.NETCore.App', 'version': runtime.name}}}))

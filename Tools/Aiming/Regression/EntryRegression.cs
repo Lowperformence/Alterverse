@@ -10,6 +10,7 @@ partial class Regression
 {
  public static void RunEntryCases()
  {
+  TemporalBeamCases();
   foreach(int fps in new[]{30,60,120})
   {
    EmptyDirectedSkills(fps);
