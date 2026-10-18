@@ -42,6 +42,7 @@ namespace Alterverse.Multiplayer
             public BattleItemType BattleItem;
             public string Admission;
             public bool SupportsDisplayNames;
+            public uint ArenaOwnedMask;
         }
 
         public static DedicatedOnlineMatchHandshake Instance { get; private set; }
@@ -236,6 +237,9 @@ namespace Alterverse.Multiplayer
             writer.WriteValueSafe((int)BattleItemInventory.Equipped);
             writer.WriteValueSafe(new FixedString4096Bytes(RankedService.Instance?.Admission ?? ""));
             writer.WriteValueSafe(DisplayNameCapability);
+            // Optional trailing field: older servers ignore it; updated servers merge
+            // this client's unlocked arenas into the match-wide random pool.
+            writer.WriteValueSafe(OnlineArenaPool.LocalOwnedMask());
             messaging.SendNamedMessage(HelloMessage, NetworkManager.ServerClientId, writer, NetworkDelivery.ReliableSequenced);
             helloSent = true;
             status = "PLAYER IDENTITY SENT TO DEDICATED SERVER";
@@ -283,6 +287,9 @@ namespace Alterverse.Multiplayer
                 reader.ReadValueSafe(out uint nameCapability);
                 supportsDisplayNames = nameCapability == DisplayNameCapability;
             }
+            uint reportedArenas = 0u;
+            if (reader.TryBeginRead(sizeof(uint)))
+                reader.ReadValueSafe(out reportedArenas);
             string admission = fixedAdmission.ToString();
             if (RankedMatchReporter.RankedDeployment != !string.IsNullOrEmpty(admission))
             { RejectClient(manager, senderClientId, "ranked admission required for ranked deployment only"); return; }
@@ -357,7 +364,8 @@ namespace Alterverse.Multiplayer
                 Hero = (HeroId)heroRaw,
                 BattleItem = (BattleItemType)battleItemRaw,
                 Admission = admission,
-                SupportsDisplayNames = supportsDisplayNames
+                SupportsDisplayNames = supportsDisplayNames,
+                ArenaOwnedMask = OnlineArenaPool.Normalize(reportedArenas)
             };
             authorizedPlayers[senderClientId] = playerId;
             unauthenticatedSince.Remove(senderClientId);
@@ -420,9 +428,15 @@ namespace Alterverse.Multiplayer
                 }
                 if (string.IsNullOrWhiteSpace(matchId)) matchId = Guid.NewGuid().ToString("N");
 
+                uint sharedArenaPool = 0u;
+                for (int i = 0; i < ordered.Count; i++)
+                    sharedArenaPool |= ordered[i].ArenaOwnedMask;
+                ArenaVariant drawnArena = OnlineArenaPool.Draw(sharedArenaPool);
+                Debug.Log($"DIMENSIONS FRONT SERVER: online arena {drawnArena} chosen from {ordered.Count} player pool(s).");
+
                 OnlineMatchPlan plan = OnlineMatchPlan.BuildDedicated(
                     matchId,
-                    ArenaVariantRuntime.Selected,
+                    drawnArena,
                     BotDifficultySettings.OnlineDifficulty,
                     members,
                     RankedMatchReporter.RankedDeployment ? SessionMode.OnlineRanked : SessionMode.OnlineCasual);
