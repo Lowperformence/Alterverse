@@ -89,9 +89,9 @@ namespace Alterverse.Shop
  public class GooglePlayShardStore {public static GooglePlayShardStore Instance;public bool Busy,PendingRecovery;public void Reconnect(){}}
  public class PaidShardCommerce
  {
-  public static PaidShardCommerce Instance;public static bool Spending;public bool Ready=true,HasPaidHistory;public int FlushCalls;
+  public static PaidShardCommerce Instance;public static bool Spending;public bool Ready=true,HasPaidHistory;public int FlushCalls;public string AccountHash;
   public static event Action EntitlementsChanged;public static void Raise()=>EntitlementsChanged?.Invoke();
-  public static void Connect(string endpoint,Func<string> token,string account){Instance=new();}
+  public static void Connect(string endpoint,Func<string> token,string account){Instance=new(){AccountHash=account};}
   public static void Disconnect(){Instance=null;Alterverse.Profile.AccountProfilePrefs.Detach();Raise();}
   public void Refresh(){}public Task<bool> FlushProfileAsync(){FlushCalls++;return Task.FromResult(true);}
  }
