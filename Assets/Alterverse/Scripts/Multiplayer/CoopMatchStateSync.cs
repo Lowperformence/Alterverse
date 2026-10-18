@@ -38,7 +38,7 @@ namespace Alterverse.Multiplayer
 
             Attach(manager.CustomMessagingManager);
 
-            if(!CoopAuthority.LocalHasServerAuthority||Time.unscaledTime<nextSend)return;
+            if(!CoopAuthority.LocalHasServerAuthority)return;
 
             // Never publish an initial "opening=false" before the authoritative countdown has
             // actually entered its pause. Remote clients intentionally remain paused until this happens.
@@ -48,7 +48,7 @@ namespace Alterverse.Multiplayer
                 openingEverActive=true;
             }
 
-            nextSend=Time.unscaledTime+SendInterval;
+            if(!SnapshotCadence.IsDue(Time.unscaledTime,SendInterval,ref nextSend))return;
             SendState(manager);
         }
 

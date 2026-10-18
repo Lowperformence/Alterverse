@@ -23,6 +23,8 @@ namespace Alterverse.Multiplayer
         private readonly HashSet<string> currentHostKeys=new();
         private readonly List<string> tombstones=new();
         private readonly List<CoopWorldEntityKey> live=new(128);
+        private readonly WorldSnapshotHistory snapshotHistory=new();
+        private CoopMatchPlan snapshotPlan;
         private CustomMessagingManager messaging;
         private bool attached;
         private float nextSend,nextMovingSend,nextRefresh;
@@ -47,18 +49,11 @@ namespace Alterverse.Multiplayer
 
             if(!CoopAuthority.LocalHasServerAuthority)return;
             float now=Time.unscaledTime;
-            if(now>=nextSend)
-            {
-                nextSend=now+SendInterval;
-                // A full snapshot also carries every moving creature.
-                nextMovingSend=now+MovingSendInterval;
-                SendState(manager);
-            }
-            else if(now>=nextMovingSend)
-            {
-                nextMovingSend=now+MovingSendInterval;
-                SendState(manager,true);
-            }
+            // Full-world discovery shares the movement clock. It must not reset that clock,
+            // otherwise 8 Hz discovery repeatedly changes the spacing of 20 Hz creature poses.
+            if(!SnapshotCadence.IsDue(now,MovingSendInterval,ref nextMovingSend))return;
+            bool full=SnapshotCadence.IsDue(now,SendInterval,ref nextSend);
+            SendState(manager,!full);
         }
 
         private void RefreshEntities()
@@ -83,6 +78,10 @@ namespace Alterverse.Multiplayer
         private void SendState(NetworkManager manager,bool movingOnly=false)
         {
             if(manager==null||!manager.IsServer||messaging==null||manager.ConnectedClientsIds==null)return;
+            if(!object.ReferenceEquals(snapshotPlan,CoopAuthority.ActivePlan))
+            {
+                snapshotHistory.Clear();snapshotPlan=CoopAuthority.ActivePlan;
+            }
             if(!movingOnly)RefreshEntities();
             // Partial movement packets must not change the complete-world lifecycle set.
             tombstones.Clear();
@@ -91,7 +90,7 @@ namespace Alterverse.Multiplayer
                 currentHostKeys.Clear();
                 foreach(string key in entities.Keys)currentHostKeys.Add(key);
                 foreach(string old in previousHostKeys)
-                    if(!currentHostKeys.Contains(old))tombstones.Add(old);
+                    if(!currentHostKeys.Contains(old)){tombstones.Add(old);snapshotHistory.Remove(old);}
             }
 
             // Keep each unfragmented state message below the transport MTU, even with
@@ -122,7 +121,14 @@ namespace Alterverse.Multiplayer
             else
             {
                 foreach(CoopWorldEntityKey entity in entities.Values)
-                    if(entity!=null&&entity.GetComponent<Health>()!=null)live.Add(entity);
+                {
+                    if(entity==null)continue;
+                    Health health=entity.GetComponent<Health>();
+                    if(health==null)continue;
+                    bool moving=entity.GetComponent<HotZoneTank>()!=null||entity.GetComponent<LaneMinion>()!=null;
+                    if(snapshotHistory.ShouldSend(entity.Key,entity.transform.position,entity.transform.eulerAngles.y,
+                        health.Current,health.Shield,health.IsDead,moving,Time.unscaledTime))live.Add(entity);
+                }
             }
             uint round=CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan);
             for(int offset=0;offset<live.Count;offset+=chunkSize)
@@ -223,6 +229,7 @@ namespace Alterverse.Multiplayer
 
         private void Detach()
         {
+            snapshotHistory.Clear();
             if(!attached||messaging==null){messaging=null;attached=false;return;}
             messaging.UnregisterNamedMessageHandler(StateMessage);
             messaging=null;attached=false;

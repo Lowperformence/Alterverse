@@ -6,7 +6,11 @@ using UnityEngine;
 
 namespace UnityEngine
 {
- public class Object {}
+ public class Object {public static T FindAnyObjectByType<T>()where T:class=>null;}
+ public enum RuntimeInitializeLoadType {SubsystemRegistration,AfterSceneLoad}
+ public sealed class RuntimeInitializeOnLoadMethodAttribute:Attribute {public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType type){}}
+ public static class Application {public static bool isFocused=true,isMobilePlatform;public static int targetFrameRate=60;}
+ public static class Debug {public static int Logs;public static void Log(object value){Logs++;}}
  public class Component:Object
  {
   public GameObject gameObject;public Transform transform=>gameObject.transform;
@@ -44,7 +48,7 @@ namespace UnityEngine
   public static Vector3 Lerp(Vector3 a,Vector3 b,float t)=>a+(b-a)*t;
  }
  public struct Quaternion {public float yaw;public static Quaternion Euler(float x,float y,float z)=>new(){yaw=y};}
- public static class Time {public static float unscaledTime,time,timeScale=1;}
+ public static class Time {public static float unscaledTime,time,timeScale=1,unscaledDeltaTime;}
  public static class Mathf
  {
   public static float Abs(float a)=>Math.Abs(a);
@@ -133,6 +137,7 @@ namespace Alterverse.Visuals
 }
 namespace Alterverse.Multiplayer
 {
+ public static class DedicatedServerNetworkRuntime {public static bool Requested;}
  public sealed class CoopHeroSlot:Component {public int Slot;public string PlayerId="player";public bool IsLocalHuman;}
  public sealed class CoopRespawnReplica:Component {public void Apply(bool active,float remaining){}}
  public sealed class CoopHeroReplicaPresentation:Component {public void Apply(bool dead){}}
@@ -158,6 +163,10 @@ namespace Alterverse.Multiplayer
   private readonly Dictionary<ulong,string> senderOwners=new();
   private readonly Dictionary<ulong,float> senderLastPoseAt=new();
   private int localSlot=-1;private string localPlayerId="player";
+  private float nextOwnerSend,nextHostSnapshot,nextRefresh;
+  private void RefreshSlots(bool immediate){}
+  private void Attach(Unity.Netcode.CustomMessagingManager value){}
+  public void Tick()=>Update();
   public Unity.Netcode.CustomMessagingManager Messages=>messaging;
   internal OwnerPoseHistory History=>ownerPoseHistory;
   public void Slot(CoopHeroSlot actor,bool local=false){slots[actor.Slot]=actor;if(local){localSlot=actor.Slot;localPlayerId=actor.PlayerId;}}
@@ -166,6 +175,12 @@ namespace Alterverse.Multiplayer
   public void Broadcast(Unity.Netcode.NetworkManager m)=>BroadcastHostSnapshot(m);
   public void ReceiveSnapshot(ulong id,object[] values)=>OnHeroSnapshot(id,new Unity.Netcode.FastBufferReader(values));
  }
+}
+
+namespace Alterverse.Performance
+{
+ public enum MobileQuality {Battery,Balanced,Performance}
+ public static class MobilePerformanceProfile {public static MobileQuality Current=MobileQuality.Balanced;}
 }
 
 namespace Alterverse.Combat
@@ -191,6 +206,8 @@ namespace Alterverse.Multiplayer
   private readonly List<string> tombstones=new();
   private readonly List<CoopWorldEntityKey> live=new(128);
   private float nextSend,nextMovingSend,nextRefresh;public int RefreshCalls;
+  private readonly WorldSnapshotHistory snapshotHistory=new();
+  private CoopMatchPlan snapshotPlan;
   private void Attach(CustomMessagingManager value){}
   public void Tick()=>Update();
   private readonly CustomMessagingManager messaging=new();
@@ -199,3 +216,4 @@ namespace Alterverse.Multiplayer
   public void Broadcast(NetworkManager manager)=>SendState(manager);public CustomMessagingManager Messages=>messaging;
  }
 }
+

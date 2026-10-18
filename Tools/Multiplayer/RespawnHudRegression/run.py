@@ -28,7 +28,7 @@ text = (root / 'Assets/Alterverse/Scripts/Match/MatchScoreboard.cs').read_text()
 methods = ['private sealed class Entry', 'private void RefreshLocalRespawn()',
            'private TeamMember LocalPlayerMember()', 'private float Performance(',
            'private void UpdateRespawnBoard()', 'private void RefreshRespawnBoard()',
-           'private void DrawHud()', 'private void DrawTeam(']
+           'private void DrawHud()', 'private void DrawTeam(', 'private void RefreshRoster()']
 fields = text[text.index('private CoopHeroSlot localHeroSlot;'):text.index('public bool ResultCommitted')]
 production = 'using System.Collections.Generic;using UnityEngine;using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Multiplayer;using Alterverse.Profile;using Alterverse.UI;namespace Alterverse.Match {public sealed partial class MatchScoreboard {' + fields + ''.join(block(text, m) for m in methods) + '}}'
 runtime = args.dotnet_root.resolve()

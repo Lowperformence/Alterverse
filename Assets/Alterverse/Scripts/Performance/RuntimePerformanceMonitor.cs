@@ -8,6 +8,8 @@ namespace Alterverse.Performance
         private readonly VfxQualityHysteresis budget = new VfxQualityHysteresis();
         private float elapsed;
         private int frames, sampleTarget;
+        private readonly FrameTimingWindow serverFrames=new();
+        private int serverGcCollections;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetRuntimeState() { SmoothedFps = 0f; UnderBudget = false; }
@@ -28,10 +30,24 @@ namespace Alterverse.Performance
         {
             elapsed = 0f; frames = 0; sampleTarget = 0;
             budget.Reset(); UnderBudget = false; SmoothedFps = 0f;
+            serverFrames.Reset();serverGcCollections=System.GC.CollectionCount(0);
         }
 
         private void Update()
         {
+            // Headless processes need no window focus. Keep their wall-clock frame data
+            // separate from the mobile VFX quality controller, including during countdowns.
+            if(Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested)
+            {
+                if(serverFrames.Observe(Time.unscaledDeltaTime))
+                {
+                    SmoothedFps=serverFrames.Fps;
+                    int collections=System.GC.CollectionCount(0);
+                    Debug.Log($"DF SERVER PERF: fps={serverFrames.Fps:F1} p95_ms={serverFrames.P95Milliseconds:F1} max_ms={serverFrames.MaxMilliseconds:F1} gc0={collections-serverGcCollections} timeScale={Time.timeScale:F2}");
+                    serverGcCollections=collections;
+                }
+                return;
+            }
             if (Time.timeScale <= 0f || !Application.isFocused) return;
             int target = Application.isMobilePlatform
                 ? (MobilePerformanceProfile.Current == MobileQuality.Battery ? 30 : 60)

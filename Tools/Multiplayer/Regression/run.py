@@ -47,10 +47,10 @@ def main():
         accessors.write_text('using Alterverse.Combat;using Alterverse.Multiplayer;using UnityEngine;'
                              'namespace Alterverse.Match {public sealed partial class MatchScoreboard {' + board[start:end] + '}}')
         main_source = (source / 'Multiplayer/CoopHeroStateSync.cs').read_text()
-        constants = re.findall(r'private const (?:string|float) (?:OwnerPoseMessage|HeroSnapshotMessage|OwnerSendInterval|MinimumMovementSlack)=[^;]+;', main_source)
-        assert len(constants) == 4
+        constants = re.findall(r'private const (?:string|float) (?:OwnerPoseMessage|HeroSnapshotMessage|OwnerSendInterval|HostSnapshotInterval|MinimumMovementSlack)=[^;]+;', main_source)
+        assert len(constants) == 5
         declarations = directory / 'TransportConstants.cs'
-        declarations.write_text('namespace Alterverse.Multiplayer {public sealed partial class CoopHeroStateSync {' + ''.join(constants) + '}}')
+        declarations.write_text('using UnityEngine;using Unity.Netcode;namespace Alterverse.Multiplayer {public sealed partial class CoopHeroStateSync {' + ''.join(constants) + block(main_source, 'private void Update()') + '}}')
         pickup = (source / 'Combat/CentralHealingPickup.cs').read_text()
         a = pickup.index('private void Update()')
         b = pickup.index('private void AnimateAvailable()', a)
@@ -73,7 +73,7 @@ def main():
         output = directory / 'Regression.dll'
         response = directory / 'compile.rsp'
         files = [engine, geometry, epochs, here / 'Regression.cs', accessors, declarations, heal, packets, source / 'Combat/HeroCombatStatus.cs',
-                 source / 'Multiplayer/CoopHeroStateSync.Transport.cs', source / 'Multiplayer/OwnerPoseHistory.cs']
+                 source / 'Multiplayer/CoopHeroStateSync.Transport.cs', source / 'Multiplayer/OwnerPoseHistory.cs', source / 'Multiplayer/SnapshotCadence.cs', source / 'Multiplayer/WorldSnapshotHistory.cs', source / 'Performance/FrameTimingWindow.cs', source / 'Performance/RuntimePerformanceMonitor.cs', source / 'Performance/VfxQualityHysteresis.cs']
         response.write_text('\n'.join(['-nologo', '-target:exe', '-langversion:9', '-nowarn:0649', '-out:' + str(output),
                                        *['-r:' + str(path) for path in runtime.glob('*.dll')], *map(str, files)]))
         subprocess.run([str(dotnet / 'dotnet'), str(sdk / 'Roslyn/bincore/csc.dll'), '@' + str(response)], check=True)
@@ -84,3 +84,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

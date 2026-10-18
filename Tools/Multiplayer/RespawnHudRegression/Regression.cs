@@ -25,8 +25,8 @@ namespace UnityEngine
     public class MonoBehaviour:Component {}
     public class GameObject
     {
-        readonly Dictionary<Type,object> components=new();
-        public T AddComponent<T>()where T:Component,new(){var component=new T{gameObject=this};components[typeof(T)]=component;Object.Scene.Add(component);return component;}
+        public string name="actor";readonly Dictionary<Type,object> components=new();
+        public T AddComponent<T>()where T:Component,new(){var component=new T{gameObject=this};components[typeof(T)]=component;Object.Scene.Add(component);if(component is Health h)Health.Active.Add(h);return component;}
         public T GetComponent<T>()where T:class=>components.TryGetValue(typeof(T),out var c)?c as T:null;
     }
     public struct Rect {public Rect(float x,float y,float width,float height){}}
@@ -42,16 +42,23 @@ namespace UnityEngine
         public static int CeilToInt(float v)=>(int)Math.Ceiling(v);
     }
 }
-namespace Alterverse.Combat {public class Health:Component {}}
+namespace Alterverse.Combat {public class Health:Component {
+ public static readonly List<Health> Active=new();
+ public event Action<Health,GameObject> DiedWithSource;
+ public void Die()=>DiedWithSource?.Invoke(this,gameObject);
+}}
 namespace Alterverse.Characters
 {
     public class TeamMember:Component {public int Team;}
+    public class HeroIdentity:Component {public string DisplayName="BOT";}
+    public class MobaBotRespawn:Component {}
     public class HeroRespawn:Component
     {public bool IsRespawning,RespawnReady;public float RemainingSeconds;public int Confirmed;public void ConfirmRespawn(){Confirmed++;}}
     public static class LocalHeroContext {public static bool IsLocal(GameObject actor)=>actor.GetComponent<CoopHeroSlot>()?.IsLocalHuman==true;}
 }
 namespace Alterverse.Profile
 {
+    public static class PlayerProfile {public static string PlayerName="LOCAL";}
     public static class FounderEntitlement
     {public static int Reads;public static bool Owned {get{Reads++;return true;}}}
 }
@@ -98,6 +105,13 @@ namespace Alterverse.Match
         private DimensionsFront front=new();private bool matchEnded;
         private float HudWidth=>960;private float HudHeight=>720;
         private void DrawResult(){}
+        public int DeathEvents;
+        private void OnHeroDied(Health victim,GameObject source)=>DeathEvents++;
+        private static bool IsHero(TeamMember member)=>member!=null&&(member.GetComponent<HeroRespawn>()!=null||member.GetComponent<MobaBotRespawn>()!=null||member.GetComponent<CoopHeroSlot>()!=null);
+        private static string CoopDisplayName(CoopHeroSlot slot)=>"ONLINE";
+        private static string DisplayName(string value)=>value;
+        public void Enroll()=>RefreshRoster();
+        public int Enrolled=>entries.Count;
         public void Discover()=>RefreshLocalRespawn();
         public void Tick()=>UpdateRespawnBoard();
         public void Paint()=>DrawHud();
@@ -120,8 +134,29 @@ class Regression
         var actor=new GameObject();actor.AddComponent<Health>();actor.AddComponent<TeamMember>().Team=team;
         actor.AddComponent<CoopHeroSlot>().IsLocalHuman=local;actor.AddComponent<CoopRespawnReplica>();return actor;
     }
+    static void RosterCases()
+    {
+        Health.Active.Clear();UnityEngine.Object.Scene.Clear();
+        var board=new MatchScoreboard();var hero=Hero(0,true);var enemy=Hero(1);
+        var nonHero=new GameObject();nonHero.AddComponent<Health>();nonHero.AddComponent<TeamMember>();
+        board.Enroll();Check(board.Enrolled==2,"registry includes heroes and excludes non-hero health owners");
+        int scans=UnityEngine.Object.Searches;long bytes=GC.GetAllocatedBytesForCurrentThread();
+        for(int i=0;i<1200;i++)board.Enroll();
+        bytes=GC.GetAllocatedBytesForCurrentThread()-bytes;
+        Check(UnityEngine.Object.Searches==scans,"scoreboard roster never performs scene-wide discovery");
+        Check(bytes==0,"stable roster updates allocate no temporary scene arrays");
+        hero.GetComponent<Health>().Die();Check(board.DeathEvents==1,"repeated registration cannot duplicate death subscription");
+        var later=Hero(1);board.Enroll();Check(board.Enrolled==3,"late hero joins the roster");
+        var disabled=Hero(1);Health.Active.Remove(disabled.GetComponent<Health>());board.Enroll();
+        Check(board.Enrolled==3,"inactive health is not enrolled until enabled");
+        Health.Active.Add(disabled.GetComponent<Health>());board.Enroll();Check(board.Enrolled==4,"re-enabled hero is enrolled");
+        Health.Active.Remove(hero.GetComponent<Health>());board.Enroll();Check(board.Enrolled==4,"death/despawn keeps earned scoreboard counters");
+        Console.WriteLine($"1200 roster refreshes: allocatedBytes={bytes}, sceneSearches={UnityEngine.Object.Searches-scans}.");
+        Health.Active.Clear();UnityEngine.Object.Scene.Clear();
+    }
     static void Main()
     {
+        RosterCases();
         CoopAuthority.Active=true;
         var board=new MatchScoreboard();var local=Hero(0,true);var ally=Hero(0);var enemy=Hero(1);
         board.Seed(local,"LOCAL",1);board.Seed(ally,"ALLY",2);board.Seed(enemy,"ENEMY",3);

@@ -251,7 +251,8 @@ static class Regression
     "World snapshot preserves identity, position, HP, shield, alive state and tombstone count");
   object buffer=typeof(CoopWorldStateSync).GetField("live",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(sync);
   for(int i=1;i<=60;i++){Time.unscaledTime=i/60f;sync.Tick();}
-  Check(sync.RefreshCalls==sync.Messages.Sent.Count,"No server entity discovery on nonsend frames");
+  Check(sync.RefreshCalls<=9,"Full-world discovery stays bounded to eight updates per second plus initial state");
+  Check(sync.Messages.Sent.Count==2,"Unchanged stationary world state uses a one-second recovery heartbeat");
   Check(ReferenceEquals(buffer,typeof(CoopWorldStateSync).GetField("live",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(sync)),"Live snapshot buffer survives subsequent sends");
   health.Current=21;health.IsDead=true;sync.Broadcast(NetworkManager.Singleton);
   var changed=sync.Messages.Sent[^1];Check((float)changed.Values[7]==21&&(bool)changed.Values[9],"Reused buffers read current state rather than stale values");
@@ -303,5 +304,90 @@ static class Regression
    Position(GameplayCollision.ClampToRoundedArena(corner,width,height),corner,"Corner clamping is stable across repeated acknowledgements");
   }
  }
- static void Main(){HistoryCases();TransportCases();DashTransportCases();HealingAndStatusCases();WorldPacketCases();SnapshotWorkCases();EnlargedBoundaryCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
+ static void CadenceCases()
+ {
+  foreach(int fps in new[]{30,60,90,120})foreach(bool host in new[]{false,true})
+  {
+   CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=host;
+   CoopAuthority.ActivePlan=new();Time.unscaledTime=0;
+   var sync=new CoopHeroStateSync();sync.Slot(Actor(0,!host),!host);
+   NetworkManager.Singleton=new NetworkManager{IsServer=host};
+   MatchScoreboard.Instance=new MatchScoreboard();
+   for(int i=0;i<fps*10;i++){Time.unscaledTime=i/(float)fps;sync.Tick();}
+   Check(Math.Abs(sync.Messages.Sent.Count-200)<=1,$"Production {(host?"server":"owner")} maintains 20 Hz at {fps} FPS, got {sync.Messages.Sent.Count/10f}");
+   Console.WriteLine($"Production {(host?"server":"owner")} at {fps} FPS: {sync.Messages.Sent.Count/10f} updates/s.");
+   int before=sync.Messages.Sent.Count;Time.unscaledTime+=3;sync.Tick();sync.Tick();
+   Check(sync.Messages.Sent.Count==before+1,"A stall sends only one current pose, with no catch-up burst");
+  }
+  // Full snapshots must not restart the moving-creature clock.
+  foreach(int fps in new[]{30,60,120})
+  {
+   Time.unscaledTime=0;CoopAuthority.LocalHasServerAuthority=true;
+   NetworkManager.Singleton=new NetworkManager{IsServer=true};
+   var world=new CoopWorldStateSync();var entity=new GameObject().AddComponent<CoopWorldEntityKey>();entity.Key="moving";
+   var hp=entity.gameObject.AddComponent<Health>();var tank=entity.gameObject.AddComponent<HotZoneTank>();tank.TankHealth=hp;
+   HotZoneTank.Active.Clear();HotZoneTank.Active.Add(tank);world.Live.Add(entity);
+   for(int i=0;i<fps*10;i++){Time.unscaledTime=i/(float)fps;world.Tick();}
+   Check(Math.Abs(world.Messages.Sent.Count-200)<=1,"Moving world packets retain 20 Hz across 8 Hz full snapshots");
+   Check(world.RefreshCalls<=81,"World discovery does not run at movement frequency");
+   HotZoneTank.Active.Clear();
+  }
+ }
+ static void WorldDeltaCases()
+ {
+  Time.unscaledTime=0;var sync=new CoopWorldStateSync();var manager=new NetworkManager{IsServer=true};
+  for(int i=0;i<110;i++){var e=new GameObject().AddComponent<CoopWorldEntityKey>();e.Key="static"+i;e.gameObject.AddComponent<Health>();sync.Live.Add(e);}
+  sync.Broadcast(manager);Check(sync.Messages.Sent.Count==19,"Initial full world reaches clients");
+  sync.Messages.Sent.Clear();
+  for(int i=1;i<8;i++){Time.unscaledTime=i*.125f;sync.Broadcast(manager);}
+  Check(sync.Messages.Sent.Count==0,"Seven unchanged world scans produce zero redundant static packets");
+  Time.unscaledTime=1;sync.Broadcast(manager);
+  Check(sync.Messages.Sent.Count==19,"One-second full-state heartbeat repairs packet loss and late joins");
+  sync.Messages.Sent.Clear();Time.unscaledTime=1.125f;
+  var hp=sync.Live[0].GetComponent<Health>();hp.Current=29;hp.Shield=7;hp.IsDead=true;
+  sync.Broadcast(manager);
+  Check(sync.Messages.Sent.Count==1&&(int)sync.Messages.Sent[0].Values[1]==1,"Health/shield/death change bypasses static heartbeat immediately");
+  sync.Messages.Sent.Clear();sync.Live[1].transform.position=P(9);sync.Broadcast(manager);
+  Check(sync.Messages.Sent.Count==1,"A stationary-object relocation is never suppressed");
+  sync.Messages.Sent.Clear();var removed=sync.Live[2];sync.Live.RemoveAt(2);sync.Broadcast(manager);
+  Check(sync.Messages.Sent.Count==1&&sync.Messages.Sent[0].Delivery==NetworkDelivery.ReliableSequenced,"Filtering preserves reliable removal");
+  sync.Messages.Sent.Clear();sync.Live.Add(removed);sync.Broadcast(manager);
+  Check(sync.Messages.Sent.Count==1&&(int)sync.Messages.Sent[0].Values[1]==1,"Recreated key is not hidden by retired history");
+  var history=new WorldSnapshotHistory();history.ShouldSend("a",P(0),0,100,0,false,false,10);
+  Check(history.ShouldSend("a",P(0),0,100,0,false,false,0),"Clock reset forces fresh state");
+  Check(history.ShouldSend("a",P(0),0,100,0,false,true,.01f),"Stationary creature still supplies interpolation samples");
+  history.Clear();Check(history.ShouldSend("a",P(0),0,100,0,false,false,.02f),"Reconnect clears history");
+  sync.Messages.Sent.Clear();CoopAuthority.ActivePlan=new();sync.Broadcast(manager);
+  Check(sync.Messages.Sent.Count==19,"New match plan forces all current world state through the cache");
+  long before=GC.GetAllocatedBytesForCurrentThread();
+  for(int i=0;i<10000;i++)history.ShouldSend("a",P(0),0,100,0,false,false,.02f);
+  Check(GC.GetAllocatedBytesForCurrentThread()==before,"Unchanged snapshot comparisons allocate no temporary managed memory");
+  Console.WriteLine("110 unchanged stationary objects: 19 packets/second instead of 152; moving actors stay at 20 Hz.");
+ }
+ static void TimingCases()
+ {
+  var window=new Alterverse.Performance.FrameTimingWindow();bool report=false;
+  for(int i=0;i<600;i++)report|=window.Observe(1f/60f);
+  Check(report&&Math.Abs(window.Fps-60)<.01f&&Math.Abs(window.P95Milliseconds-1000f/60)<.01f,"Server pacing window measures 60 FPS and frame percentile");
+  window.Reset();report=false;
+  for(int i=0;i<580;i++)report|=window.Observe(.016f);
+  report|=window.Observe(1f);
+  Check(report&&window.Fps<60&&window.MaxMilliseconds==1000&&window.P95Milliseconds<17,"Rare stall is retained in max even when p95 stays low");
+  window.Reset();Check(!window.Observe(float.NaN)&&!window.Observe(float.PositiveInfinity)&&!window.Observe(0),"Invalid frame samples cannot poison the diagnostics");
+  for(int i=0;i<10000;i++)window.Observe(.001f);
+  Check(window.Fps>999&&window.P95Milliseconds<1.01f,"Diagnostics stay bounded above the sample capacity");
+  long before=GC.GetAllocatedBytesForCurrentThread();
+  for(int i=0;i<10000;i++)window.Observe(.001f);
+  Check(GC.GetAllocatedBytesForCurrentThread()==before,"Timing collection and reporting reuse their sample storage");
+  var monitor=new Alterverse.Performance.RuntimePerformanceMonitor();
+  var update=(Action)Delegate.CreateDelegate(typeof(Action),monitor,typeof(Alterverse.Performance.RuntimePerformanceMonitor).GetMethod("Update",BindingFlags.Instance|BindingFlags.NonPublic));
+  DedicatedServerNetworkRuntime.Requested=true;Application.isFocused=false;Time.timeScale=0;Time.unscaledDeltaTime=1f/60;
+  int logs=Debug.Logs;for(int i=0;i<600;i++)update();
+  Check(Debug.Logs==logs+1&&Math.Abs(Alterverse.Performance.RuntimePerformanceMonitor.SmoothedFps-60)<.01f,"Headless paused/unfocused server emits actual frame diagnostics");
+  DedicatedServerNetworkRuntime.Requested=false;Application.isFocused=true;Time.timeScale=1;
+  for(int i=0;i<120;i++)update();
+  Check(Debug.Logs==logs+1,"Client performance monitoring does not emit dedicated-server logs");
+ }
+ static void Main(){HistoryCases();TransportCases();DashTransportCases();HealingAndStatusCases();WorldPacketCases();SnapshotWorkCases();EnlargedBoundaryCases();CadenceCases();WorldDeltaCases();TimingCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
 }
+

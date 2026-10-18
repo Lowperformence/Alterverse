@@ -59,17 +59,15 @@ namespace Alterverse.Multiplayer
 
             if(CoopAuthority.LocalHasServerAuthority)
             {
-                if(Time.unscaledTime>=nextHostSnapshot)
+                if(SnapshotCadence.IsDue(Time.unscaledTime,HostSnapshotInterval,ref nextHostSnapshot))
                 {
-                    nextHostSnapshot=Time.unscaledTime+HostSnapshotInterval;
                     BroadcastHostSnapshot(manager);
                 }
                 return;
             }
 
-            if(localSlot>=0&&Time.unscaledTime>=nextOwnerSend)
+            if(localSlot>=0&&SnapshotCadence.IsDue(Time.unscaledTime,OwnerSendInterval,ref nextOwnerSend))
             {
-                nextOwnerSend=Time.unscaledTime+OwnerSendInterval;
                 SendOwnerPose(manager);
             }
         }
