@@ -25,10 +25,13 @@ namespace Alterverse.Online
 
         public static bool HasLeaderboardId=>!string.IsNullOrWhiteSpace(MostWinsLeaderboardId)&&
             !MostWinsLeaderboardId.StartsWith("REPLACE_",StringComparison.Ordinal);
-        public static bool IsConfigured=>HasLeaderboardId&&HasGameAppId;
+        public static bool IsConfigured=>HasLeaderboardId&&HasGameAppId&&
+            string.IsNullOrEmpty(GooglePlayAccountSession.ConfigurationError);
         public static ConnectionState State=>IsConfigured?state:ConnectionState.NotConfigured;
         public static string Status=>!HasLeaderboardId?"Add the MOST WINS leaderboard ID from Google Play Console.":
-            !HasGameAppId?"Play Games setup incomplete: game App ID is missing. Run Android Setup with the Play Console resources.":status;
+            !HasGameAppId?"Play Games setup incomplete: game App ID is missing. Run Android Setup with the Play Console resources.":
+            !string.IsNullOrEmpty(GooglePlayAccountSession.ConfigurationError)?
+                GooglePlayAccountSession.ConfigurationError:status;
         public static bool IsBusy=>authenticating||submitting||openingUi;
         public static bool IsAuthenticated
         {
@@ -149,6 +152,12 @@ namespace Alterverse.Online
         {
             if(!IsConfigured){state=ConnectionState.NotConfigured;return;}
 #if UNITY_ANDROID && !UNITY_EDITOR
+            if(!AccountServerBootstrap.CloudProfileReady)
+            {
+                state=ConnectionState.Idle;
+                status="Waiting for the verified Google account and cloud profile. Connect Google in PROFILE.";
+                return;
+            }
             if(openingUi)return;
             if(!IsAuthenticated)
             {
