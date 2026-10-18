@@ -16,6 +16,9 @@ namespace Alterverse.Profile
     {
         [Serializable] sealed class Configuration { public string httpsEndpoint; }
         public static AccountServerBootstrap Instance { get; private set; }
+        // Persistent migration guard: an installation that has previously connected
+        // a Unity account must never create a replacement identity on a login error.
+        private const string KnownAccountOnDeviceKey="DF_KnownUnityAccountOnDevice_v1";
         public string Status { get; private set; } = "Account server not configured.";
         public bool Busy { get; private set; }
         string endpoint,connectedPlayer;
@@ -101,8 +104,10 @@ namespace Alterverse.Profile
                                 // With a cached player, NEVER create a second Google account:
                                 // a missing Google link must instead leave the old cached
                                 // identity available for safe in-place linking.
+                                bool firstAccountOnDevice=!cachedSession &&
+                                    PlayerPrefs.GetInt(KnownAccountOnDeviceKey,0)==0;
                                 await auth.SignInWithGooglePlayGamesAsync(code,
-                                    new SignInOptions{CreateAccount=!cachedSession});
+                                    new SignInOptions{CreateAccount=firstAccountOnDevice});
                             }
                             catch(Exception)
                             {
@@ -140,6 +145,11 @@ namespace Alterverse.Profile
             var auth=AuthenticationService.Instance;
             if(string.IsNullOrEmpty(endpoint)||!auth.IsAuthorized||connectedPlayer==auth.PlayerId&&PaidShardCommerce.Instance!=null)return;
             connectedPlayer=auth.PlayerId;
+            if(GooglePlayAccountSession.Supported && PlayerPrefs.GetInt(KnownAccountOnDeviceKey,0)==0)
+            {
+                PlayerPrefs.SetInt(KnownAccountOnDeviceKey,1);
+                PlayerPrefs.Save();
+            }
             using var hash=SHA256.Create();
             string account=BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(auth.PlayerId))).Replace("-","").ToLowerInvariant();
             ProfileTransaction.Recover();
@@ -248,8 +258,12 @@ namespace Alterverse.Profile
                         GoogleStatus="Google authorization unavailable. Check Play Games configuration.";
                         return false;
                     }
+                    // A genuinely fresh installation may create its first Google-linked
+                    // account here after an earlier network retry. Previously used
+                    // installations may only recover an existing account.
+                    bool firstAccountOnDevice=PlayerPrefs.GetInt(KnownAccountOnDeviceKey,0)==0;
                     await AuthenticationService.Instance.SignInWithGooglePlayGamesAsync(code,
-                        new SignInOptions{CreateAccount=false});
+                        new SignInOptions{CreateAccount=firstAccountOnDevice});
                     OnSignedIn();
                     return await VerifyGoogleLinkAsync();
                 }
