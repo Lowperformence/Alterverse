@@ -43,6 +43,7 @@ namespace Alterverse.EditorChecks
             if(PlayerSettings.Android.bundleVersionCode<1)errors.Add("Set a positive, unused version code before uploading.");
             if((int)PlayerSettings.Android.minSdkVersion<26)errors.Add("Minimum Android SDK must remain API 26 or newer for this release profile.");
             AndroidR8Optimization.AddValidationErrors(errors);
+            ValidatePlayGamesSetup(errors);
 
             if(PlayerSettings.GetUseDefaultGraphicsAPIs(BuildTarget.Android))
                 errors.Add("Disable automatic Android Graphics APIs so the release always keeps the OpenGL ES 3 fallback.");
@@ -77,6 +78,37 @@ namespace Alterverse.EditorChecks
             if(!scene)errors.Add("No existing enabled scene in Build Settings.");
             if(errors.Count>0)throw new BuildFailedException(string.Join("\n",errors));
             Debug.Log("DIMENSIONS FRONT: Android release gate passed, including device-compatibility graphics checks. Generated manifest guard will run during the Gradle build.");
+        }
+        [System.Serializable] private sealed class PlayGamesSetupSnapshot
+        {
+            public string mAppId, mWebClientId;
+        }
+        private static void ValidatePlayGamesSetup(List<string> errors)
+        {
+            // A leaderboard ID on its own does not configure the native Play Games
+            // identity. Without the Web OAuth client Unity cannot request the server
+            // code used to restore the same cloud account on another device.
+            UnityEngine.Object asset=Resources.Load("PlayGamesSettings");
+            if(asset==null)
+            {
+                errors.Add("Google Play Games setup missing. Run Window > Google Play Games > Setup > Android Setup.");
+                return;
+            }
+            try
+            {
+                var values=JsonUtility.FromJson<PlayGamesSetupSnapshot>(JsonUtility.ToJson(asset));
+                if(values?.mAppId!="1029475752167")
+                    errors.Add("Google Play Games App ID does not match the published game. Run Android Setup with the Play Console resources.");
+                if(string.IsNullOrWhiteSpace(values?.mWebClientId))
+                    errors.Add("Google Play Games Web Client ID is missing. Enter the Game Server OAuth web client in Android Setup before building.");
+            }
+            catch(System.Exception)
+            {
+                errors.Add("Cannot read Google Play Games settings; regenerate them through Android Setup.");
+            }
+            string manifest="Assets/Plugins/Android/GooglePlayGamesManifest.androidlib/AndroidManifest.xml";
+            if(!File.Exists(manifest)||!File.ReadAllText(manifest).Contains("1029475752167"))
+                errors.Add("Google Play Games Android manifest is not configured with the published App ID. Run Android Setup to regenerate it.");
         }
         private static void EnsureLauncherIcon()
         {
