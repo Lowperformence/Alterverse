@@ -8,7 +8,28 @@ partial class Regression {
  static int checks;
  static void Check(bool b,string message){checks++;if(!b)throw new Exception(message);}
  static void Rejected(Action a,string message){bool rejected=false;try{a();}catch(InvalidOperationException){rejected=true;}Check(rejected,message);}
+ static void ArenaPoolCases(){
+  const uint moon=1u<<(int)ArenaVariant.Moon, mars=1u<<(int)ArenaVariant.Mars, earth=1u<<(int)ArenaVariant.Earth;
+  uint free=OnlineArenaPool.Normalize(0u);
+  Check((free&moon)!=0u&&(free&mars)!=0u,"free maps always in online pool");
+  Check((free&earth)==0u,"premium map not included without purchase");
+  Check(OnlineArenaPool.Normalize(1u<<31)==free,"unknown arena bits rejected");
+  Alterverse.Shop.ArenaUnlockInventory.Unlocked.Clear();
+  Check((OnlineArenaPool.LocalOwnedMask()&earth)==0u,"locked local map omitted");
+  Alterverse.Shop.ArenaUnlockInventory.Unlocked.Add(ArenaVariant.Earth);
+  uint buyerMask=OnlineArenaPool.LocalOwnedMask();
+  Check((buyerMask&earth)!=0u,"purchased arena reported");
+  uint otherPlayerMask=free;
+  uint union=buyerMask|otherPlayerMask;
+  Check((union&earth)!=0u,"one owner's purchased map enters collective match pool");
+  UnityEngine.Random.TestIndex=2;
+  Check(OnlineArenaPool.Draw(union)==ArenaVariant.Earth,"server can draw premium pooled arena");
+  UnityEngine.Random.TestIndex=0;
+  Check(OnlineArenaPool.Draw(0u)==ArenaVariant.Moon,"empty reported pool still draws a free map");
+  Alterverse.Shop.ArenaUnlockInventory.Unlocked.Clear();
+ }
  static void Main(){
+  ArenaPoolCases();
   LobbyCases().GetAwaiter().GetResult();
   LifecycleCases().GetAwaiter().GetResult();
   IdentityCases();
