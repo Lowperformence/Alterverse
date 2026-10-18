@@ -61,7 +61,7 @@ def main():
         b = world.index('private void OnState(', a)
         packets = directory / 'WorldPackets.cs'
         update = world[world.index('private void Update()'):world.index('private void RefreshEntities()')]
-        interval = re.search(r'private const float SendInterval=[^;]+;', world)[0]
+        interval = ''.join(re.findall(r'private const float (?:SendInterval|MovingSendInterval)=[^;]+;', world))
         packets.write_text('using System.Collections.Generic;using Alterverse.Combat;using UnityEngine;using Unity.Netcode;using Unity.Collections;namespace Alterverse.Multiplayer {public sealed partial class CoopWorldStateSync {' + interval + update + world[a:b] + '}}')
         locomotion = (source / 'Characters/HeroLocomotion.cs').read_text()
         a = locomotion.index('private uint movementRevision;')
