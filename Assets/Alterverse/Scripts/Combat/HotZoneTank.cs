@@ -105,7 +105,7 @@ namespace Alterverse.Combat
         private void OnEnable(){if(!active.Contains(this))active.Add(this);}
         private void OnDisable(){active.Remove(this);shotPending=false;shotTarget=null;}
 
-        public static bool Spawn(int winningTeam)
+        public static bool Spawn(int winningTeam,int zoneOccurrence=-1)
         {
             int team=Mathf.Clamp(winningTeam,0,1);
 
@@ -146,7 +146,12 @@ namespace Alterverse.Combat
             Health hp=go.AddComponent<Health>();hp.Configure(MaxHp,true);
             TeamMember member=go.AddComponent<TeamMember>();member.Initialize(team);
             if(Alterverse.Multiplayer.CoopAuthority.Active)
-                go.AddComponent<Alterverse.Multiplayer.CoopWorldEntityKey>().Configure($"HOTZONE:{coopSpawnSerial++}");
+            {
+                // The server and every client must derive the same key for the same event.
+                // A process-wide serial diverges when the player starts another online match.
+                string worldKey=zoneOccurrence>=0?$"HOTZONE:{zoneOccurrence}":$"HOTZONE:{coopSpawnSerial++}";
+                go.AddComponent<Alterverse.Multiplayer.CoopWorldEntityKey>().Configure(worldKey);
+            }
             go.AddComponent<HotZoneTank>().Initialize(team,spawn,skeleton,alien,spider,bear);
             return true;
         }
