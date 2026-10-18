@@ -24,7 +24,8 @@ namespace Alterverse.Multiplayer
 
 namespace Alterverse.Combat
 {
- public static class HotZoneTank {public static int Spawns;public static bool Spawn(int team){Spawns++;return true;}}
+ public class HotZoneTank:MonoBehaviour {public static int Spawns;public static readonly System.Collections.Generic.List<HotZoneTank> Active=new();public Health TankHealth;public static bool Spawn(int team){Spawns++;return true;}}
+ public class LaneMinion:MonoBehaviour {public static readonly System.Collections.Generic.List<LaneMinion> Active=new();}
  public class DimensionPlanet:MonoBehaviour {public void ApplyNetworkAvailability(bool alive){}}
 }
 namespace Alterverse.Match
