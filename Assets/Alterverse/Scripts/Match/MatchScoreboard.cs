@@ -97,7 +97,13 @@ if(!CoopMatchResultSync.TryGetLocalResult(out CoopMatchResultSync.SlotResult net
 {rewardPending=true;nextRewardAttempt=Time.unscaledTime+.25f;return;}
 winningTeam=networkWinner;won=player!=null&&player.Team==winningTeam;rewardId=receipt;
 playerKills=networkResult.Kills;playerDeaths=networkResult.Deaths;playerAssists=networkResult.Assists;playerObjectives=networkResult.Objectives;
-MatchTelemetry.HeroStats localTelemetry=playerEntry!=null?MatchTelemetry.Instance?.GetStats(playerEntry.Health):null;playerQuestKills=localTelemetry?.Kills??networkResult.Kills;playerHotZoneCaptures=localTelemetry?.HotZoneCaptures??0;playerSoldierKills=localTelemetry?.SoldierKills??0;playerDamageDealt=networkResult.DamageDealt;playerDamageTaken=networkResult.DamageTaken;playerHealing=networkResult.Healing;playerFrontContribution=networkResult.FrontContribution;
+// Online quests use authoritative end-of-match totals. Local telemetry can miss
+// remote events; keep it only as a fallback for older servers without the suffix.
+MatchTelemetry.HeroStats localTelemetry=playerEntry!=null?MatchTelemetry.Instance?.GetStats(playerEntry.Health):null;
+playerQuestKills=networkResult.HasQuestStats?networkResult.QuestKills:networkResult.Kills;
+playerHotZoneCaptures=networkResult.HasQuestStats?networkResult.HotZoneCaptures:(localTelemetry?.HotZoneCaptures??0);
+playerSoldierKills=networkResult.HasQuestStats?networkResult.SoldierKills:(localTelemetry?.SoldierKills??0);
+playerDamageDealt=networkResult.DamageDealt;playerDamageTaken=networkResult.DamageTaken;playerHealing=networkResult.Healing;playerFrontContribution=networkResult.FrontContribution;
 ApplyNetworkResultsToEntries();
 }
 else
