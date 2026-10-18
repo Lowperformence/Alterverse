@@ -112,7 +112,7 @@ namespace Alterverse.Combat
             if (hero == HeroId.Mira && (slot == 1 || slot == 2)) return AimType.Ally;
             if ((hero == HeroId.Kaelon || hero == HeroId.Rook || hero == HeroId.Nerok) && slot == 1) return AimType.Self;
             if (ability.Radius > 0f) return ability.Range > 0f ? AimType.Area : AimType.SelfArea;
-            if (hero == HeroId.Nyra && slot == 0) return AimType.Beam;
+            if ((hero == HeroId.Nyra || hero == HeroId.Traveler) && slot == 0) return AimType.Beam;
             if ((hero == HeroId.Nerok && slot == 0) || (hero == HeroId.Kaelon && slot == 0) ||
                 (hero == HeroId.Veyr && slot == 1) || HeroAttackDelivery.IsRanged(hero)) return AimType.Projectile;
             return AimType.Melee;

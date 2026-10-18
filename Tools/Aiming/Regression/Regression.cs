@@ -55,7 +55,7 @@ partial class Regression
  {
   Reset();
   Check(AimingSettings.Current.For(HeroId.Nyra,0).aimType==AimType.Beam,"Prism Shot is a laser");
-  Check(AimingSettings.Current.For(HeroId.Traveler,0).aimType==AimType.Projectile,"Temporal Beam retains existing orb flight");
+  Check(AimingSettings.Current.For(HeroId.Traveler,0).aimType==AimType.Beam,"Temporal Beam resolves as a laser on release");
   foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))for(int slot=0;slot<4;slot++)
   {
    var entry=AimingSettings.Current.For(hero,slot);var baseline=HeroAbilityKit.LoadoutFor(hero).Spec(slot);
@@ -492,7 +492,7 @@ partial class Regression
    Console.WriteLine("PASS "+checks+" assertions: movement taps, manual override, last direction, multitouch, Timmy leaps and host routing.");
    return;
   }
-  MovementDashCases();SupportTargeting();SelfShieldPreviews();Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();MovingConnectionCases();TimmyCases();TimmyVfxCases();
+  MovementDashCases();SupportTargeting();SelfShieldPreviews();Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();MovingConnectionCases();TimmyCases();TimmyVfxCases();TemporalBeamCases();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   ConnectionTiming(args.Contains("--connection-timing"));
