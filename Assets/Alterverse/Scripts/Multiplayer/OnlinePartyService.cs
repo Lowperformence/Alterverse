@@ -627,7 +627,11 @@ namespace Alterverse.Multiplayer
                     if(!await Alterverse.Profile.AccountServerBootstrap.Instance.EnsureAuthenticatedAsync())return false;
                 }
                 else if (!AuthenticationService.Instance.IsSignedIn)
+                {
+                    // Recover cached identity only; never create an account from this path.
+                    if(!AuthenticationService.Instance.SessionTokenExists)return false;
                     await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                }
                 return true;
             }
             catch (Exception ex)
