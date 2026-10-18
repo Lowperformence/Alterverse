@@ -16,6 +16,10 @@ namespace Alterverse.Profile
                 string value=AccountProfilePrefs.GetString(NameKey, "");
                 if (SafeIdentityCatalog.IsPlayerName(value))
                 {
+                    // Do not briefly show a server-generated identity while the
+                    // Google account and correct cloud profile are still being verified.
+                    if (GooglePlayAccountSession.Supported && !AccountServerBootstrap.CloudProfileReady)
+                        return "CONNECTING...";
                     string alias=AccountProfilePrefs.Attached?AccountProfilePrefs.GetString(PlayGamesNameKey, ""):null;
                     return SafeIdentityCatalog.IsDisplayName(alias)?alias:value;
                 }
