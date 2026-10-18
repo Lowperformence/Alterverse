@@ -1,15 +1,40 @@
+using System.Collections.Generic;
 using Alterverse.Characters;using UnityEngine;
 namespace Alterverse.Combat
 {
 [RequireComponent(typeof(Health))]public sealed class LaneMinion:MonoBehaviour
 {
-[SerializeField]private float moveSpeed=2.8f,detectionRange=7.5f,attackRange=1.85f,attackDamage=3.25f,attackCooldown=1.35f;private Health health,target,pendingTarget;private float hitAt,pendingDamage,pendingRange;private int team;private Alterverse.Match.DimensionsFront front;private float structureDamageMultiplier=1f,frontInfluenceOnDeath;private bool siegeUnit;public bool IsSiegeUnit=>siegeUnit;public float RunningSpeed=>moveSpeed;private Vector3 destination;public Vector3 LaneDestination=>destination;private float nextAttackTime,nextScanTime,nextRouteScan;private string waveGroupKey;private int waveSlot;private float regroupGraceUntil;private RealityCore routeCore;private bool routeBlocked;public int Team=>team;public void ConfigureFrontInfluence(float percent)=>frontInfluenceOnDeath=Mathf.Max(0f,percent);public void ConfigureSiegeRole(bool enabled=true)=>siegeUnit=enabled;public void ConfigureCombat(float speed,float detection,float range,float damage,float cooldown,float vsStructures=1f){moveSpeed=speed;detectionRange=detection;attackRange=range;attackDamage=damage;attackCooldown=cooldown;structureDamageMultiplier=Mathf.Max(1f,vsStructures);}private void Awake(){gameObject.layer=GameplayCollision.Units;health=GetComponent<Health>();front=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();if(health!=null)health.Died+=OnDied;}private void OnDestroy(){if(health!=null)health.Died-=OnDied;}private void OnDisable(){pendingTarget=null;}private void OnDied(){pendingTarget=null;if(frontInfluenceOnDeath<=0f)return;front??=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();if(front!=null)front.Push(team==0?1:0,frontInfluenceOnDeath);}public void Initialize(int teamId,Vector3 laneDestination){team=teamId;destination=laneDestination;nextAttackTime=Time.time+Random.Range(.2f,.65f);}
+// Reuse one live registry for movement snapshots and one group-leader pass per frame.
+private static readonly List<LaneMinion> active=new();
+public static IReadOnlyList<LaneMinion> Active=>active;
+private static readonly Dictionary<(int team,string group),LaneMinion> groupLeaders=new();
+private static int leaderFrame=-1;
+[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+private static void ResetRegistry(){active.Clear();groupLeaders.Clear();leaderFrame=-1;}
+private void OnEnable(){if(!active.Contains(this))active.Add(this);leaderFrame=-1;}
+private static void RefreshGroupLeaders()
+{
+    if(leaderFrame==Time.frameCount)return;
+    leaderFrame=Time.frameCount;
+    groupLeaders.Clear();
+    for(int i=0;i<active.Count;i++)
+    {
+        LaneMinion unit=active[i];
+        if(unit==null||unit.health==null||unit.health.IsDead||unit.siegeUnit||string.IsNullOrEmpty(unit.waveGroupKey))continue;
+        var key=(unit.team,unit.waveGroupKey);
+        if(!groupLeaders.TryGetValue(key,out LaneMinion leader)||
+            (unit.team==0?unit.transform.position.x>leader.transform.position.x:unit.transform.position.x<leader.transform.position.x))
+            groupLeaders[key]=unit;
+    }
+}
+[SerializeField]private float moveSpeed=2.8f,detectionRange=7.5f,attackRange=1.85f,attackDamage=3.25f,attackCooldown=1.35f;private Health health,target,pendingTarget;private float hitAt,pendingDamage,pendingRange;private int team;private Alterverse.Match.DimensionsFront front;private float structureDamageMultiplier=1f,frontInfluenceOnDeath;private bool siegeUnit;public bool IsSiegeUnit=>siegeUnit;public float RunningSpeed=>moveSpeed;private Vector3 destination;public Vector3 LaneDestination=>destination;private float nextAttackTime,nextScanTime,nextRouteScan;private string waveGroupKey;private int waveSlot;private float regroupGraceUntil;private RealityCore routeCore;private bool routeBlocked;public int Team=>team;public void ConfigureFrontInfluence(float percent)=>frontInfluenceOnDeath=Mathf.Max(0f,percent);public void ConfigureSiegeRole(bool enabled=true){siegeUnit=enabled;leaderFrame=-1;}public void ConfigureCombat(float speed,float detection,float range,float damage,float cooldown,float vsStructures=1f){moveSpeed=speed;detectionRange=detection;attackRange=range;attackDamage=damage;attackCooldown=cooldown;structureDamageMultiplier=Mathf.Max(1f,vsStructures);}private void Awake(){gameObject.layer=GameplayCollision.Units;health=GetComponent<Health>();front=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();if(health!=null)health.Died+=OnDied;}private void OnDestroy(){active.Remove(this);leaderFrame=-1;if(health!=null)health.Died-=OnDied;}private void OnDisable(){active.Remove(this);leaderFrame=-1;pendingTarget=null;}private void OnDied(){leaderFrame=-1;pendingTarget=null;if(frontInfluenceOnDeath<=0f)return;front??=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();if(front!=null)front.Push(team==0?1:0,frontInfluenceOnDeath);}public void Initialize(int teamId,Vector3 laneDestination){leaderFrame=-1;team=teamId;destination=laneDestination;nextAttackTime=Time.time+Random.Range(.2f,.65f);}
 public void ConfigureWaveGroup(string unitKey,int slot)
 {
     if(string.IsNullOrEmpty(unitKey))return;
     int marker=unitKey.LastIndexOf(":I");
     waveGroupKey=marker>0?unitKey.Substring(0,marker):unitKey;
     waveSlot=Mathf.Max(0,slot);
+    leaderFrame=-1;
     regroupGraceUntil=Time.time+2.5f;
 }
 private void Update(){if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;if(Time.timeScale<=0f)return;if(health==null||health.IsDead||!HeroCombatStatus.CanAct(gameObject)){pendingTarget=null;return;}if(front!=null&&front.HasEnded){pendingTarget=null;return;}if(pendingTarget!=null){Vector3 facing=pendingTarget.transform.position-transform.position;Face(facing);if(Time.time>=hitAt){Health victim=pendingTarget;pendingTarget=null;if(IsValidTarget(victim)&&HeroCombatRules.TargetDistance(transform.position,victim)<=pendingRange+.25f){var gun=GetComponentInChildren<Alterverse.Visuals.MechMachineGunVisual>();if(gun!=null&&gun.Muzzle!=null)Alterverse.Visuals.MonsterAttackVfx.Resolve(gameObject,gun.Muzzle.position,victim.transform.position+Vector3.up*.55f);victim.TakeDamage(pendingDamage,gameObject);}}return;}if(TryRegroup()){target=null;return;}if(!IsValidTarget(target))target=null;if(Time.time>=nextScanTime){target=FindTarget();nextScanTime=Time.time+.2f;}if(target!=null){Vector3 delta=target.transform.position-transform.position;delta.y=0;float range=(target.GetComponent<LaneTower>()!=null||target.GetComponent<RealityCore>()!=null)?2.4f:attackRange;if(delta.sqrMagnitude<=range*range){Face(delta);if(Time.time>=nextAttackTime){nextAttackTime=Time.time+attackCooldown;Alterverse.Visuals.CombatMotion.Begin(gameObject,.18f,target);float dealt=(target.GetComponent<LaneTower>()!=null||target.GetComponent<RealityCore>()!=null)?attackDamage*structureDamageMultiplier:attackDamage;pendingTarget=target;pendingDamage=dealt;pendingRange=range;hitAt=Time.time+.18f;}return;}MoveTowards(target.transform.position);return;}
@@ -24,17 +49,8 @@ private bool TryRegroup()
 {
     if(siegeUnit||string.IsNullOrEmpty(waveGroupKey))return false;
 
-    LaneMinion leader=null;
-    float bestX=team==0?float.NegativeInfinity:float.PositiveInfinity;
-    for(int i=0;i<Health.Active.Count;i++)
-    {
-        Health hp=Health.Active[i];
-        if(hp==null||hp.IsDead)continue;
-        LaneMinion other=hp.GetComponent<LaneMinion>();
-        if(other==null||other.team!=team||other.siegeUnit||other.waveGroupKey!=waveGroupKey)continue;
-        float x=other.transform.position.x;
-        if((team==0&&x>bestX)||(team==1&&x<bestX)){bestX=x;leader=other;}
-    }
+    RefreshGroupLeaders();
+    groupLeaders.TryGetValue((team,waveGroupKey),out LaneMinion leader);
 
     if(leader==null||leader==this)return false;
     float behind=team==0?leader.transform.position.x-transform.position.x:transform.position.x-leader.transform.position.x;
