@@ -13,13 +13,13 @@ namespace Alterverse.Shop
         public readonly int Price;
         public readonly CosmeticCategory Category;
         public readonly Color Accent;
-        public int ProgressionPercent=>WingMatchRewardBonus.Percent(Id);
+        public float ProgressionPercent=>WingMatchRewardBonus.Percent(Id);
         public CosmeticDefinition(UniversalHeroCosmetic id,string name,int price,string ownedKey,CosmeticCategory category,string description,Color accent)
         {
             Id=id;Name=name;Price=price;OwnedKey=ownedKey;Category=category;Description=description;Accent=accent;
             PriceLabel=price==0?"FREE":price.ToString("N0")+" SHARDS";
-            int bonus=WingMatchRewardBonus.Percent(id);
-            BonusLabel=bonus==0?"NO PROGRESSION BONUS":"+"+bonus+"% MATCH XP   /   +"+bonus+"% MATCH SHARDS";
+            float bonus=WingMatchRewardBonus.Percent(id);
+            BonusLabel=bonus==0?"NO PROGRESSION BONUS":WingMatchRewardBonus.ShopBonus(id);
         }
     }
     // Add a definition here to expose supported visual content in both collection views.
@@ -31,6 +31,8 @@ namespace Alterverse.Shop
             new(UniversalHeroCosmetic.Voidfall,UniversalSkin.Name,UniversalSkin.Price,UniversalSkin.OwnedKey,CosmeticCategory.Wings,"Fractured violet wings. Preserves the hero's original colors.",new Color(.64f,.43f,.94f)),
             new(UniversalHeroCosmetic.PlagueWings,PlagueWings.Name,PlagueWings.Price,PlagueWings.OwnedKey,CosmeticCategory.Wings,"Toxic wings from the Green Planet.",new Color(.44f,.85f,.27f)),
             new(UniversalHeroCosmetic.BetaSupporterWings,BetaSupporterWings.Name,BetaSupporterWings.Price,BetaSupporterWings.OwnedKey,CosmeticCategory.Wings,"Crimson dimensional wings for Beta Supporters.",new Color(.95f,.26f,.36f)),
+            new(UniversalHeroCosmetic.AngelWings,AngelWings.Name,AngelWings.Price,AngelWings.OwnedKey,CosmeticCategory.Wings,"Golden feathered wings with warm radiant quills and an aureole.",new Color(1f,.78f,.30f)),
+            new(UniversalHeroCosmetic.RgbRiftWings,RgbRiftWings.Name,RgbRiftWings.Price,RgbRiftWings.OwnedKey,CosmeticCategory.Wings,"Articulated anthracite metal wings with flowing RGB light strips.",new Color(.16f,.78f,1f)),
             new(UniversalHeroCosmetic.DeluxeWings,DeluxeWings.Name,DeluxeWings.Price,DeluxeWings.OwnedKey,CosmeticCategory.Wings,"Faceted silver crystal wings with icy cyan fractures.",new Color(.72f,.92f,1f))
         };
         public static IReadOnlyList<CosmeticDefinition> All { get; }=System.Array.AsReadOnly(definitions);
@@ -48,6 +50,8 @@ namespace Alterverse.Shop
             UniversalHeroCosmetic.PlagueWings=>"plague_wings",
             UniversalHeroCosmetic.BetaSupporterWings=>"beta_supporter_wings",
             UniversalHeroCosmetic.DeluxeWings=>"deluxe_wings",
+            UniversalHeroCosmetic.AngelWings=>"angel_wings",
+            UniversalHeroCosmetic.RgbRiftWings=>"rgb_rift_wings",
             _=>""
         };
         public static AvatarPurchaseResult Purchase(UniversalHeroCosmetic id)
@@ -68,4 +72,5 @@ namespace Alterverse.Shop
         }
     }
 }
+
 

@@ -1,6 +1,14 @@
 {
   "profile": [
     {
+      "key": "DF_SkinOwned_AngelWings",
+      "kind": 0
+    },
+    {
+      "key": "DF_SkinOwned_RgbRiftWings",
+      "kind": 0
+    },
+    {
       "key": "DF_BotAdaptiveTier",
       "kind": 0
     },
@@ -1582,3 +1590,4 @@
     }
   ]
 }
+

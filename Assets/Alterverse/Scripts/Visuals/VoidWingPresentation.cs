@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 namespace Alterverse.Visuals
 {
     // Cosmetic-only dimensional wings. No collider, light, particles or gameplay components.
-    public sealed class VoidWingPresentation:MonoBehaviour
+    public sealed partial class VoidWingPresentation:MonoBehaviour
     {
         readonly Transform[] wings=new Transform[2];
         const float WingSize=.70f;
@@ -290,7 +290,11 @@ namespace Alterverse.Visuals
             for(int i=0;i<2;i++)if(wings[i]!=null)
             {
                 float side=i==0?-1:1;
-                if(deluxe)
+                if(angel)
+                    wings[i].localRotation=Quaternion.Euler(4+motion*4,side*(10+motion*7+Mathf.Sin(time*1.05f)*4-pulse*3),side*(3+Mathf.Sin(time*.8f)*1.5f));
+                else if(rgbRift)
+                    wings[i].localRotation=Quaternion.Euler(5+motion*5,side*(12+motion*8+Mathf.Sin(time*1.1f)*2-pulse*4),side*(4+Mathf.Sin(time*.8f)*1.5f));
+                else if(deluxe)
                     wings[i].localRotation=Quaternion.Euler(5+motion*5,side*(14+motion*8+Mathf.Sin(time*1.1f)*2-pulse*4),side*(4+Mathf.Sin(time*.8f)*1.5f));
                 else if(plague)
                     wings[i].localRotation=Quaternion.Euler(7+motion*6+Mathf.Sin(time*1.15f)*1.4f,side*(16+motion*9+Mathf.Sin(time*1.05f)*3.2f-pulse*5),side*(7+Mathf.Sin(time*.72f)*2.8f));
@@ -299,7 +303,13 @@ namespace Alterverse.Visuals
                 else
                     wings[i].localRotation=Quaternion.Euler(10+motion*12,side*(12+motion*14+Mathf.Sin(time*1.8f)*3-pulse*8),0);
             }
-            if(edge!=null)
+            if(rgbRift&&edge!=null&&facet!=null)
+            {
+                float hue=Mathf.Repeat(time/6f,1f);
+                edge.SetFloat("_HueShift",hue);
+                edge.SetFloat("_Intensity",1.8f+Mathf.Sin(time*1.4f)*.15f+pulse*.5f);
+            }
+            else if(edge!=null)
             {
                 float baseIntensity=plague?1.12f:betaSupporter?1.72f:1.15f;
                 float wave=plague?Mathf.Sin(time*1.15f)*.10f:betaSupporter?Mathf.Sin(time*1.6f)*.16f:Mathf.Sin(time*2)*.12f;
@@ -307,6 +317,7 @@ namespace Alterverse.Visuals
                 edge.SetColor("_EmissionColor",energyColor*(baseIntensity+wave+pulse*pulseBoost));
             }
         }
-        void OnDestroy(){if(mesh!=null)Destroy(mesh);if(core!=null)Destroy(core);if(edge!=null)Destroy(edge);if(facet!=null)Destroy(facet);}
+        void OnDestroy(){if(mountMesh!=null)Destroy(mountMesh);if(mesh!=null)Destroy(mesh);if(core!=null)Destroy(core);if(edge!=null)Destroy(edge);if(facet!=null)Destroy(facet);}
     }
 }
+

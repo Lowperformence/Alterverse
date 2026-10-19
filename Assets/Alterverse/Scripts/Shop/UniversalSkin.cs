@@ -9,7 +9,9 @@ namespace Alterverse.Shop
         Voidfall=1,
         BetaSupporterWings=2,
         PlagueWings=3,
-        DeluxeWings=4
+        DeluxeWings=4,
+        AngelWings=5,
+        RgbRiftWings=6
     }
 
     /// <summary>Account ownership, one exclusive cosmetic slot per hero. Legacy keys are retained.</summary>
@@ -118,6 +120,36 @@ namespace Alterverse.Shop
         public static bool Equip(bool enabled)
         {
             if(enabled)return UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.DeluxeWings);
+            return !Equipped||UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.Original);
+        }
+    }
+
+    public static class AngelWings
+    {
+        public const string Name="ANGEL WINGS";
+        public const string OwnedKey="DF_SkinOwned_AngelWings";
+        public const int Price=11000;
+        public static bool Owned=>CosmeticCatalog.IsOwned(UniversalHeroCosmetic.AngelWings);
+        public static bool Equipped=>Owned&&UniversalCosmeticSelection.Equipped==UniversalHeroCosmetic.AngelWings;
+        public static AvatarPurchaseResult Purchase()=>CosmeticCatalog.Purchase(UniversalHeroCosmetic.AngelWings);
+        public static bool Equip(bool enabled)
+        {
+            if(enabled)return UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.AngelWings);
+            return !Equipped||UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.Original);
+        }
+    }
+
+    public static class RgbRiftWings
+    {
+        public const string Name="RGB WINGS";
+        public const string OwnedKey="DF_SkinOwned_RgbRiftWings";
+        public const int Price=15000;
+        public static bool Owned=>CosmeticCatalog.IsOwned(UniversalHeroCosmetic.RgbRiftWings);
+        public static bool Equipped=>Owned&&UniversalCosmeticSelection.Equipped==UniversalHeroCosmetic.RgbRiftWings;
+        public static AvatarPurchaseResult Purchase()=>CosmeticCatalog.Purchase(UniversalHeroCosmetic.RgbRiftWings);
+        public static bool Equip(bool enabled)
+        {
+            if(enabled)return UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.RgbRiftWings);
             return !Equipped||UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.Original);
         }
     }

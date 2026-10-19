@@ -14,7 +14,7 @@ namespace Alterverse.Match
         private static bool hasSnapshot;
 
         public static UniversalHeroCosmetic MatchCosmetic=>hasSnapshot?matchCosmetic:UniversalHeroCosmetic.Original;
-        public static int MatchPercent=>Percent(MatchCosmetic);
+        public static float MatchPercent=>Percent(MatchCosmetic);
 
         public static void BeginMatch(HeroId playerHero)
         {
@@ -23,21 +23,24 @@ namespace Alterverse.Match
             hasSnapshot=true;
         }
 
-        public static int Percent(UniversalHeroCosmetic cosmetic)=>cosmetic switch
+        public static float Percent(UniversalHeroCosmetic cosmetic)=>cosmetic switch
         {
             UniversalHeroCosmetic.Voidfall=>5,
             UniversalHeroCosmetic.PlagueWings=>10,
             UniversalHeroCosmetic.BetaSupporterWings=>20,
             UniversalHeroCosmetic.DeluxeWings=>50,
+            UniversalHeroCosmetic.AngelWings=>27.5f,
+            UniversalHeroCosmetic.RgbRiftWings=>37.5f,
             _=>0
         };
 
         public static int CalculateBonus(int baseAmount,UniversalHeroCosmetic cosmetic)
         {
             if(baseAmount<=0)return 0;
-            int percent=Percent(cosmetic);
+            float percent=Percent(cosmetic);
             if(percent<=0)return 0;
-            return Mathf.Max(0,Mathf.RoundToInt(baseAmount*(percent/100f)));
+            // Keep half-percents exact until the final whole-unit rounding.
+            return (int)System.Math.Round(baseAmount*(double)percent/100d,System.MidpointRounding.ToEven);
         }
 
         public static string DisplayName(UniversalHeroCosmetic cosmetic)=>cosmetic switch
@@ -46,13 +49,18 @@ namespace Alterverse.Match
             UniversalHeroCosmetic.PlagueWings=>"PLAGUE WINGS",
             UniversalHeroCosmetic.BetaSupporterWings=>"BETA SUPPORTER",
             UniversalHeroCosmetic.DeluxeWings=>"DELUXE WINGS",
+            UniversalHeroCosmetic.AngelWings=>AngelWings.Name,
+            UniversalHeroCosmetic.RgbRiftWings=>RgbRiftWings.Name,
             _=>"NO WING BONUS"
         };
 
+        public static string PercentLabel(float percent)=>percent.ToString("0.#",System.Globalization.CultureInfo.InvariantCulture);
+
         public static string ShopBonus(UniversalHeroCosmetic cosmetic)
         {
-            int percent=Percent(cosmetic);
-            return percent<=0?"NO MATCH REWARD BONUS":$"+{percent}% MATCH XP  /  +{percent}% MATCH SHARDS";
+            float percent=Percent(cosmetic);
+            return percent<=0?"NO MATCH REWARD BONUS":$"+{PercentLabel(percent)}% MATCH XP  /  +{PercentLabel(percent)}% MATCH SHARDS";
         }
     }
 }
+

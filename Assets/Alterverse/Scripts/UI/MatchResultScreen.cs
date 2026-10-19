@@ -24,7 +24,8 @@ namespace Alterverse.UI
         public string ExitLabel="BACK TO MENU";
         public bool Won, Ready, Retrying;
         public string Difficulty, Hero, BonusName;
-        public int Kills, Deaths, Assists, Objectives, Xp, Shards, BaseXp, XpBonus, BaseShards, ShardBonus, BonusPercent;
+        public int Kills, Deaths, Assists, Objectives, Xp, Shards, BaseXp, XpBonus, BaseShards, ShardBonus;
+        public float BonusPercent;
         public int AccountLevel, PassLevel, PassXpGained;
         public bool AccountMax, PassMax, PassLevelUp;
         public long AccountInto, AccountRequired;
@@ -42,7 +43,7 @@ namespace Alterverse.UI
             XpText=Ready?"+"+Number(Xp):"—";ShardsText=Ready?"+"+Number(Shards):"—";
             XpBreakdown=Number(BaseXp)+" BASE  +"+Number(XpBonus)+" BONUS";
             ShardBreakdown=Number(BaseShards)+" BASE  +"+Number(ShardBonus)+" BONUS";
-            BonusBadge=!Ready?"FINALIZING…":BonusPercent>0?"+"+BonusPercent+"% WING BONUS":(XpBonus>0||ShardBonus>0)?"BONUS REWARD":"MATCH REWARD";
+            BonusBadge=!Ready?"FINALIZING…":BonusPercent>0?"+"+Alterverse.Match.WingMatchRewardBonus.PercentLabel(BonusPercent)+"% WING BONUS":(XpBonus>0||ShardBonus>0)?"BONUS REWARD":"MATCH REWARD";
             if(Drops==null)Drops=Drop==BattleItemType.None?Array.Empty<DropReward>():new[]{new DropReward(Drop,1)};
             DropButton=Drops.Length==1?"DROP ×1":Drops.Length>1?"DROPS ×"+Drops.Length:"PROGRESS";
             DropName=Drop==BattleItemType.None?"NO BATTLE ITEM DROP":BattleItemInventory.Name(Drop);
@@ -265,5 +266,6 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 

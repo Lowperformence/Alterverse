@@ -13,14 +13,14 @@ namespace Alterverse.UI
         [MenuItem("DIMENSIONS FRONT/Checks/Result presentation (no save writes)")]
         public static void Run()
         {
-            foreach(var cosmetic in new[]{UniversalHeroCosmetic.Original,UniversalHeroCosmetic.Voidfall,UniversalHeroCosmetic.PlagueWings,UniversalHeroCosmetic.BetaSupporterWings})
+            foreach(var cosmetic in new[]{UniversalHeroCosmetic.Original,UniversalHeroCosmetic.Voidfall,UniversalHeroCosmetic.PlagueWings,UniversalHeroCosmetic.BetaSupporterWings,UniversalHeroCosmetic.DeluxeWings,UniversalHeroCosmetic.AngelWings,UniversalHeroCosmetic.RgbRiftWings})
             {
                 var data=Fixture(0);data.BonusPercent=WingMatchRewardBonus.Percent(cosmetic);data.BonusName=WingMatchRewardBonus.DisplayName(cosmetic);
                 data.Xp=123;data.Shards=321;data.BaseXp=100;data.XpBonus=23;data.PassXpGained=100;
                 data.Prepare();
                 Assert(data.XpText=="+123"&&data.ShardsText=="+321","Receipt totals must be displayed directly, not recomputed from cosmetic percent.");
                 Assert(data.PassXpGained==100,"Preparing a wing badge must not multiply Battle Pass XP.");
-                Assert(data.BonusPercent>0?data.BonusBadge.Contains(data.BonusPercent+"%"):data.BonusBadge=="BONUS REWARD","Non-wing reward bonuses stay generic so hidden difficulty is not exposed.");
+                Assert(data.BonusPercent>0?data.BonusBadge.Contains(WingMatchRewardBonus.PercentLabel(data.BonusPercent)+"%"):data.BonusBadge=="BONUS REWARD","Non-wing reward bonuses stay generic so hidden difficulty is not exposed.");
             }
             var defeat=Fixture(4);defeat.Prepare();Assert(defeat.Result=="DEFEAT","Result is from the player's perspective.");
             var capped=Fixture(7);capped.Prepare();Assert(capped.AccountText=="MAX LEVEL"&&capped.XpText=="+1","Cap-limited actual XP must not be replaced with an estimated bonus.");
@@ -62,7 +62,7 @@ namespace Alterverse.UI
                 PassLevel=14,PassInto=120,PassRequired=342,PassProgress=.351f,PassXpGained=100,PassLevelUp=true
             };
             // Fixtures model granted receipts; they do not call any grant/drop/transaction function.
-            int percent=WingMatchRewardBonus.Percent(cosmetic);
+            int percent=WingMatchRewardBonus.CalculateBonus(100,cosmetic);
             data.XpBonus=percent;data.Xp=100+percent;data.ShardBonus=percent;data.BaseShards=100;data.Shards=100+percent;
             if(scenario==7){data.AccountMax=true;data.AccountLevel=PlayerExperience.MaxLevel;data.Xp=1;data.BaseXp=1;data.XpBonus=0;data.AccountProgress=1;data.PassXpGained=1;}
             if(scenario==8){data.Xp=int.MaxValue;data.Shards=int.MaxValue;data.BaseXp=int.MaxValue;data.BaseShards=int.MaxValue;data.Kills=123456;data.Deaths=10000;data.Assists=999999;}

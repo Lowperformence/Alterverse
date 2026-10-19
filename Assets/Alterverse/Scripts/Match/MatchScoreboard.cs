@@ -23,7 +23,7 @@ private string rewardId=System.Guid.NewGuid().ToString("N");private float nextRe
 private sealed class Entry{public Health Health;public TeamMember Member;public string Name;public int Kills,Deaths,Assists;public int Score=>Kills*100+Assists*50-Deaths*15;
 public float BoardPerformance;public bool BoardOwn;
 public string BoardName,BoardKills,BoardDeaths,BoardAssists,BoardScore;
-}public static MatchScoreboard Instance{get;private set;}[SerializeField]private float refreshInterval=.5f,assistWindow=8f;private readonly Dictionary<Health,Entry> entries=new();private readonly Dictionary<Health,Dictionary<TeamMember,float>> damageCredit=new();private float nextRefresh;private HeroRespawn playerRespawn;private CoopRespawnReplica coopRespawn;private DimensionsFront front;private bool matchEnded,rewardGranted,rewardPending;private int winningTeam,matchReward,matchXp,matchBaseReward,matchShardBonus,matchBaseXp,matchXpBonus,matchBonusPercent,playerKills,playerDeaths,playerAssists,playerObjectives,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,battlePassLevelBefore=1;private float playerDamageDealt,playerDamageTaken,playerHealing,playerFrontContribution;private UniversalHeroCosmetic matchBonusCosmetic=UniversalHeroCosmetic.Original;private BattleItemType matchItemDrop;
+}public static MatchScoreboard Instance{get;private set;}[SerializeField]private float refreshInterval=.5f,assistWindow=8f;private readonly Dictionary<Health,Entry> entries=new();private readonly Dictionary<Health,Dictionary<TeamMember,float>> damageCredit=new();private float nextRefresh;private HeroRespawn playerRespawn;private CoopRespawnReplica coopRespawn;private DimensionsFront front;private bool matchEnded,rewardGranted,rewardPending;private int winningTeam,matchReward,matchXp,matchBaseReward,matchShardBonus,matchBaseXp,matchXpBonus,playerKills,playerDeaths,playerAssists,playerObjectives,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,battlePassLevelBefore=1;private float matchBonusPercent;private float playerDamageDealt,playerDamageTaken,playerHealing,playerFrontContribution;private UniversalHeroCosmetic matchBonusCosmetic=UniversalHeroCosmetic.Original;private BattleItemType matchItemDrop;
 private void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;rewardGranted=false;matchEnded=false;MatchClock.Set(PauseReason.Result,false);}
 private void Start(){RefreshRoster();RefreshLocalRespawn();front=Object.FindAnyObjectByType<DimensionsFront>();if(front!=null)front.MatchEnded+=OnMatchEnded;}
 private void Update(){if(Time.unscaledTime>=nextRefresh){nextRefresh=Time.unscaledTime+refreshInterval;RefreshRoster();RefreshLocalRespawn();if(front==null){front=Object.FindAnyObjectByType<DimensionsFront>();if(front!=null)front.MatchEnded+=OnMatchEnded;}}if(matchEnded)RefreshResultPresentation();else UpdateRespawnBoard();}
@@ -241,7 +241,7 @@ private void RefreshResultPresentation()
         details.Add(new MatchResultScreenData.Metric("SHARDS  /  BASE",matchBaseReward.ToString("N0")));
         details.Add(new MatchResultScreenData.Metric("ACCOUNT XP  /  WING BONUS",matchXpBonus.ToString("N0")));
         details.Add(new MatchResultScreenData.Metric("SHARDS  /  WING BONUS",matchShardBonus.ToString("N0")));
-        if(matchBonusPercent>0)details.Add(new MatchResultScreenData.Metric("WING BONUS",snapshot.BonusName+"  +"+matchBonusPercent+"%"));
+        if(matchBonusPercent>0)details.Add(new MatchResultScreenData.Metric("WING BONUS",snapshot.BonusName+"  +"+WingMatchRewardBonus.PercentLabel(matchBonusPercent)+"%"));
         details.Add(new MatchResultScreenData.Metric("BATTLE PASS XP  /  NO WING MULTIPLIER",snapshot.PassXpGained.ToString("N0")));
     }
     snapshot.Details=details.ToArray();
@@ -282,6 +282,7 @@ private void DrawTeam(List<Entry> team,float x,float y,float width,string title)
 private void OnDestroy(){foreach(var pair in entries)if(pair.Key!=null)pair.Key.DiedWithSource-=OnHeroDied;if(front!=null)front.MatchEnded-=OnMatchEnded;entries.Clear();if(Instance==this)Instance=null;}
 }
 }
+
 
 
 

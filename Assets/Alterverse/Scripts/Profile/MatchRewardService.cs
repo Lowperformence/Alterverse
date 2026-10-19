@@ -7,7 +7,8 @@ namespace Alterverse.Profile
 {
     public readonly struct MatchRewardResult
     {
-        public readonly int Shards,Xp,BaseShards,ShardBonus,BaseXp,XpBonus,BonusPercent;
+        public readonly int Shards,Xp,BaseShards,ShardBonus,BaseXp,XpBonus;
+        public readonly float BonusPercent;
         public readonly bool ShardDropped;
         public readonly UniversalHeroCosmetic BonusCosmetic;
 
@@ -65,7 +66,7 @@ namespace Alterverse.Profile
                 int storedBaseXp=Alterverse.Profile.AccountProfilePrefs.HasKey(ReceiptBaseXp)?Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(ReceiptBaseXp,0)):storedXp;
                 int storedXpBonus=Alterverse.Profile.AccountProfilePrefs.HasKey(ReceiptXpBonus)?Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(ReceiptXpBonus,0)):Mathf.Max(0,storedXp-storedBaseXp);
                 int rawCosmetic=Alterverse.Profile.AccountProfilePrefs.GetInt(ReceiptBonusCosmetic,0);
-                UniversalHeroCosmetic storedCosmetic=rawCosmetic>=0&&rawCosmetic<=3?(UniversalHeroCosmetic)rawCosmetic:UniversalHeroCosmetic.Original;
+                UniversalHeroCosmetic storedCosmetic=Enum.IsDefined(typeof(UniversalHeroCosmetic),rawCosmetic)?(UniversalHeroCosmetic)rawCosmetic:UniversalHeroCosmetic.Original;
 
                 // Battle Pass intentionally receives BASE account XP only; its own receipt keeps this idempotent.
                 BattlePassProgress.GrantMatchXp(storedBaseXp,matchId);
@@ -140,3 +141,4 @@ namespace Alterverse.Profile
         }
     }
 }
+

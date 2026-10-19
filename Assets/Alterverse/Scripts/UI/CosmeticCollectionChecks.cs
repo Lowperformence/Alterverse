@@ -24,7 +24,7 @@ namespace Alterverse.UI
             object previousSnapshot=snapshot.GetValue(null),previousHasSnapshot=hasSnapshot.GetValue(null);
             try
             {
-                CheckMigration();CheckPurchaseAndEquip();CheckDeluxeWings();CheckGrid();
+                CheckMigration();CheckPurchaseAndEquip();CheckDeluxeWings();CheckPremiumWings();CheckGrid();
                 Debug.Log("DIMENSIONS FRONT: cosmetic migration, purchases, per-hero equip, match snapshot and grid geometry checks passed. Touch/render validation remains a device check.");
             }
             finally
@@ -121,6 +121,39 @@ namespace Alterverse.UI
             Assert(WingMatchRewardBonus.MatchPercent==0,"Next match after unequip grants no wing bonus.");
         }
 
+        private static void CheckPremiumWings()
+        {
+            var ids=new[]{UniversalHeroCosmetic.AngelWings,UniversalHeroCosmetic.RgbRiftWings};
+            int[] prices={11000,15000};float[] percents={27.5f,37.5f};
+            for(int i=0;i<ids.Length;i++)
+            {
+                var id=ids[i];int price=prices[i];float percent=percents[i];
+                Assert(CosmeticCatalog.Find(id).Price==price,"Premium wing price is exact.");
+                Assert(WingMatchRewardBonus.Percent(id)==percent&&percent==price/400f,"Premium wings preserve 400 shards per percentage point.");
+                CosmeticProfile.TestData=new Dictionary<string,int>{{"DF_Shards",price-1}};
+                Assert(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.InsufficientShards&&CosmeticProfile.Balance==price-1&&!CosmeticCatalog.IsOwned(id),"One shard short cannot buy or charge.");
+                Assert(!UniversalCosmeticSelection.EquipFor(HeroId.Traveler,id),"Unowned premium wings cannot equip.");
+                CosmeticProfile.TestData=new Dictionary<string,int>{{"DF_Shards",price}};
+                Assert(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.Purchased&&CosmeticProfile.Balance==0&&CosmeticCatalog.IsOwned(id),"Exact balance buys and saves ownership.");
+                Assert(CosmeticProfile.LastTestTransaction.Length==2,"Payment and ownership form one transaction.");
+                Assert(UniversalCosmeticSelection.EquippedFor(HeroId.Veyr)==UniversalHeroCosmetic.Original,"Buying does not silently equip.");
+                Assert(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.AlreadyOwned&&CosmeticProfile.Balance==0,"Duplicate purchase does not charge.");
+                for(int hero=0;hero<HeroIdentity.HeroCount;hero++)
+                    Assert(UniversalCosmeticSelection.EquipFor((HeroId)hero,id)&&UniversalCosmeticSelection.EquippedFor((HeroId)hero)==id,"Premium wing equips on every hero.");
+                CosmeticProfile.TestData=new Dictionary<string,int>(CosmeticProfile.TestData);
+                Assert(UniversalCosmeticSelection.EquippedFor(HeroId.Traveler)==id,"Owned/equipped premium wing survives profile reload.");
+                WingMatchRewardBonus.BeginMatch(HeroId.Traveler);
+                Assert(WingMatchRewardBonus.MatchPercent==percent,"Match snapshot retains fractional percentages.");
+                Assert(WingMatchRewardBonus.CalculateBonus(400,id)==price/100,"400 base rewards retain the half-percent exactly.");
+                Assert(WingMatchRewardBonus.CalculateBonus(0,id)==0&&WingMatchRewardBonus.CalculateBonus(-1,id)==0,"Empty/invalid reward bases cannot grant currency.");
+                Assert(CosmeticCatalog.Find(id).BonusLabel.Contains(WingMatchRewardBonus.PercentLabel(percent)+"%"),"Shop displays fractional percentage.");
+                Assert(UniversalCosmeticSelection.EquipFor(HeroId.Traveler,UniversalHeroCosmetic.Original),"Premium wings can be unequipped.");
+                Assert(UniversalCosmeticSelection.EquippedFor(HeroId.Rook)==id&&WingMatchRewardBonus.MatchPercent==percent,"Unequip is per hero and cannot change the running match bonus.");
+                WingMatchRewardBonus.BeginMatch(HeroId.Traveler);
+                Assert(WingMatchRewardBonus.MatchPercent==0,"Next match uses Original after unequip.");
+            }
+        }
+
         private static void CheckGrid()
         {
             foreach(float screenWidth in new[]{1920f,2160f,2400f,800f})
@@ -142,3 +175,4 @@ namespace Alterverse.UI
     }
 }
 #endif
+
