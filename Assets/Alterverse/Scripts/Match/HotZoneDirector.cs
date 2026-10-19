@@ -319,7 +319,8 @@ namespace Alterverse.Match
             zeroTime=Mathf.Max(0,zeroScore);lumenTime=Mathf.Max(0,lumenScore);
             rewardIssued=winner>=0;
             RecordWinningParticipants(winner);
-            if(winner>=0)HotZoneTank.Spawn(winner,occurrenceIndex);
+            // The host snapshot creates the reward replica, with its team/event key.
+            // A resolve event alone does not prove a reward exists (the host has a cap).
 
             HotZoneResolved?.Invoke(winner,zeroTime,lumenTime);
 
@@ -439,4 +440,5 @@ namespace Alterverse.Match
         }
     }
 }
+
 

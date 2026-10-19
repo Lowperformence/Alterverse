@@ -14,8 +14,50 @@ partial class Regression
   bool result=(bool)typeof(HeroMotor).GetMethod("TryGetAttackFacing",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(motor,args);
   direction=(Vector3)args[0];return result;
  }
+ static void HeldFocusCases()
+ {
+  foreach(int fps in new[]{30,60,120})foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))
+  {
+   if(!HeroAttackDelivery.IsRanged(hero))continue;
+   Reset();var actor=Hero(hero,0,Vector3.zero);var basic=actor.GetComponent<BasicAttack>();
+   float range=basic.Aim.castRange;
+   var first=Hero(HeroId.Kaelon,1,Vector3.forward*(range*.7f)).GetComponent<Health>();
+   var second=Hero(HeroId.Rook,1,Vector3.right*(range*.8f)).GetComponent<Health>();
+   first.Current=500;second.Current=800;
+   Check(basic.TryAttack(),"held focus starts "+hero);
+   var soft=actor.GetComponent<SoftTargeting>();Check(soft.Current==first,"initial focus priority "+hero);
+   for(int frame=0;frame<fps;frame++)
+   {
+    Clock.Advance(1f/fps);
+    // Only target selection is exercised; keep cooldown active to avoid fixture damage.
+    typeof(BasicAttack).GetField("nextAttackTime",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(basic,Time.time+10);first.Current=frame%2==0?800:400;second.Current=frame%2==0?300:900;
+    first.transform.position=Vector3.forward*(range*(frame%2==0?.85f:.65f));
+    second.transform.position=Vector3.right*(range*(frame%2==0?.60f:.95f));
+    // Manual selection can share SoftTargeting but must not steal a held basic's focus.
+    soft.AcquireAssisted(range,Vector3.right,20);basic.TryAttack();
+    Check(soft.Current==first,"held basic ignores HP/distance and manual preview churn "+hero);
+   }
+   first.transform.position=Vector3.forward*(range+.1f);second.Current=1;
+   Clock.Advance(1f/fps);Check(soft.AcquireBasic(range,Vector3.forward)==null,"edge band never extends attack range "+hero);
+   Check(soft.Current==first,"edge band preserves held focus "+hero);
+   first.transform.position=Vector3.forward*(range*.7f);
+   Clock.Advance(.3f);
+   Check(soft.AcquireBasic(range,Vector3.forward)==second,"release permits fresh priority "+hero);
+   second.IsDead=true;
+   Check(soft.AcquireBasic(range,Vector3.forward)==first,"dead focus immediately replaced "+hero);
+   first.transform.position=Vector3.forward*(range+1);
+   Check(soft.AcquireBasic(range,Vector3.forward)==null,"distant focus cleared "+hero);
+   Reset();actor=Hero(hero,0,Vector3.zero);soft=actor.GetComponent<SoftTargeting>();
+   var soldier=new GameObject("focus soldier");soldier.transform.position=Vector3.forward;
+   soldier.AddComponent<TeamMember>().Initialize(1);var soldierHp=soldier.AddComponent<Health>();
+   Check(soft.AcquireBasic(5,Vector3.forward)==soldierHp,"nonhero fallback "+hero);
+   var priorityHero=Hero(HeroId.Rook,1,Vector3.right*2).GetComponent<Health>();
+   Check(soft.AcquireBasic(5,Vector3.forward)==priorityHero,"hero still replaces nonhero during hold "+hero);
+  }
+ }
  public static void RunJitterCases()
  {
+  HeldFocusCases();
   foreach(int fps in new[]{30,60,120})
   {
    foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))for(int slot=0;slot<4;slot++)
@@ -73,3 +115,4 @@ partial class Regression
   Console.WriteLine("PASS "+checks+" AOE/facing edge assertions at 30/60/120 FPS; actual ManualAiming, BasicAttack and HeroMotor. Native movement/rotation/rendering are fixtures.");
  }
 }
+

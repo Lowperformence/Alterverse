@@ -107,6 +107,32 @@ namespace Alterverse.Combat
 
         public static bool Spawn(int winningTeam,int zoneOccurrence=-1)
         {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return false;
+            return SpawnReward(winningTeam,zoneOccurrence,false);
+        }
+
+        public static HotZoneTank EnsureNetworkReplica(string key)
+        {
+            if(!Alterverse.Multiplayer.CoopAuthority.Active||
+                Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority||
+                !Alterverse.Multiplayer.HotZoneRewardKey.TryParse(key,out int occurrence,out int team))return null;
+            for(int i=0;i<active.Count;i++)
+            {
+                HotZoneTank tank=active[i];
+                if(tank!=null&&tank.GetComponent<Alterverse.Multiplayer.CoopWorldEntityKey>()?.Key==key)return tank;
+            }
+            // Replicas follow the actual host set; a stale client count must not suppress one.
+            if(!SpawnReward(team,occurrence,true))return null;
+            for(int i=0;i<active.Count;i++)
+            {
+                HotZoneTank tank=active[i];
+                if(tank!=null&&tank.GetComponent<Alterverse.Multiplayer.CoopWorldEntityKey>()?.Key==key)return tank;
+            }
+            return null;
+        }
+
+        private static bool SpawnReward(int winningTeam,int zoneOccurrence,bool replica)
+        {
             int team=Mathf.Clamp(winningTeam,0,1);
 
             // Two Hot Zones may resolve in one match. Do not let the early reward suppress
@@ -117,7 +143,7 @@ namespace Alterverse.Combat
                 HotZoneTank existing=active[i];
                 if(existing!=null&&existing.health!=null&&!existing.health.IsDead)living++;
             }
-            if(living>=2)return false;
+            if(!replica&&living>=2)return false;
 
             Vector3 spawn=new(team==0?-4f:4f,.95f,0f);
             for(int i=0;i<active.Count;i++)
@@ -145,14 +171,15 @@ namespace Alterverse.Combat
             Renderer baseRenderer=go.GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;
             Health hp=go.AddComponent<Health>();hp.Configure(MaxHp,true);
             TeamMember member=go.AddComponent<TeamMember>();member.Initialize(team);
+            go.AddComponent<HotZoneTank>().Initialize(team,spawn,skeleton,alien,spider,bear);
             if(Alterverse.Multiplayer.CoopAuthority.Active)
             {
-                // The server and every client must derive the same key for the same event.
-                // A process-wide serial diverges when the player starts another online match.
-                string worldKey=zoneOccurrence>=0?$"HOTZONE:{zoneOccurrence}":$"HOTZONE:{coopSpawnSerial++}";
+                // Include team so an authoritative snapshot can reconstruct a missing replica.
+                // Configure after art creation so death also hides the complete visual hierarchy.
+                int occurrence=zoneOccurrence>=0?zoneOccurrence:coopSpawnSerial++;
+                string worldKey=Alterverse.Multiplayer.HotZoneRewardKey.Create(occurrence,team);
                 go.AddComponent<Alterverse.Multiplayer.CoopWorldEntityKey>().Configure(worldKey);
             }
-            go.AddComponent<HotZoneTank>().Initialize(team,spawn,skeleton,alien,spider,bear);
             return true;
         }
 
@@ -1501,6 +1528,7 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 
 

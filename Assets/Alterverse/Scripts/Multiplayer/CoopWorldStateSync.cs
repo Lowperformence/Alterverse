@@ -19,6 +19,8 @@ namespace Alterverse.Multiplayer
         private const float MovingSendInterval=1f/20f;
 
         private readonly Dictionary<string,CoopWorldEntityKey> entities=new();
+        private readonly HashSet<string> removedKeys=new();
+        private CoopMatchPlan replicaPlan;
         private readonly HashSet<string> previousHostKeys=new();
         private readonly HashSet<string> currentHostKeys=new();
         private readonly List<string> tombstones=new();
@@ -184,6 +186,10 @@ namespace Alterverse.Multiplayer
             if (!MatchNetworkProtocol.ReadRound(ref reader)) return;
             reader.ReadValueSafe(out int count);
             if (count < 0 || count > 96) return;
+            if(!object.ReferenceEquals(replicaPlan,CoopAuthority.ActivePlan))
+            {
+                replicaPlan=CoopAuthority.ActivePlan;removedKeys.Clear();
+            }
             RefreshEntities();
             for(int i=0;i<count;i++)
             {
@@ -195,7 +201,17 @@ namespace Alterverse.Multiplayer
                 reader.ReadValueSafe(out bool dead);
 
                 string id=fixedId.ToString();
-                if(!entities.TryGetValue(id,out CoopWorldEntityKey entity)||entity==null)continue;
+                if(removedKeys.Contains(id))continue;
+                if(!entities.TryGetValue(id,out CoopWorldEntityKey entity)||entity==null)
+                {
+                    if(dead||!MatchNetworkProtocol.Finite(x)||!MatchNetworkProtocol.Finite(y)||
+                        !MatchNetworkProtocol.Finite(z)||!MatchNetworkProtocol.Finite(yaw)||
+                        !MatchNetworkProtocol.Finite(current)||!MatchNetworkProtocol.Finite(shield))continue;
+                    HotZoneTank reward=HotZoneTank.EnsureNetworkReplica(id);
+                    entity=reward!=null?reward.GetComponent<CoopWorldEntityKey>():null;
+                    if(entity==null)continue;
+                    entities[id]=entity;
+                }
                 Health health=entity.GetComponent<Health>();if(health==null)continue;
                 entity.ApplyTarget(new Vector3(x,y,z),yaw,false);
                 health.ApplyNetworkSnapshot(current,shield,dead);
@@ -210,6 +226,7 @@ namespace Alterverse.Multiplayer
             {
                 reader.ReadValueSafe(out FixedString128Bytes fixedId);
                 string id=fixedId.ToString();
+                removedKeys.Add(id);
                 if(entities.TryGetValue(id,out CoopWorldEntityKey entity)&&entity!=null)
                 {
                     entities.Remove(id);
@@ -236,4 +253,5 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 

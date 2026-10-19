@@ -192,7 +192,7 @@ private void DrawHud()
 private void RefreshResultPresentation()
 {
     if(resultScreen!=null&&resultSnapshotReady==rewardGranted&&resultSnapshotWarning==saveWarningShown)return;
-    TeamMember player=playerRespawn!=null?playerRespawn.GetComponent<TeamMember>():null;
+    TeamMember player=LocalPlayerMember();
     Entry entry=player!=null?FindEntry(player):null;
     MatchTelemetry.HeroStats stats=entry!=null?MatchTelemetry.Instance?.GetStats(entry.Health):null;
     HeroIdentity hero=player!=null?player.GetComponent<HeroIdentity>():null;

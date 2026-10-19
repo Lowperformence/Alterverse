@@ -70,7 +70,7 @@ namespace Alterverse.Combat
             AimSpec spec = Aim;
             if (!CanAct() || !spec.allowTapCast) return false;
             // Restore the existing sticky, hero-prioritized selection for basic attacks only.
-            Health target = targeting.Acquire(spec.castRange, transform.forward);
+            Health target = targeting.AcquireBasic(spec.castRange, transform.forward);
             if (target == null)
             {
                 // Presentation-only edge tolerance; acquisition and damage keep the
@@ -159,5 +159,6 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 

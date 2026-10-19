@@ -125,11 +125,15 @@ namespace Alterverse.Multiplayer
                 if(slot==null||slot.Slot<0||slot.Slot>=MatchSession.MaxPlayers)continue;
                 Health health=slot.GetComponent<Health>();
                 MatchTelemetry.HeroStats stats=health!=null?MatchTelemetry.Instance?.GetStats(health):null;
+                // Telemetry.Kills includes soldiers/objectives for quests. K/D/A must use
+                // the same hero-only authority as the in-match scoreboard.
+                int kills=0,deaths=0,assists=0;
+                MatchScoreboard.Instance?.GetNetworkScore(health,out kills,out deaths,out assists);
                 results[slot.Slot]=new SlotResult(
                     slot.Slot,
-                    stats?.Kills??0,
-                    stats?.Deaths??0,
-                    stats?.Assists??0,
+                    kills,
+                    deaths,
+                    assists,
                     stats?.Objectives??0,
                     stats?.DamageDealt??0,
                     stats?.DamageTaken??0,
