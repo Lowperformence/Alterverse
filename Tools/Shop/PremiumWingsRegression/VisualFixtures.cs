@@ -14,7 +14,7 @@ namespace UnityEngine {
   public static GameObject CreatePrimitive(PrimitiveType t){var g=new GameObject();g.AddComponent<Collider>();g.AddComponent<MeshRenderer>();return g;}
  }
  public enum PrimitiveType{Sphere}
- public class Transform:Component {public Vector3 position,localPosition,localScale;public Quaternion localRotation;public List<Transform> Children=new();public void SetParent(Transform p,bool world){p.Children.Add(this);}}
+ public class Transform:Component {public Vector3 position,localPosition,localScale=Vector3.one;public Quaternion localRotation;public List<Transform> Children=new();public void SetParent(Transform p,bool world){p.Children.Add(this);}}
  public struct Vector3 {
   public float x,y,z;public Vector3(float x,float y,float z){this.x=x;this.y=y;this.z=z;}public static Vector3 one=>new(1,1,1);public static Vector3 forward=>new(0,0,1);
   public float magnitude=>(float)Math.Sqrt(x*x+y*y+z*z);public Vector3 normalized=>magnitude>0?this*(1/magnitude):new();
@@ -33,7 +33,7 @@ namespace UnityEngine {
  public class MeshFilter:Component {public Mesh sharedMesh;}
  public class MeshRenderer:Component {public Material[] sharedMaterials;public Material sharedMaterial;public Rendering.ShadowCastingMode shadowCastingMode;public bool receiveShadows;}
  public class Collider:Component {public bool enabled;}
- public class LineRenderer:Component {public bool useWorldSpace,receiveShadows;public Material sharedMaterial;public int positionCount;public float widthMultiplier;public Rendering.ShadowCastingMode shadowCastingMode;public void SetPosition(int i,Vector3 v){}}
+ public class LineRenderer:Component {public bool useWorldSpace,receiveShadows;public Material sharedMaterial;public int positionCount;public float widthMultiplier;public Rendering.ShadowCastingMode shadowCastingMode;public Dictionary<int,Vector3> Positions=new();public void SetPosition(int i,Vector3 v){Positions[i]=v;}}
  public class TextAsset:Object {public string text;}
  public static class Resources {public static T Load<T>(string path)where T:Object {if(typeof(T)==typeof(TextAsset))return new TextAsset{text=File.ReadAllText("Assets/Alterverse/Resources/Wings/PremiumWingMeshes.json")} as T;return new Shader{name=path} as T;}}
  public static class JsonUtility {public static T FromJson<T>(string text)=>System.Text.Json.JsonSerializer.Deserialize<T>(text,new System.Text.Json.JsonSerializerOptions{IncludeFields=true});}

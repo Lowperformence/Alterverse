@@ -2,6 +2,13 @@ using System;
 using System.Collections.Generic;
 namespace UnityEngine
 {
+    public class Texture2D {public string Resource;}
+    public static class Resources
+    {
+        public static readonly Dictionary<string,int> Loads=new();
+        public static T Load<T>(string path) where T:class
+        {Loads[path]=Loads.GetValueOrDefault(path)+1;return new Texture2D{Resource=path} as T;}
+    }
     public struct Color { public Color(float r,float g,float b,float a=1){} }
     public static class Debug { public static void Log(object message)=>Console.WriteLine(message); }
     public static class Mathf

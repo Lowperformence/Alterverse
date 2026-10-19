@@ -14,7 +14,7 @@ compiler=sdk/'Roslyn/bincore/csc.dll'
 refs=sorted((args.dotnet_root/'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'))[-1]
 host=args.dotnet_root/'dotnet'
 source=root/'Assets/Alterverse/Scripts'
-files=[source/a for a in ['Shop/UniversalSkin.cs','Shop/CosmeticCatalog.cs','Shop/CosmeticProfile.cs','Match/WingMatchRewardBonus.cs','UI/CosmeticCollectionChecks.cs']]
+files=[source/a for a in ['Shop/UniversalSkin.cs','Shop/CosmeticCatalog.cs','Shop/CosmeticProfile.cs','Shop/WingPreviewIcons.cs','Match/WingMatchRewardBonus.cs','UI/CosmeticCollectionChecks.cs']]
 with tempfile.TemporaryDirectory(prefix='df-premium-wings-') as folder:
     tmp=Path(folder)
     # Compile the actual grid functions used by the existing editor collection suite.

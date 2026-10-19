@@ -273,14 +273,9 @@ namespace Alterverse.UI
             FrontEndTheme.Fill(new Rect(r.x,r.y,r.width,thickness),color);FrontEndTheme.Fill(new Rect(r.x,r.yMax-thickness,r.width,thickness),color);
             FrontEndTheme.Fill(new Rect(r.x,r.y,thickness,r.height),color);FrontEndTheme.Fill(new Rect(r.xMax-thickness,r.y,thickness,r.height),color);
         }
-        private static Texture2D angelIcon,rgbIcon;
         private static void CosmeticIcon(Rect rect,CosmeticDefinition definition,bool owned)
         {
-            Texture2D icon=null;
-            if(definition.Id==UniversalHeroCosmetic.AngelWings)
-                icon=angelIcon!=null?angelIcon:angelIcon=Resources.Load<Texture2D>("Wings/AngelIcon");
-            else if(definition.Id==UniversalHeroCosmetic.RgbRiftWings)
-                icon=rgbIcon!=null?rgbIcon:rgbIcon=Resources.Load<Texture2D>("Wings/RgbIcon");
+            Texture2D icon=WingPreviewIcons.Load(definition.Id);
             if(icon!=null)
             {
                 Color previous=GUI.color;GUI.color=owned?Color.white:new Color(.6f,.6f,.6f,1f);
