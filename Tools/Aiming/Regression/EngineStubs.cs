@@ -76,7 +76,7 @@ namespace UnityEngine.InputSystem {
 }
 namespace UnityEngine.InputSystem.EnhancedTouch {public struct Touch {public int touchId;public UnityEngine.Vector2 screenPosition;public UnityEngine.InputSystem.TouchPhase phase;public static List<Touch> activeTouches=new();}public static class EnhancedTouchSupport {public static bool enabled;public static void Enable()=>enabled=true;public static void Disable()=>enabled=false;}}
 namespace Alterverse.Characters {
- public class HeroMotor:UnityEngine.MonoBehaviour {public UnityEngine.Vector2 MoveInput;public UnityEngine.Vector3 LastMoveDirection=UnityEngine.Vector3.forward;public bool HasMoveInput=>MoveInput.sqrMagnitude>0;public UnityEngine.Vector3 CurrentMoveDirection=>new(MoveInput.x,0,MoveInput.y);public void SetMoveInput(UnityEngine.Vector2 v){MoveInput=v;if(v.sqrMagnitude>0)LastMoveDirection=CurrentMoveDirection.normalized;}public void NotifyAttack(float s,UnityEngine.Vector3 f){}public void TrackBasicTarget(Alterverse.Combat.Health t,float s){}}
+ public class HeroMotor:UnityEngine.MonoBehaviour {public UnityEngine.Vector2 MoveInput;public UnityEngine.Vector3 LastMoveDirection=UnityEngine.Vector3.forward;public bool HasMoveInput=>MoveInput.sqrMagnitude>0;public UnityEngine.Vector3 CurrentMoveDirection=>new(MoveInput.x,0,MoveInput.y);public void SetMoveInput(UnityEngine.Vector2 v){MoveInput=v;if(v.sqrMagnitude>0)LastMoveDirection=CurrentMoveDirection.normalized;}public void NotifyAttack(float s,UnityEngine.Vector3 f){}public void TrackBasicTarget(Alterverse.Combat.Health t,float s){}public void KeepBasicTargetFacing(float r){}}
  public class HeroLocomotion:UnityEngine.MonoBehaviour {
   public UnityEngine.Vector3 Velocity,FrameStartPosition,DashDestination;
   public bool IsForcedMoving,IsDashing;public bool OwnsMovementFrame=>IsForcedMoving||IsDashing;
@@ -176,3 +176,4 @@ namespace UnityEngine.Rendering {public enum GraphicsDeviceType {Null,Vulkan}}
 
 // Combat-only fixture: actual stretched/rounded bounds are exercised by the map and transport suites.
 namespace Alterverse.Combat {public static class ArenaLayout {public const float MovementHalfWidth=41f,MovementHalfHeight=35f;}}
+

@@ -71,7 +71,13 @@ namespace Alterverse.Combat
             if (!CanAct() || !spec.allowTapCast) return false;
             // Restore the existing sticky, hero-prioritized selection for basic attacks only.
             Health target = targeting.Acquire(spec.castRange, transform.forward);
-            if (target == null) return false;
+            if (target == null)
+            {
+                // Presentation-only edge tolerance; acquisition and damage keep the
+                // exact cast range. Release stops these hold-time refreshes.
+                motor?.KeepBasicTargetFacing(spec.castRange);
+                return false;
+            }
             // Hold calls also arrive during cooldown. Keep facing the eligible target without
             // restarting the attack animation, movement slowdown or cooldown.
             Vector3 direction = target.transform.position - transform.position;
@@ -153,4 +159,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 

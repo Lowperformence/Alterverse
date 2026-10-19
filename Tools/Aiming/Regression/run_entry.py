@@ -13,6 +13,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dotnet-root', type=Path, required=True)
     parser.add_argument('--ranged-cones', action='store_true')
+    parser.add_argument('--aim-jitter', action='store_true', help='Exercise actual HeroMotor facing and manual AOE edge placement')
     args = parser.parse_args()
     here = Path(__file__).resolve().parent
     root = here.parents[2]
@@ -29,6 +30,19 @@ def main():
         'public class DisallowMultipleComponent:Attribute{} public class SerializeField:Attribute{}')
     stubs = stubs.replace('public static bool CanSimulateHostGameplay=>',
                           'public static bool CanMutateAuthoritativeState=>CanSimulateHostGameplay;public static bool CanSimulateHostGameplay=>')
+    if args.aim_jitter:
+        names.append('Characters/HeroMotor.cs')
+        stubs = stubs.replace('public class SerializeField:Attribute{}', 'public class HeaderAttribute:Attribute {public HeaderAttribute(string s){}}public class SerializeField:Attribute{}')
+        # Compile the real facing owner for these checks; native movement remains a fixture.
+        stubs = re.sub(r'^ public class HeroMotor:.*\n', '', stubs, flags=re.M)
+        stubs = stubs.replace('public class HeroLocomotion:UnityEngine.MonoBehaviour {',
+            'public class HeroLocomotion:UnityEngine.MonoBehaviour { public bool CanMove=>true; public float SpeedMultiplier=>1; public UnityEngine.Vector3 LastCollisionNormal; public void FaceMovement(UnityEngine.Vector3 d){}')
+        stubs = stubs.replace('public float CooldownMultiplier=1;', 'public float CooldownMultiplier=1,MoveSpeedMultiplier=1;')
+        stubs = stubs.replace('public Button qKey=new()', 'public Button aKey=new(),dKey=new(),wKey=new(),sKey=new(),qKey=new()')
+        stubs = stubs.replace('public static Vector2 zero=>', 'public Vector2 normalized=>magnitude>0?this/magnitude:zero;public static Vector2 zero=>')
+        stubs = stubs.replace('public static Vector3 zero=>', 'public static Vector3 MoveTowards(Vector3 a,Vector3 b,float d){var v=b-a;return v.magnitude<=d?b:a+v.normalized*d;}public static Vector3 ProjectOnPlane(Vector3 v,Vector3 n)=>v-n*Dot(v,n)/Mathf.Max(.000001f,n.sqrMagnitude);public static Vector3 zero=>')
+        stubs = stubs.replace('public const float PI=', 'public static float Exp(float x)=>(float)Math.Exp(x);public const float PI=')
+        stubs = stubs.replace('public static Quaternion identity=>', 'public static Quaternion Slerp(Quaternion a,Quaternion b,float t)=>b;public static Quaternion identity=>')
     with tempfile.TemporaryDirectory(prefix='df-skill-entry-') as directory:
         directory = Path(directory)
         fixtures = directory / 'EngineStubs.cs'
@@ -45,12 +59,14 @@ public sealed partial class HeroSkillVfx {
         tests = ['Regression.cs', 'TimmyRegression.cs', 'TimmyVfxRegression.cs', 'ConnectionTiming.cs',
                  'ConeCaptureRegression.cs', 'MovingConnectionRegression.cs', 'EntryRegression.cs',
                  'RangedConeRegression.cs']
+        if args.aim_jitter:
+            tests.append('JitterRegression.cs')
         files = [fixtures, presentation, *[here / n for n in tests],
                  root / 'Assets/Alterverse/Editor/AttackDeliveryRegression.cs',
                  root / 'Assets/Alterverse/Editor/BasicAttackDeliveryRegression.cs',
                  *[root / 'Assets/Alterverse/Scripts' / n for n in names]]
         subprocess.run([str(dotnet / 'dotnet'), str(csc), '-nologo', '-noconfig', '-langversion:9',
-                        '-define:UNITY_EDITOR', '-main:EntryPoint', '-out:' + str(output),
+                        '-define:UNITY_EDITOR', '-main:' + ('JitterEntry' if args.aim_jitter else 'EntryPoint'), '-out:' + str(output),
                         *['-r:' + str(p) for p in refs.glob('*.dll')], *map(str, files)], check=True)
         output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions': {
             'tfm': 'net8.0', 'framework': {'name': 'Microsoft.NETCore.App', 'version': runtime.name}}}))
@@ -59,3 +75,4 @@ public sealed partial class HeroSkillVfx {
 
 if __name__ == '__main__':
     main()
+

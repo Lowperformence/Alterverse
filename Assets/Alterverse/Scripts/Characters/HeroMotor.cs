@@ -297,8 +297,20 @@ namespace Alterverse.Characters
         public void TrackBasicTarget(Health target, float seconds)
         {
             if (!HeroCombatRules.Enemy(gameObject, target)) return;
+            float until = Time.time + Mathf.Max(.02f, seconds);
+            // Per-frame hold refreshes must not shorten an accepted windup's facing.
+            basicFacingUntil = target == basicFacingTarget ? Mathf.Max(basicFacingUntil, until) : until;
             basicFacingTarget = target;
-            basicFacingUntil = Time.time + Mathf.Max(.02f, seconds);
+        }
+
+        public void KeepBasicTargetFacing(float range)
+        {
+            // Small presentation hysteresis prevents movement facing taking over
+            // whenever the held target oscillates just outside acquisition range.
+            // Never acquire, attack, or refresh a dead/far-away target here.
+            if (!HeroCombatRules.Enemy(gameObject, basicFacingTarget) ||
+                HeroCombatRules.TargetDistance(transform.position, basicFacingTarget) > range + .2f) return;
+            basicFacingUntil = Mathf.Max(basicFacingUntil, Time.time + .12f);
         }
 
         public void ClearInput()
@@ -343,3 +355,4 @@ namespace Alterverse.Characters
         }
     }
 }
+

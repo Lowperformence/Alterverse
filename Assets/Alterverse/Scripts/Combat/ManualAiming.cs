@@ -4,6 +4,7 @@ using UnityEngine;
 namespace Alterverse.Combat
 {
     // Skill gestures only. Basic attacks use tap/hold directly through BasicAttack.TryAttack.
+    [DefaultExecutionOrder(100)]
     public sealed class ManualAiming : MonoBehaviour
     {
         private Health self;
@@ -68,7 +69,10 @@ namespace Alterverse.Combat
             if (Spec.aimType == AimType.Ally)
                 target = AimGeometry.Select(gameObject, direction, Spec.castRange, Spec.coneAngle * .5f, true);
             else if (AimGeometry.UsesConeCapture(Spec)) target = AimGeometry.CaptureConeTarget(gameObject, rawDirection, Spec);
-            else if (Spec.aimType != AimType.Self && Spec.aimType != AimType.SelfArea && Spec.aimType != AimType.Dash)
+            // Once the thumb places an area, it owns the point. Reacquiring assist
+            // at its angular/range edge otherwise alternates between two directions.
+            else if (!(dragged && Spec.aimType == AimType.Area) &&
+                Spec.aimType != AimType.Self && Spec.aimType != AimType.SelfArea && Spec.aimType != AimType.Dash)
                 direction = AimGeometry.Assist(gameObject, rawDirection, Spec, out target);
             Vector3 point = Spec.aimType == AimType.SelfArea || Spec.aimType == AimType.Self
                 ? transform.position : transform.position + direction * distance;
@@ -96,4 +100,5 @@ namespace Alterverse.Combat
         private void OnApplicationPause(bool paused) { if (paused) Cancel(); }
     }
 }
+
 
