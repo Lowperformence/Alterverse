@@ -120,6 +120,10 @@ namespace Alterverse.Profile
                 new ProfileTransaction.Write(ReceiptXpBonus,xpBonus),
                 new ProfileTransaction.Write(ReceiptBonusCosmetic,(int)cosmetic)
             };
+            // Queue the invitation atomically with the first completed match, never on an
+            // abandoned round or a duplicate receipt. Presentation waits for the menu.
+            if(MatchesCompleted==0&&AccountProfilePrefs.GetInt("DF_FirstMatchReviewPrompt_v1",0)==0)
+                writes.Add(new ProfileTransaction.Write("DF_FirstMatchReviewPrompt_v1",1));
             writes.AddRange(DailyQuestProgress.MatchWrites(enemyKills<0?kills:enemyKills,hotZoneCaptures,soldierKills,won,ArenaVariantRuntime.Current));
             ProfileTransaction.Commit(writes.ToArray());
 

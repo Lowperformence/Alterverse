@@ -147,6 +147,13 @@ namespace Alterverse.UI
         private void Update()
         {
             if (!visible || suspended || OnlineMatchLoadingScreen.IsVisible) return;
+            UpdateReviewPrompt();
+            if (ReviewPromptVisible)
+            {
+                if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+                    reviewPromptOpen = false;
+                return;
+            }
             EdgegapOnlineFlow onlineFlow = EdgegapOnlineFlow.Instance;
             if (page == Page.Play && onlineFlow != null &&
                 (onlineFlow.Busy || onlineFlow.IsSearching || !string.IsNullOrEmpty(onlineFlow.LastError)))
@@ -183,7 +190,7 @@ namespace Alterverse.UI
         }
         private void OnGUI()
         {
-            if (!visible || OnlinePartyOverlay.IsOpen || RankedPanel.Visible || OnlineMatchLoadingScreen.IsVisible) return;
+            if (!visible || (!ReviewPromptVisible && OnlinePartyOverlay.IsOpen) || RankedPanel.Visible || OnlineMatchLoadingScreen.IsVisible) return;
             Matrix4x4 oldMatrix = GUI.matrix; Color oldColor = GUI.color; bool oldEnabled = GUI.enabled;
             try
             {
@@ -197,6 +204,7 @@ namespace Alterverse.UI
                 float y = Screen.height-safe.yMax+(safe.height-MenuHeight*scale)*.5f;
                 GUI.matrix = Matrix4x4.TRS(new Vector3(safe.x,y,0),Quaternion.identity,Vector3.one*scale);
                 theme ??= new FrontEndTheme();
+                if (ReviewPromptVisible) { DrawReviewPrompt(); return; }
                 if (launching) { DrawLaunch(); return; }
                 if(page != Page.Home)
                 {

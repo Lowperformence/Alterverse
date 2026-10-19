@@ -53,7 +53,7 @@ namespace Alterverse.UI
         private void OnGUI()
         {
             // Play Online opens this surface; a closed party must not draw over the menu.
-            if (!MainMenuController.IsVisible || !open || OnlineMatchLoadingScreen.IsVisible) return;
+            if (!MainMenuController.IsVisible || MainMenuController.ReviewPromptVisible || !open || OnlineMatchLoadingScreen.IsVisible) return;
 
             OnlinePartyService online = OnlinePartyService.Instance;
             if (online == null) return;
