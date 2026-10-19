@@ -106,10 +106,11 @@ static class Regression
   {
    var s=Actor(i);s.transform.position=new Vector3(i*2,0,i*.5f);server.Slot(s);
    serverBoard.Seed(s.GetComponent<Health>(),i*2,i,i+1);
-   var c=Actor(i);client.Slot(c);clientActors[i]=c;clientBoard.Registered.Add(c.GetComponent<Health>());
+   var c=Actor(i);c.gameObject.AddComponent<Alterverse.Visuals.HeroVisualMotion>();client.Slot(c);clientActors[i]=c;clientBoard.Registered.Add(c.GetComponent<Health>());
   }
   CoopAuthority.LocalHasServerAuthority=true;MatchScoreboard.Instance=serverBoard;server.Broadcast(serverManager);
   Check((int)server.Messages.Sent[^1].Values[1]==8,"A complete 4v4 roster is serialized");
+  float snapshotTime=Time.unscaledTime;
   int bytes=0;foreach(var field in server.Messages.Sent[^1].Values)
    bytes+=field is bool?1:field is int||field is uint||field is float?4:throw new Exception("Unknown snapshot field type");
   Check(bytes<1200,"Full roster snapshot stays below a conservative 1200-byte application payload budget");
@@ -119,6 +120,7 @@ static class Regression
   CoopAuthority.LocalHasServerAuthority=false;MatchScoreboard.Instance=clientBoard;client.ReceiveSnapshot(0,server.Messages.Sent[^1].Values);
   for(int i=1;i<8;i++)
   {
+   Check(clientActors[i].GetComponent<Alterverse.Visuals.HeroVisualMotion>().SampledAt==snapshotTime,"hero source timestamp reaches renderer through actual transport");
    Check(clientBoard.Read(clientActors[i].GetComponent<Health>())==(i*2,i,i+1),"Full-roster live score for slot "+i);
    Position(clientActors[i].transform.position,new Vector3(i*2,0,i*.5f),"Full-roster remote pose for slot "+i);
   }
@@ -221,7 +223,7 @@ static class Regression
    int count=(int)message.Values[1];delivered+=count;
    Check(count<=6,"World states are bounded to six entities per independent packet");
    // Conservative full-size FixedString storage (actual NGO may encode fewer bytes).
-   Check(12+count*(128+6*4+1)<=1024,"Maximum-key state packet fits the writer and unfragmented budget");
+   Check(12+count*(128+7*4+1)<=1024,"Maximum-key state packet fits the writer and unfragmented budget");
    Check(message.Delivery==NetworkDelivery.UnreliableSequenced,"Repeated world motion stays on unreliable delivery");
   }
   Check(delivered==110,"World snapshots do not silently omit objects beyond the former 96 cap");
@@ -247,7 +249,7 @@ static class Regression
   Check((uint)first.Values[0]==CoopPlanHandshake.Round&&(int)first.Values[1]==1,"World header remains compatible");
   Check(((Unity.Collections.FixedString128Bytes)first.Values[2]).ToString()=="live"&&
     (float)first.Values[3]==3&&(float)first.Values[4]==2&&(float)first.Values[5]==1&&
-    (float)first.Values[7]==37&&(float)first.Values[8]==12&&!(bool)first.Values[9]&&(int)first.Values[10]==0,
+    (float)first.Values[7]==37&&(float)first.Values[8]==12&&!(bool)first.Values[9]&&(float)first.Values[10]==0&&(int)first.Values[11]==0,
     "World snapshot preserves identity, position, HP, shield, alive state and tombstone count");
   object buffer=typeof(CoopWorldStateSync).GetField("live",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(sync);
   for(int i=1;i<=60;i++){Time.unscaledTime=i/60f;sync.Tick();}
@@ -388,6 +390,28 @@ static class Regression
   for(int i=0;i<120;i++)update();
   Check(Debug.Logs==logs+1,"Client performance monitoring does not emit dedicated-server logs");
  }
- static void Main(){HistoryCases();TransportCases();DashTransportCases();HealingAndStatusCases();WorldPacketCases();SnapshotWorkCases();EnlargedBoundaryCases();CadenceCases();WorldDeltaCases();TimingCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
+ static void OwnerBurstProbe()
+ {
+  foreach(float speed in new[]{4.77f,6.5f,8.0f})
+  {
+   CoopPlanHandshake.Round++;CoopAuthority.ActivePlan=new();CoopAuthority.ActivePlan.Session.Slots[0]=new();
+   CoopAuthority.Active=true;Time.timeScale=1;Time.unscaledTime=0;MatchNetworkProtocol.AllowOwner=true;
+   var server=new CoopHeroStateSync();var actor=Actor(0);server.Slot(actor);actor.GetComponent<HeroCombatProfile>().MoveSpeed=speed;
+   CoopAuthority.LocalHasServerAuthority=true;NetworkManager.Singleton=new NetworkManager{IsServer=true};
+   float worst=0;
+   for(int i=1;i<=40;i++)
+   {
+    // Four legitimate 20Hz poses arrive together after a 200ms network/receive stall.
+    Time.unscaledTime=(float)Math.Ceiling(i/4f)*.2f;
+    float position=i*.05f*speed;
+    object[] packet={CoopPlanHandshake.Round,0,new Unity.Collections.FixedString128Bytes("player"),(uint)i,0u,position,0f,0f,0f,speed,0f};
+    server.ReceiveOwner(7,packet);
+    worst=Math.Max(worst,position-actor.transform.position.x);
+   }
+   Console.WriteLine($"BURST PROBE speed={speed:F2} units/s: largest valid-pose rejection={worst:F4} units");
+  }
+ }
+ static void Main(){OwnerBurstProbe();HistoryCases();TransportCases();DashTransportCases();HealingAndStatusCases();WorldPacketCases();SnapshotWorkCases();EnlargedBoundaryCases();CadenceCases();WorldDeltaCases();TimingCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
 }
+
 

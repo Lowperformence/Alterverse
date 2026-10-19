@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile real world-entity interpolation with deterministic 8 Hz snapshot/renderer fixtures."""
+"""Compile real world-entity interpolation with 8/20 Hz timing and packet-jitter fixtures."""
 import argparse
 import json
 from pathlib import Path
@@ -26,3 +26,4 @@ with tempfile.TemporaryDirectory(prefix='df-world-motion-') as temporary:
     subprocess.run([str(runtime / 'dotnet'), str(csc), '@' + str(response)], check=True)
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions': {'tfm': 'net8.0', 'framework': {'name': 'Microsoft.NETCore.App', 'version': version}}}))
     subprocess.run([str(runtime / 'dotnet'), str(output)], check=True)
+

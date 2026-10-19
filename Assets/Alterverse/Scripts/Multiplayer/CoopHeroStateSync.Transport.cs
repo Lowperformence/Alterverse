@@ -194,6 +194,7 @@ namespace Alterverse.Multiplayer
                 int kills=0,deaths=0,assists=0;
                 MatchScoreboard.Instance?.GetNetworkScore(health,out kills,out deaths,out assists);
                 writer.WriteValueSafe(kills);writer.WriteValueSafe(deaths);writer.WriteValueSafe(assists);
+                writer.WriteValueSafe(Time.unscaledTime);
             }
 
             for(int i=0;i<manager.ConnectedClientsIds.Count;i++)
@@ -238,6 +239,8 @@ namespace Alterverse.Multiplayer
                 reader.ReadValueSafe(out uint acknowledgedPose);
                 reader.ReadValueSafe(out float acknowledgedX);reader.ReadValueSafe(out float acknowledgedY);reader.ReadValueSafe(out float acknowledgedZ);
                 reader.ReadValueSafe(out int kills);reader.ReadValueSafe(out int deaths);reader.ReadValueSafe(out int assists);
+                reader.ReadValueSafe(out float sampledAt);
+                if(!MatchNetworkProtocol.Finite(sampledAt))continue;
 
                 if(rosterSlot<0||rosterSlot>=slots.Length)continue;
                 CoopHeroSlot actor=slots[rosterSlot];if(actor==null)continue;
@@ -259,7 +262,7 @@ namespace Alterverse.Multiplayer
                     actor.transform.position=corrected;
                 if(!localOwner)actor.transform.rotation=Quaternion.Euler(0,yaw,0);
                 if(!localOwner)actor.GetComponent<HeroVisualMotion>()?.ReceivePresentationSnapshot(hostPosition,
-                    Quaternion.Euler(0,yaw,0),dead||respawning||errorSqr>9f,forcedMoving);
+                    Quaternion.Euler(0,yaw,0),dead||respawning||errorSqr>9f,forcedMoving,sampledAt);
 
                 health.ApplyNetworkSnapshot(current,shield,dead);
                 MatchScoreboard.Instance?.ApplyNetworkScore(health,kills,deaths,assists);
@@ -285,3 +288,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+

@@ -50,6 +50,7 @@ namespace UnityEngine
     {
         public static int RoundToInt(float n)=>(int)MathF.Round(n);
         public static float Max(float a,float b)=>Math.Max(a,b);
+        public static float Min(float a,float b)=>Math.Min(a,b);
         public static float Exp(float n)=>MathF.Exp(n);
         public static float InverseLerp(float a,float b,float value)=>a==b?0:Math.Clamp((value-a)/(b-a),0,1);
     }
@@ -66,8 +67,47 @@ class Regression
     {var g=new GameObject();g.AddComponent<Renderer>();g.AddComponent<Collider>();var key=g.AddComponent<CoopWorldEntityKey>();key.Configure("HOTZONE:0");return key;}
     static double Deviation(List<float> samples)
     {double average=samples.Average();return Math.Sqrt(samples.Select(x=>(x-average)*(x-average)).Average());}
+    static void ArrivalJitterProbe()
+    {
+        foreach(int fps in new[]{30,60,120})
+        {
+            var worldKey=New();float worldPrevious=0;var buffer=new HeroPresentationBuffer();var corrected=new HeroPresentationBuffer();int next=0;float previous=0,correctedPrevious=0;var speeds=new List<float>();var correctedSpeeds=new List<float>();
+            for(int frame=0;frame<fps*6;frame++)
+            {
+                float now=(float)frame/fps;
+                while(next*.05f+(next%2==0?.02f:.06f)<=now+.000001f)
+                {
+                    // Server moves at a constant 4.77 units/s and sends at exactly 20Hz.
+                    // Only network arrival spacing alternates by 40ms.
+                    float received=next*.05f+(next%2==0?.02f:.06f);
+                    buffer.Push(new Vector3(next*.05f*4.77f,0,0),Quaternion.identity,received,false);
+                    corrected.PushRemote(new Vector3(next*.05f*4.77f,0,0),Quaternion.identity,next*.05f+900f,received,false);
+                    Time.unscaledTime=received;worldKey.ApplyTarget(new Vector3(next*.05f*4.77f,0,0),0,false,next*.05f+900f);next++;
+                }
+                buffer.Evaluate(now,out var p,out _);corrected.Evaluate(now,out var fixedPose,out _);
+                if(frame>fps){correctedSpeeds.Add((fixedPose.x-correctedPrevious)*fps);Check(Math.Abs((fixedPose.x-correctedPrevious)*fps-4.77f)<.025f,"source timeline preserves steady speed under 40ms arrival jitter and clock offset");}
+                correctedPrevious=fixedPose.x;
+                Time.unscaledTime=now;tick.Invoke(worldKey,null);
+                if(frame>fps)Check(Math.Abs((worldKey.transform.position.x-worldPrevious)*fps-4.77f)<.025f,"production world entity forwards source time before gait sampling");
+                worldPrevious=worldKey.transform.position.x;
+                if(frame>fps)speeds.Add((p.x-previous)*fps);
+                previous=p.x;
+            }
+            Console.WriteLine($"ARRIVAL JITTER PROBE {fps} FPS: constant server speed 4.77, rendered min={speeds.Min():F2}, max={speeds.Max():F2}, speed deviation={Deviation(speeds):F2}; corrected deviation={Deviation(correctedSpeeds):F4} units/s");
+        }
+    }
     static void Main()
     {
+        ArrivalJitterProbe();
+        var source=new HeroPresentationBuffer();source.PushRemote(new Vector3(1,0,0),Quaternion.identity,500,10,false);
+        source.PushRemote(new Vector3(2,0,0),Quaternion.identity,500.1f,10.1f,false);
+        source.Evaluate(11,out var held,out _);Check(held.x==2,"source-timed packet gap holds latest pose without extrapolation");
+        source.PushRemote(new Vector3(30,0,0),Quaternion.identity,501,11,true);source.Evaluate(11,out var resetPose,out _);
+        Check(resetPose.x==30,"source-timed relocation clears old motion immediately");
+        source.PushRemote(new Vector3(99,0,0),Quaternion.identity,float.NaN,11.1f,false);source.Evaluate(12,out held,out _);
+        Check(held.x==30,"nonfinite source timestamp cannot poison the buffer");
+        source.Clear();source.Push(Vector3.zero,Quaternion.identity,0,false);source.Evaluate(0,out var localPose,out _);
+        Check(localPose.x==0,"clearing source timeline restores local/offline clock semantics");
         foreach(int fps in new[]{30,60,120})
         {
             Time.unscaledTime=0;var key=New();key.ApplyTarget(new Vector3(0,0,0),0,true);
@@ -115,3 +155,4 @@ class Regression
         Console.WriteLine($"PASS: {checks} world motion checks. Controlled timing/render fixtures; native Unity/network/Android untested.");
     }
 }
+

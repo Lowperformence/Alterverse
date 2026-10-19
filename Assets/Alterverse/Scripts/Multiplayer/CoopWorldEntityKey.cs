@@ -9,8 +9,8 @@ namespace Alterverse.Multiplayer
     public sealed class CoopWorldEntityKey : MonoBehaviour
     {
         [SerializeField]private string key="";
-        // World snapshots arrive at 8 Hz. Interpolate between two received poses instead
-        // of easing toward each new goal, which repeatedly accelerates the creature gait.
+        // Moving world snapshots arrive at 20 Hz; full discovery runs at 8 Hz.
+        // Interpolate on their server sampling timeline to keep arrival jitter out of the gait.
         private readonly HeroPresentationBuffer presentation=new(.15f);
         private bool hasTarget;
         private Renderer[] renderers=System.Array.Empty<Renderer>();
@@ -38,11 +38,12 @@ namespace Alterverse.Multiplayer
             configured=true;
         }
 
-        public void ApplyTarget(Vector3 position,float yaw,bool immediate)
+        public void ApplyTarget(Vector3 position,float yaw,bool immediate,float sampledAt=float.NaN)
         {
             Quaternion rotation=Quaternion.Euler(0,yaw,0);
             bool reset=immediate||!hasTarget||(transform.position-position).sqrMagnitude>36f;
-            presentation.Push(position,rotation,Time.unscaledTime,reset);
+            if(float.IsNaN(sampledAt))presentation.Push(position,rotation,Time.unscaledTime,reset);
+            else presentation.PushRemote(position,rotation,sampledAt,Time.unscaledTime,reset);
             hasTarget=true;
             if(reset)transform.SetPositionAndRotation(position,rotation);
         }
@@ -77,4 +78,5 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 

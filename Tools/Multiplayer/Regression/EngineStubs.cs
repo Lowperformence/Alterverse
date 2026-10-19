@@ -133,7 +133,7 @@ namespace Alterverse.Characters
 }
 namespace Alterverse.Visuals
 {
- public sealed class HeroVisualMotion:Component {public Vector3 PresentedPosition;public void ReceivePresentationSnapshot(Vector3 p,Quaternion q,bool reset,bool forced){}}
+ public sealed class HeroVisualMotion:Component {public Vector3 PresentedPosition;public float SampledAt;public void ReceivePresentationSnapshot(Vector3 p,Quaternion q,bool reset,bool forced,float sampledAt=float.NaN){SampledAt=sampledAt;}}
 }
 namespace Alterverse.Multiplayer
 {
@@ -200,7 +200,7 @@ namespace Alterverse.Multiplayer
  public sealed class CoopWorldEntityKey:Component {public string Key;}
  public sealed partial class CoopWorldStateSync
  {
-  private const string StateMessage="DF_COOP_WORLD_STATE_V2";
+  private const string StateMessage="DF_COOP_WORLD_STATE_V3";
   private readonly Dictionary<string,CoopWorldEntityKey> entities=new();
   private readonly HashSet<string> previousHostKeys=new(),currentHostKeys=new();
   private readonly List<string> tombstones=new();
@@ -216,4 +216,5 @@ namespace Alterverse.Multiplayer
   public void Broadcast(NetworkManager manager)=>SendState(manager);public CustomMessagingManager Messages=>messaging;
  }
 }
+
 

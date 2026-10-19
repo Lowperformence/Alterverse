@@ -83,12 +83,13 @@ namespace Alterverse.Visuals
         public bool HasNetworkPresentation => isActiveAndEnabled && root!=null && RemoteReplica && presentationBuffer.Ready;
         public bool GroundingSuspended => Dashing || Time.time < dashUntil || RemoteReplica &&
             (Time.time < replicaGroundingUntil || PlanarSpeed > Mathf.Max(1f,(locomotion!=null?locomotion.RunningSpeed:6.5f)*1.6f));
-        public void ReceivePresentationSnapshot(Vector3 position, Quaternion rotation, bool discontinuity, bool forcedMoving)
+        public void ReceivePresentationSnapshot(Vector3 position, Quaternion rotation, bool discontinuity, bool forcedMoving, float sampledAt = float.NaN)
         {
             if(replicaSlot==null)replicaSlot=GetComponent<CoopHeroSlot>();
             replicaGroundingUntil = forcedMoving ? Time.time + .25f : 0f;
             bool reset = discontinuity || !presentationBuffer.Ready;
-            presentationBuffer.Push(position, rotation, Time.time, reset);
+            if(float.IsNaN(sampledAt))presentationBuffer.Push(position,rotation,Time.unscaledTime,reset);
+            else presentationBuffer.PushRemote(position,rotation,sampledAt,Time.unscaledTime,reset);
             if (!reset) return;
             if (root != null) ResetPresentationAfterRelocation();
             PresentedPosition = lastPosition = position; PresentedRotation = rotation; PresentedVelocity = Vector3.zero;
@@ -275,7 +276,7 @@ namespace Alterverse.Visuals
 
             if(root==null)return;
             Vector3 presented=transform.position;Quaternion presentedRotation=transform.rotation;
-            if(RemoteReplica)presentationBuffer.Evaluate(Time.time,out presented,out presentedRotation);
+            if(RemoteReplica)presentationBuffer.Evaluate(Time.unscaledTime,out presented,out presentedRotation);
             // A replica may exist before its first snapshot; retain its spawn pose then.
             if(RemoteReplica&&!presentationBuffer.Ready){presented=transform.position;presentedRotation=transform.rotation;}
             PresentedPosition=presented;PresentedRotation=presentedRotation;
@@ -986,3 +987,4 @@ namespace Alterverse.Visuals
 
     }
 }
+

@@ -63,7 +63,7 @@ namespace Alterverse.Match {
 namespace Alterverse.Multiplayer {
  public class CoopMatchPlan {public string MatchId="round";}
  public static class CoopAuthority {public static bool Active=true,LocalHasServerAuthority;public static bool CanSimulateHostGameplay=>LocalHasServerAuthority;public static CoopMatchPlan ActivePlan=new();}
- public class CoopWorldEntityKey:Component {public string Key;public bool Hidden;public void Configure(string key=null){if(key!=null)Key=key;if(Key==null)Key=gameObject.name;}public void ApplyTarget(Vector3 position,float yaw,bool immediate){transform.position=position;}public void ApplyAlivePresentation(bool alive){Hidden=!alive;}}
+ public class CoopWorldEntityKey:Component {public string Key;public bool Hidden;public void Configure(string key=null){if(key!=null)Key=key;if(Key==null)Key=gameObject.name;}public void ApplyTarget(Vector3 position,float yaw,bool immediate,float sampledAt=float.NaN){transform.position=position;}public void ApplyAlivePresentation(bool alive){Hidden=!alive;}}
  public class CoopHeroSlot:Component {public int Slot;}
  public static class MatchSession {public const int MaxPlayers=10;}
  public static class MatchNetworkProtocol {public static bool ReadRound(ref FastBufferReader reader){reader.ReadValueSafe(out string round);return round==CoopAuthority.ActivePlan.MatchId;}public static bool Finite(float x)=>!float.IsNaN(x)&&!float.IsInfinity(x);}
@@ -80,7 +80,7 @@ namespace Alterverse.Multiplayer {
 class Regression {
  static int checks;static void Check(bool value,string message){checks++;if(!value)throw new Exception(message);}
  static void Reset(){GameObject.All.Clear();Health.Active.Clear();HotZoneTank.Reset();Time.frameCount++;CoopAuthority.ActivePlan=new();CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;}
- static object[] Pose(string key,float hp=476,bool dead=false,float x=12)=>new object[]{"round",1,new FixedString128Bytes(key),x,1f,3f,45f,hp,0f,dead,0};
+ static object[] Pose(string key,float hp=476,bool dead=false,float x=12)=>new object[]{"round",1,new FixedString128Bytes(key),x,1f,3f,45f,hp,0f,dead,1f,0};
  static void Main(){
   foreach(int team in new[]{0,1})foreach(int occurrence in new[]{0,1,2,20,int.MaxValue}){
    string key=HotZoneRewardKey.Create(occurrence,team);Check(HotZoneRewardKey.TryParse(key,out int o,out int t)&&o==occurrence&&t==team,"stable event/team identity");

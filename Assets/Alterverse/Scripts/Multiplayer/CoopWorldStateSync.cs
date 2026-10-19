@@ -14,7 +14,7 @@ namespace Alterverse.Multiplayer
     /// </summary>
     public sealed class CoopWorldStateSync : MonoBehaviour
     {
-        private const string StateMessage="DF_COOP_WORLD_STATE_V2";
+        private const string StateMessage="DF_COOP_WORLD_STATE_V3";
         private const float SendInterval=.125f;
         private const float MovingSendInterval=1f/20f;
 
@@ -149,6 +149,7 @@ namespace Alterverse.Multiplayer
                     writer.WriteValueSafe(entity.transform.eulerAngles.y);
                     writer.WriteValueSafe(health.Current);writer.WriteValueSafe(health.Shield);
                     writer.WriteValueSafe(health.IsDead);
+                    writer.WriteValueSafe(Time.unscaledTime);
                 }
                 writer.WriteValueSafe(0);
                 SendChunk(manager,writer,NetworkDelivery.UnreliableSequenced);
@@ -199,6 +200,8 @@ namespace Alterverse.Multiplayer
                 reader.ReadValueSafe(out float current);
                 reader.ReadValueSafe(out float shield);
                 reader.ReadValueSafe(out bool dead);
+                reader.ReadValueSafe(out float sampledAt);
+                if(!MatchNetworkProtocol.Finite(sampledAt))continue;
 
                 string id=fixedId.ToString();
                 if(removedKeys.Contains(id))continue;
@@ -213,7 +216,7 @@ namespace Alterverse.Multiplayer
                     entities[id]=entity;
                 }
                 Health health=entity.GetComponent<Health>();if(health==null)continue;
-                entity.ApplyTarget(new Vector3(x,y,z),yaw,false);
+                entity.ApplyTarget(new Vector3(x,y,z),yaw,false,sampledAt);
                 health.ApplyNetworkSnapshot(current,shield,dead);
                 DimensionPlanet planet=entity.GetComponent<DimensionPlanet>();
                 if(planet!=null)planet.ApplyNetworkAvailability(!dead);
