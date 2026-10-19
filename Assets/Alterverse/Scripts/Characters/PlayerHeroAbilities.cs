@@ -76,7 +76,7 @@ namespace Alterverse.Characters
             if (h == HeroId.Kaelon && slot == 1) return $"Gain {s.Power:0} shield for 4s.";
             if (h == HeroId.Rook && slot == 1) return $"Recover {s.Power:0} HP and gain 20 shield for 3s.";
             if (h == HeroId.Kaelon && slot == 0) return $"{s.Power:0} damage and a 0.55s stun. Brief stun immunity follows.";
-            if (h == HeroId.Nyra && slot == 3) return $"Three shots at the captured position, {s.Power:0} total damage. Enemies can dodge; stunning interrupts the volley.";
+            if (h == HeroId.Nyra && slot == 3) return $"Three cone shots at one enemy, {s.Power:0} total damage. Stunning interrupts unreleased shots.";
             if (h == HeroId.Veyr && slot == 3) return $"{s.Power:0} damage after {s.Windup:0.##}s, up to 35% more against wounded heroes. Targets can leave the aimed cone.";
             if (s.Radius > 0)
                 return $"After {s.Windup:0.#}s: {s.Power:0} damage in {s.Radius:0.#}m." +
@@ -84,7 +84,7 @@ namespace Alterverse.Characters
                         h == HeroId.Elyra && slot != 0 ? " Slows enemies for 2s." :
                         h == HeroId.Traveler ? (slot == 3 ? " Paradox field slows enemies for 1.8s." : " Chrono field slows enemies for 1.5s.") :
                         h == HeroId.Rook && slot == 3 ? " Gain 65 shield for 4s." : "");
-            return $"{s.Power:0} damage on geometric contact." +
+            return $"{s.Power:0} damage on cone contact." +
                    (slot == 1 || slot == 2 || h == HeroId.Mira || h == HeroId.Rook ? " Briefly slows the target." : "");
         }
 

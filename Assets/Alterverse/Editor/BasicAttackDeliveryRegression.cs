@@ -34,12 +34,6 @@ namespace Alterverse.EditorChecks
                     Check(target.Current == initial, hero + ": no damage before windup");
                     Due(delivery, false);
                     Step(delivery);
-                    if (HeroAttackDelivery.IsRanged(hero))
-                    {
-                        Check(target.Current == initial, hero + ": no damage before projectile arrival");
-                        Due(delivery, true);
-                        Step(delivery);
-                    }
                     float expected = hero == HeroId.Rook ? 21f : 20f;
                     Check(Mathf.Abs(initial - target.Current - expected) < .001f, hero + ": one correctly sized hit");
                     Step(delivery);
@@ -51,10 +45,12 @@ namespace Alterverse.EditorChecks
                     Due(delivery, false);
                     Step(delivery);
                     if (HeroAttackDelivery.IsRanged(hero)) { Due(delivery, true); Step(delivery); }
-                    Check(Mathf.Abs(target.Max-target.Current-expected)<.001f, hero + ": accepted target survives retreat during windup");
+                    float retreatDamage=HeroAttackDelivery.IsRanged(hero)?0f:expected;
+                    Check(Mathf.Abs(target.Max-target.Current-retreatDamage)<.001f, hero + ": ranged cone respects range; melee commitment preserved");
+                    delivery.Cancel();
                     // Draining again must never duplicate an already committed strike.
                     Due(delivery, true); Step(delivery);
-                    Check(Mathf.Abs(target.Max-target.Current-expected)<.001f, hero + ": accepted strike resolves once");
+                    Check(Mathf.Abs(target.Max-target.Current-retreatDamage)<.001f, hero + ": accepted strike resolves once");
                     target.RestoreFull();
                     target.transform.position = origin + Vector3.forward;
                     delivery.Basic(target, 20f, 3f);
@@ -70,7 +66,7 @@ namespace Alterverse.EditorChecks
                     Step(delivery);
                     Check(target.Current == target.Max, hero + ": death cancels pending damage");
                 }
-                Debug.Log($"All {HeroIdentity.HeroCount} hero basics passed: windup, flight, single damage, committed targets, stun/death cancellation.");
+                Debug.Log($"All {HeroIdentity.HeroCount} hero basics passed: windup, ranged cones, single damage, melee commitment, stun/death cancellation.");
             }
             finally
             {
@@ -97,7 +93,6 @@ namespace Alterverse.EditorChecks
                 Type type = slot.GetType();
                 if (!(bool)type.GetField("Active").GetValue(slot)) continue;
                 type.GetField("ReleaseAt").SetValue(slot, Time.time - 1f);
-                if (arrival) type.GetField("SampleTime").SetValue(slot, Time.time - 1f);
                 slots.SetValue(slot, i);
             }
         }

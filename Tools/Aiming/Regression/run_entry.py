@@ -12,6 +12,7 @@ import tempfile
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dotnet-root', type=Path, required=True)
+    parser.add_argument('--ranged-cones', action='store_true')
     args = parser.parse_args()
     here = Path(__file__).resolve().parent
     root = here.parents[2]
@@ -42,7 +43,8 @@ public sealed partial class HeroSkillVfx {
 ''')
         output = directory / 'Regression.dll'
         tests = ['Regression.cs', 'TimmyRegression.cs', 'TimmyVfxRegression.cs', 'ConnectionTiming.cs',
-                 'ConeCaptureRegression.cs', 'MovingConnectionRegression.cs', 'EntryRegression.cs']
+                 'ConeCaptureRegression.cs', 'MovingConnectionRegression.cs', 'EntryRegression.cs',
+                 'RangedConeRegression.cs']
         files = [fixtures, presentation, *[here / n for n in tests],
                  root / 'Assets/Alterverse/Editor/AttackDeliveryRegression.cs',
                  root / 'Assets/Alterverse/Editor/BasicAttackDeliveryRegression.cs',
@@ -52,7 +54,7 @@ public sealed partial class HeroSkillVfx {
                         *['-r:' + str(p) for p in refs.glob('*.dll')], *map(str, files)], check=True)
         output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions': {
             'tfm': 'net8.0', 'framework': {'name': 'Microsoft.NETCore.App', 'version': runtime.name}}}))
-        subprocess.run([str(dotnet / 'dotnet'), str(output)], check=True)
+        subprocess.run([str(dotnet / 'dotnet'), str(output), *(['--ranged-cones'] if args.ranged_cones else [])], check=True)
 
 
 if __name__ == '__main__':

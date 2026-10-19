@@ -18,12 +18,13 @@ namespace Alterverse.EditorChecks
         {typeof(HeroAttackDelivery).GetMethod("Update",Hidden).Invoke(delivery,null);}
         private static void Due(HeroAttackDelivery delivery,string field)
         {
+            if(field=="HitAt")return; // There is no projectile-arrival gameplay clock.
             Array slots=(Array)typeof(HeroAttackDelivery).GetField("pending",Hidden).GetValue(delivery);
             for(int i=0;i<slots.Length;i++)
             {
                 object entry=slots.GetValue(i);Type type=entry.GetType();
                 if(!(bool)type.GetField("Active").GetValue(entry))continue;
-                type.GetField(field=="HitAt"?"SampleTime":field).SetValue(entry,Time.time-1);
+                type.GetField(field).SetValue(entry,Time.time-1);
                 slots.SetValue(entry,i);
             }
         }
@@ -60,7 +61,7 @@ namespace Alterverse.EditorChecks
                     Check(Mathf.Approximately(Total(target),baseline),"basic dealt damage before windup");
                     Tick(delivery);Check(Mathf.Approximately(Total(target),baseline),"early update dealt damage");
                     Due(delivery,"ReleaseAt");Tick(delivery);
-                    Check(Mathf.Abs(Total(target)-(HeroAttackDelivery.IsRanged((HeroId)hero)?baseline:baseline-applied))<.002f,"release/contact timing mismatch");
+                    Check(Mathf.Abs(Total(target)-(baseline-applied))<.002f,"release/contact timing mismatch");
                     Due(delivery,"HitAt");Tick(delivery);
                     Check(Mathf.Abs(Total(target)-(baseline-applied))<.002f,"contact changed basic damage");
                     Tick(delivery);Check(Mathf.Abs(Total(target)-(baseline-applied))<.002f,"basic resolved twice");
@@ -71,7 +72,8 @@ namespace Alterverse.EditorChecks
 
                     baseline=Fresh(target);HeroCombatRules.BasicHit(source,target,power);
                     victim.transform.position=new Vector3(10,80,0);Drain(delivery);
-                    Check(Mathf.Abs(Total(target)-(baseline-applied))<.002f,"accepted basic lost its target after retreat");
+                    Check(Mathf.Abs(Total(target)-(HeroAttackDelivery.IsRanged((HeroId)hero)?baseline:baseline-applied))<.002f,"ranged cone respects range; melee commitment preserved");
+                    delivery.Cancel();
                     baseline=Fresh(target);
                     victim.transform.position=new Vector3(1,80,0);
 
@@ -157,11 +159,11 @@ namespace Alterverse.EditorChecks
                 body.ResetMotion();status.Clear();before=Fresh(target);
                 victim.transform.position=new Vector3(4,80,0);
 
-                delivery.Ability(execution,0,target,windup:0);Tick(delivery);
                 wall=GameObject.CreatePrimitive(PrimitiveType.Cube);
                 wall.name="DF_HookWallRegression";wall.layer=GameplayCollision.Structures;
                 wall.transform.position=new Vector3(2,80.4f,0);wall.transform.localScale=new Vector3(.3f,2,2);
                 Physics.SyncTransforms();
+                delivery.Ability(execution,0,target,windup:0);Tick(delivery);
                 Due(delivery,"HitAt");Tick(delivery);
                 Check(Mathf.Approximately(Total(target),before),"hook passed through a real wall");
                 Check(!body.IsForcedMoving,"blocked hook pulled victim");

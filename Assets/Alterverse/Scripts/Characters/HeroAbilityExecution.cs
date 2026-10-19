@@ -32,7 +32,7 @@ namespace Alterverse.Characters
             bool stunned=GetComponent<HeroCombatStatus>()?.Stunned==true;
             if(stunned&&!wasStunned)
             {
-                // Interrupt preparation/channels, not projectiles already in flight or an
+                // Interrupt preparation/channels, not released cone attacks or an
                 // incoming forced displacement owned by another hero (for example the hook).
                 GetComponent<HeroAttackDelivery>()?.CancelWindups();
                 sivraDashPassivePending=false;

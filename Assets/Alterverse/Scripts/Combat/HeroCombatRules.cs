@@ -25,6 +25,20 @@ namespace Alterverse.Combat
 
         public static float BasicDistance(Vector3 origin,Health target)=>TargetDistance(origin,target);
 
+        // One ordering for cone preview, automatic ranged acquisition and damage:
+        // enemy hero class, then remaining HP, then distance. No weighted score
+        // can let a nearby minion outrank an eligible hero.
+        public static bool PreferConeTarget(Health candidate,Health best,Vector3 origin)
+        {
+            if(best==null)return true;
+            bool hero=candidate.GetComponent<HeroIdentity>()!=null;
+            bool bestHero=best.GetComponent<HeroIdentity>()!=null;
+            if(hero!=bestHero)return hero;
+            if(!Mathf.Approximately(candidate.Current,best.Current))
+                return candidate.Current<best.Current;
+            return TargetDistance(origin,candidate)<TargetDistance(origin,best);
+        }
+
         public static bool Enemy(GameObject actor, Health target)
         {
             if (target == null || target.IsDead || !target.isActiveAndEnabled || target.gameObject == actor) return false;
@@ -65,4 +79,3 @@ namespace Alterverse.Combat
         }
     }
 }
-

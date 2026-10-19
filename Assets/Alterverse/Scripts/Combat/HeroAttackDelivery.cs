@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Alterverse.Combat
 {
-    // Automatic basics commit to an in-range target; manual casts retain geometric delivery.
+    // Direct ranged damage uses the aiming cone. Flying effects never own collision.
     [RequireComponent(typeof(Health), typeof(HeroIdentity))]
     [DefaultExecutionOrder(120)]
     public sealed class HeroAttackDelivery : MonoBehaviour
@@ -13,18 +13,20 @@ namespace Alterverse.Combat
         private struct Pending
         {
             public bool Active, Launched, Basic, Volley, Hook, HasAimPoint, TargetedBasic;
-            public Vector3 Direction, Point, ReleaseOrigin, LaunchOrigin, Position;
+            public Vector3 Direction, Point, LaunchOrigin;
             public Health Target;
             public HeroAbilityExecution Execution;
             public AimSpec Spec;
             public int Slot, VisualId;
-            public float Damage, ReleaseAt, SampleTime, Traveled, FlightDuration, FlightElapsed, ConeUntil;
+            public float Damage, ReleaseAt, ConeUntil;
         }
         private Pending[] pending;
         private readonly RaycastHit[] blockers = new RaycastHit[32];
         private Health self;
         private HeroIdentity identity;
         private bool hasPending;
+        private Health volleyTarget;
+        private bool volleyTargetChosen;
         internal Vector3? VisualOrigin { get; private set; }
         internal Vector3? VisualDirection { get; private set; }
         private void Awake()
@@ -93,9 +95,10 @@ namespace Alterverse.Combat
                 pending[i] = new Pending { Active = true, Basic = slot < 0, Slot = slot, Damage = damage,
                     TargetedBasic = slot < 0 && spec.targetingMode == TargetingMode.AutoBasic && pose.Target != null,
                     Execution = execution, Volley = volley, Hook = identity.Hero == HeroId.Nerok && slot == 0,
-                    Direction = spec.targetingMode == TargetingMode.Cone ? pose.Direction :
+                    Direction = spec.targetingMode == TargetingMode.Cone || spec.aimType == AimType.Projectile ||
+                        spec.aimType == AimType.Beam || spec.aimType == AimType.Homing ? pose.Direction :
                         spec.aimType == AimType.Melee && slot >= 0 ? pose.Direction : pose.CastDirection(transform.position),
-                    Point = pose.Point, ReleaseOrigin = transform.position, HasAimPoint = pose.HasAimPoint, Spec = spec,
+                    Point = pose.Point, HasAimPoint = pose.HasAimPoint, Spec = spec,
                     Target = spec.targetingMode == TargetingMode.Homing || slot < 0 && spec.targetingMode == TargetingMode.AutoBasic ? pose.Target : null, ReleaseAt = Time.time + windup };
                 hasPending = true;
                 if (!volley) HeroCombatAudio.Windup(gameObject, slot + 1);
@@ -114,6 +117,12 @@ namespace Alterverse.Combat
         public bool AbilityAimed(HeroAbilityExecution execution, int slot, AimPose pose, bool volley = false, float windup = -1f)
         {
             if (execution == null || execution.gameObject != gameObject || !execution.isActiveAndEnabled || slot < 0 || slot > 3) return false;
+            if (volley)
+            {
+                bool activeVolley = false;
+                for (int i = 0; i < pending.Length; i++) activeVolley |= pending[i].Active && pending[i].Volley;
+                if (!activeVolley) { volleyTarget = null; volleyTargetChosen = false; }
+            }
             AimSpec spec = AimingSettings.Current.For(identity.Hero, slot);
             return Queue(pose, spec, slot, 0f, execution, volley,
                 windup >= 0f ? windup : AbilityWindup(identity.Hero, slot, GetComponent<HeroAbilityKit>().Spec(slot)));
@@ -139,6 +148,7 @@ namespace Alterverse.Combat
         public void Cancel()
         {
             if (pending != null) for (int i = 0; i < pending.Length; i++) pending[i] = default;
+            volleyTarget = null; volleyTargetChosen = false;
             hasPending = false; HeroSkillVfx.CancelProjectiles(gameObject);
         }
         private void OnDisable() { if (self != null) self.Died -= Cancel; Cancel(); }
@@ -211,9 +221,11 @@ namespace Alterverse.Combat
             => p.TargetedBasic;
 
         private static bool LiveCone(Pending p)
-            => !p.Basic && p.Spec.targetingMode == TargetingMode.Cone &&
-               (p.Spec.aimType == AimType.Melee || p.Spec.aimType == AimType.Beam ||
-                p.Spec.aimType == AimType.Projectile || p.Spec.aimType == AimType.Homing);
+            => (p.Spec.targetingMode == TargetingMode.Cone &&
+                p.Spec.aimType == AimType.Melee) || RangedCone(p);
+        private static bool RangedCone(Pending p)
+            => p.Spec.aimType == AimType.Projectile || p.Spec.aimType == AimType.Beam ||
+               p.Spec.aimType == AimType.Homing;
 
         // Every server update uses the same wedge as the player's visible aiming preview.
         // Select a SINGLE body per direct attack; a hero always beats a closer minion
@@ -221,10 +233,10 @@ namespace Alterverse.Combat
         private Health ConeContact(Pending p)
         {
             Health best = null;
-            float bestScore = float.MaxValue;
             for (int i = 0; i < Health.Active.Count; i++)
             {
                 Health target = Health.Active[i];
+                if (p.Volley && volleyTargetChosen && target != volleyTarget) continue;
                 if (!HeroCombatRules.Enemy(gameObject, target) ||
                     !AimGeometry.ConeBody(target, p.LaunchOrigin, p.Direction,
                         p.Spec.castRange, p.Spec.coneAngle, true)) continue;
@@ -237,10 +249,7 @@ namespace Alterverse.Combat
                 if (distance > .001f && BlockDistance(p.LaunchOrigin, AimGeometry.Direction(delta),
                     distance, .01f) < Mathf.Max(0f, distance - radius) - .01f) continue;
 
-                float alignment = distance > .0001f ? Vector3.Angle(p.Direction, delta) : 0f;
-                float score = alignment * 4f + distance +
-                    (target.GetComponent<HeroIdentity>() != null ? -100000f : 0f);
-                if (score < bestScore) { best = target; bestScore = score; }
+                if (HeroCombatRules.PreferConeTarget(target,best,p.LaunchOrigin)) best=target;
             }
             return best;
         }
@@ -286,6 +295,9 @@ namespace Alterverse.Combat
         }
         private void Impact(Pending p, Health target)
         {
+            // The three shots of one non-AOE volley share one victim. A killed
+            // victim cannot turn the remaining shots into multi-target damage.
+            if (p.Volley && !volleyTargetChosen) { volleyTarget = target; volleyTargetChosen = true; }
             if (p.Hook) p.Execution.ResolveSharkHookHit(target);
             else if (p.Basic) HeroCombatRules.ResolveBasicHit(gameObject, target, p.Damage);
             else p.Execution.ResolvePresentedHit(p.Slot, target, p.Volley);
@@ -326,125 +338,71 @@ namespace Alterverse.Combat
                 if (!p.Active) continue;
                 if (!p.Basic && (p.Execution == null || !p.Execution.isActiveAndEnabled)) { pending[i] = default; continue; }
                 bool automatic = AutomaticBasic(p);
-                bool justLaunched = false;
-                if (automatic && !HeroCombatRules.Enemy(gameObject, p.Target))
-                { pending[i] = default; HeroVfxPool.CancelDelivery(p.VisualId); continue; }
                 if (!p.Launched)
                 {
+                    if (automatic && !HeroCombatRules.Enemy(gameObject, p.Target))
+                    { pending[i] = default; continue; }
                     if (automatic) FaceBasicTarget(p);
                     if (Time.time < p.ReleaseAt) continue;
-                    // The manually directed cone remains fixed in world space. Targets are
-                    // checked as bodies ENTER the cone for the entire active strike/flight;
-                    // a single captured point must never narrow or redirect its hitbox.
-                    p.Launched = true; justLaunched = true;
-                    p.LaunchOrigin = transform.position; p.Position = p.LaunchOrigin; p.SampleTime = Time.time;
+                    p.Launched = true;
+                    p.LaunchOrigin = transform.position;
                     if (automatic)
                     {
                         p.Point = p.Target.transform.position;
                         p.HasAimPoint = true;
+                        p.Direction = AimGeometry.Direction(p.Point - p.LaunchOrigin);
                         FaceBasicTarget(p, true);
                     }
-                    // Rebase melee as well: strafing during a longer preparation must not rotate
-                    // the captured stationary point outside a cone with an obsolete origin.
-                    if (p.HasAimPoint && !LiveCone(p))
+                    if (LiveCone(p))
+                    {
+                        // Fixed active hit interval, independent of projectile speed,
+                        // central trajectory, travel distance or a visual collision.
+                        p.ConeUntil = Time.time + (p.Spec.aimType == AimType.Beam ? .12f : .20f);
+                        Health entered = ConeContact(p);
+                        if (entered != null && automatic) p.Target = entered;
+                        Vector3 endpoint = entered != null ? entered.transform.position :
+                            p.LaunchOrigin + p.Direction * p.Spec.castRange;
+                        float flight = p.Spec.aimType == AimType.Melee ? 0f :
+                            p.Spec.aimType == AimType.Beam ? .12f :
+                            Mathf.Max(.01f, HeroCombatRules.Distance(p.LaunchOrigin, endpoint) / p.Spec.projectileSpeed);
+                        p.VisualId = Present(p, endpoint, flight);
+                        if (entered != null)
+                        {
+                            pending[i] = default;
+                            Impact(p, entered);
+                        }
+                        else pending[i] = p;
+                        continue;
+                    }
+                    // Melee automatic basics retain their existing committed-target behavior.
+                    if (p.HasAimPoint)
                         p.Direction = new AimPose(p.Direction, p.Point, null, true).CastDirection(p.LaunchOrigin);
                     float distance = automatic ? HeroCombatRules.Distance(p.LaunchOrigin, p.Point) : p.Spec.castRange;
                     float length = BlockDistance(p.LaunchOrigin, p.Direction, distance, p.Spec.projectileWidth);
-                    Vector3 endpoint = p.LaunchOrigin + p.Direction * length;
-                    if (p.Spec.aimType == AimType.Melee || p.Spec.aimType == AimType.Beam)
-                    {
-                        if (LiveCone(p))
-                        {
-                            p.ConeUntil = Time.time + (p.Spec.aimType == AimType.Beam ? .12f : .20f);
-                            p.VisualId = Present(p, endpoint, p.Spec.aimType == AimType.Beam ? .12f : 0f);
-                            Health entered = ConeContact(p);
-                            if (entered != null)
-                            {
-                                pending[i] = default;
-                                Impact(p, entered);
-                            }
-                            else pending[i] = p;
-                            continue;
-                        }
-                        float fraction; Health target = Contact(p, p.LaunchOrigin, endpoint, false, out fraction);
-                        if (target != null) endpoint = p.Spec.aimType == AimType.Melee ? target.transform.position
-                            : Vector3.Lerp(p.LaunchOrigin, endpoint, Mathf.Clamp01(fraction));
-                        if (target != null && p.Spec.aimType == AimType.Melee)
-                            p.Direction = AimGeometry.Direction(endpoint - p.LaunchOrigin);
-                        Present(p, endpoint, p.Spec.aimType == AimType.Beam ? .12f : 0f);
-                        pending[i] = default;
-                        if (target != null) Impact(p, target);
-                        continue;
-                    }
-                    // Automatic visuals and gameplay share the same launch-distance flight
-                    // clock and live endpoint. Manual shots retain their fixed trajectory.
-                    p.FlightDuration = Mathf.Max(.01f, distance / p.Spec.projectileSpeed);
-                    p.VisualId = Present(p, automatic ? p.Point : endpoint,
-                        automatic ? p.FlightDuration : Mathf.Max(.01f, length / p.Spec.projectileSpeed));
-                    if (LiveCone(p))
-                    {
-                        // Projectile collision begins on the flight update, not at the
-                        // exact launch instant. Cover can still interrupt the shot
-                        // before a distant body is resolved.
-                        p.ConeUntil = Time.time + Mathf.Max(.08f, length / p.Spec.projectileSpeed);
-                    }
+                    float fraction;
+                    Health target = Contact(p, p.LaunchOrigin, p.LaunchOrigin + p.Direction * length, false, out fraction);
+                    Vector3 contact = target != null ? target.transform.position : p.LaunchOrigin + p.Direction * length;
+                    Present(p, contact, 0f);
+                    pending[i] = default;
+                    if (target != null) Impact(p, target);
+                    continue;
                 }
-                if (LiveCone(p))
-                {
-                    if (Time.time > p.ConeUntil)
-                    {
-                        pending[i] = default;
-                        HeroVfxPool.CancelDelivery(p.VisualId);
-                        continue;
-                    }
-                    Health entrant = justLaunched ? null : ConeContact(p);
-                    if (entrant != null)
-                    {
-                        pending[i] = default;
-                        HeroVfxPool.CancelDelivery(p.VisualId);
-                        Impact(p, entrant);
-                        continue;
-                    }
-                    if (p.Spec.aimType == AimType.Melee || p.Spec.aimType == AimType.Beam)
-                    {
-                        pending[i] = p;
-                        continue;
-                    }
-                }
-                float dt = Mathf.Max(0f, Time.time - p.SampleTime); p.SampleTime = Time.time;
-                if (dt <= 0f) { pending[i] = p; continue; }
-                if (!automatic && p.Spec.targetingMode == TargetingMode.Homing && HeroCombatRules.Enemy(gameObject, p.Target))
-                    p.Direction = AimGeometry.Direction(p.Target.transform.position - p.Position);
-                Vector3 destination;
-                if (automatic)
-                {
-                    p.FlightElapsed += dt;
-                    destination = Vector3.Lerp(p.LaunchOrigin, p.Target.transform.position,
-                        Mathf.Clamp01(p.FlightElapsed / p.FlightDuration));
-                    destination.y = p.Position.y;
-                    p.Direction = AimGeometry.Direction(destination - p.Position);
-                }
-                else destination = p.Position + p.Direction * Mathf.Min(p.Spec.castRange - p.Traveled, p.Spec.projectileSpeed * dt);
-                float step = HeroCombatRules.Distance(p.Position, destination);
-                float allowed = BlockDistance(p.Position, p.Direction, step, p.Spec.projectileWidth);
-                Vector3 end = p.Position + p.Direction * allowed;
-                // A wall/range endpoint can end this frame's flight early. Do not sample later target movement.
-                float contactFraction = 0f;
-                Health hit = LiveCone(p) ? null : Contact(p, p.Position, end, true, out contactFraction,
-                    allowed / Mathf.Max(.0001f, automatic ? step : p.Spec.projectileSpeed * dt));
-                p.Traveled += allowed; p.Position = end;
-                if (hit != null || allowed < step - .0001f ||
-                    (automatic ? p.FlightElapsed >= p.FlightDuration : p.Traveled >= p.Spec.castRange - .0001f))
+                // A body can enter anywhere in the still-active wedge, including a
+                // frame-spanning dash. Each delivery commits at most one hit.
+                if (Time.time > p.ConeUntil)
+                { pending[i] = default; continue; }
+                Health entrant = ConeContact(p);
+                if (entrant != null)
                 {
                     pending[i] = default;
                     HeroVfxPool.CancelDelivery(p.VisualId);
-                    if (hit != null) Impact(p, hit);
+                    if (automatic) p.Target = entrant;
+                    // Retarget the cosmetic effect; gameplay is already decided by the cone.
+                    Present(p, entrant.transform.position, p.Spec.aimType == AimType.Melee ? 0f : .12f);
+                    Impact(p, entrant);
                 }
-                else pending[i] = p;
             }
             Recount();
         }
     }
 }
-
-

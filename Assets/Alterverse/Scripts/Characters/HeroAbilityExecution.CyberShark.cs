@@ -84,9 +84,9 @@ namespace Alterverse.Characters
 
         internal void ResolveSharkHookHit(Health target)
         {
-            // Delivery calls this only after an actual anchor collision. Pull begins on contact.
-            // Released shots survive caster stun; walls still block the pull path.
-            // Delivery already swept the anchor against walls and the target body. A second
+            // Delivery calls this after cone/body contact, independently of the anchor VFX.
+            // Released cones survive caster stun; walls still block the pull path.
+            // Delivery already checked the target body's sight line. A second
             // ray to the body's centre can reject a valid grazing contact beside cover.
             // The separate pull still requires a clear path to Nerok below.
             if(!HeroCombatRules.Enemy(gameObject,target))return;
@@ -155,4 +155,3 @@ namespace Alterverse.Characters
         }
     }
 }
-

@@ -4,7 +4,7 @@ using Alterverse.Characters;
 using Alterverse.Combat;
 using Alterverse.Multiplayer;
 
-class EntryPoint { static void Main() => Regression.RunEntryCases(); }
+class EntryPoint { static void Main(string[] args) { if(Array.IndexOf(args,"--ranged-cones")>=0) Regression.RunRangedConeCases(); else Regression.RunEntryCases(); } }
 
 partial class Regression
 {
@@ -281,11 +281,11 @@ partial class Regression
     if(scenario==2)b.transform.position=Angle(16,4);
     if(scenario==3)b.transform.position=new Vector3(-5,0,4);
    });
-   if(scenario==0 || scenario==1)
+   if(scenario==0 || scenario==1 || scenario==2)
     Near(1000-Total(b),a.GetComponent<HeroAbilityKit>().Spec(2).Power,
      "live cone accepts moving entrant after launch "+scenario+" at "+fps);
    else Near(Total(b),1000,
-     "non-cone geometry and true off-field dodge stay safe "+scenario+" at "+fps);
+     "true off-field dodge stays safe "+scenario+" at "+fps);
   }
  }
 

@@ -14,6 +14,18 @@ stickyUntil=0;return current;
 }
 public Health Acquire(float range,Vector3 aimDirection,bool preferHeroes=true)
 {
+var identity=GetComponent<HeroIdentity>();
+if(preferHeroes&&identity!=null&&HeroAttackDelivery.IsRanged(identity.Hero))
+{
+ Health selected=null;
+ for(int i=0;i<Health.Active.Count;i++)
+ {
+  Health candidate=Health.Active[i];
+  if(!Valid(candidate)||HeroCombatRules.TargetDistance(transform.position,candidate)>range)continue;
+  if(HeroCombatRules.PreferConeTarget(candidate,selected,transform.position))selected=candidate;
+ }
+ current=selected;stickyUntil=Time.time+stickSeconds;return current;
+}
 bool sticky=Valid(current)&&Time.time<stickyUntil&&HeroCombatRules.TargetDistance(transform.position,current)<=range;
 if(sticky&&(!preferHeroes||current.GetComponent<HeroIdentity>()!=null))return current;
 var candidates=Health.Active;int count=candidates.Count;Health best=null,bestHero=null;float bestScore=float.MinValue,bestHeroScore=float.MinValue;Vector3 aim=aimDirection;aim.y=0;if(aim.sqrMagnitude<.05f)aim=transform.forward;aim.Normalize();

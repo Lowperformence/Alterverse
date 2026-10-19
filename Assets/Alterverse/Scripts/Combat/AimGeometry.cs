@@ -163,10 +163,15 @@ namespace Alterverse.Combat
                 else if (!ConeBody(h, origin, direction, range, angle * 2f)) continue;
                 // Hero class wins before any distance/angle tie-break. Minions, monsters,
                 // structures and objectives are considered only when no hero is eligible.
-                float score = degrees * 4f + distance;
-                if (!ally && h.GetComponent<HeroIdentity>() != null) score -= 100000f;
-                if (ally) score += h.Normalized * 2f;
-                if (score < bestScore) { bestScore = score; best = h; }
+                if (!ally)
+                {
+                    if (HeroCombatRules.PreferConeTarget(h,best,origin)) best=h;
+                }
+                else
+                {
+                    float score = degrees * 4f + distance + h.Normalized * 2f;
+                    if (score < bestScore) { bestScore = score; best = h; }
+                }
             }
             return best;
         }
@@ -218,5 +223,3 @@ namespace Alterverse.Combat
         }
     }
 }
-
-

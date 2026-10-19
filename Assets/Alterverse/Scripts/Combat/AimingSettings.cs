@@ -94,6 +94,10 @@ namespace Alterverse.Combat
             if (overrides != null)
                 for (int i = 0; i < overrides.Length; i++)
                     if (overrides[i].hero == hero && overrides[i].slot == slot) { spec = overrides[i].spec; break; }
+            // Projectile/beam/homing describe presentation only. Even legacy serialized
+            // overrides must resolve damage through the same cone shown to the player.
+            if (spec.aimType == AimType.Projectile || spec.aimType == AimType.Beam || spec.aimType == AimType.Homing)
+                spec.targetingMode = slot < 0 ? TargetingMode.AutoBasic : TargetingMode.Cone;
             spec.castRange = Mathf.Max(0f, spec.castRange);
             spec.aoeRadius = Mathf.Max(0f, spec.aoeRadius);
             spec.coneAngle = Mathf.Clamp(spec.coneAngle, 1f, 180f);
