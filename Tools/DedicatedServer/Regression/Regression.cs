@@ -12,12 +12,32 @@ using UnityEngine.Rendering;
 static class Regression
 {
  static int checks,builds;
+ const string Settings="Assets/GooglePlayGames/Resources/PlayGamesSettings.asset";
+ const string Held="Assets/Alterverse/Editor/PlayGamesSettings.server-build.asset";
+ static string Full(string path)=>Path.GetFullPath(Path.Combine(Application.dataPath,"..",path));
+ static void WriteAsset(string path,string data)
+ {
+  Directory.CreateDirectory(Path.GetDirectoryName(Full(path)));File.WriteAllText(Full(path),data);
+  File.WriteAllText(Full(path)+".meta","guid: preserve-google-play-settings");
+ }
+ static void Restored(string data)
+ {
+  Check(File.ReadAllText(Full(Settings))==data,"Restore the exact local Google Play settings, including local client IDs");
+  Check(File.ReadAllText(Full(Settings)+".meta")=="guid: preserve-google-play-settings","Preserve the asset GUID");
+  Check(!File.Exists(Full(Held))&&!File.Exists(Full(Held)+".meta"),"Do not leave held settings after a build");
+ }
  static readonly string[] Names={"Universal Render Pipeline/Lit","Universal Render Pipeline/Unlit","DimensionsFront/HeroEnergy"};
  static void Check(bool value,string message){if(!value)throw new Exception(message);checks++;}
  static void Reset()
  {
   Shader.Available.Clear();foreach(string name in Names)Shader.Available[name]=new Shader{name=name};
   AssetDatabase.Settings=new GraphicsSettings();AssetDatabase.Saves=0;builds=0;
+  AssetDatabase.MoveHandler=null;
+  foreach(string path in new[]{Settings,Held})
+  {
+   if(File.Exists(Full(path)))File.Delete(Full(path));
+   if(File.Exists(Full(path)+".meta"))File.Delete(Full(path)+".meta");
+  }
   Resources.Assets.Clear();HeroPresentationChecks.Checks=0;
   EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene{enabled=true,path="Assets/Game.unity"},new EditorBuildSettingsScene{enabled=false,path="Assets/Disabled.unity"}};
   BuildPipeline.Handler=options=>
@@ -27,8 +47,42 @@ static class Regression
    Check(Names.All(name=>AssetDatabase.Settings.Included.Contains(Shader.Find(name))),"Every runtime shader must be included before Unity builds");
    Check(options.target==BuildTarget.StandaloneLinux64&&options.subtarget==(int)StandaloneBuildSubtarget.Server,"Keep the Linux Dedicated Server target");
    Check(options.scenes.SequenceEqual(new[]{"Assets/Game.unity"}),"Build only enabled scenes");
+   Check(options.options==BuildOptions.CleanBuildCache,"Rebuild player data without stale platform serialization caches");
    return new BuildReport{summary=new BuildSummary{result=BuildResult.Succeeded}};
   };
+ }
+ static void GooglePlaySettingsCases()
+ {
+  const string local="app: local-app\nwebClientId: local-client-id\n";
+  foreach(int outcome in new[]{0,1,2})
+  {
+   Reset();WriteAsset(Settings,local);PlayerSettings.dedicatedServerOptimizations=true;
+   BuildPipeline.Handler=options=>
+   {
+    Check(!File.Exists(Full(Settings))&&File.ReadAllText(Full(Held))==local,"Android settings are outside Resources while the Linux player builds");
+    if(outcome==1)throw new Exception("native exception");
+    return new BuildReport{summary=new BuildSummary{result=outcome==2?BuildResult.Failed:BuildResult.Succeeded}};
+   };
+   if(outcome==0)DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer();
+   else Reject(DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer,outcome==1?"native exception":"Failed");
+   Restored(local);Check(PlayerSettings.dedicatedServerOptimizations,"Restore optimization setting alongside Google Play settings");
+  }
+  Reset();WriteAsset(Settings,local);AssetDatabase.MoveHandler=(from,to)=>"move denied";
+  Reject(DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer,"move denied");
+  Restored(local);Check(builds==0,"Do not build when exclusion fails");
+  Reset();WriteAsset(Held,local);
+  DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer();Restored(local);
+  Reset();WriteAsset(Settings,local);WriteAsset(Held,"other local configuration");
+  Reject(DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer,"neither file was overwritten");
+  Check(File.ReadAllText(Full(Settings))==local&&File.ReadAllText(Full(Held))=="other local configuration"&&builds==0,"Preserve both assets on recovery collision");
+  Reset();WriteAsset(Settings,local);
+  AssetDatabase.MoveHandler=(from,to)=>to==Settings?"restore denied":null;
+  Reject(DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer,"restore denied");
+  Check(File.ReadAllText(Full(Held))==local&&!File.Exists(Full(Settings)),"Keep the recoverable file if restoration fails");
+  AssetDatabase.MoveHandler=null;DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer();Restored(local);
+  Reset();WriteAsset(Held,local);
+  typeof(DimensionsFrontDedicatedServerBuilder).GetMethod("RestoreAfterInterruptedBuild",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Static).Invoke(null,null);
+  EditorApplication.delayCall();Restored(local);
  }
  static void Reject(Action action,string phrase)
  {
@@ -103,10 +157,11 @@ static class Regression
     Reject(()=>new AndroidRuntimeShaderPreserver().OnPreprocessBuild(new BuildReport{summary=new BuildSummary{platform=BuildTarget.Android}}),"Void Knight armor glow shader is missing or has compiler errors: "+resource);
     Resources.Assets["Shader:HeroArt/"+resource]=Shader.Find("DimensionsFront/"+resource);
    }
-   RuntimeSuppressionCases();
+   GooglePlaySettingsCases();RuntimeSuppressionCases();
    Console.WriteLine("PASS: "+checks+" dedicated server build checks (Unity editor substitutes; no native player build)");
   }
   finally{Directory.Delete(directory,true);}
  }
 }
+
 

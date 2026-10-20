@@ -37,7 +37,7 @@ namespace UnityEditor
  [AttributeUsage(AttributeTargets.Method)]public sealed class InitializeOnLoadMethodAttribute:Attribute {}
  public enum BuildTarget {Android,StandaloneLinux64}
  public enum StandaloneBuildSubtarget {Player,Server}
- public enum BuildOptions {None}
+ public enum BuildOptions {None,CleanBuildCache}
  public struct BuildPlayerOptions {public string[] scenes;public string locationPathName;public BuildTarget target;public int subtarget;public BuildOptions options;}
  public class EditorBuildSettingsScene {public bool enabled;public string path;}
  public static class EditorBuildSettings {public static EditorBuildSettingsScene[] scenes;}
@@ -47,11 +47,26 @@ namespace UnityEditor
  public static class PlayerSettings {public static bool dedicatedServerOptimizations;}
  public static class BuildPipeline
  {
+  public static bool isBuildingPlayer;
   public static Func<BuildPlayerOptions,BuildReport> Handler;
   public static BuildReport BuildPlayer(BuildPlayerOptions options)=>Handler(options);
  }
  public static class AssetDatabase
  {
+  public static Func<string,string,string> MoveHandler;
+  public static string MoveAsset(string from,string to)
+  {
+   string error=MoveHandler?.Invoke(from,to);
+   if(!string.IsNullOrEmpty(error))return error;
+   string root=System.IO.Path.GetFullPath(System.IO.Path.Combine(UnityEngine.Application.dataPath,".."));
+   string source=System.IO.Path.Combine(root,from),destination=System.IO.Path.Combine(root,to);
+   if(!System.IO.File.Exists(source))return "source is missing";
+   if(System.IO.File.Exists(destination))return "destination exists";
+   System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(destination));
+   System.IO.File.Move(source,destination);
+   if(System.IO.File.Exists(source+".meta"))System.IO.File.Move(source+".meta",destination+".meta");
+   return "";
+  }
   public static UnityEngine.Rendering.GraphicsSettings Settings;
   public static int Saves;
   public static T LoadAssetAtPath<T>(string path) where T:class=>Settings as T;
@@ -95,3 +110,4 @@ namespace Alterverse.Match {public enum PauseReason{Menu}public static class Mat
 namespace Alterverse.Prototype {public sealed class PrototypeBootstrap:UnityEngine.Object {public bool enabled=true;}}
 namespace Alterverse.UI {public sealed class MainMenuController:UnityEngine.Object {public UnityEngine.Object gameObject=new();}}
 namespace Alterverse.Multiplayer {public static class CoopAuthority {public static object ActivePlan;}}
+

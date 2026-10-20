@@ -12,10 +12,22 @@ namespace Alterverse.EditorTools
         private const string OutputDirectory="Builds/DedicatedServer/Linux";
         private const string ExecutableName="DimensionsFrontServer.x86_64";
         private const string DockerfileName="Dockerfile";
+        private const string PlayGamesSettingsPath="Assets/GooglePlayGames/Resources/PlayGamesSettings.asset";
+        private const string HeldPlayGamesSettingsPath="Assets/Alterverse/Editor/PlayGamesSettings.server-build.asset";
+
+        [InitializeOnLoadMethod]
+        private static void RestoreAfterInterruptedBuild()
+        {
+            EditorApplication.delayCall+=()=>
+            {
+                if(!BuildPipeline.isBuildingPlayer) RestorePlayGamesSettings();
+            };
+        }
 
         [MenuItem("Tools/Dimensions Front/Build Linux Dedicated Server")]
         public static void BuildLinuxDedicatedServer()
         {
+            RestorePlayGamesSettings();
             string[] scenes=EditorBuildSettings.scenes
                 .Where(scene=>scene.enabled&&!string.IsNullOrEmpty(scene.path))
                 .Select(scene=>scene.path)
@@ -35,7 +47,7 @@ namespace Alterverse.EditorTools
                 locationPathName=executablePath,
                 target=BuildTarget.StandaloneLinux64,
                 subtarget=(int)StandaloneBuildSubtarget.Server,
-                options=BuildOptions.None
+                options=BuildOptions.CleanBuildCache
             };
 
             Debug.Log($"DIMENSIONS FRONT SERVER BUILD: building {scenes.Length} scene(s) to {executablePath}");
@@ -48,11 +60,17 @@ namespace Alterverse.EditorTools
             {
                 PlayerSettings.dedicatedServerOptimizations=false;
                 Alterverse.EditorChecks.AndroidRuntimeShaderPreserver.EnsureForDedicatedServer();
+                // Google.Play.Games only compiles for Android/Editor. Resources assets are
+                // otherwise bundled into Linux too, leaving this ScriptableObject with no class.
+                // Hold it under Editor for this build; MoveAsset preserves the asset and GUID.
+                if(AssetFileExists(PlayGamesSettingsPath))
+                    MoveSettingsAsset(PlayGamesSettingsPath,HeldPlayGamesSettingsPath);
                 report=BuildPipeline.BuildPlayer(options);
             }
             finally
             {
                 PlayerSettings.dedicatedServerOptimizations=previousOptimizations;
+                RestorePlayGamesSettings();
             }
             BuildSummary summary=report.summary;
             if(summary.result!=BuildResult.Succeeded)
@@ -62,6 +80,24 @@ namespace Alterverse.EditorTools
             Debug.Log($"DIMENSIONS FRONT SERVER BUILD READY: {executablePath} • {summary.totalSize} bytes • {summary.totalTime}");
             Debug.Log($"DIMENSIONS FRONT EDGEGAP: Dockerfile ready at {Path.Combine(outputDirectory,DockerfileName)}");
             if(!Application.isBatchMode) EditorUtility.RevealInFinder(outputDirectory);
+        }
+
+        private static bool AssetFileExists(string path)=>
+            File.Exists(Path.GetFullPath(Path.Combine(Application.dataPath,"..",path)));
+
+        private static void RestorePlayGamesSettings()
+        {
+            if(!AssetFileExists(HeldPlayGamesSettingsPath)) return;
+            if(AssetFileExists(PlayGamesSettingsPath))
+                throw new InvalidOperationException("Both original and held PlayGamesSettings assets exist. Resolve the duplicate before building; neither file was overwritten.");
+            MoveSettingsAsset(HeldPlayGamesSettingsPath,PlayGamesSettingsPath);
+        }
+
+        private static void MoveSettingsAsset(string from,string to)
+        {
+            string error=AssetDatabase.MoveAsset(from,to);
+            if(!string.IsNullOrEmpty(error))
+                throw new InvalidOperationException($"Could not move PlayGamesSettings from {from} to {to}: {error}");
         }
 
         private static void WriteEdgegapDockerFiles(string outputDirectory)
@@ -90,4 +126,5 @@ namespace Alterverse.EditorTools
         }
     }
 }
+
 
