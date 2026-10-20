@@ -8,16 +8,16 @@ namespace Alterverse.Combat
     {
         private float HeroBaseShieldCapacity => GetComponent<Alterverse.Characters.HeroIdentity>()?.Hero switch
         {
-            Alterverse.Characters.HeroId.VoidKnight => 60f,
-            Alterverse.Characters.HeroId.Nerok => 90f,
-            Alterverse.Characters.HeroId.Veyr => 70f,
-            Alterverse.Characters.HeroId.Kaelon => 70f,
-            Alterverse.Characters.HeroId.Rook => 80f,
+            Alterverse.Characters.HeroId.VoidKnight => 90f,
+            Alterverse.Characters.HeroId.Nerok => 120f,
+            Alterverse.Characters.HeroId.Veyr => 100f,
+            Alterverse.Characters.HeroId.Kaelon => 100f,
+            Alterverse.Characters.HeroId.Rook => 110f,
             Alterverse.Characters.HeroId.Timmy => Alterverse.Characters.TimmyBalance.BaseShield,
-            Alterverse.Characters.HeroId.Nyra => 30f,
-            _ => 50f
+            Alterverse.Characters.HeroId.Nyra => 60f,
+            _ => 80f
         };
-        private const float HeroBaseShieldRechargeDelay = 15f;
+        private const float HeroBaseShieldRechargeDelay = 11.25f;
         private const float AurenPassiveTickSeconds = 1f;
 
         private static readonly System.Collections.Generic.List<Health> active = new(128);
@@ -213,7 +213,7 @@ namespace Alterverse.Combat
 
             amount=GetComponent<Alterverse.Characters.VoidKnightState>()?.ReduceFrontalDamage(amount,source)??amount;
 
-            // If 15 seconds have already elapsed, the shield is restored before this hit lands.
+            // Restore a due recharge before this hit lands, even between Update ticks.
             RefreshHeroBaseShield();
 
             // Any valid incoming hit restarts the recharge delay while the hero shield is damaged.
@@ -229,7 +229,7 @@ namespace Alterverse.Combat
             heroBaseShield -= heroAbsorbed;
             amount -= heroAbsorbed;
 
-            // A hit that actually reduced the hero shield starts/restarts the 15 second delay.
+            // A hit that actually reduced the hero shield starts/restarts the recharge delay.
             if (heroBaseShieldEnabled && (heroAbsorbed > 0f || heroBaseShield < HeroBaseShieldCapacity))
                 heroBaseShieldRechargeAt = Time.time + HeroBaseShieldRechargeDelay;
 
@@ -344,3 +344,4 @@ namespace Alterverse.Combat
         }
     }
 }
+
