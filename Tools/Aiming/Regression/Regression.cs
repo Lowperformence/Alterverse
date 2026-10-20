@@ -24,7 +24,7 @@ partial class Regression
   foreach(var g in GameObject.All.ToArray())if(g.GetComponent<Alterverse.Visuals.HeroVfxPool>()!=null)Call(g.GetComponent<Alterverse.Visuals.HeroVfxPool>(),"OnDestroy");
   GameObject.All.Clear();Health.Active.Clear();Clock.Reset();Camera.main=null;Mouse.current=null;Keyboard.current=null;
   Touch.activeTouches.Clear();CoopAuthority.Active=false;CoopAuthority.LocalHasServerAuthority=true;CoopAuthority.LocalIsHost=true;
-  Unity.Netcode.NetworkManager.Singleton=null;
+  Unity.Netcode.NetworkManager.Singleton=null;Alterverse.Visuals.CombatMotion.Starts=0;
   AimingSettings.Current.overrides=new AimingSettings.AttackOverride[0];
   AimingSettings.Current.rememberAimDirection=false;
   AimingSettings.Current.basicLeadQuality=1f;
@@ -247,6 +247,46 @@ partial class Regression
   Touch.activeTouches.Add(new Touch{touchId=9,phase=TouchPhase.Began,screenPosition=button});Call(hud,"Update");Near(a.GetComponent<BasicAttack>().RemainingCooldown,0,"held basic waits without eligible target");
   far=Hero(HeroId.Kaelon,1,Vector3.left*2);Touch.activeTouches[0]=new Touch{touchId=9,phase=TouchPhase.Stationary,screenPosition=button};Call(hud,"Update");
   Check(a.GetComponent<BasicAttack>().RemainingCooldown>0,"held basic starts when a target enters range");Check(a.GetComponent<SoftTargeting>().Current==far.GetComponent<Health>(),"hold updates the visible soft target");
+ }
+ static void RejectedBasicWindups()
+ {
+  Reset();var actor=Hero(HeroId.Veyr,0,Vector3.zero);actor.AddComponent<CoopHeroSlot>().Slot=1;
+  var target=Hero(HeroId.Kaelon,1,Vector3.forward).GetComponent<Health>();var basic=actor.GetComponent<BasicAttack>();
+  var service=new GameObject("commands").AddComponent<CoopGameplayCommands>();
+  var manager=new Unity.Netcode.NetworkManager{IsListening=true,IsConnectedClient=true,IsServer=false};Unity.Netcode.NetworkManager.Singleton=manager;
+  CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;CoopAuthority.LocalIsHost=false;Call(service,"Update");
+  int attempts=0;
+  for(int i=0;i<20;i++)
+  {
+   if(basic.TryAttack())attempts++;basic.ApplyNetworkCooldown(0,10000);Clock.Advance(.02f);
+  }
+  Check(attempts>1&&attempts<=4,"zero cooldown rejection retries are bounded independently of server cooldown");
+  Check(Alterverse.Visuals.CombatMotion.Starts==0,"rejected held basic never predicts phantom windups");
+  float hp=Total(target.gameObject);
+  basic.ApplyNetworkWindup(target.transform.position,target,.16f,.04f);
+  Check(Alterverse.Visuals.CombatMotion.Starts==1,"accepted server windup starts owner presentation once");
+  Near(Alterverse.Visuals.CombatMotion.Elapsed,.04f,"confirmed presentation keeps network age");
+  basic.ApplyNetworkWindup(target.transform.position,target,.16f,.4f);
+  Check(Alterverse.Visuals.CombatMotion.Starts==1,"late acceptance cannot replay expired windup");
+  Near(Total(target.gameObject),hp,"confirmation never deals client damage");
+  Clock.Advance(1);target.transform.position=Vector3.forward*(basic.Aim.castRange+1);
+  Check(!basic.TryAttackAimed(new AimPose(Vector3.forward,target.transform.position,target,true)),"explicit out-of-range client target rejected before sending");
+  CoopAuthority.LocalHasServerAuthority=true;CoopAuthority.LocalIsHost=true;manager.IsServer=true;
+  int confirmations=0;
+  Action<Alterverse.Visuals.HeroVfxEvent> onCue=e=>{if(e.Cue==Alterverse.Visuals.HeroVfxCue.BasicWindup)confirmations++;};
+  Alterverse.Visuals.HeroVfxEvents.Emitted+=onCue;
+  try
+  {
+   Check(!basic.TryAttackNetworkAuthoritative(target),"host rejects distant target");
+   Check(confirmations==0,"host range rejection emits no acceptance");
+   target.transform.position=Vector3.forward;
+   Check(basic.TryAttackNetworkAuthoritative(target),"host still accepts valid basic");
+   Check(confirmations==1,"only queued authoritative strike emits acceptance");
+   Check(!basic.TryAttackNetworkAuthoritative(target),"cooldown rejects repeated accepted strike");
+   Check(confirmations==1,"cooldown rejection emits no duplicate acceptance");
+  }
+  finally { Alterverse.Visuals.HeroVfxEvents.Emitted-=onCue; }
+
  }
  static void Network()
  {
@@ -492,11 +532,12 @@ partial class Regression
    Console.WriteLine("PASS "+checks+" assertions: movement taps, manual override, last direction, multitouch, Timmy leaps and host routing.");
    return;
   }
-  MovementDashCases();SupportTargeting();SelfShieldPreviews();Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();MovingConnectionCases();TimmyCases();TimmyVfxCases();
+  MovementDashCases();SupportTargeting();SelfShieldPreviews();Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();RejectedBasicWindups();Network();InterruptionsAndCapacity();ConeCaptureCases();MovingConnectionCases();TimmyCases();TimmyVfxCases();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   ConnectionTiming(args.Contains("--connection-timing"));
   Console.WriteLine("PASS "+checks+" assertions: existing 8 heroes, Timmy contact/root/channel, geometry, dodges, AOE, gestures, multitouch, network direction/point, interrupts and connection timing.");
  }
 }
+
 

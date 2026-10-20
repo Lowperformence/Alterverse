@@ -22,6 +22,7 @@ partial class Regression
    EmptyConeNetwork(fps);
    ScratchWarningEdgeAndTap(fps);
   }
+  RejectedBasicWindups();
   FirstScratchContact();
   LiveConeCases();
   SivraVectorShiftPassive();
@@ -348,3 +349,4 @@ partial class Regression
   }
  }
 }
+

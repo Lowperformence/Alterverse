@@ -13,6 +13,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dotnet-root', type=Path, required=True)
     parser.add_argument('--ranged-cones', action='store_true')
+    parser.add_argument('--negative-held-basic', action='store_true', help='Restore send-time basic animation to prove the rejected-hold regression fails')
     parser.add_argument('--aim-jitter', action='store_true', help='Exercise actual HeroMotor facing and manual AOE edge placement')
     args = parser.parse_args()
     here = Path(__file__).resolve().parent
@@ -65,6 +66,14 @@ public sealed partial class HeroSkillVfx {
                  root / 'Assets/Alterverse/Editor/AttackDeliveryRegression.cs',
                  root / 'Assets/Alterverse/Editor/BasicAttackDeliveryRegression.cs',
                  *[root / 'Assets/Alterverse/Scripts' / n for n in names]]
+        if args.negative_held_basic:
+            original = root / 'Assets/Alterverse/Scripts/Combat/BasicAttack.cs'
+            negative = directory / 'BasicAttackNegative.cs'
+            content = original.read_text()
+            needle = 'nextAttackTime = Time.time + Cooldown;'
+            assert content.count(needle) == 2
+            negative.write_text(content.replace(needle, needle + '\n                CombatMotion.BeginAimed(gameObject, HeroAttackDelivery.Windup(identity.Hero), pose.Point);', 1))
+            files = [negative if file == original else file for file in files]
         subprocess.run([str(dotnet / 'dotnet'), str(csc), '-nologo', '-noconfig', '-langversion:9',
                         '-define:UNITY_EDITOR', '-main:' + ('JitterEntry' if args.aim_jitter else 'EntryPoint'), '-out:' + str(output),
                         *['-r:' + str(p) for p in refs.glob('*.dll')], *map(str, files)], check=True)
@@ -75,4 +84,5 @@ public sealed partial class HeroSkillVfx {
 
 if __name__ == '__main__':
     main()
+
 

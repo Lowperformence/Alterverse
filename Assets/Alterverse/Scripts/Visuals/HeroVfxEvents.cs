@@ -6,7 +6,7 @@ namespace Alterverse.Visuals
     internal enum HeroVfxCue
     {
         Cast, Basic, Spell, Impact, Area, Dash, TargetWarning, Support, SupportLink,
-        Debuff, Ultimate, CancelWarnings, CancelProjectiles, ShieldContact, PlayerHit
+        Debuff, Ultimate, CancelWarnings, CancelProjectiles, ShieldContact, PlayerHit, BasicWindup
     }
 
     // Semantic presentation events, independent of meshes/materials and gameplay state.
@@ -66,3 +66,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

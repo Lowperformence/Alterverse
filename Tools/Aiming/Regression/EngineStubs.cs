@@ -110,7 +110,7 @@ namespace Alterverse.Visuals {
  public class MeleeBasicAttackAnimation:UnityEngine.MonoBehaviour{}
  public class HeroAbilityReadabilityBoost:UnityEngine.MonoBehaviour{}
  public class HeroVisualMotion:UnityEngine.MonoBehaviour {public bool HasNetworkPresentation;public UnityEngine.Vector3 PresentedPosition;public UnityEngine.Quaternion PresentedRotation=UnityEngine.Quaternion.identity;public UnityEngine.Vector3 ReleasePoint=>transform.position;public float DashSeconds;public void PulseAbility(int slot,float windup){}public void PulseDash(float seconds=.17f){DashSeconds=seconds;}}
- public static class CombatMotion {public static void BeginAimed(UnityEngine.GameObject a,float w,UnityEngine.Vector3 p){}public static void Begin(UnityEngine.GameObject a,float w,Alterverse.Combat.Health t){}}
+ public static class CombatMotion { public static int Starts; public static float Elapsed; public static void PresentBasicAt(UnityEngine.GameObject a,float w,UnityEngine.Vector3 p,Alterverse.Combat.Health t,float elapsed){Starts++;Elapsed=elapsed;} public static void BeginAimed(UnityEngine.GameObject a,float w,UnityEngine.Vector3 p){Starts++;}public static void Begin(UnityEngine.GameObject a,float w,Alterverse.Combat.Health t){Starts++;}}
 
  public sealed partial class HeroSkillVfx:UnityEngine.MonoBehaviour {
   public static UnityEngine.Vector3 LastPoint;
@@ -179,3 +179,4 @@ namespace Alterverse.Combat {public static class ArenaLayout {public const float
 
 
 namespace Alterverse.Multiplayer {public class CoopWorldEntityKey:UnityEngine.MonoBehaviour {public string Key;public void Configure(){Key??=gameObject.name;}}}
+

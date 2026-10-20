@@ -89,6 +89,11 @@ namespace Alterverse.Multiplayer
                         visual?.PulseAbility(ability,duration);visual?.SeekAction(elapsed);
                     }
                     break;
+                case HeroVfxCue.BasicWindup:
+                    // Remote rigs retain snapshot presentation; only the owner waits for acceptance.
+                    if(slots[actorSlot].IsLocalHuman)
+                        actor.GetComponent<BasicAttack>()?.ApplyNetworkWindup(point,target,duration,elapsed);
+                    break;
                 case HeroVfxCue.Basic:HeroSkillVfx.Basic(actor,point,duration,target!=null?target.transform:null,flag);break;
                 case HeroVfxCue.Spell:HeroSkillVfx.Spell(actor,point,ability,duration,target!=null?target.transform:null);break;
                 case HeroVfxCue.Impact:if(target!=null)HeroSkillVfx.Impact(actor,target,ability);break;
@@ -107,4 +112,5 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 

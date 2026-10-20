@@ -104,6 +104,10 @@ namespace Alterverse.Combat
                 if (!volley) HeroCombatAudio.Windup(gameObject, slot + 1);
                 if (slot < 0)
                 {
+                    // Emit only after authoritative target/range/capacity acceptance.
+                    using var accepted = HeroVfxEvents.Begin(HeroVfxCue.BasicWindup, gameObject,
+                        pose.HasAimPoint ? pose.Point : transform.position + pose.Direction * spec.castRange,
+                        duration: windup, target: pose.Target != null ? pose.Target.gameObject : null);
                     if (pose.Target != null && spec.targetingMode == TargetingMode.AutoBasic)
                         CombatMotion.Begin(gameObject, windup, pose.Target);
                     else CombatMotion.BeginAimed(gameObject, windup, pose.HasAimPoint ? pose.Point : transform.position + pose.Direction * spec.castRange);
@@ -406,3 +410,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

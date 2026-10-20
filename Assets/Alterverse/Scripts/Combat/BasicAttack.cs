@@ -22,6 +22,7 @@ namespace Alterverse.Combat
         private HeroIdentity identity;
         private SoftTargeting targeting;
         private float nextAttackTime;
+        private float nextNetworkAttempt;
 
         private HeroCombatProfile Profile
         {
@@ -94,18 +95,18 @@ namespace Alterverse.Combat
         public bool TryAttackAimed(AimPose pose)
         {
             if (!CanAttempt() || !AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
-            HeroId hero = identity != null ? identity.Hero : HeroId.Veyr;
-            float windup = HeroAttackDelivery.Windup(hero);
             if (Alterverse.Multiplayer.CoopGameplayCommands.ShouldRouteClientCommand(gameObject))
             {
+                if (Time.time < nextNetworkAttempt) return false;
+                if (pose.Target != null && (!HeroCombatRules.Enemy(gameObject, pose.Target) ||
+                    HeroCombatRules.TargetDistance(transform.position, pose.Target) > Aim.castRange)) return false;
                 if (!Alterverse.Multiplayer.CoopGameplayCommands.TrySendBasic(gameObject, pose)) return false;
+                // An acknowledgement with zero cooldown can mean rejection. Throttle retries
+                // independently, without inventing a server gameplay cooldown.
+                nextNetworkAttempt = Time.time + Mathf.Min(.12f, Cooldown);
                 nextAttackTime = Time.time + Cooldown;
-                Vector3 direction = pose.CastDirection(transform.position);
-                locomotion.FaceAction(direction);
-                motor?.NotifyAttack(Mathf.Max(.18f, windup + .18f), direction);
-                motor?.TrackBasicTarget(pose.Target, windup + .18f);
-                if (pose.Target != null) CombatMotion.Begin(gameObject, windup, pose.Target);
-                else CombatMotion.BeginAimed(gameObject, windup, pose.HasAimPoint ? pose.Point : transform.position + direction * Range);
+                // Sending intent is not acceptance: the host checks its current range.
+                // Its BasicWindup event starts the owner's presentation only after Queue succeeds.
                 OnboardingSessionGuard.Attack(this);
                 return true;
             }
@@ -142,6 +143,20 @@ namespace Alterverse.Combat
             return true;
         }
 
+        internal void ApplyNetworkWindup(Vector3 point, Health target, float windup, float elapsed)
+        {
+            if (!Alterverse.Multiplayer.CoopGameplayCommands.ShouldRouteClientCommand(gameObject) || !CanAct() ||
+                !AimGeometry.Finite(point) || float.IsNaN(windup) || float.IsInfinity(windup) ||
+                float.IsNaN(elapsed) || float.IsInfinity(elapsed) || windup <= 0 || elapsed < 0 || elapsed >= windup + .18f) return;
+            // Seek the accepted action to the server clock, including its recovery.
+            float remaining = Mathf.Max(0, windup - elapsed);
+            Vector3 direction = AimGeometry.Direction(point - transform.position);
+            locomotion.FaceAction(direction, remaining + .18f);
+            motor?.NotifyAttack(remaining + .18f, direction);
+            motor?.TrackBasicTarget(target, remaining + .18f);
+            CombatMotion.PresentBasicAt(gameObject, windup, point, target, elapsed);
+        }
+
         public void ApplyNetworkCooldown(float remaining,uint acknowledgedCommand=0)
         {
             if (!Alterverse.Multiplayer.CoopAuthority.Active || Alterverse.Multiplayer.CoopAuthority.LocalIsHost) return;
@@ -159,6 +174,7 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 
 

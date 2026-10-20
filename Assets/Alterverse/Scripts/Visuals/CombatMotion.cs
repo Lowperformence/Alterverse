@@ -51,6 +51,13 @@ namespace Alterverse.Visuals
             Present(actor,windup,aim,target);
             if(relay)Started?.Invoke(actor,windup,aim);
         }
+        public static void PresentBasicAt(GameObject actor,float windup,Vector3 point,Health target,float elapsed)
+        {
+            Present(actor,windup,point,target);
+            actor.GetComponent<HeroVisualMotion>()?.SeekAction(elapsed);
+            actor.GetComponent<MeleeBasicAttackAnimation>()?.Seek(elapsed);
+            actor.GetComponent<VoidKnightPresentation>()?.SeekBasic(elapsed);
+        }
         public static void Present(GameObject actor,float windup,Vector3 aim,Health target=null)
         {
             if(actor.GetComponent<HeroIdentity>()!=null)
@@ -78,3 +85,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

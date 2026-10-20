@@ -208,6 +208,32 @@ static partial class VfxRegression
         Check(report.Contains("frameP95Ms=100")&&report.Contains("frameMaxMs=100.0"),"Native telemetry retains attack-time frame spikes hidden by an average CPU sample");
         Check(((string)consume.Invoke(service,null)).Contains("serverFps=0.0"),"Telemetry starts a fresh bounded interval after reporting");
     }
+    static void ConfirmedBasicWindups()
+    {
+        foreach(HeroId id in Enum.GetValues(typeof(HeroId)))
+        {
+            Reset();var manager=NetworkManager.Singleton;
+            var relay=new GameObject("relay").AddComponent<CoopHeroStateSync>();relay.Bind(manager.CustomMessagingManager);
+            var actor=Hero(id,0,true);var target=Hero(HeroId.Kaelon,1);target.transform.position=Vector3.forward;
+            relay.Slot(actor.GetComponent<CoopHeroSlot>());relay.Slot(target.GetComponent<CoopHeroSlot>());
+            Check(actor.GetComponent<BasicAttack>().TryAttackNetworkAuthoritative(target.GetComponent<Health>()),"Host accepts basic for "+id);
+            Check(manager.CustomMessagingManager.Packets.Count==1,"Accepted basic has one bounded semantic confirmation "+id);
+            var packet=manager.CustomMessagingManager.LastPacket;
+            CoopAuthority.LocalHasServerAuthority=false;manager.IsServer=false;
+            int starts=CombatMotion.Starts;manager.ServerTime.Time=100.05;
+            relay.Receive(7,packet);Check(CombatMotion.Starts==starts,"Nonserver sender cannot confirm owner basic "+id);
+            actor.GetComponent<CoopHeroSlot>().IsLocalHuman=false;
+            relay.Receive(0,packet);Check(CombatMotion.Starts==starts,"Remote basic keeps snapshot presentation "+id);
+            actor.GetComponent<CoopHeroSlot>().IsLocalHuman=true;
+            relay.Receive(0,packet);Check(CombatMotion.Starts==starts+1,"Confirmed owner basic presents once "+id);
+            Check(Mathf.Abs(CombatMotion.Elapsed-.05f)<.0001f,"Owner basic seeks server age "+id);
+            manager.ServerTime.Time=101;relay.Receive(0,packet);
+            Check(CombatMotion.Starts==starts+1,"Expired basic confirmation never restarts windup "+id);
+            Check(manager.CustomMessagingManager.Packets.Count==1,"Owner confirmation cannot echo network event "+id);
+            relay.Unbind();
+        }
+    }
+
     static void PendingCooldowns()
     {
         Reset();var manager=NetworkManager.Singleton;
@@ -422,8 +448,9 @@ static partial class VfxRegression
         Check(Visible().Length>before,"Production receiver and full facade create visible client meshes");
         Check(manager.CustomMessagingManager.Packets.Count==1,"Client replay cannot echo an event");
         before=Visible().Length;relay.Receive(9,packet);Check(Visible().Length==before,"A non-server cannot inject visual events");
-        relay.Unbind();NetworkPresentationFollowers();AllCues();CommandDamage();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();PendingCooldowns();OfflineOnlineParity();
+        relay.Unbind();NetworkPresentationFollowers();AllCues();CommandDamage();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();ConfirmedBasicWindups();PendingCooldowns();OfflineOnlineParity();
         AttackAtlasChecks();
         Console.WriteLine("PASS "+checks+" production online VFX and combat/shader checks (controlled Unity/GPU/network fixtures)");
     }
 }
+

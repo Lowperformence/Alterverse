@@ -30,6 +30,7 @@ namespace Alterverse.Visuals
             if(clips.Count==0)Debug.LogError("DF: Void Knight clips missing from imported FBX.",this);ApplyUpperBody();
         }
         public void BeginBasic(float windup){if(Mathf.Abs(windup-VoidKnightBalance.CounterWindup)<.001f){BeginCounter();return;}serial=serial%3+1;Begin("Attack"+serial,1f,windup,.28f);}
+        public void SeekBasic(float elapsed)=>started-=Mathf.Max(0,elapsed);
         public void BeginAbility(int slot,float windup)=>Begin(slot==3?"Ultimate":"Skill"+slot,slot==3?1.3f:slot==1?.8f:1f,windup,slot==3?.65f:slot==2?.18f:.28f);
         public void BeginCounter()=>Begin("Counter",.8f,VoidKnightBalance.CounterWindup,.2f);
         private void Begin(string name,float seconds,float windup,float sourceContact){action=name;started=Time.time;duration=seconds;contact=windup;authoredContact=sourceContact;}
@@ -72,3 +73,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
