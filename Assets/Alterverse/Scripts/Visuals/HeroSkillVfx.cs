@@ -252,6 +252,13 @@ namespace Alterverse.Visuals
                 Fx(HeroFxShape.Hex,p,Accent(actor),.48f*strength,.20f,HeroFxMotion.Contract,Quaternion.Euler(25,0,0),actor);
                 Fx(HeroFxShape.Cracks,Ground(impact),Accent(actor),.36f*strength,.20f,actor:actor);
             }
+            else if(Hero(actor)==HeroId.Nerok)
+            {
+                // His anchor makes a short water crest; keep Brakk's gauntlet fractures exclusive to Brakk.
+                Fx(HeroFxShape.WaveCrest,p,Accent(actor),.62f*strength,.23f,
+                    HeroFxMotion.Expand,direction,actor);
+                Ring(actor,p,.40f*strength,.18f);
+            }
             else
             {
                 Vector3 start=Muzzle(actor),center=Vector3.Lerp(start,p,.70f);
@@ -307,6 +314,7 @@ namespace Alterverse.Visuals
             }
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Cast,actor,slot:slot,duration:Mathf.Max(0,windup));
             if(actor==null)return;
+            PolishCast(actor,slot);
             if(Hero(actor)==HeroId.Timmy){TimmyCast(actor,slot);return;}
             HeroId h=Hero(actor);Color c=h==HeroId.Mira&&(slot==1||slot==2||slot==3)?new Color(.24f,1f,.42f):Accent(actor);float size=slot==3?.45f:.22f;Vector3 p=Muzzle(actor);
             Quaternion facing=actor.transform.rotation;
@@ -436,6 +444,8 @@ namespace Alterverse.Visuals
         {
             Vector3 from=Muzzle(actor),to=impact+Vector3.up*.35f;
             Quaternion facing=Face(from,to);Color cyan=new Color(.04f,.70f,1f,.94f);
+            HeroVfxPool.Sprite(HeroFxSprite.Trace,from,to,new Vector2(.34f,.54f),cyan,flight,
+                actor,HeroFxMotion.TravelFixedFrame,rotation:facing,endFollow:target);
             HeroVfxPool.Emit(HeroFxShape.AnchorProjectile,from,to,Vector3.one*.78f,cyan,
                 flight,HeroFxMotion.TravelFixedFrame,facing,actor,endFollow:target);
             float distance=Vector3.Distance(from,to);
@@ -454,6 +464,8 @@ namespace Alterverse.Visuals
         public static void SharkVortex(GameObject actor,Vector3 center,float radius,float duration)
         {
             Vector3 p=Ground(center);Color water=new Color(.02f,.48f,.95f,.65f);
+            HeroVfxPool.Sprite(HeroFxSprite.Vortex,p+Vector3.up*.025f,p,new Vector2(radius*1.2f,radius*1.2f),
+                new Color(.10f,.76f,1f,.28f),duration,actor,HeroFxMotion.Orbit,Quaternion.Euler(90f,0,0),false);
             Fx(HeroFxShape.WaterSpiral,p,water,radius,duration,HeroFxMotion.Orbit,actor:actor);
             Fx(HeroFxShape.WaterSpiral,p+Vector3.up*.075f,new Color(.2f,.85f,1f,.42f),radius*.76f,
                 duration,HeroFxMotion.Orbit,Quaternion.Euler(0,60,0),actor);
@@ -475,6 +487,7 @@ namespace Alterverse.Visuals
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Area,actor,center,slot,duration,radius,flag:warning,secondary:beneficial);
             if(actor==null)return;
             HeroId hero=Hero(actor);
+            if(!warning)PolishArea(actor,center,radius,slot,beneficial);
             if(hero==HeroId.Timmy&&slot==1)
             {
                 TimmyEffect(actor,warning?0:1,center,center,radius,warning?duration:TimmyBalance.DustVfxSeconds);
@@ -651,6 +664,7 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Spell,actor,impact,slot,duration:travelTime,target:target!=null?target.gameObject:null);
             if(actor==null)return;HeroId h=Hero(actor);
+            PolishRelease(actor,impact,slot,travelTime,target);
             if(h==HeroId.Timmy)
             {
                 if(slot==0||slot==3)TimmyClaws(actor,impact,slot);
@@ -659,6 +673,9 @@ namespace Alterverse.Visuals
             }
             switch(h)
             {
+                case HeroId.VoidKnight:
+                    if(slot==0)Slash(actor,impact,slot,true);
+                    break;
                 case HeroId.Veyr:
                     if(slot==1)RiftScarProjectile(actor,impact,travelTime,target);
                     else if(slot==3)
@@ -774,6 +791,7 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Impact,actor,slot:slot,target:target!=null?target.gameObject:null);
             if(actor==null||target==null)return;
+            PolishImpact(actor,target,slot);
             Vector3 p=target.transform.position+Vector3.up*.35f;Color c=Accent(actor);
             float strength=slot<0?.35f:slot==3?.90f:.62f;
             HeroId hero=Hero(actor);
@@ -876,6 +894,7 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Support,actor,duration:duration,target:target!=null?target.gameObject:null,flag:shield);
             if(actor==null||target==null)return;
+            PolishSupport(actor,target,shield);
             HeroId hero=Hero(actor);
             Color c=hero==HeroId.Mira?new Color(.22f,1f,.52f):Accent(actor);
             Color holy=hero==HeroId.Mira?Color.Lerp(c,Color.white,.38f):c;
@@ -941,9 +960,11 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Basic,actor,impact,slot:-1,duration:travelTime,target:target!=null?target.gameObject:null,flag:animate);
             if(actor==null)return;if(animate)actor.GetComponent<HeroVisualMotion>()?.PulseAttack(false);
+            PolishRelease(actor,impact,-1,travelTime,target);
             if(Hero(actor)==HeroId.Timmy){TimmyClaws(actor,impact,-1);return;}
             switch(Hero(actor))
             {
+                case HeroId.VoidKnight:Slash(actor,impact,-1,true);break;
                 case HeroId.Veyr:Slash(actor,impact,-1);break;
                 case HeroId.Kaelon:
                 case HeroId.Nerok:
@@ -957,6 +978,7 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Dash,actor,to,slot,duration,origin:from);
             if(actor==null)return;Color c=Accent(actor);HeroId h=Hero(actor);
+            PolishDash(actor,from,to);
             if(h==HeroId.Timmy){TimmyEffect(actor,slot==3?3:2,from,to,0,duration);return;}
             Quaternion face=Face(from,to);float distance=Vector3.Distance(from,to);
             if(h==HeroId.Traveler)

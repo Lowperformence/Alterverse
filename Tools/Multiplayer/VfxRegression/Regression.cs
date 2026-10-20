@@ -8,7 +8,7 @@ using Alterverse.Visuals;
 using Unity.Netcode;
 using UnityEngine;
 
-static class VfxRegression
+static partial class VfxRegression
 {
     static int checks;
     static void Check(bool valid,string reason){if(!valid)throw new Exception(reason);checks++;}
@@ -35,6 +35,8 @@ static class VfxRegression
         NetworkManager.Singleton=new(){IsServer=true,IsListening=true,IsConnectedClient=true};
         NetworkManager.Singleton.ServerTime.Time=100;
         Resources.HeroShaderSupported=true;SystemInfo.graphicsDeviceType=UnityEngine.Rendering.GraphicsDeviceType.Vulkan;
+        Resources.AttackAtlasAvailable=Resources.AttackAtlasShaderSupported=Resources.AttackAtlasTextureAvailable=true;
+        Alterverse.Performance.AdaptiveVfxBudget.AllowDecorative=true;
         CoopHeroStateSync.LegacyRelays=CoopHeroStateSync.TimmyRelays=0;
     }
     static void Step(float dt)
@@ -255,11 +257,12 @@ static class VfxRegression
         public float ActorHealth,ActorShield,TargetHealth,TargetShield,AllyHealth,AllyShield,Cooldown;
         public Vector3 Position;
         public string[] Events;
+        public bool AtlasSeen;
     }
-    static Outcome Scenario(HeroId id,int action,bool online,int fps)
+    static Outcome Scenario(HeroId id,int action,bool online,int fps,bool render=false)
     {
         Reset();var manager=NetworkManager.Singleton;
-        CoopAuthority.Active=online;SystemInfo.graphicsDeviceType=UnityEngine.Rendering.GraphicsDeviceType.Null;
+        CoopAuthority.Active=online;SystemInfo.graphicsDeviceType=render?UnityEngine.Rendering.GraphicsDeviceType.Vulkan:UnityEngine.Rendering.GraphicsDeviceType.Null;
         var actor=Hero(id,0);var target=Hero(HeroId.Kaelon,1);var ally=Hero(HeroId.Kaelon,2);
         actor.GetComponent<Health>().Current=500;ally.GetComponent<Health>().Current=500;
         float range=action<0?actor.GetComponent<HeroCombatProfile>().AttackRange:AimingSettings.Current.For(id,action).castRange;
@@ -286,12 +289,13 @@ static class VfxRegression
         }
         else accepted=action<0?actor.GetComponent<BasicAttack>().TryAttackAimed(pose):actor.GetComponent<PlayerHeroAbilities>().CastAimed(action,pose);
         Check(accepted,"Valid offline/server action begins "+id+action+" fps="+fps);
-        for(int frame=0;frame<fps*5;frame++)Step(1f/fps);
+        bool atlasSeen=AtlasVisible().Length>0;
+        for(int frame=0;frame<fps*5;frame++){Step(1f/fps);if(render)atlasSeen|=AtlasVisible().Length>0;}
         HeroVfxEvents.Emitted-=observer;
         return new Outcome{ActorHealth=actor.GetComponent<Health>().Current,ActorShield=actor.GetComponent<Health>().Shield,
             TargetHealth=target.GetComponent<Health>().Current,TargetShield=target.GetComponent<Health>().Shield,
             AllyHealth=ally.GetComponent<Health>().Current,AllyShield=ally.GetComponent<Health>().Shield,
-            Position=actor.transform.position,Events=events.ToArray(),
+            Position=actor.transform.position,Events=events.ToArray(),AtlasSeen=atlasSeen,
             Cooldown=action<0?actor.GetComponent<BasicAttack>().RemainingCooldown:actor.GetComponent<PlayerHeroAbilities>().RemainingFor(action)};
     }
     static void OfflineOnlineParity()
@@ -316,6 +320,7 @@ static class VfxRegression
         {
             if(slot==null)continue;var t=slot.GetType();
             if((bool)t.GetField("Active").GetValue(slot)&&(bool)t.GetField("ShieldBound").GetValue(slot)&&
+                ((MeshFilter)t.GetField("Filter").GetValue(slot)).sharedMesh.name=="DF_AuthoredFx_Shield"&&
                 ReferenceEquals(t.GetField("Follow").GetValue(slot),target.transform))return slot;
         }
         return null;
@@ -418,6 +423,7 @@ static class VfxRegression
         Check(manager.CustomMessagingManager.Packets.Count==1,"Client replay cannot echo an event");
         before=Visible().Length;relay.Receive(9,packet);Check(Visible().Length==before,"A non-server cannot inject visual events");
         relay.Unbind();NetworkPresentationFollowers();AllCues();CommandDamage();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();PendingCooldowns();OfflineOnlineParity();
+        AttackAtlasChecks();
         Console.WriteLine("PASS "+checks+" production online VFX and combat/shader checks (controlled Unity/GPU/network fixtures)");
     }
 }

@@ -16,6 +16,7 @@ namespace Alterverse.EditorChecks
         private static readonly string[,] RequiredMaterials =
         {
             { "CombatVfx/HeroEnergy", "Assets/Alterverse/Resources/CombatVfx/HeroEnergy.shader" },
+            { "CombatVfx/AttackAtlas", "Assets/Alterverse/Resources/CombatVfx/AttackAtlas.shader" },
             { "CombatUI/AbilityButton", "Assets/Alterverse/Shaders/AbilityButton.shader" },
             { "HeroArt/HeroSurface", "Assets/Alterverse/Resources/HeroArt/HeroSurface.shader" }
         };
@@ -98,9 +99,27 @@ namespace Alterverse.EditorChecks
                     errors.Add("Missing/mismatched Resources material: " + resource + " (expected " + shaderPath + ")");
             }
 
+            ValidateAttackAtlas(errors);
             if (errors.Count > 0) throw new BuildFailedException(string.Join("\n", errors));
             Debug.Log("DIMENSIONS FRONT: validated " + paths.Length + " project shaders and the runtime material references; " +
                 compiledPasses + " default render passes compiled on the current Editor device.");
+        }
+
+        private static void ValidateAttackAtlas(List<string> errors)
+        {
+            const string path="Assets/Alterverse/Resources/CombatVfx/AttackAtlas.png";
+            Material material=Resources.Load<Material>("CombatVfx/AttackAtlas");
+            Texture2D atlas=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if(atlas==null||atlas.width!=1024||atlas.height!=1024||material==null||material.GetTexture("_BaseMap")!=atlas)
+                errors.Add("Attack atlas is missing, has the wrong dimensions or is not assigned to its runtime material.");
+            TextureImporter importer=AssetImporter.GetAtPath(path) as TextureImporter;
+            if(importer==null){errors.Add("Attack atlas has no texture importer.");return;}
+            if(importer.isReadable||importer.mipmapEnabled||importer.wrapMode!=TextureWrapMode.Clamp||
+                importer.filterMode!=FilterMode.Bilinear)
+                errors.Add("Attack atlas must use bilinear/clamp sampling with CPU readability and mipmaps disabled.");
+            TextureImporterPlatformSettings android=importer.GetPlatformTextureSettings("Android");
+            if(!android.overridden||android.maxTextureSize!=1024||android.format!=TextureImporterFormat.ASTC_6x6)
+                errors.Add("Attack atlas must retain its 1024px Android ASTC 6x6 override.");
         }
     }
 }

@@ -1,0 +1,799 @@
+{
+  "size": [
+    1024,
+    1024
+  ],
+  "cell": 128,
+  "padding": 4,
+  "columns": 8,
+  "rows": 8,
+  "license": "CC0 1.0",
+  "sources": [
+    {
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "author": "Kenney Vleugels / Kenney.nl",
+      "url": "https://kenney.nl/assets/particle-pack",
+      "license": "CC0 1.0",
+      "sha256": "b631d4b07f7002549fdcf155f01141ad482f79f3440e4e301eed49ce5f1d8958"
+    },
+    {
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "author": "Cethiel",
+      "url": "https://opengameart.org/content/weapon-slash-effect",
+      "license": "CC0 1.0",
+      "sha256": "163eb4e4d41385f3b888e7176c6da077d0e7fa7c101da96bbaa4645a2ec9d673"
+    },
+    {
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "author": "rubberduck",
+      "url": "https://opengameart.org/content/sparkling-fireball-effect",
+      "license": "CC0 1.0",
+      "sha256": "31bd99f9e4b0a3adc0d3c8c04635848cd314681940d0b0429673f2aebe7eddf7"
+    }
+  ],
+  "clips": [
+    {
+      "name": "Glow",
+      "first": 0,
+      "count": 1
+    },
+    {
+      "name": "Burst",
+      "first": 1,
+      "count": 1
+    },
+    {
+      "name": "Muzzle",
+      "first": 2,
+      "count": 1
+    },
+    {
+      "name": "Smoke",
+      "first": 3,
+      "count": 1
+    },
+    {
+      "name": "Rune",
+      "first": 4,
+      "count": 1
+    },
+    {
+      "name": "Vortex",
+      "first": 5,
+      "count": 1
+    },
+    {
+      "name": "ClawMark",
+      "first": 6,
+      "count": 1
+    },
+    {
+      "name": "Slash",
+      "first": 7,
+      "count": 1
+    },
+    {
+      "name": "Flame",
+      "first": 8,
+      "count": 1
+    },
+    {
+      "name": "ShockRing",
+      "first": 9,
+      "count": 1
+    },
+    {
+      "name": "Flare",
+      "first": 10,
+      "count": 1
+    },
+    {
+      "name": "Trace",
+      "first": 11,
+      "count": 1
+    },
+    {
+      "name": "ShieldGlyph",
+      "first": 12,
+      "count": 1
+    },
+    {
+      "name": "Dust",
+      "first": 13,
+      "count": 1
+    },
+    {
+      "name": "Portal",
+      "first": 14,
+      "count": 1
+    },
+    {
+      "name": "FireSpark",
+      "first": 15,
+      "count": 1
+    },
+    {
+      "name": "Star",
+      "first": 16,
+      "count": 1
+    },
+    {
+      "name": "SoftStar",
+      "first": 17,
+      "count": 1
+    },
+    {
+      "name": "SlashLight",
+      "first": 18,
+      "count": 6
+    },
+    {
+      "name": "SlashHeavy",
+      "first": 24,
+      "count": 6
+    },
+    {
+      "name": "SlashClaw",
+      "first": 30,
+      "count": 6
+    },
+    {
+      "name": "SlashCross",
+      "first": 36,
+      "count": 6
+    },
+    {
+      "name": "SlashLunge",
+      "first": 42,
+      "count": 6
+    },
+    {
+      "name": "Fireball",
+      "first": 48,
+      "count": 16
+    }
+  ],
+  "frames": [
+    {
+      "cell": 0,
+      "clip": "Glow",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/circle_05.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 1,
+      "clip": "Burst",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/spark_01.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 2,
+      "clip": "Muzzle",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/star_09.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 3,
+      "clip": "Smoke",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/smoke_04.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 4,
+      "clip": "Rune",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/magic_02.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 5,
+      "clip": "Vortex",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/twirl_03.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 6,
+      "clip": "ClawMark",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/scratch_01.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 7,
+      "clip": "Slash",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/slash_02.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 8,
+      "clip": "Flame",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/flame_06.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 9,
+      "clip": "ShockRing",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/circle_03.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 10,
+      "clip": "Flare",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/flare_01.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 11,
+      "clip": "Trace",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/trace_03.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 12,
+      "clip": "ShieldGlyph",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/symbol_02.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 13,
+      "clip": "Dust",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/dirt_01.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 14,
+      "clip": "Portal",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/circle_04.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 15,
+      "clip": "FireSpark",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/fire_02.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 16,
+      "clip": "Star",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/star_03.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 17,
+      "clip": "SoftStar",
+      "archive": "01_Kenney_Particle_Pack.zip",
+      "member": "PNG (Transparent)/star_06.png",
+      "source_size": [
+        512,
+        512
+      ]
+    },
+    {
+      "cell": 18,
+      "clip": "SlashLight",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/1/Classic_01.png",
+      "source_size": [
+        126,
+        150
+      ]
+    },
+    {
+      "cell": 19,
+      "clip": "SlashLight",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/1/Classic_02.png",
+      "source_size": [
+        124,
+        150
+      ]
+    },
+    {
+      "cell": 20,
+      "clip": "SlashLight",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/1/Classic_03.png",
+      "source_size": [
+        125,
+        150
+      ]
+    },
+    {
+      "cell": 21,
+      "clip": "SlashLight",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/1/Classic_04.png",
+      "source_size": [
+        126,
+        150
+      ]
+    },
+    {
+      "cell": 22,
+      "clip": "SlashLight",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/1/Classic_05.png",
+      "source_size": [
+        124,
+        150
+      ]
+    },
+    {
+      "cell": 23,
+      "clip": "SlashLight",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/1/Classic_06.png",
+      "source_size": [
+        125,
+        150
+      ]
+    },
+    {
+      "cell": 24,
+      "clip": "SlashHeavy",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/2/Classic_07.png",
+      "source_size": [
+        126,
+        150
+      ]
+    },
+    {
+      "cell": 25,
+      "clip": "SlashHeavy",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/2/Classic_08.png",
+      "source_size": [
+        124,
+        150
+      ]
+    },
+    {
+      "cell": 26,
+      "clip": "SlashHeavy",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/2/Classic_09.png",
+      "source_size": [
+        125,
+        150
+      ]
+    },
+    {
+      "cell": 27,
+      "clip": "SlashHeavy",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/2/Classic_10.png",
+      "source_size": [
+        126,
+        150
+      ]
+    },
+    {
+      "cell": 28,
+      "clip": "SlashHeavy",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/2/Classic_11.png",
+      "source_size": [
+        124,
+        150
+      ]
+    },
+    {
+      "cell": 29,
+      "clip": "SlashHeavy",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/2/Classic_12.png",
+      "source_size": [
+        125,
+        150
+      ]
+    },
+    {
+      "cell": 30,
+      "clip": "SlashClaw",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/3/Classic_13.png",
+      "source_size": [
+        126,
+        150
+      ]
+    },
+    {
+      "cell": 31,
+      "clip": "SlashClaw",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/3/Classic_14.png",
+      "source_size": [
+        124,
+        150
+      ]
+    },
+    {
+      "cell": 32,
+      "clip": "SlashClaw",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/3/Classic_15.png",
+      "source_size": [
+        125,
+        150
+      ]
+    },
+    {
+      "cell": 33,
+      "clip": "SlashClaw",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/3/Classic_16.png",
+      "source_size": [
+        126,
+        150
+      ]
+    },
+    {
+      "cell": 34,
+      "clip": "SlashClaw",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/3/Classic_17.png",
+      "source_size": [
+        124,
+        150
+      ]
+    },
+    {
+      "cell": 35,
+      "clip": "SlashClaw",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/3/Classic_18.png",
+      "source_size": [
+        125,
+        150
+      ]
+    },
+    {
+      "cell": 36,
+      "clip": "SlashCross",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/4/Classic_19.png",
+      "source_size": [
+        126,
+        150
+      ]
+    },
+    {
+      "cell": 37,
+      "clip": "SlashCross",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/4/Classic_20.png",
+      "source_size": [
+        124,
+        150
+      ]
+    },
+    {
+      "cell": 38,
+      "clip": "SlashCross",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/4/Classic_21.png",
+      "source_size": [
+        125,
+        150
+      ]
+    },
+    {
+      "cell": 39,
+      "clip": "SlashCross",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/4/Classic_22.png",
+      "source_size": [
+        126,
+        150
+      ]
+    },
+    {
+      "cell": 40,
+      "clip": "SlashCross",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/4/Classic_23.png",
+      "source_size": [
+        124,
+        150
+      ]
+    },
+    {
+      "cell": 41,
+      "clip": "SlashCross",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/4/Classic_24.png",
+      "source_size": [
+        125,
+        150
+      ]
+    },
+    {
+      "cell": 42,
+      "clip": "SlashLunge",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/5/Classic_25.png",
+      "source_size": [
+        126,
+        150
+      ]
+    },
+    {
+      "cell": 43,
+      "clip": "SlashLunge",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/5/Classic_26.png",
+      "source_size": [
+        124,
+        150
+      ]
+    },
+    {
+      "cell": 44,
+      "clip": "SlashLunge",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/5/Classic_27.png",
+      "source_size": [
+        125,
+        150
+      ]
+    },
+    {
+      "cell": 45,
+      "clip": "SlashLunge",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/5/Classic_28.png",
+      "source_size": [
+        126,
+        150
+      ]
+    },
+    {
+      "cell": 46,
+      "clip": "SlashLunge",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/5/Classic_29.png",
+      "source_size": [
+        124,
+        150
+      ]
+    },
+    {
+      "cell": 47,
+      "clip": "SlashLunge",
+      "archive": "02_Cethiel_Weapon_Slash.zip",
+      "member": "Classic/5/Classic_30.png",
+      "source_size": [
+        125,
+        150
+      ]
+    },
+    {
+      "cell": 48,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0001.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 49,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0004.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 50,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0008.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 51,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0011.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 52,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0014.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 53,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0017.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 54,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0021.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 55,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0024.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 56,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0027.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 57,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0030.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 58,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0034.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 59,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0037.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 60,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0040.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 61,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0043.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 62,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0047.png",
+      "source_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "cell": 63,
+      "clip": "Fireball",
+      "archive": "03_Rubberduck_Sparkling_Fireball.zip",
+      "member": "particles_fireball/0050.png",
+      "source_size": [
+        256,
+        256
+      ]
+    }
+  ],
+  "atlas_sha256": "6098ddd96907f4fc1ad45fe44688120d19eaaa1c3d8c485d406e8a1183945d19"
+}

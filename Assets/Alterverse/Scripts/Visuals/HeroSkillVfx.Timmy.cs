@@ -45,6 +45,7 @@ namespace Alterverse.Visuals
                 HeroVfxPool.CancelShape(actor,HeroFxShape.Claw,HeroFxMotion.TravelFixedFrame);
                 HeroVfxPool.CancelShape(actor,HeroFxShape.Claw,HeroFxMotion.AttachedJet);
                 HeroVfxPool.CancelShape(actor,HeroFxShape.Streak,HeroFxMotion.AttachedJet);
+                HeroVfxPool.CancelShape(actor,HeroFxShape.TexturedQuad,HeroFxMotion.AttachedJet);
                 if(kind==4)
                 {
                     HeroVfxPool.CancelShape(actor,HeroFxShape.TimmyGrenade);
@@ -113,6 +114,9 @@ namespace Alterverse.Visuals
                 Vector3 p=nozzle!=null?nozzle.position:Chest(actor)-heading*.22f+facing*Vector3.right*(side*.12f);
                 Transform follow=nozzle!=null?nozzle:actor.transform;
                 Quaternion exhaust=Quaternion.LookRotation((heading+Vector3.up*.35f).normalized);
+                HeroVfxPool.Sprite(HeroFxSprite.Flame,p,p,new Vector2(.23f,.39f),
+                    new Color(.24f,.82f,1f,.72f),jetLife,actor,HeroFxMotion.AttachedJet,
+                    exhaust,follow:follow,elapsed:elapsed);
                 HeroVfxPool.Emit(HeroFxShape.Streak,p,p,new Vector3(.14f,.14f,.72f),cyan,jetLife,
                     HeroFxMotion.AttachedJet,exhaust,actor,follow:follow,elapsed:elapsed,cancelOnOwnerDeath:true);
                 HeroVfxPool.Emit(HeroFxShape.Streak,p,p,new Vector3(.055f,.055f,.38f),

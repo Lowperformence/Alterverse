@@ -25,6 +25,7 @@ def remove_class(text, declaration):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dotnet-root', type=Path, required=True)
+    parser.add_argument('--negative-control', action='store_true', help='Temporarily omit the imported layer to prove the action checks detect it')
     args = parser.parse_args()
     here = Path(__file__).resolve().parent
     root = here.parents[2]
@@ -34,7 +35,7 @@ def main():
     csc = sorted((dotnet / 'sdk').glob('*/Roslyn/bincore/csc.dll'))[-1]
     runtime = sorted((dotnet / 'shared/Microsoft.NETCore.App').iterdir())[-1]
     names = ast.literal_eval(re.search(r'^names=(\[[^\n]+\])', (shared / 'run.py').read_text(), re.M)[1])
-    names += ['Visuals/HeroSkillVfx.cs', 'Visuals/HeroSkillVfx.VoidKnight.cs',
+    names += ['Visuals/HeroSkillVfx.cs', 'Visuals/HeroSkillVfx.AttackPolish.cs', 'Visuals/MonsterAttackVfx.cs', 'Visuals/PrototypeVfx.cs', 'Visuals/BomberExplosionVfx.cs', 'Visuals/HeroSkillVfx.VoidKnight.cs',
               'Characters/VoidKnightBalance.cs', 'Characters/VoidKnightState.cs',
               'Characters/HeroAbilityExecution.VoidKnight.cs', 'Multiplayer/CoopHeroStateSync.Vfx.cs', 'Characters/HeroLocomotion.cs', 'Visuals/HeroPresentationBuffer.cs', 'UI/TargetIndicatorHUD.cs']
     engine = (shared / 'EngineStubs.cs').read_text()
@@ -44,9 +45,9 @@ def main():
     engine = engine.replace('public struct Quaternion {', 'public struct Quaternion {public static Quaternion Slerp(Quaternion a,Quaternion b,float t){var q=System.Numerics.Quaternion.Slerp(new(a.x,a.y,a.z,a.w),new(b.x,b.y,b.z,b.w),t);return new Quaternion{x=q.X,y=q.Y,z=q.Z,w=q.W};}')
     engine = engine.replace('public class GUIStyle {', 'public enum FontStyle{Bold}public class GUIStyleState{public Color textColor;}public class GUIStyle {public object font;public FontStyle fontStyle;public GUIStyleState normal=new();')
     engine = engine.replace('public static class GUI {', 'public static class GUI {public static void Label(Rect r,string text,GUIStyle style){}')
-    engine = engine.replace('public static class StylizedArtDirection {', 'public static class StylizedArtDirection {public static UnityEngine.Color WarmAccent=>UnityEngine.Color.white;')
-    engine = engine.replace('public enum DimensionSound{Kill}', 'public enum DimensionSound{Kill,HeroDeath,Shield}')
-    engine = engine.replace('public static class DimensionAudio {', 'public static class DimensionAudio {public static void PlayAt(DimensionSound sound,UnityEngine.Vector3 p,float gain){}')
+    engine = engine.replace('public static class StylizedArtDirection {', 'public static class StylizedArtDirection {public static UnityEngine.Color LumenEnergy=>UnityEngine.Color.white;public static UnityEngine.Color WarmAccent=>UnityEngine.Color.white;')
+    engine = engine.replace('public enum DimensionSound{Kill}', 'public enum DimensionSound{Kill,HeroDeath,Shield,MechGun}')
+    engine = engine.replace('public static class DimensionAudio {', 'public static class DimensionAudio {public static void PlayAt(DimensionSound sound,UnityEngine.Vector3 p,float gain,float elapsed=0){}')
 
     engine = engine.replace('public class HeroMotor:UnityEngine.MonoBehaviour {', 'public class HeroMotor:UnityEngine.MonoBehaviour {public float MoveSpeed=>6.5f;')
     engine = engine.replace('public class LaneMinion:UnityEngine.MonoBehaviour {', 'public class LaneMinion:UnityEngine.MonoBehaviour {public float RunningSpeed=>6.5f;')
@@ -93,8 +94,16 @@ def main():
                            'private float maxHealth=1000;public float Current=1000;public bool IsDead;public event Action<float,float> Changed;' +
                            capacity + transient + shield + add_shield + snapshot + '}}')
         output = directory / 'Regression.dll'
-        files = [fixtures, replica, here / 'Regression.cs', here / 'NetworkFixtures.cs',
+        files = [fixtures, replica, here / 'Regression.cs', here / 'AttackAtlasRegression.cs', here / 'MonsterPresentationFixtures.cs', here / 'NetworkFixtures.cs',
                  *[root / 'Assets/Alterverse/Scripts' / n for n in names]]
+        if args.negative_control:
+            original = root / 'Assets/Alterverse/Scripts/Visuals/HeroVfxPool.Textures.cs'
+            disabled = directory / 'AtlasDisabled.cs'
+            content = original.read_text()
+            needle = 'attackAtlas=Resources.Load<Material>("CombatVfx/AttackAtlas");'
+            assert content.count(needle) == 1
+            disabled.write_text(content.replace(needle, 'attackAtlas=null; return;'))
+            files = [disabled if file == original else file for file in files]
         subprocess.run([str(dotnet / 'dotnet'), str(csc), '-nologo', '-noconfig', '-langversion:9',
                         '-out:' + str(output), *['-r:' + str(p) for p in refs.glob('*.dll')], *map(str, files)], check=True)
         output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions': {

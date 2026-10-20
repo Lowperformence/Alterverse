@@ -85,6 +85,10 @@ namespace Alterverse.Visuals
                 Vector3 center=Vector3.Lerp(from,to,.38f);
                 float reach=Mathf.Clamp(delta.magnitude*.52f,.8f,2.1f);
                 Quaternion flat=Quaternion.Euler(0,heading.eulerAngles.y,0);
+                HeroVfxPool.Sprite(style==MonsterAttackStyle.Frost?HeroFxSprite.SlashClaw:
+                    style==MonsterAttackStyle.Tentacle?HeroFxSprite.SlashLunge:HeroFxSprite.SlashHeavy,
+                    center,center,new Vector2(reach,reach),color,duration,actor,
+                    rotation:flat*Quaternion.Euler(90,0,0),billboard:false,elapsed:elapsed);
                 int cuts=style==MonsterAttackStyle.Frost?3:style==MonsterAttackStyle.Tentacle||style==MonsterAttackStyle.Scorpion?2:1;
                 for(int i=0;i<cuts;i++)
                 {
@@ -107,6 +111,9 @@ namespace Alterverse.Visuals
                 default:core=HeroFxShape.Orb;size=Vector3.one*(style==MonsterAttackStyle.Orb?.40f:.29f);break;
             }
             HeroVfxPool.Emit(core,from,to,size,color,duration,motion,heading,actor,endFollow:target,elapsed:elapsed,cancelOnOwnerDeath:true);
+            HeroVfxPool.Sprite(style==MonsterAttackStyle.Stone?HeroFxSprite.Dust:
+                style==MonsterAttackStyle.Alien||style==MonsterAttackStyle.Bio?HeroFxSprite.FireSpark:HeroFxSprite.Glow,
+                from,to,new Vector2(.42f,.42f),color,duration,actor,motion,heading,endFollow:target,elapsed:elapsed);
             if(style==MonsterAttackStyle.Orb||style==MonsterAttackStyle.Poison)
                 HeroVfxPool.Emit(HeroFxShape.Streak,from,to,new Vector3(.24f,.24f,.45f),color,duration,
                     HeroFxMotion.Travel,heading,actor,endFollow:target,decorative:true,elapsed:elapsed,cancelOnOwnerDeath:true);
@@ -124,6 +131,8 @@ namespace Alterverse.Visuals
             Transform muzzle=gun!=null?gun.Muzzle:null;
             Vector3 delta=to-from;Quaternion heading=delta.sqrMagnitude>.0001f?Quaternion.LookRotation(delta):actor.transform.rotation;
             Color tracer=new Color(1f,.76f,.28f),flash=new Color(1f,.88f,.48f);
+            HeroVfxPool.Sprite(HeroFxSprite.Muzzle,from,from,new Vector2(.34f,.34f),flash,.09f,
+                actor,follow:muzzle,elapsed:elapsed);
             // One recorded three-shot burst uses one existing pooled audio voice.
             gun?.MarkBurstPresented();
             DimensionAudio.PlayAt(DimensionSound.MechGun,from,.5f,elapsed);
@@ -155,6 +164,10 @@ namespace Alterverse.Visuals
             float delay=guard?.16f:0;
             if(guard)Launch(actor,from,to,delay,elapsed);
             MonsterAttackStyle style=StyleFor(actor);Color color=Tint(actor,style);
+            HeroVfxPool.Sprite(style==MonsterAttackStyle.Stone?HeroFxSprite.Dust:
+                style==MonsterAttackStyle.Frost?HeroFxSprite.ClawMark:
+                style==MonsterAttackStyle.Scorpion||style==MonsterAttackStyle.Iron?HeroFxSprite.Fireball:HeroFxSprite.Burst,
+                to,to,new Vector2(.68f,.68f),color,.23f,actor,delay:delay,elapsed:elapsed);
             if(!guard&&style==MonsterAttackStyle.Mech)
             {
                 var gun=actor.GetComponentInChildren<MechMachineGunVisual>();
@@ -187,11 +200,17 @@ namespace Alterverse.Visuals
         {
             if(actor==null)return;
             HeroVfxPool.CancelShape(actor,HeroFxShape.MonsterBeam);
+            HeroVfxPool.CancelSprite(actor,HeroFxSprite.Glow,HeroFxMotion.Sustained);
             if(duration<=0||target==null||elapsed>=duration)return;
             Transform eye=null;
             foreach(var t in actor.GetComponentsInChildren<Transform>(true))if(t.name=="RedEye"){eye=t;break;}
             Vector3 from=eye!=null?eye.position:actor.transform.position+Vector3.up*.70f+actor.transform.forward*1.55f;
             Vector3 to=target.position+Vector3.up*.65f;
+            Color light=new Color(1f,.08f,.025f,.64f);
+            HeroVfxPool.Sprite(HeroFxSprite.Glow,from,from,new Vector2(.32f,.32f),light,duration,actor,
+                HeroFxMotion.Sustained,follow:eye!=null?eye:actor.transform,endFollow:target,elapsed:elapsed);
+            HeroVfxPool.Sprite(HeroFxSprite.Glow,to,to,new Vector2(.36f,.36f),light,duration,actor,
+                HeroFxMotion.Sustained,follow:target,endFollow:target,elapsed:elapsed);
             HeroVfxPool.Emit(HeroFxShape.MonsterBeam,from,to,new Vector3(.085f,.085f,1),new Color(1f,.03f,.01f),duration,
                 HeroFxMotion.Tether,owner:actor,follow:eye,endFollow:target,elapsed:elapsed,cancelOnOwnerDeath:true);
         }
