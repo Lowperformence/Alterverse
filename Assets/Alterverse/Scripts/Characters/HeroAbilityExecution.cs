@@ -167,7 +167,7 @@ namespace Alterverse.Characters
                     (slot == 2 ? ally.TemporaryShield > 5f : ally.Normalized >= .95f)) return false;
                 if (aimed.HasValue && !AimGeometry.Cone(transform.position, attackAim.Direction, ally.transform.position, aimSpec.castRange, aimSpec.coneAngle)) return false;
                 HeroCombatAudio.Cast(gameObject,slot);
-                if (slot == 1) ally.Heal(spec.Power,false); else ally.AddShield(spec.Power, 4f,false);
+                if (slot == 1) ally.Heal(spec.Power,false,gameObject); else ally.AddShield(spec.Power, 4f,false);
                 HeroSkillVfx.SupportLink(gameObject, ally);
                 HeroSkillVfx.Support(gameObject,ally,slot==2,4f);
             }
@@ -295,7 +295,7 @@ namespace Alterverse.Characters
                 bool ally=own!=null&&member!=null&&member.Team==own.Team&&h.GetComponent<HeroIdentity>()!=null;
                 if(identity.Hero==HeroId.Mira)
                 {
-                    if(ally){float supportBefore=h.Current+h.Shield;h.Heal(spec.Power,false);h.AddShield(25,3,false);confirmed|=h.Current+h.Shield>supportBefore;HeroSkillVfx.Support(gameObject,h,false,.45f);HeroSkillVfx.Support(gameObject,h,true,3);}
+                    if(ally){float supportBefore=h.Current+h.Shield;h.Heal(spec.Power,false,gameObject);h.AddShield(25,3,false);confirmed|=h.Current+h.Shield>supportBefore;HeroSkillVfx.Support(gameObject,h,false,.45f);HeroSkillVfx.Support(gameObject,h,true,3);}
                 }
                 else
                 {

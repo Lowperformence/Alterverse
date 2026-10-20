@@ -24,7 +24,8 @@ namespace Alterverse.Multiplayer
         private const string PlanMessage = "DF_DEDICATED_PLAN_V1";
         private const string AckMessage = "DF_DEDICATED_PLAN_ACK_V1";
         private const string LaunchMessage = "DF_DEDICATED_LAUNCH_V1";
-        private const int ProtocolVersion = 6;
+        // Includes source-timed snapshots and stable nonhero combat target identities.
+        private const int ProtocolVersion = 7;
         private const uint DisplayNameCapability = 0x44464E31; // Optional trailing DFN1 marker; old servers ignore it.
         private const float HumanJoinWindowSeconds = 60f;
         private const float PlanAckTimeoutSeconds = 20f;
@@ -300,7 +301,9 @@ namespace Alterverse.Multiplayer
             string claimedPlayerId = fixedPlayer.ToString();
             string displayName = fixedName.ToString();
 
-            if (protocol != ProtocolVersion || string.IsNullOrWhiteSpace(ticketId) || string.IsNullOrWhiteSpace(claimedTeamId) ||
+            if (protocol != ProtocolVersion)
+            { RejectClient(manager, senderClientId, "game version mismatch: update the Android app and dedicated server together"); return; }
+            if (string.IsNullOrWhiteSpace(ticketId) || string.IsNullOrWhiteSpace(claimedTeamId) ||
                 !Enum.IsDefined(typeof(HeroId), heroRaw) || !Enum.IsDefined(typeof(BattleItemType), battleItemRaw))
             {
                 RejectClient(manager, senderClientId, "invalid dedicated hello");

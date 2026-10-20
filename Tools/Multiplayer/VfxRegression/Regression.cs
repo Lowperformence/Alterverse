@@ -226,14 +226,14 @@ static class VfxRegression
         Check(abilities.RemainingFor(0)==skill,"Acknowledging a basic cannot clear a newer ability");
         basic.ApplyNetworkCooldown(.25f,1);Check(Mathf.Abs(basic.RemainingCooldown-.25f)<.00001f,"Older action may accept its own acknowledgement while another is pending");
         manager.IsServer=true;CoopAuthority.LocalHasServerAuthority=true;
-        manager.CustomMessagingManager.Handlers["DF_COOP_BASIC_V6"](7,new FastBufferReader(basicPacket));
+        manager.CustomMessagingManager.Handlers["DF_COOP_BASIC_V7"](7,new FastBufferReader(basicPacket));
         Check(CoopGameplayCommands.ProcessedCommand(0)==1,"Authorized basic is acknowledged");
         int accepted=(int)typeof(CoopGameplayCommands).GetField("acceptedCombat",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(service);
-        manager.CustomMessagingManager.Handlers["DF_COOP_BASIC_V6"](7,new FastBufferReader(basicPacket));
+        manager.CustomMessagingManager.Handlers["DF_COOP_BASIC_V7"](7,new FastBufferReader(basicPacket));
         Check((int)typeof(CoopGameplayCommands).GetField("acceptedCombat",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(service)==accepted,"Duplicate command cannot execute damage twice");
         // Force a legitimate rejection after the local prediction: server is still on cooldown.
         server.GetComponent<HeroAbilityExecution>().MarkNetworkRequestCooldown(0);
-        manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](7,new FastBufferReader(abilityPacket));
+        manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V7"](7,new FastBufferReader(abilityPacket));
         Check(CoopGameplayCommands.ProcessedCommand(0)==2,"Rejected but processed command also acknowledges prediction");
         manager.IsServer=false;CoopAuthority.LocalHasServerAuthority=false;
         abilities.ApplyNetworkCooldown(0,0,2);Check(abilities.RemainingFor(0)==0,"Rejected request can restore the true server cooldown");

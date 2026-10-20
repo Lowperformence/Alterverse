@@ -14,7 +14,8 @@ namespace Alterverse.Multiplayer
     {
         private const string ProbeMessage="DF_COOP_PLAN_PROBE_V1";
         private const string AckMessage="DF_COOP_PLAN_ACK_V1";
-        private const int ProtocolVersion=4;
+        // Reject older combat/snapshot formats before a Relay match can launch.
+        private const int ProtocolVersion=5;
 
         public static CoopPlanHandshake Instance { get; private set; }
         public static bool PlanHandshakeReady=>Instance!=null&&Instance.planHandshakeReady;
@@ -191,7 +192,7 @@ namespace Alterverse.Multiplayer
                 ?$"MATCH PLAN SYNCED • {expectedPlayers}/{expectedPlayers} PLAYERS"
                 :valid
                     ?$"PLAN VERIFIED • {Mathf.Min(approvedClients.Count+1,expectedPlayers)}/{expectedPlayers}"
-                    :"MATCH PLAN MISMATCH";
+                    :protocol!=ProtocolVersion?"GAME VERSION MISMATCH • UPDATE ALL PLAYERS":"MATCH PLAN MISMATCH";
 
             using FastBufferWriter writer=new(20,Allocator.Temp);
             writer.WriteValueSafe(ProtocolVersion);
@@ -218,7 +219,7 @@ namespace Alterverse.Multiplayer
             uint localFingerprint=Fingerprint(CoopAuthority.PreparedPlan);
             planHandshakeReady=protocol==ProtocolVersion&&accepted&&hostFingerprint==localFingerprint;
             lastFingerprint=localFingerprint;
-            status=planHandshakeReady?"MATCH PLAN SYNCED":"MATCH PLAN MISMATCH";
+            status=planHandshakeReady?"MATCH PLAN SYNCED":protocol!=ProtocolVersion?"GAME VERSION MISMATCH • UPDATE ALL PLAYERS":"MATCH PLAN MISMATCH";
             if(!planHandshakeReady)nextProbeAt=Time.unscaledTime+.75f;
         }
 

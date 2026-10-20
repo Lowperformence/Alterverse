@@ -85,7 +85,7 @@ static class Regression
   Vector3 accepted=serverActor.transform.position;server.ReceiveOwner(7,client.Messages.Sent[0].Values);
   Position(serverActor.transform.position,accepted,"Out-of-order owner packet cannot overwrite accepted movement");
   object[] cheat=(object[])client.Messages.Sent[4].Values.Clone();cheat[5]=100f;Time.unscaledTime=.15f;server.ReceiveOwner(7,cheat);
-  Check(serverActor.transform.position.x-accepted.x<1,"Sequence acknowledgement does not bypass the server speed limit");
+  Check(serverActor.transform.position.x-accepted.x<=6.5f*.25f+.18f,"Sequence acknowledgement cannot exceed the bounded receive-jitter reserve");
   object[] untrusted=(object[])client.Messages.Sent[4].Values.Clone();untrusted[3]=6u;untrusted[5]=200f;
   accepted=serverActor.transform.position;MatchNetworkProtocol.AllowOwner=false;server.ReceiveOwner(7,untrusted);
   Position(serverActor.transform.position,accepted,"Unauthorized owner cannot move another player");MatchNetworkProtocol.AllowOwner=true;
@@ -408,10 +408,36 @@ static class Regression
     server.ReceiveOwner(7,packet);
     worst=Math.Max(worst,position-actor.transform.position.x);
    }
+   Check(worst<.0001f,"Four legitimate poses delivered together do not reject valid movement at speed "+speed);
    Console.WriteLine($"BURST PROBE speed={speed:F2} units/s: largest valid-pose rejection={worst:F4} units");
   }
  }
- static void Main(){OwnerBurstProbe();HistoryCases();TransportCases();DashTransportCases();HealingAndStatusCases();WorldPacketCases();SnapshotWorkCases();EnlargedBoundaryCases();CadenceCases();WorldDeltaCases();TimingCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
+
+ static void SustainedSpeedCases()
+ {
+  foreach(int frequency in new[]{20,60,120})
+  {
+   CoopPlanHandshake.Round++;CoopAuthority.ActivePlan=new();CoopAuthority.ActivePlan.Session.Slots[0]=new();
+   CoopAuthority.Active=true;Time.timeScale=1;Time.unscaledTime=0;MatchNetworkProtocol.AllowOwner=true;
+   var sync=new CoopHeroStateSync();var actor=Actor(0);sync.Slot(actor);actor.GetComponent<HeroCombatProfile>().MoveSpeed=1f;
+   CoopAuthority.LocalHasServerAuthority=true;NetworkManager.Singleton=new NetworkManager{IsServer=true};
+   for(int i=1;i<=frequency*10;i++)
+   {
+    Time.unscaledTime=i/(float)frequency;
+    object[] packet={CoopPlanHandshake.Round,0,new Unity.Collections.FixedString128Bytes("player"),(uint)i,0u,i*2f/frequency,0f,0f,0f,1f,0f};
+    sync.ReceiveOwner(7,packet);
+   }
+   Check(actor.transform.position.x<10.5f,"Double-speed input cannot gain distance through extra packets at "+frequency+"Hz");
+  }
+  var budget=new OwnerMovementBudget();float accepted=0;
+  for(int i=0;i<1000;i++)accepted+=budget.Limit(7,1f,4.77f,1f,.18f);
+  Check(accepted<1.38f,"A receive burst shares one reserve instead of receiving slack per packet");
+  budget.Hold(7,2f);Check(budget.Limit(7,2f,4.77f,100f,.18f)==0,"Root/forced movement clears the reserved distance");
+  Check(budget.Limit(7,2.05f,4.77f,1f,.18f)<.24f,"Releasing a root permits only newly elapsed running distance");
+  Check(budget.Limit(7,float.NaN,4.77f,1f,.18f)==0,"Invalid time cannot mint movement allowance");
+ }
+
+ static void Main(){SustainedSpeedCases();OwnerBurstProbe();HistoryCases();TransportCases();DashTransportCases();HealingAndStatusCases();WorldPacketCases();SnapshotWorkCases();EnlargedBoundaryCases();CadenceCases();WorldDeltaCases();TimingCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
 }
 
 

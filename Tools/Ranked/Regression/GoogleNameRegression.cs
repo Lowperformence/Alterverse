@@ -71,7 +71,7 @@ partial class Regression
    for(ulong id=1;id<=2;id++)
    {
     string ticket="google-ticket-"+id;manager.ConnectedClientsIds.Add(id);
-    var values=new List<object>{6,new FixedString128Bytes(ticket),new FixedString128Bytes("team"),
+    var values=new List<object>{7,new FixedString128Bytes(ticket),new FixedString128Bytes("team"),
      new FixedString128Bytes("fixture-match"),new FixedString128Bytes(ticket),new FixedString64Bytes(alias),
      (int)HeroId.Veyr,(int)BattleItemType.None,new FixedString4096Bytes("")};
     if(!mixed||id==1)values.Add((uint)0x44464E31);

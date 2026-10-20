@@ -32,7 +32,6 @@ namespace Alterverse.Multiplayer
         private CustomMessagingManager messaging;
         private readonly CoopHeroSlot[] slots=new CoopHeroSlot[MatchSession.MaxPlayers];
         private readonly Dictionary<ulong,string> senderOwners=new();
-        private readonly Dictionary<ulong,float> senderLastPoseAt=new();
         private float nextOwnerSend,nextHostSnapshot,nextRefresh;
         private int localSlot=-1;
         private string localPlayerId="";
@@ -139,7 +138,6 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(OrunOverdriveMessage);
             messaging=null;attached=false;
             senderOwners.Clear();
-            senderLastPoseAt.Clear();
             ResetPoseTransport();
         }
 

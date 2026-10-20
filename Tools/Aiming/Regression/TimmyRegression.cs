@@ -217,7 +217,7 @@ partial class Regression
   other=Hero(HeroId.Kaelon,1,Vector3.forward*3);other.AddComponent<Alterverse.Multiplayer.CoopHeroSlot>().Slot=3;
   Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;
   Alterverse.Multiplayer.CoopAuthority.ActivePlan.Session.Slots[1]=new Alterverse.Multiplayer.MatchPlayerSlot{PlayerId="test"};
-  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.7f);
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V7"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.7f);
   Check(b.GetComponent<HeroCombatStatus>()?.Rooted==true,"host jumps to the same marked enemy even if another enters the cone");
   Check(other.GetComponent<HeroCombatStatus>()?.Rooted!=true,"host cannot silently swap Scratch victims");
   Run(2.3f);Near(Total(b),1000-TimmyBalance.ScratchDamage,"network Scratch keeps full selected-victim damage");Near(Total(other),1000,"network Scratch remains single target");

@@ -73,7 +73,7 @@ def main():
         output = directory / 'Regression.dll'
         response = directory / 'compile.rsp'
         files = [engine, geometry, epochs, here / 'Regression.cs', accessors, declarations, heal, packets, source / 'Combat/HeroCombatStatus.cs',
-                 source / 'Multiplayer/CoopHeroStateSync.Transport.cs', source / 'Multiplayer/OwnerPoseHistory.cs', source / 'Multiplayer/SnapshotCadence.cs', source / 'Multiplayer/WorldSnapshotHistory.cs', source / 'Performance/FrameTimingWindow.cs', source / 'Performance/RuntimePerformanceMonitor.cs', source / 'Performance/VfxQualityHysteresis.cs']
+                 source / 'Multiplayer/CoopHeroStateSync.Transport.cs', source / 'Multiplayer/OwnerPoseHistory.cs', source / 'Multiplayer/OwnerMovementBudget.cs', source / 'Multiplayer/SnapshotCadence.cs', source / 'Multiplayer/WorldSnapshotHistory.cs', source / 'Performance/FrameTimingWindow.cs', source / 'Performance/RuntimePerformanceMonitor.cs', source / 'Performance/VfxQualityHysteresis.cs']
         response.write_text('\n'.join(['-nologo', '-target:exe', '-langversion:9', '-nowarn:0649', '-out:' + str(output),
                                        *['-r:' + str(path) for path in runtime.glob('*.dll')], *map(str, files)]))
         subprocess.run([str(dotnet / 'dotnet'), str(sdk / 'Roslyn/bincore/csc.dll'), '@' + str(response)], check=True)

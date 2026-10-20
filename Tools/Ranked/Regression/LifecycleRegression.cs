@@ -104,10 +104,10 @@ partial class Regression
    Invoke(sync,"OnHotProgress",0UL,new FastBufferReader(progress.Values));
    Check(client.Remaining==18&&client.ZeroControlSeconds==8&&client.ZeroInside==2,"online HUD receives capture clock, score and participant count");
    Invoke(sync,"OnHotResolve",0UL,new FastBufferReader(result.Values));
-   Check(!client.IsActive&&Alterverse.Combat.HotZoneTank.Spawns==2,"client spawns replica of awarded Hotzone monster");
+   Check(!client.IsActive&&Alterverse.Combat.HotZoneTank.Spawns==1,"client resolve waits for an authoritative world snapshot");
    Invoke(sync,"OnHotResolve",0UL,new FastBufferReader(result.Values));
    Invoke(sync,"OnHotOpen",0UL,new FastBufferReader(open.Values));
-   Check(!client.IsActive&&Alterverse.Combat.HotZoneTank.Spawns==2,"old objective events cannot duplicate rewards or reopen resolved zone");
+   Check(!client.IsActive&&Alterverse.Combat.HotZoneTank.Spawns==1,"old objective events cannot duplicate rewards or reopen resolved zone");
    CoopAuthority.LocalHasServerAuthority=true;client.ApplyNetworkOpen(new Vector3(),1);
    Check(!client.IsActive,"server ignores client presentation mutation");
   }
@@ -136,7 +136,7 @@ partial class Regression
   Check(Alterverse.Combat.Health.Lookups==440,"lookup cache refreshes on next frame");
   var spawned=new GameObject();var health=spawned.AddComponent<Alterverse.Combat.Health>();
   spawned.AddComponent<CoopWorldEntityKey>().Key="fresh";Alterverse.Combat.Health.Active.Add(health);
-  Invoke(sync,"OnState",0UL,new FastBufferReader(round,1,new Unity.Collections.FixedString128Bytes("fresh"),2f,0f,3f,0f,42f,5f,false,0));
+  Invoke(sync,"OnState",0UL,new FastBufferReader(round,1,new Unity.Collections.FixedString128Bytes("fresh"),2f,0f,3f,0f,42f,5f,false,1f,0));
   Check(health.Current==42&&health.Shield==5,"new entity in same frame is discovered and receives fresh HP/shield");
   int before=Alterverse.Combat.Health.Lookups;Time.frameCount++;
   Invoke(sync,"OnState",0UL,new FastBufferReader(round+1,0,0));

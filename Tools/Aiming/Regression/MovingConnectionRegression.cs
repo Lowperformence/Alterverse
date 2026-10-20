@@ -106,9 +106,9 @@ partial class Regression
    // A target's server position has advanced since the client's click; roster identity stays stable.
    enemy.transform.position+=Vector3.right;enemy.GetComponent<HeroLocomotion>().Velocity=Vector3.right*4;
    var truncated=new byte[packet.Length-1];Array.Copy(packet,truncated,truncated.Length);
-   manager.CustomMessagingManager.Handlers["DF_COOP_BASIC_V6"](1,new Unity.Netcode.FastBufferReader(truncated));
+   manager.CustomMessagingManager.Handlers["DF_COOP_BASIC_V7"](1,new Unity.Netcode.FastBufferReader(truncated));
    Near(actor.GetComponent<BasicAttack>().RemainingCooldown,0,"truncated basic command rejected before cooldown");
-   manager.CustomMessagingManager.Handlers["DF_COOP_BASIC_V6"](1,new Unity.Netcode.FastBufferReader(packet));
+   manager.CustomMessagingManager.Handlers["DF_COOP_BASIC_V7"](1,new Unity.Netcode.FastBufferReader(packet));
    Check(actor.GetComponent<BasicAttack>().RemainingCooldown>0,"host accepts automatic basic target identity");
    for(int i=0;i<Mathf.CeilToInt(.5f*fps);i++)WalkingStep(1f/fps,actor,Vector3.zero,enemy,Vector3.right*4);
    Near(Total(enemy),978,"host launch-time basic connects to moving intended body at "+fps+" FPS");

@@ -19,12 +19,12 @@ namespace Alterverse.Prototype
 namespace Alterverse.Multiplayer
 {
  public class CoopMatchResultSync {public static CoopMatchResultSync Instance;public bool ResultReady;}
- public static class MatchNetworkProtocol {public static bool Authorized(ulong id,string player)=>true;public static bool ReadRound(ref Unity.Netcode.FastBufferReader reader){reader.ReadValueSafe(out uint round);return round==CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan);}}
+ public static class MatchNetworkProtocol {public static bool Finite(float n)=>!float.IsNaN(n)&&!float.IsInfinity(n);public static bool Authorized(ulong id,string player)=>true;public static bool ReadRound(ref Unity.Netcode.FastBufferReader reader){reader.ReadValueSafe(out uint round);return round==CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan);}}
 }
 
 namespace Alterverse.Combat
 {
- public class HotZoneTank:MonoBehaviour {public static int Spawns;public static readonly System.Collections.Generic.List<HotZoneTank> Active=new();public Health TankHealth;public static bool Spawn(int team){Spawns++;return true;}}
+ public class HotZoneTank:MonoBehaviour {public static HotZoneTank EnsureNetworkReplica(string key)=>null;public static int Spawns;public static readonly System.Collections.Generic.List<HotZoneTank> Active=new();public Health TankHealth;public static bool Spawn(int team,int occurrence=-1){Spawns++;return true;}}
  public class LaneMinion:MonoBehaviour {public static readonly System.Collections.Generic.List<LaneMinion> Active=new();}
  public class DimensionPlanet:MonoBehaviour {public void ApplyNetworkAvailability(bool alive){}}
 }
@@ -49,7 +49,7 @@ namespace Alterverse.Multiplayer
  public sealed partial class CoopWorldEventSync:MonoBehaviour {Unity.Netcode.CustomMessagingManager messaging;}
  public class CoopWorldEntityKey:MonoBehaviour
  {
-  public string Key;public void Configure(){}public void ApplyTarget(Vector3 position,float yaw,bool immediate){transform.position=position;}
+  public string Key;public void Configure(){}public void ApplyTarget(Vector3 position,float yaw,bool immediate,float sampledAt=float.NaN){transform.position=position;}
   public void ApplyAlivePresentation(bool alive){}
  }
 }

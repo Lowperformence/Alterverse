@@ -16,8 +16,8 @@ namespace Alterverse.Multiplayer
     /// </summary>
     public sealed class CoopGameplayCommands : MonoBehaviour
     {
-        private const string BasicMessage="DF_COOP_BASIC_V6";
-        private const string AbilityMessage="DF_COOP_ABILITY_V6";
+        private const string BasicMessage="DF_COOP_BASIC_V7";
+        private const string AbilityMessage="DF_COOP_ABILITY_V7";
 
         private const int TargetNone=0;
         private const int TargetHero=1;
@@ -62,7 +62,7 @@ namespace Alterverse.Multiplayer
             int index=actor.GetComponent<CoopHeroSlot>().Slot;
             uint previous=processedCommands[index];
             if(sequence==0||(previous!=0&&unchecked((int)(sequence-previous))<=0))return false;
-            // A well-formed, authorized request is acknowledged even if gameplay rejects it.
+            // Authorized sequences are acknowledged even if their target or gameplay rejects them.
             processedCommands[index]=sequence;return true;
         }
         private int receivedCombat,authorizedCombat,acceptedCombat,damagingHits,humanDamagingHits;
@@ -159,7 +159,7 @@ namespace Alterverse.Multiplayer
             FixedString128Bytes id=new(heroSlot.PlayerId??"");
             EnsureCommandRound();
             uint sequence=unchecked(nextCommandSequence+1);if(sequence==0)sequence=1;
-            using FastBufferWriter writer=new(256,Allocator.Temp);
+            using FastBufferWriter writer=new(512,Allocator.Temp);
             writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(heroSlot.Slot);
             writer.WriteValueSafe(id);
@@ -182,6 +182,12 @@ namespace Alterverse.Multiplayer
                 writer.WriteValueSafe(targetHeroSlot);
                 writer.WriteValueSafe(targetTeam);
                 writer.WriteValueSafe(position.x);writer.WriteValueSafe(position.y);writer.WriteValueSafe(position.z);
+                if(kind!=TargetHero)
+                {
+                    CoopWorldEntityKey key=target.GetComponent<CoopWorldEntityKey>()??target.gameObject.AddComponent<CoopWorldEntityKey>();
+                    key.Configure();
+                    writer.WriteValueSafe(new FixedString128Bytes(key.Key));
+                }
             }
 
             string message=abilitySlot<0?BasicMessage:AbilityMessage;
@@ -221,9 +227,9 @@ namespace Alterverse.Multiplayer
             authorizedCombat++;
             if(!reader.TryBeginRead(sizeof(uint)))return;
             reader.ReadValueSafe(out uint sequence);
+            if(!ProcessCommand(actor,sequence))return;
             if(!TryReadTarget(actor,ref reader,out Health requestedTarget))return;
             if (!TryReadAim(ref reader, requestedTarget, out AimPose pose)) return;
-            if(!ProcessCommand(actor,sequence))return;
             if(actor.GetComponent<BasicAttack>()?.TryAttackNetworkAuthoritative(pose)==true)acceptedCombat++;
         }
 
@@ -234,11 +240,11 @@ namespace Alterverse.Multiplayer
             authorizedCombat++;
             if(!reader.TryBeginRead(sizeof(uint)))return;
             reader.ReadValueSafe(out uint sequence);
+            if(!ProcessCommand(actor,sequence))return;
             if(!TryReadTarget(actor,ref reader,out Health requestedTarget))return;
             if (!reader.TryBeginRead(sizeof(int))) return;
             reader.ReadValueSafe(out int slot);
             if (slot < 0 || slot > 3 || !TryReadAim(ref reader, requestedTarget, out AimPose pose)) return;
-            if(!ProcessCommand(actor,sequence))return;
             if(actor.GetComponent<PlayerHeroAbilities>()?.CastNetworkAuthoritative(slot, pose)==true)acceptedCombat++;
         }
 
@@ -272,8 +278,9 @@ namespace Alterverse.Multiplayer
             if(kind<TargetHero||kind>TargetOther||
                !MatchNetworkProtocol.Finite(x)||!MatchNetworkProtocol.Finite(y)||!MatchNetworkProtocol.Finite(z))return false;
 
-            if(kind==TargetHero&&heroSlot>=0&&heroSlot<MatchSession.MaxPlayers)
+            if(kind==TargetHero)
             {
+                if(heroSlot<0||heroSlot>=MatchSession.MaxPlayers)return false;
                 CoopHeroSlot[] heroes=FindObjectsByType<CoopHeroSlot>(FindObjectsInactive.Exclude);
                 for(int i=0;i<heroes.Length;i++)
                 {
@@ -281,24 +288,27 @@ namespace Alterverse.Multiplayer
                     if(slot==null||slot.Slot!=heroSlot)continue;
                     Health health=slot.GetComponent<Health>();
                     if(health!=null&&!health.IsDead&&health.isActiveAndEnabled)target=health;
-                    return true;
+                    return target!=null;
                 }
-                return true;
+                return false;
             }
 
-            Vector3 requestedPosition=new(x,y,z);
-            float bestSqr=float.MaxValue;
+            if(!reader.TryBeginRead(sizeof(ushort)))return false;
+            reader.ReadValueSafe(out FixedString128Bytes fixedKey);
+            string requestedKey=fixedKey.ToString();
+            if(string.IsNullOrEmpty(requestedKey))return false;
             var candidates=Health.Active;
             for(int i=0;i<candidates.Count;i++)
             {
                 Health candidate=candidates[i];
                 if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled)continue;
                 if(!MatchesTargetKind(candidate,kind,targetTeam))continue;
-                Vector3 delta=candidate.transform.position-requestedPosition;delta.y=0f;
-                float sqr=delta.sqrMagnitude;
-                if(sqr<bestSqr){bestSqr=sqr;target=candidate;}
+                CoopWorldEntityKey key=candidate.GetComponent<CoopWorldEntityKey>();
+                if(key==null||key.Key!=requestedKey)continue;
+                target=candidate;return true;
             }
-            return true;
+            // A missing/dead target rejects this intention; never substitute a nearby unit.
+            return false;
         }
 
         private static int TargetKind(Health target)

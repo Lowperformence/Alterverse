@@ -152,7 +152,7 @@ partial class Regression
    "ranged command sent "+hero+slot);
   CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;
   CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
-  manager.CustomMessagingManager.Handlers[slot<0?"DF_COOP_BASIC_V6":"DF_COOP_ABILITY_V6"](
+  manager.CustomMessagingManager.Handlers[slot<0?"DF_COOP_BASIC_V7":"DF_COOP_ABILITY_V7"](
    1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
   Run(1);
   Check(Total(weak)<200,"server chooses low-HP cone victim "+hero+slot);

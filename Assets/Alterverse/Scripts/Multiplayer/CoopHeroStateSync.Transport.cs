@@ -12,6 +12,7 @@ namespace Alterverse.Multiplayer
     public sealed partial class CoopHeroStateSync
     {
         private readonly OwnerPoseHistory ownerPoseHistory=new();
+        private readonly OwnerMovementBudget movementBudget=new();
         private readonly uint[] ownerAcknowledgements=new uint[MatchSession.MaxPlayers];
         private readonly Vector3[] acknowledgedPositions=new Vector3[MatchSession.MaxPlayers];
         private readonly Dictionary<ulong,uint> receivedOwnerSequences=new();
@@ -23,7 +24,7 @@ namespace Alterverse.Multiplayer
         {
             uint round=CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan);
             if(poseRoundReady&&poseRound==round)return;
-            ResetPoseTransport();senderOwners.Clear();senderLastPoseAt.Clear();
+            ResetPoseTransport();senderOwners.Clear();
             poseRound=round;poseRoundReady=true;
         }
 
@@ -31,6 +32,7 @@ namespace Alterverse.Multiplayer
         {
             poseRoundReady=false;
             ownerPoseHistory.Clear(true);
+            movementBudget.Clear();
             System.Array.Clear(ownerAcknowledgements,0,ownerAcknowledgements.Length);
             System.Array.Clear(acknowledgedPositions,0,acknowledgedPositions.Length);
             receivedOwnerSequences.Clear();
@@ -93,10 +95,12 @@ namespace Alterverse.Multiplayer
             receivedOwnerSequences[senderClientId]=ownerSequence;
             HeroLocomotion locomotion=actor.GetComponent<HeroLocomotion>();
             // Old owner poses must never undo a server dash/hook, including its final endpoint.
-            if(locomotion!=null&&(movementRevision!=locomotion.MovementRevision||locomotion.IsDashing||locomotion.IsForcedMoving))return;
+            if(locomotion!=null&&(movementRevision!=locomotion.MovementRevision||locomotion.IsDashing||locomotion.IsForcedMoving))
+            {movementBudget.Hold(senderClientId,Time.unscaledTime);return;}
             HeroCombatStatus combatStatus=actor.GetComponent<HeroCombatStatus>();
             if(combatStatus!=null&&(combatStatus.Rooted||combatStatus.Stunned))
             {
+                movementBudget.Hold(senderClientId,Time.unscaledTime);
                 ownerAcknowledgements[rosterSlot]=ownerSequence;
                 acknowledgedPositions[rosterSlot]=actor.transform.position;
                 return;
@@ -109,21 +113,17 @@ namespace Alterverse.Multiplayer
             locomotion?.SetRemoteRunVelocity(new Vector3(runX,0f,runZ));
             if(locomotion!=null&&locomotion.IsVortexPulled)
             {
+                movementBudget.Hold(senderClientId,Time.unscaledTime);
                 actor.transform.rotation=Quaternion.Euler(0,Mathf.Repeat(yaw,360f),0);
                 return;
             }
-
-            float now=Time.unscaledTime;
-            float dt=senderLastPoseAt.TryGetValue(senderClientId,out float previous)
-                ?Mathf.Clamp(now-previous,.015f,.25f):OwnerSendInterval*2f;
-            senderLastPoseAt[senderClientId]=now;
 
             HeroCombatProfile profile=actor.GetComponent<HeroCombatProfile>();
             PlanetBuffReceiver buff=actor.GetComponent<PlanetBuffReceiver>();
             float baseSpeed=profile!=null?profile.MoveSpeed:6.5f;
             float buffSpeed=buff!=null?buff.MoveSpeedMultiplier:1f;
             float statusSpeed=locomotion!=null?locomotion.SpeedMultiplier:HeroCombatStatus.Speed(actor.gameObject);
-            float allowed=Mathf.Max(MinimumMovementSlack,baseSpeed*buffSpeed*statusSpeed*dt*1.40f+MinimumMovementSlack);
+            float allowed=movementBudget.Limit(senderClientId,Time.unscaledTime,baseSpeed*buffSpeed*statusSpeed,delta.magnitude,MinimumMovementSlack);
             if(delta.magnitude>allowed)delta=delta.normalized*allowed;
 
             if(locomotion!=null)locomotion.Move(delta,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight);

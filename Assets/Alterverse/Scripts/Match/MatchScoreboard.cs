@@ -116,7 +116,22 @@ playerObjectives=telemetry?.Objectives??0;playerQuestKills=telemetry?.Kills??pla
 try{MatchRewardResult reward=MatchRewardService.GrantMatchReward(won,playerKills,playerAssists,playerObjectives,rewardId,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,deaths:playerDeaths);matchReward=reward.Shards;matchXp=reward.Xp;matchBaseReward=reward.BaseShards;matchShardBonus=reward.ShardBonus;matchBaseXp=reward.BaseXp;matchXpBonus=reward.XpBonus;matchBonusCosmetic=reward.BonusCosmetic;matchBonusPercent=reward.BonusPercent;matchItemDrop=won?BattleItemInventory.RollVictoryDrop(rewardId):BattleItemType.None;rewardGranted=true;}catch(System.Exception){rewardPending=true;nextRewardAttempt=Time.unscaledTime+2;if(!saveWarningShown){saveWarningShown=true;Debug.LogWarning("DIMENSIONS FRONT: reward save pending; retrying the same receipt.");}}
 }
 private void ApplyNetworkResultsToEntries(){foreach(Entry e in entries.Values){CoopHeroSlot slot=e.Member!=null?e.Member.GetComponent<CoopHeroSlot>():null;if(slot==null||!CoopMatchResultSync.TryGetSlotResult(slot.Slot,out CoopMatchResultSync.SlotResult s))continue;e.Kills=s.Kills;e.Deaths=s.Deaths;e.Assists=s.Assists;}}
-private float Performance(Entry e){MatchTelemetry.HeroStats s=MatchTelemetry.Instance?.GetStats(e.Health);return s!=null?s.MvpScore:e.Score;}private Entry Mvp(){Entry best=null;float bestScore=float.MinValue;foreach(Entry e in entries.Values){float score=Performance(e);if(best==null||score>bestScore){best=e;bestScore=score;}}return best;}
+private float Performance(Entry e)
+{
+    if(CoopAuthority.Active&&!CoopAuthority.LocalHasServerAuthority)
+    {
+        CoopHeroSlot slot=e.Health!=null?e.Health.GetComponent<CoopHeroSlot>():null;
+        if(slot!=null&&CoopMatchResultSync.TryGetSlotResult(slot.Slot,out CoopMatchResultSync.SlotResult result))
+            return PerformanceScore(result.Kills,result.Deaths,result.Assists,result.DamageDealt,result.DamageTaken,result.Healing,result.FrontContribution);
+        // Live clients receive authoritative K/D/A but no complete combat telemetry.
+        return e.Score;
+    }
+    MatchTelemetry.HeroStats stats=MatchTelemetry.Instance?.GetStats(e.Health);
+    return stats!=null?PerformanceScore(e.Kills,e.Deaths,e.Assists,stats.DamageDealt,stats.DamageTaken,stats.Healing,stats.FrontContribution):e.Score;
+}
+private static float PerformanceScore(int kills,int deaths,int assists,float damageDealt,float damageTaken,float healing,float contribution)
+    =>kills*110+assists*65-deaths*25+damageDealt*.055f+damageTaken*.025f+healing*.065f+contribution*38f;
+private Entry Mvp(){Entry best=null;float bestScore=float.MinValue;foreach(Entry e in entries.Values){float score=Performance(e);if(best==null||score>bestScore){best=e;bestScore=score;}}return best;}
 private float HudScale=>Mathf.Max(.1f,Mathf.Min(Screen.safeArea.height/720f,Screen.safeArea.width/960f));
 private float HudWidth=>Screen.safeArea.width/HudScale;private float HudHeight=>Screen.safeArea.height/HudScale;
 private void OnGUI(){if(MainMenuController.IsVisible)return;Matrix4x4 matrix=GUI.matrix;Color color=GUI.color;bool enabled=GUI.enabled;try{Rect safe=Screen.safeArea;GUI.matrix=Matrix4x4.TRS(new Vector3(safe.x,Screen.height-safe.yMax,0),Quaternion.identity,Vector3.one*(matchEnded?MatchResultLayout.Scale(safe):HudScale));DrawHud();}finally{GUI.matrix=matrix;GUI.color=color;GUI.enabled=enabled;}}

@@ -11,8 +11,6 @@ namespace Alterverse.Visuals
 }
 namespace Alterverse.Multiplayer
 {
-    public sealed class CoopWorldEntityKey:MonoBehaviour
-    {public string Key;public void Configure(){Key??=gameObject.name;}}
     public sealed partial class CoopHeroStateSync:MonoBehaviour
     {
         private static CoopHeroStateSync audioRelay;

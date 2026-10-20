@@ -27,9 +27,37 @@ partial class Regression
   SivraVectorShiftPassive();
   TimmyCases();TimmyVfxCases();IndependentConeDirection();EndedOnlyReverseDirection();CapturedPointNetwork();
   SupportTargeting();SelfShieldPreviews();
+  NetworkNonHeroIdentity();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   Console.WriteLine("PASS "+checks+" skill-entry and existing combat assertions. Deterministic engine fixtures; no native Unity/Android/latency test.");
+ }
+
+ static void NetworkNonHeroIdentity()
+ {
+  foreach(bool killTarget in new[]{false,true})
+  {
+   Reset();var actor=Hero(HeroId.Nyra,0,Vector3.zero);actor.AddComponent<CoopHeroSlot>().Slot=1;
+   var intended=new GameObject("intended");intended.transform.position=Vector3.forward*5;
+   intended.AddComponent<LaneMinion>().Team=1;var intendedHealth=intended.AddComponent<Health>();
+   var nearby=new GameObject("nearby");nearby.transform.position=Vector3.forward*5.05f;
+   nearby.AddComponent<LaneMinion>().Team=1;var nearbyHealth=nearby.AddComponent<Health>();
+   var service=new GameObject("commands").AddComponent<CoopGameplayCommands>();
+   var manager=new Unity.Netcode.NetworkManager{IsListening=true,IsConnectedClient=true,IsServer=false};Unity.Netcode.NetworkManager.Singleton=manager;
+   CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");
+   Check(CoopGameplayCommands.TrySendBasic(actor,new AimPose(Vector3.forward,intended.transform.position,intendedHealth,true)),"Stable nonhero target is serialized");
+   var packet=manager.CustomMessagingManager.LastPacket;
+   Check(intended.GetComponent<CoopWorldEntityKey>()?.Key=="intended","Sender assigns a stable world identity before the command");
+   // Put the intended unit on a different firing line so ordinary cone overlap
+   // cannot be mistaken for the server selecting a different target.
+   intended.transform.position=Vector3.forward*-5.8f;
+   if(killTarget)intendedHealth.TakeDamage(2000);
+   CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
+   manager.CustomMessagingManager.Handlers["DF_COOP_BASIC_V7"](1,new Unity.Netcode.FastBufferReader(packet));Run(.7f);
+   Near(nearbyHealth.Current,1000,"A command cannot substitute a nearby nonhero for its selected target");
+   if(!killTarget)Check(intendedHealth.Current<1000,"Host executes the serialized identity after the intended unit moves");
+   Check(CoopGameplayCommands.ProcessedCommand(1)>0,"Even a vanished target releases the owner's pending command acknowledgement");
+  }
  }
 
  static void SivraVectorShiftPassive()
@@ -245,7 +273,7 @@ partial class Regression
   CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");
   Check(CoopGameplayCommands.TrySendAbility(a,3,pose),"empty Scratch packet sent");
   CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
-  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V7"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
   for(int frame=0;frame<Mathf.CeilToInt(3f*fps);frame++)Step(1f/fps,()=>{if(Time.time>.1f)b.transform.position=Vector3.forward*4.5f;});
   Near(Total(b),1000-TimmyBalance.ScratchDamage,"host resolves late entry after empty V5 cast at "+fps);
  }
@@ -302,7 +330,7 @@ partial class Regression
    CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");
    Check(CoopGameplayCommands.TrySendAbility(a,slot,pose),"empty V5 directed cast sent");
    CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
-   manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
+   manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V7"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
    for(int frame=0;frame<fps;frame++)Step(1f/fps,()=>b.transform.position=Angle(16,4));
    Near(1000-Total(b),a.GetComponent<HeroAbilityKit>().Spec(slot).Power,"host captures late cone entrant before beam/projectile launch at "+fps);
   }

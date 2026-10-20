@@ -288,6 +288,9 @@ namespace Alterverse.Combat
         public void Heal(float amount) => Heal(amount, true);
 
         public void Heal(float amount, bool playAudio)
+            => Heal(amount, playAudio, null);
+
+        public void Heal(float amount, bool playAudio, GameObject source)
         {
             if (!Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState || IsDead || amount <= 0)
                 return;
@@ -296,7 +299,8 @@ namespace Alterverse.Combat
             Current = Mathf.Min(maxHealth, Current + amount);
             if (applied > 0)
             {
-                MatchTelemetry.Instance?.RecordHealing(this, applied);
+                Health healer = source != null ? source.GetComponentInParent<Health>() : this;
+                MatchTelemetry.Instance?.RecordHealing(healer, applied);
                 if (playAudio)
                     Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Heal, transform.position, .18f);
             }

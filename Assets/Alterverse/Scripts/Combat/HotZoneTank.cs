@@ -399,8 +399,7 @@ namespace Alterverse.Combat
             if(kryonBear)bearAttackKick=1f;
             Health victim=shotTarget;shotTarget=null;
             if(victim==null||victim.IsDead)return;
-            TeamMember victimTeam=victim.GetComponent<TeamMember>();
-            if(victimTeam==null||victimTeam.Team==team)return;
+            if(!TeamSupportGroup.IsEnemyCombatUnit(victim,team))return;
             Vector3 delta=victim.transform.position-transform.position;delta.y=0;
             if(delta.sqrMagnitude>(AttackRange+.75f)*(AttackRange+.75f))return;
 

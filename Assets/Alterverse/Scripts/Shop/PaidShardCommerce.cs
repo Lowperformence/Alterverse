@@ -30,7 +30,7 @@ namespace Alterverse.Shop
         public static PaidShardCommerce Instance { get; private set; }
         public static event Action EntitlementsChanged;
         public static int Balance => Instance != null && Instance.Ready ? Instance.snapshot.balance : 0;
-        public static bool Spending => Instance != null && (Instance.spending || Instance.socialSpending || !string.IsNullOrEmpty(Instance.AccountHash) && PlayerPrefs.HasKey(Instance.OperationKey));
+        public static bool Spending => Instance != null && (Instance.spending || Instance.socialSpending || Instance.fulfilling || !string.IsNullOrEmpty(Instance.AccountHash) && PlayerPrefs.HasKey(Instance.OperationKey));
         public bool Ready => ready && !string.IsNullOrEmpty(ReadCredential());
         public bool PurchasesReady => Ready && snapshot.billingReady;
         // Revision survives spending the entire balance; switching must not strand paid history.
@@ -42,7 +42,7 @@ namespace Alterverse.Shop
         readonly HashSet<TaskCompletionSource<bool>> pending = new();
         string endpoint;
         Func<string> token;
-        bool ready,saving,spending,refreshing,socialSpending;
+        bool ready,saving,spending,refreshing,socialSpending,fulfilling;
         int generation;
         long lastResponseCode;
         string settledOperation; bool operationSucceeded;
@@ -61,7 +61,7 @@ namespace Alterverse.Shop
             c.snapshot = new Snapshot(); c.nextSave = 0; c.nextRefresh = Time.unscaledTime + 30;
             c.StartCoroutine(c.Sync()); EntitlementsChanged?.Invoke(); return c;
         }
-        public void Refresh() { if (token != null && !refreshing && !spending && !saving && !socialSpending) StartCoroutine(Sync()); }
+        public void Refresh() { if (token != null && !refreshing && !spending && !saving && !socialSpending && !fulfilling) StartCoroutine(Sync()); }
         public static void Disconnect()
         {
             if (Instance == null) return;
@@ -71,7 +71,7 @@ namespace Alterverse.Shop
         }
         void CancelPending()
         {
-            StopAllCoroutines(); saving = spending = refreshing = socialSpending = false;
+            StopAllCoroutines(); saving = spending = refreshing = socialSpending = fulfilling = false;
             var tasks = new List<TaskCompletionSource<bool>>(pending); pending.Clear();
             foreach (var task in tasks) task.TrySetResult(false);
         }
@@ -82,7 +82,7 @@ namespace Alterverse.Shop
         }
         void Update()
         {
-            if (token == null || saving || spending || refreshing || socialSpending) return;
+            if (token == null || saving || spending || refreshing || socialSpending || fulfilling) return;
             if (!Ready)
             {
                 if (Time.unscaledTime >= nextRefresh) { nextRefresh = Time.unscaledTime + 15; Refresh(); }
@@ -121,7 +121,7 @@ namespace Alterverse.Shop
         {
             if (!Ready || !AccountProfilePrefs.Attached) { done?.Invoke(false); yield break; }
             // Unity coroutines execute on the main thread: serialize every profile request.
-            while (saving || socialSpending) yield return null;
+            while (saving || socialSpending || fulfilling) yield return null;
             if (!AccountProfilePrefs.Dirty) { done?.Invoke(true); yield break; }
             saving = true;
             var submitted = AccountProfilePrefs.Capture();
@@ -161,16 +161,27 @@ namespace Alterverse.Shop
         }
         IEnumerator FulfillPurchase(string product,string purchaseToken,TaskCompletionSource<bool> task)
         {
-            while(socialSpending)yield return null;
-            Response response = null;
-            yield return Send("/google-play/fulfill",new Request { productId = product,purchaseToken = purchaseToken },r => response = r);
-            bool ok = response?.wallet != null;
-            if (ok) { ApplyWallet(response.wallet); Status = "Shards added. Account balance saved on server."; }
-            pending.Remove(task); task.TrySetResult(ok);
+            // Serialize verification with all other account mutations. A late fulfillment
+            // response must not overwrite a newer purchase wallet or another request's status.
+            while(socialSpending||saving||spending||refreshing||fulfilling)yield return null;
+            fulfilling=true;
+            bool ok=false;
+            try
+            {
+                Response response = null;
+                yield return Send("/google-play/fulfill",new Request { productId = product,purchaseToken = purchaseToken },r => response = r);
+                ok = response?.wallet != null;
+                if (ok) { ApplyWallet(response.wallet); Status = "Shards added. Account balance saved on server."; }
+            }
+            finally
+            {
+                fulfilling=false;
+                pending.Remove(task); task.TrySetResult(ok);
+            }
         }
         public bool TryBeginSocialSpend()
         {
-            if(!Ready||AccountServerBootstrap.Instance?.Busy==true||saving||spending||refreshing||socialSpending||PlayerPrefs.HasKey(OperationKey))return false;
+            if(!Ready||AccountServerBootstrap.Instance?.Busy==true||saving||spending||refreshing||socialSpending||fulfilling||PlayerPrefs.HasKey(OperationKey))return false;
             socialSpending=true;return true;
         }
         public void EndSocialSpend(int session,Snapshot value,AccountProfilePrefs.Entry[] submitted)
@@ -187,7 +198,7 @@ namespace Alterverse.Shop
         }
         public bool BeginPurchase(string sku)
         {
-            if (!Ready || AccountServerBootstrap.Instance?.Busy==true || spending || saving || refreshing || socialSpending || string.IsNullOrEmpty(sku) || PlayerPrefs.HasKey(OperationKey)) return false;
+            if (!Ready || AccountServerBootstrap.Instance?.Busy==true || spending || saving || refreshing || socialSpending || fulfilling || string.IsNullOrEmpty(sku) || PlayerPrefs.HasKey(OperationKey)) return false;
             // Persist the id before making the request. A restart retries the same operation,
             // including consumable purchases, rather than issuing a second debit.
             PlayerPrefs.SetString(OperationKey,JsonUtility.ToJson(new PurchaseOperation { id = Guid.NewGuid().ToString("N"),sku = sku }));
@@ -284,7 +295,7 @@ namespace Alterverse.Shop
         void OnApplicationPause(bool paused)
         {
             AccountProfilePrefs.Save();
-            if (paused && Ready && !saving && !spending && !refreshing && !socialSpending) StartCoroutine(SaveProfile(null));
+            if (paused && Ready && !saving && !spending && !refreshing && !socialSpending && !fulfilling) StartCoroutine(SaveProfile(null));
             if (!paused) Refresh();
         }
         void OnDestroy()
