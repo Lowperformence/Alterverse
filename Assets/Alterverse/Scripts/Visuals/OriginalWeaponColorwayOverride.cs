@@ -8,7 +8,7 @@ namespace Alterverse.Visuals
 {
     /// <summary>
     /// Weapon-shop variants are colorways of each hero's authored standard weapon only.
-    /// A translucent energy layer shares the original mesh; the original materials remain visible.
+    /// A translucent metallic finish and fluorescent runes share the original mesh.
     /// </summary>
     [DefaultExecutionOrder(5000)]
     internal sealed class OriginalWeaponColorwayOverride : MonoBehaviour
@@ -196,14 +196,18 @@ namespace Alterverse.Visuals
                     submeshes=filter.sharedMesh.subMeshCount;
                 }
                 else { Destroy(layer);continue; }
-                var material=new Material(shader) { name="DF_TransparentColorway_"+hero+"_"+variant };
+                var material=new Material(shader) { name="DF_PremiumColorway_"+hero+"_"+variant };
                 Color glow=item.Glow;
-                glow.a=.5f;
+                // Leave the authored texture visible between the brighter inset runes.
+                glow.a=.24f;
                 material.SetColor("_GlowColor",glow);
-                material.SetFloat("_RimOpacity",.5f);
+                material.SetColor("_MetalColor",new Color(.16f+glow.r*.12f,.18f+glow.g*.12f,.21f+glow.b*.12f));
+                material.SetFloat("_Metallic",.88f);
+                material.SetFloat("_Smoothness",.72f);
+                material.SetFloat("_RimOpacity",.55f);
                 material.SetFloat("_PatternStyle",PatternStyle(hero));
                 material.SetFloat("_PatternOffset",variant*.37f);
-                material.SetFloat("_PatternStrength",.78f);
+                material.SetFloat("_PatternStrength",1f);
                 var slots=new Material[submeshes];
                 Material inscription=null;
                 for(int i=0;i<slots.Length;i++)
@@ -223,8 +227,9 @@ namespace Alterverse.Visuals
                 overlay.sharedMaterials=slots;
                 overlay.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
                 overlay.receiveShadows=false;
-                overlay.lightProbeUsage=UnityEngine.Rendering.LightProbeUsage.Off;
-                overlay.reflectionProbeUsage=UnityEngine.Rendering.ReflectionProbeUsage.Off;
+                overlay.lightProbeUsage=source.lightProbeUsage;
+                overlay.reflectionProbeUsage=source.reflectionProbeUsage;
+                overlay.probeAnchor=source.probeAnchor;
                 overlay.enabled=source.enabled;
                 state.Overlay=overlay;
                 state.Styled=inscription!=null?new[]{material,inscription}:new[]{material};
@@ -251,6 +256,9 @@ namespace Alterverse.Visuals
             var coordinates=new List<Vector3>(vertices.Length);
             foreach(Vector3 vertex in vertices)coordinates.Add((vertex-bounds.center)/scale);
             mesh.SetUVs(2,coordinates);
+            // Rest normals keep projection stable when the weapon turns or bends.
+            Vector3[] normals=source.normals;
+            if(normals.Length==vertices.Length)mesh.SetUVs(3,new List<Vector3>(normals));
             return mesh;
         }
 
@@ -303,5 +311,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 

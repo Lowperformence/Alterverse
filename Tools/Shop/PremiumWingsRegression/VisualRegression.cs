@@ -45,6 +45,32 @@ class VisualRegression
    Call(p,"OnDestroy");
    Check(meshes.All(m=>m.Destroyed)&&materials.All(m=>m.Destroyed),"runtime meshes and materials released");
   }
-  Console.WriteLine("PASS "+checks+" production wing construction/index/material/cycle/cleanup assertions for all ten heroes, game and preview. GPU/native transforms remain fixtures.");
+  foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))foreach(bool preview in new[]{false,true})
+  {
+   var owner=new GameObject();var visual=new GameObject();var p=owner.AddComponent<VoidWingPresentation>();
+   p.BuildDeluxe(visual.transform,preview,hero);
+   Check(visual.transform.Children.Count==2,"Deluxe paired wings");
+   var renderers=visual.transform.Children.Select(t=>t.gameObject.GetComponent<MeshRenderer>()).ToArray();
+   var materials=renderers.SelectMany(r=>r.sharedMaterials).Distinct().ToArray();
+   Check(materials.Length==3,"Deluxe shared silver, crystal and white energy materials");
+   var energy=materials.Single(m=>m.name=="DF_DeluxeWhiteFractures");
+   Check(energy.shader.name==RuntimeShaderLibrary.Unlit.name,"Deluxe white elements are independent of scene light");
+   var white=energy.Colors["_BaseColor"];
+   Check(white.r==1&&white.g==1&&white.b==1,"Deluxe base is neutral white rather than cyan");
+   var mesh=visual.transform.Children[0].gameObject.GetComponent<MeshFilter>().sharedMesh;
+   Check(mesh.Triangles[2].Length>0&&mesh.Triangles[0].Length>0&&mesh.Triangles[1].Length>0,"white elements coexist with both non-emissive surfaces");
+   foreach(float time in new[]{0f,.7f,3f,6f})
+   {
+    Time.time=Time.unscaledTime=time;Call(p,"LateUpdate");
+    var emission=energy.Colors["_EmissionColor"];
+    Check(emission.r>1&&emission.r==emission.g&&emission.g==emission.b,"animated emission stays luminous neutral white");
+   }
+   p.BuildDeluxe(visual.transform,preview,hero);
+   Check(visual.transform.Children.Count==2,"Deluxe rebuild cannot duplicate wings");
+   Call(p,"OnDestroy");
+   Check(mesh.Destroyed&&materials.All(m=>m.Destroyed),"Deluxe resources released");
+  }
+  Console.WriteLine("PASS "+checks+" production wing construction/index/material/cycle/cleanup assertions for all ten heroes, game and preview, including white Deluxe emission. GPU/native transforms remain fixtures.");
  }
 }
+

@@ -144,21 +144,22 @@ namespace Alterverse.Visuals
         public void BuildDeluxe(Transform visual,bool isPreview,HeroId hero)
         {
             if(mesh!=null)return;preview=isPreview;deluxe=true;betaSupporter=false;plague=false;
-            Shader surface=WingCoreShader(),energy=WingEnergyShader();if(surface==null||energy==null)return;
+            // Keep white elements luminous on desktop previews and Android alike.
+            Shader surface=WingCoreShader(),energy=RuntimeShaderLibrary.Unlit;if(surface==null||energy==null)return;
             core=CreateWingMaterial(surface,"DF_DeluxeSilver",new Color(.16f,.21f,.26f));
             facet=CreateWingMaterial(surface,"DF_DeluxePolishedCrystal",new Color(.92f,.97f,1f));
-            edge=CreateWingMaterial(energy,"DF_DeluxeIceFractures",new Color(.25f,.88f,1f));
+            edge=CreateWingMaterial(energy,"DF_DeluxeWhiteFractures",Color.white);
             foreach(Material material in new[]{core,facet})
             {
                 if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",.82f);
                 if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",.86f);
             }
-            energyColor=new Color(.30f,.90f,1f);
+            energyColor=Color.white;
             edge.EnableKeyword("_EMISSION");edge.SetColor("_EmissionColor",energyColor*1.25f);
             var vertices=new System.Collections.Generic.List<Vector3>();
             var triangles=new[]{new System.Collections.Generic.List<int>(),new System.Collections.Generic.List<int>(),new System.Collections.Generic.List<int>()};
             // Layered, closed crystal feathers: raised silver ridges, dark recesses and
-            // sparse icy facets. The swept crown and long tapered tips follow the reference.
+            // sparse fluorescent white facets. The swept crown and long tapered tips follow the reference.
             int crystal=0;
             for(int row=0;row<3;row++)for(int column=0;column<7;column++)
             {
@@ -320,4 +321,5 @@ namespace Alterverse.Visuals
         void OnDestroy(){if(mountMesh!=null)Destroy(mountMesh);if(mesh!=null)Destroy(mesh);if(core!=null)Destroy(core);if(edge!=null)Destroy(edge);if(facet!=null)Destroy(facet);}
     }
 }
+
 
