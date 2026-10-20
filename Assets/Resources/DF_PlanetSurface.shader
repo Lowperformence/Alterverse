@@ -167,12 +167,34 @@ Shader "Alterverse/PlanetSurface"
                     data.a=lerp(data.a,.5h,quiet*.6h);
                 }
                 // A separate Blender-authored geological layer reads at the gameplay camera distance.
+                // Its vertical projections keep cliff faces from stretching into flat XZ stripes.
                 float2 geologyUV=p.xz*_MacroScale+.07*sin(p.zx*.09);
                 half4 geology=SAMPLE_TEXTURE2D(_MacroData,sampler_MacroData,geologyUV);
+                if(_SurfaceMode>1.5h)
+                {
+                    half3 geoWeights=pow(abs(n),4.0h);
+                    geoWeights/=max(dot(geoWeights,half3(1,1,1)),.001h);
+                    half4 geoX=SAMPLE_TEXTURE2D(_MacroData,sampler_MacroData,p.zy*_MacroScale+.07*sin(p.yz*.09));
+                    half4 geoZ=SAMPLE_TEXTURE2D(_MacroData,sampler_MacroData,p.xy*_MacroScale+.07*sin(p.yx*.09));
+                    geology=geoX*geoWeights.x+geology*geoWeights.y+geoZ*geoWeights.z;
+                }
                 half quietGeology=1-smoothstep(7.0,17.0,length(p.xz));
                 half geologicalContrast=_MacroStrength*lerp(1.0h,.45h,quietGeology);
                 albedo*=1+(geology.r-.5h)*geologicalContrast;
                 data.b=lerp(data.b,geology.b,.35h);
+                // Derive broad relief from the existing filtered geological height, without
+                // extra height taps. Screen-space derivatives reconstruct its tangent gradient;
+                // float precision and a bounded magnitude keep grazing/degenerate triangles safe.
+                float3 dpdx=ddx(p),dpdy=ddy(p);
+                float3 tangentX=cross(dpdy,n),tangentY=cross(n,dpdx);
+                float determinant=dot(dpdx,tangentX);
+                float geoHeight=geology.r*.7+geology.a*.3;
+                float inverseDeterminant=(determinant<0?-1.0:1.0)/max(abs(determinant),.00001);
+                float3 geoGradient=(ddx(geoHeight)*tangentX+ddy(geoHeight)*tangentY)*inverseDeterminant;
+                geoGradient*=min(1.0,.28/max(length(geoGradient),.0001));
+                half geoVisibility=DFMicroVisibility(p,_MacroScale);
+                half broadRelief=geologicalContrast*lerp(.65h,1.35h,saturate(_SurfaceMode*.5h));
+                gradient+=geoGradient*(broadRelief*geoVisibility);
                 half fineVisibility=DFMicroVisibility(p,_FineScale);
                 float3 fineDx=ddx(p)*_FineScale,fineDy=ddy(p)*_FineScale;
                 if(_FineRelief>0 && fineVisibility>0)
@@ -197,7 +219,10 @@ Shader "Alterverse/PlanetSurface"
                 // Broad combat courts retain quiet detail; peripheral fissures receive deeper contact shading.
                 half cavityWeight=_CavityStrength*lerp(1.0h,.45h,quietGeology);
                 half cavity=lerp(1.0h,lerp(.70h,1.0h,saturate(data.a*2))*lerp(.80h,1.0h,geology.g),cavityWeight);
-                half roughness=clamp(data.b+_RoughnessBias,.03h,.97h);
+                // Recessed mineral seams are slightly rougher than exposed crests. Authored
+                // roughness still dominates, preserving the difference between ice and basalt.
+                half seam=saturate((.5h-data.a)*2);
+                half roughness=clamp(data.b+_RoughnessBias+seam*.065h,.03h,.97h);
                 half smooth=saturate(lerp(_Smoothness,1-roughness,.58h));
                 half3 rgb=DFSurfaceLighting(p,n,albedo,_Metallic,smooth,cavity,_EmissionColor.rgb,i.positionCS);
                 return half4(MixFog(rgb,i.fog),1);
@@ -264,5 +289,6 @@ Shader "Alterverse/PlanetSurface"
     }
     Fallback Off
 }
+
 
 

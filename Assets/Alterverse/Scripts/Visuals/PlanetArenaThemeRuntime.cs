@@ -14,6 +14,8 @@ namespace Alterverse.Visuals
     public sealed class PlanetArenaThemeRuntime : MonoBehaviour
     {
         readonly List<Material> ownedMaterials=new();
+        readonly List<Mesh> ownedMeshes=new();
+        Mesh fracturedBasalt,basaltSpire,coralBranch;
         Transform detailRoot;
         ArenaVariant builtFor=(ArenaVariant)(-1);
         float nextBossScan;
@@ -37,7 +39,7 @@ namespace Alterverse.Visuals
 
             if(world==null)
             {
-                if(detailRoot==null&&ownedMaterials.Count>0)ReleaseMaterials();
+                if(detailRoot==null&&(ownedMaterials.Count>0||ownedMeshes.Count>0))ReleaseResources();
                 builtFor=(ArenaVariant)(-1);
                 failedThemeWorld=null;
                 failedThemeVariant=(ArenaVariant)(-1);
@@ -100,6 +102,8 @@ namespace Alterverse.Visuals
 
         void BuildPyraxis()
         {
+            fracturedBasalt=Own(FracturedUnitRock(173));
+            basaltSpire=Own(FracturedUnitRock(211));
             Material basalt=MakeMaterial("DF_Pyraxis_Basalt",new Color(.035f,.024f,.021f,1f),.10f,.18f);
             Material basaltEdge=MakeMaterial("DF_Pyraxis_BasaltEdge",new Color(.10f,.045f,.018f,1f),.05f,.22f);
             Material lava=MakeMaterial("DF_Pyraxis_Lava",new Color(1f,.23f,.012f,1f),0f,.45f,true,3.3f);
@@ -109,11 +113,11 @@ namespace Alterverse.Visuals
             for(int i=0;i<vents.Length;i++)
             {
                 Vector3 p=Surface(vents[i].x,vents[i].z,0f);
-                Primitive(PrimitiveType.Sphere,"BasaltMass",detailRoot,p+Vector3.up*.55f,
+                MeshPart(fracturedBasalt,"BasaltMass",detailRoot,p+Vector3.up*.55f,
                     new Vector3(2.2f,1.05f,1.65f),Quaternion.Euler(0,i*37f,0),basalt);
                 Primitive(PrimitiveType.Cylinder,"LavaVent",detailRoot,p+Vector3.up*.88f,
                     new Vector3(.70f,.055f,.70f),Quaternion.identity,i%2==0?hotLava:lava);
-                Primitive(PrimitiveType.Cube,"BasaltSpire",detailRoot,p+new Vector3((i%2==0?1.6f:-1.6f),1.35f,.35f),
+                MeshPart(basaltSpire,"BasaltSpire",detailRoot,p+new Vector3((i%2==0?1.6f:-1.6f),1.35f,.35f),
                     new Vector3(.55f,2.6f,.70f),Quaternion.Euler(10f,i*53f,8f),basaltEdge);
             }
 
@@ -128,6 +132,10 @@ namespace Alterverse.Visuals
 
         void BuildNeptune()
         {
+            // Reuse one tapered, capped branch mesh across the entire coral field.
+            // The old capsules read as smooth plastic tubes from the overhead camera.
+            coralBranch=Own(SceneryMeshQuality.SoftProfile("DF_AbyssCoralBranch",10,new[]{
+                new Vector2(.53f,0f),new Vector2(.43f,.34f),new Vector2(.31f,.78f),new Vector2(.08f,1f)}));
             Material abyss=MakeMaterial("DF_Neptune_Abyss",new Color(.006f,.018f,.065f,1f),.08f,.35f);
             Material coral=MakeMaterial("DF_Neptune_Coral",new Color(.025f,.10f,.34f,1f),.05f,.42f);
             Material bio=MakeMaterial("DF_Neptune_Biolume",new Color(.025f,.52f,1f,1f),0f,.62f,true,2.8f);
@@ -155,9 +163,12 @@ namespace Alterverse.Visuals
                 {
                     float side=(b-1)*.65f;
                     float h=1.7f+b*.55f;
-                    Primitive(PrimitiveType.Capsule,"CoralBranch",cluster,new Vector3(side,h*.55f,(b%2)*.35f),
-                        new Vector3(.30f,h*.52f,.30f),Quaternion.Euler((b-1)*12f,20f+b*41f,(b-1)*14f),b==1?coral:abyss);
-                    Primitive(PrimitiveType.Sphere,"BioTip",cluster,new Vector3(side,h+0.05f,(b%2)*.35f),
+                    Vector3 foot=new(side,.10f,(b%2)*.35f);
+                    Quaternion bend=Quaternion.Euler((b-1)*12f,20f+b*41f,(b-1)*14f);
+                    MeshPart(coralBranch,"CoralBranch",cluster,foot,
+                        new Vector3(.30f,h,.30f),bend,b==1?coral:abyss);
+                    // The luminous polyp follows the tilted branch endpoint, not world up.
+                    Primitive(PrimitiveType.Sphere,"BioTip",cluster,foot+bend*(Vector3.up*h),
                         new Vector3(.25f,.25f,.25f),Quaternion.identity,bio);
                 }
             }
@@ -194,7 +205,7 @@ namespace Alterverse.Visuals
         {
             Material material=RuntimeShaderLibrary.Create(color,false,metallic,smoothness,
                 emission?color*emissionPower:Color.black);
-            if(material==null)return null;
+            if(material==null)throw new System.InvalidOperationException("Arena decoration material unavailable: "+name);
             material.name=name;
             if(name=="DF_Earth_Water")PlanetWaterMaterials.Apply(material);
             else if(!emission)
@@ -224,17 +235,51 @@ namespace Alterverse.Visuals
             return go;
         }
 
+        // Existing transforms were sized for unit Unity primitives. Normalize fractured
+        // rock geometry to the same bounds so decoration never expands into a combat lane.
+        static Mesh FracturedUnitRock(int seed)
+        {
+            Mesh mesh=LunarFragmentGeometry.Create(seed);
+            Bounds bounds=mesh.bounds;
+            Vector3[] vertices=mesh.vertices;
+            for(int i=0;i<vertices.Length;i++)
+            {
+                Vector3 p=vertices[i]-bounds.center;
+                vertices[i]=new Vector3(p.x/bounds.size.x,p.y/bounds.size.y,p.z/bounds.size.z);
+            }
+            mesh.vertices=vertices;
+            mesh.RecalculateNormals();mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        Mesh Own(Mesh mesh){ownedMeshes.Add(mesh);return mesh;}
+
+        GameObject MeshPart(Mesh mesh,string name,Transform parent,Vector3 position,Vector3 scale,Quaternion rotation,Material material)
+        {
+            GameObject go=new(name);
+            go.transform.SetParent(parent,false);
+            go.transform.localPosition=position;go.transform.localRotation=rotation;go.transform.localScale=scale;
+            go.AddComponent<MeshFilter>().sharedMesh=mesh;
+            MeshRenderer renderer=go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial=material;
+            clearance.RemoveIfBlocked(go);
+            return go;
+        }
+
         void ClearTheme()
         {
             if(detailRoot!=null)Object.Destroy(detailRoot.gameObject);
             detailRoot=null;
-            ReleaseMaterials();
+            ReleaseResources();
         }
 
-        void ReleaseMaterials()
+        void ReleaseResources()
         {
             for(int i=0;i<ownedMaterials.Count;i++)if(ownedMaterials[i]!=null)Object.Destroy(ownedMaterials[i]);
             ownedMaterials.Clear();
+            for(int i=0;i<ownedMeshes.Count;i++)if(ownedMeshes[i]!=null)Object.Destroy(ownedMeshes[i]);
+            ownedMeshes.Clear();
+            fracturedBasalt=null;basaltSpire=null;coralBranch=null;
         }
 
         void OnDestroy()=>ClearTheme();
@@ -435,3 +480,4 @@ namespace Alterverse.Visuals
         void OnDestroy()=>HotZoneCreatureVisualFactory.Release(ownedMaterials);
     }
 }
+

@@ -116,9 +116,14 @@ Shader "Alterverse/ScenerySurface"
                 }
                 n=normalize(n-(gradient-n*dot(n,gradient)));
                 albedo*=1+(detail.a-.5h)*_ValueContrast;
-                half roughness=clamp(detail.b+_RoughnessBias,.03h,.97h);
+                // Correlate the finish with recesses instead of adding an unrelated gloss
+                // layer. Metal plates, bark and wet stone retain their authored roughness.
+                half recess=saturate((.5h-detail.a)*2);
+                half roughness=clamp(detail.b+_RoughnessBias+recess*(.08h*_RoughnessWeight),.03h,.97h);
                 half smooth=saturate(lerp(_Smoothness,1-roughness,_RoughnessWeight));
-                half cavity=lerp(.88h,1.0h,saturate(detail.a*2));
+                // Deeper contact response follows actual texture relief. Leaf transmission
+                // and sheen stay independent, with no extra texture sample or light.
+                half cavity=1-recess*lerp(.12h,.25h,saturate(_Relief));
                 half3 rgb=DFSurfaceLighting(input.positionWS,n,albedo,_Metallic,smooth,cavity,_EmissionColor.rgb,input.positionCS);
                 half rim=pow(1-saturate(dot(n,GetWorldSpaceNormalizeViewDir(input.positionWS))),4);
                 rgb+=albedo*rim*_Sheen;
@@ -181,3 +186,4 @@ Shader "Alterverse/ScenerySurface"
     }
     Fallback Off
 }
+

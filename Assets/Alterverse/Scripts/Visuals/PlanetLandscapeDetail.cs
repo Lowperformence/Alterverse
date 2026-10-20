@@ -114,6 +114,7 @@ namespace Alterverse.Visuals
 
         void BuildPocket(int seed)
         {
+            BuildGroundTransition(seed);
             switch(variant)
             {
                 case ArenaVariant.Moon: ImpactPocket(seed); break;
@@ -134,10 +135,40 @@ namespace Alterverse.Visuals
             // Fine scale debris ties the larger silhouettes back into the ground.
             for(int i=0;i<14;i++)
             {
-                float a=(i*137.5f+seed*23)*Mathf.Deg2Rad,r=.75f+(i%5)*.40f;
-                float size=.08f+(i%4)*.035f;
-                Add(rock,i%2,new Vector3(Mathf.Cos(a)*r,.025f,Mathf.Sin(a)*r*.68f),
-                    new Vector3(size,.08f,size*1.3f),Quaternion.Euler(0,i*47,8));
+                float a=(i*137.5f+seed*23)*Mathf.Deg2Rad,r=1.05f+(i%5)*.43f;
+                float size=.12f+(i%4)*.04f;
+                // Keep rubble mineral: layer 1 is bark on the forest variants.
+                int material=(variant==ArenaVariant.Earth||variant==ArenaVariant.Toi715b)?0:i%2;
+                Add(rock,material,new Vector3(Mathf.Cos(a)*r,.025f,Mathf.Sin(a)*r*.68f),
+                    new Vector3(size,.09f,size*1.3f),Quaternion.Euler(0,i*47,8));
+            }
+        }
+
+        // Low overlapping shelves connect props to the surface instead of leaving isolated
+        // silhouettes on a flat floor. Each piece uses the same terrain sampler and clearance
+        // as the larger props, and joins an existing opaque batch (no decals or extra draws).
+        void BuildGroundTransition(int seed)
+        {
+            for(int shelf=0;shelf<6;shelf++)
+            {
+                float angle=(shelf*60f+seed*23f)*Mathf.Deg2Rad;
+                float radius=1.08f+(shelf%2)*.25f;
+                Add(rock,0,new Vector3(Mathf.Cos(angle)*radius,-.025f,Mathf.Sin(angle)*radius*.62f),
+                    new Vector3(.72f+(shelf%3)*.12f,.12f+(shelf%2)*.045f,.42f),
+                    Quaternion.Euler(0,-angle*Mathf.Rad2Deg+seed*11f,(shelf%2==0?1:-1)*4f));
+            }
+            // Broken mineral ribbons remain low and sparse, readable from the gameplay camera.
+            // Organic and industrial variants get their own root/panel treatment below.
+            bool organic=variant==ArenaVariant.Earth||variant==ArenaVariant.GreenPlanet||
+                variant==ArenaVariant.Neptune||variant==ArenaVariant.Trappist1e||variant==ArenaVariant.Toi715b;
+            if(organic||variant==ArenaVariant.Dark00)return;
+            int layer=variant==ArenaVariant.Pyraxis||variant==ArenaVariant.Wasp76b?2:1;
+            for(int segment=0;segment<5;segment++)
+            {
+                float x=-1.7f+segment*.61f;
+                float z=-1.20f+Mathf.Sin(segment*1.9f+seed)*.14f;
+                Add(rock,layer,new Vector3(x,.018f,z),new Vector3(.42f,.055f,.16f),
+                    Quaternion.Euler(0,seed*13f+segment*19f,0));
             }
         }
 
@@ -255,6 +286,14 @@ namespace Alterverse.Visuals
                 float height=tree==1?2.45f:1.95f+(tree%2)*.16f;
                 float yaw=seed*29+tree*47;
                 Add(column,1,new Vector3(x,.03f,z),new Vector3(.22f,height,.22f),Quaternion.Euler(0,yaw,tree==0?-2:2));
+                // Broad buttress roots attach each trunk to the ground without another renderer.
+                for(int root=0;root<3;root++)
+                {
+                    float a=(yaw+root*120f)*Mathf.Deg2Rad;
+                    Vector3 end=new Vector3(x+Mathf.Cos(a)*.49f,.025f,z+Mathf.Sin(a)*.49f);
+                    Vector3 direction=new Vector3(x,.29f,z)-end;
+                    Add(column,1,end,new Vector3(.14f,direction.magnitude,.14f),Quaternion.FromToRotation(Vector3.up,direction));
+                }
 
                 for(int branch=0;branch<3;branch++)
                 {
@@ -317,6 +356,13 @@ namespace Alterverse.Visuals
         void IndustrialPocket(int seed)
         {
             Add(beam,0,new Vector3(-1.3f,0,-.6f),new Vector3(3.0f,.16f,1.7f),Quaternion.Euler(0,45,0));
+            // Staggered service plates and exposed rails break up the monolithic base.
+            for(int plate=0;plate<4;plate++)
+            {
+                Vector3 p=new(-1.05f+plate*.62f,.025f,-1.05f+(plate%2)*.13f);
+                Add(beam,1,p,new Vector3(.57f,.055f,.44f),Quaternion.Euler(0,45,0));
+                Add(beam,0,p+new Vector3(0,.065f,.12f),new Vector3(.51f,.035f,.045f),Quaternion.Euler(0,45,0));
+            }
             for(int i=0;i<3;i++)
             {
                 Vector3 p=new(-.65f+i*.65f,.12f,0);
@@ -466,6 +512,7 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
 

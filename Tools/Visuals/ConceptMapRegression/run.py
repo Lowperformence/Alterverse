@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+"""Compile and exercise production landscape placement against engine substitutes."""
+import argparse,json,subprocess,tempfile
+from pathlib import Path
+p=argparse.ArgumentParser(description=__doc__)
+p.add_argument('--dotnet-root',type=Path,required=True)
+a=p.parse_args()
+here=Path(__file__).resolve().parent
+root=here.parents[2]
+dotnet=a.dotnet_root.resolve()
+csc=sorted((dotnet/'sdk').glob('*/Roslyn/bincore/csc.dll'))[-1]
+refs=sorted((dotnet/'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'))[-1]
+with tempfile.TemporaryDirectory() as folder:
+    out=Path(folder)/'ConceptMaps.dll'
+    files=[here/'EngineFixtures.cs',here/'Regression.cs',root/'Assets/Alterverse/Scripts/Visuals/PlanetLandscapeDetail.cs',root/'Assets/Alterverse/Scripts/Visuals/PlanetArenaThemeRuntime.cs',root/'Assets/Alterverse/Scripts/Visuals/LunarFragmentGeometry.cs']
+    subprocess.run([str(dotnet/'dotnet'),str(csc),'-nologo','-out:'+str(out),*['-r:'+str(f) for f in refs.glob('*.dll')],*map(str,files)],check=True)
+    out.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':'8.0.0'},'rollForward':'LatestPatch'}}))
+    subprocess.run([str(dotnet/'dotnet'),str(out)],cwd=root,check=True)
