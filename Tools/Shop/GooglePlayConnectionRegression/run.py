@@ -3,6 +3,7 @@ This does not run Unity, the native Google SDK, Play checkout or a device.
 """
 import argparse
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -43,7 +44,12 @@ with tempfile.TemporaryDirectory(prefix='df-google-connection-') as temp:
 
 manifest = ET.parse(root / 'Assets/Plugins/Android/GooglePlayGamesManifest.androidlib/AndroidManifest.xml')
 ns = '{http://schemas.android.com/apk/res/android}'
-app_id = next(x.attrib[ns + 'value'] for x in manifest.findall('application/meta-data')
+app_id_source = next(x.attrib[ns + 'value'] for x in manifest.findall('application/meta-data')
               if x.attrib[ns + 'name'] == 'com.google.android.gms.games.APP_ID')
-assert app_id == r'\u00201029475752167', 'Native manifest must identify the actual published game as a string'
-print('PASS Android manifest App ID and non-Android compilation')
+# Android decodes these escapes when linking the manifest. Validate the runtime
+# value, not the literal escape spelling: \u0020 introduced a leading space.
+app_id = re.sub(r'\\u([0-9a-fA-F]{4})', lambda m: chr(int(m[1], 16)), app_id_source)
+assert re.fullmatch(r'[0-9]+', app_id), 'Native App ID must contain digits only, without whitespace'
+assert app_id == '1029475752167', 'Native manifest must identify the actual published game'
+assert app_id_source.startswith(r'\u003'), 'Keep the numeric metadata typed as a string'
+print('PASS Android manifest digits-only App ID and non-Android compilation')
