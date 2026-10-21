@@ -244,9 +244,15 @@ namespace Alterverse.UI
             for(int i=0;i<NavigationLabels.Length;i++)
                 if(theme.Navigation(new Rect(rail,178+i*44,202,40),NavigationLabels[i],NavigationIcon(NavigationPages[i]),
                     primary:i==0,selected:page==NavigationPages[i]))SetPage(NavigationPages[i]);
-            theme.FitLabel(new Rect(Left,30,ContentWidth*.62f,34),"COMMAND DECK  /  "+page.ToString().ToUpperInvariant(),theme.Heading);
-            theme.FitLabel(new Rect(Right-300,32,300,30),$"LEVEL {PlayerExperience.Level}  /  {PlayerWallet.Balance} SHARDS",theme.Body,true);
+            theme.FitLabel(new Rect(Left,25,ContentWidth-300,30),"COMMAND DECK  /  "+page.ToString().ToUpperInvariant(),theme.Heading);
+            theme.Label(new Rect(Left,57,ContentWidth-300,22),$"LEVEL {PlayerExperience.Level}",theme.Small,true);
+            DrawShardWallet(new Rect(Right-280,20,280,56));
             FrontEndTheme.Fill(new Rect(Left,85,ContentWidth,1),new Color(.75f,.65f,.47f,.50f));
+        }
+        private void DrawShardWallet(Rect rect)
+        {
+            theme.Panel(rect);
+            ShardShopVisualOverlay.DrawWallet(rect,PlayerWallet.Balance);
         }
         private static int NavigationIcon(Page target) => target switch
         {
@@ -295,9 +301,10 @@ namespace Alterverse.UI
             theme.Panel(profile);
             AvatarBadgeRenderer.Draw(new Rect(profile.x+12,profile.y+12,44,44),PlayerProfile.Avatar,Texture2D.whiteTexture,Time.unscaledTime);
             theme.FitLabel(new Rect(profile.x+68,profile.y+8,196,25),PlayerProfile.PlayerName,theme.Body);
-            theme.Label(new Rect(profile.x+68,profile.y+32,196,23),$"LEVEL {PlayerExperience.Level}  /  {PlayerWallet.Balance} SHARDS",theme.Small,true);
+            theme.Label(new Rect(profile.x+68,profile.y+32,196,23),$"LEVEL {PlayerExperience.Level}",theme.Small,true);
             theme.Progress(new Rect(profile.x+68,profile.y+60,194,3),PlayerExperience.LevelProgress);
             if(GUI.Button(profile,GUIContent.none,GUIStyle.none))SetPage(Page.Profile);
+            DrawShardWallet(new Rect(Right-280,106,280,70));
 
             FrontEndTheme.Fill(new Rect(Left,246,1,276),new Color(.66f,.75f,.84f,.45f));
             int[] homeNavigation=HomeNavigation;
@@ -802,7 +809,6 @@ namespace Alterverse.UI
         private void DrawShardShop()
         {
             theme.Label(new Rect(Left,270,ContentWidth*.5f,32),"SHARD EXCHANGE",theme.Heading);
-            theme.Label(new Rect(Left+ContentWidth*.5f,274,ContentWidth*.5f,26),$"BALANCE  {PlayerWallet.Balance:N0} SHARDS",theme.Small);
             var store=GooglePlayShardStore.Instance;
             var sub=ShardPacks.Subscription;
             if(sub!=null)

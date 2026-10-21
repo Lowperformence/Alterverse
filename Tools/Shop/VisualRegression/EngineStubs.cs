@@ -10,10 +10,13 @@ namespace UnityEngine
     public struct Color {public float r,g,b,a;public Color(float x,float y,float z,float w=1){r=x;g=y;b=z;a=w;} public static Color white=>new(1,1,1);}
     public struct Color32 {public byte r,g,b,a;public Color32(byte x,byte y,byte z,byte w){r=x;g=y;b=z;a=w;}}
     public enum TextureFormat {RGBA32} public enum FilterMode {Bilinear} public enum TextureWrapMode {Clamp} public enum HideFlags {DontSave}
-    public enum TextAnchor {MiddleCenter} public enum FontStyle {Bold} public enum TextClipping {Clip} public enum ScaleMode {StretchToFill,ScaleToFit}
+    public enum TextAnchor {MiddleCenter,MiddleLeft} public enum FontStyle {Bold} public enum TextClipping {Clip} public enum ScaleMode {StretchToFill,ScaleToFit}
     public enum EventType {Repaint,Layout} public class Event {public static Event current=new();public EventType type=EventType.Repaint;}
     public class GUIStyleState {public Color textColor=Color.white;}
-    public class GUIStyle {public int fontSize=16;public TextAnchor alignment;public FontStyle fontStyle;public TextClipping clipping;public GUIStyleState normal=new();public GUIStyle(){}public GUIStyle(GUIStyle other){fontSize=other.fontSize;}}
+    public class Font {}
+    public class RectOffset {public RectOffset(int l,int r,int t,int b){}}
+    public class GUIContent {public string text="";}
+    public class GUIStyle {public int fontSize=16;public Font font;public bool wordWrap,richText;public RectOffset padding;public TextAnchor alignment;public FontStyle fontStyle;public TextClipping clipping;public GUIStyleState normal=new();public GUIStyle(){}public GUIStyle(GUIStyle other){fontSize=other.fontSize;alignment=other.alignment;fontStyle=other.fontStyle;normal.textColor=other.normal.textColor;}public Vector2 CalcSize(GUIContent content)=>new(content.text.Length*fontSize*.62f,fontSize+2);}
     public class GUISkin {public GUIStyle label=new();}
     public class Texture2D
     {
@@ -26,7 +29,8 @@ namespace UnityEngine
     {
         public static GUISkin skin=new();public static Color color=Color.white;public static List<object> Commands=new();public static Dictionary<string,Texture2D> Textures=new();
         public static void DrawTexture(Rect r,Texture2D t,ScaleMode mode=ScaleMode.StretchToFill,bool alpha=true){Textures[t.name]=t;Commands.Add(new{kind="texture",rect=r,tint=color,texture=t.name,fit=mode==ScaleMode.ScaleToFit});}
-        public static void Label(Rect r,string text,GUIStyle style){Commands.Add(new{kind="label",rect=r,text,size=style.fontSize,tint=style.normal.textColor,center=true});}
+        public static void Label(Rect r,string text,GUIStyle style){Commands.Add(new{kind="label",rect=r,text,size=style.fontSize,tint=style.normal.textColor,center=style.alignment==TextAnchor.MiddleCenter});}
+        public static void Label(Rect r,GUIContent content,GUIStyle style)=>Label(r,content.text,style);
     }
     public static class Mathf
     {
@@ -54,6 +58,7 @@ namespace Alterverse.Shop
 namespace Alterverse.UI
 {
     using UnityEngine;
+    static class FrontEndTypography {public static Font Display,Body;}
     class FrontEndTheme
     {
         public GUIStyle Heading=new(){fontSize=26},Small=new(){fontSize=16};

@@ -13,6 +13,51 @@ namespace Alterverse.UI
         private static Texture2D glow;
         private static GUIStyle amountStyle;
         private static GUIStyle packStyle;
+        private static GUIStyle walletAmountStyle, walletLabelStyle;
+        private static readonly GUIContent walletAmountContent = new GUIContent();
+        private static int walletBalance = int.MinValue;
+
+        /// <summary>Read-only currency display. Always shows the exact wallet value, never an animated estimate.</summary>
+        public static void DrawWallet(Rect card, int balance)
+        {
+            if(Event.current.type!=EventType.Repaint)return;
+            EnsureArtwork();
+            if(walletBalance!=balance)
+            {
+                walletBalance=balance;
+                walletAmountContent.text=balance.ToString("N0");
+            }
+            if(walletAmountStyle==null)
+            {
+                walletAmountStyle=new GUIStyle(GUI.skin.label){font=FrontEndTypography.Display,
+                    alignment=TextAnchor.MiddleLeft,fontStyle=FontStyle.Bold,wordWrap=false,
+                    richText=false,clipping=TextClipping.Clip,padding=new RectOffset(0,0,0,0)};
+                walletAmountStyle.normal.textColor=new Color(.96f,1f,1f);
+                walletLabelStyle=new GUIStyle(walletAmountStyle){font=FrontEndTypography.Body,fontSize=12};
+                walletLabelStyle.normal.textColor=new Color(.48f,.86f,1f);
+            }
+            Color previous=GUI.color;
+            try
+            {
+                float pulse=.91f+.04f*Mathf.Sin(Time.unscaledTime*1.4f);
+                GUI.color=new Color(.12f,.72f,1f,.55f*pulse);
+                GUI.DrawTexture(new Rect(card.x+2,card.y+2,84,card.height-4),glow,ScaleMode.StretchToFill,true);
+                GUI.color=previous;
+                Fill(new Rect(card.x+12,card.y+1,card.width-24,1),new Color(.34f,.83f,1f,.80f));
+                Fill(new Rect(card.x+1,card.y+14,2,card.height-28),new Color(.22f,.77f,1f,.90f));
+                GUI.DrawTexture(new Rect(card.x+12,card.y+6,48,card.height-12),crystal,ScaleMode.ScaleToFit,true);
+                Fill(new Rect(card.x+43,card.y+15,9,1),new Color(1f,1f,1f,.82f*pulse));
+                Fill(new Rect(card.x+47,card.y+11,1,9),new Color(1f,1f,1f,.82f*pulse));
+                GUI.Label(new Rect(card.x+72,card.y+7,card.width-86,18),"SHARDS",walletLabelStyle);
+                Rect amountRect=new Rect(card.x+70,card.y+23,card.width-84,card.height-26);
+                walletAmountStyle.fontSize=card.height>=64?32:27;
+                float textWidth=walletAmountStyle.CalcSize(walletAmountContent).x;
+                if(textWidth>amountRect.width)
+                    walletAmountStyle.fontSize=Mathf.Max(14,Mathf.FloorToInt(walletAmountStyle.fontSize*amountRect.width/textWidth));
+                GUI.Label(amountRect,walletAmountContent,walletAmountStyle);
+            }
+            finally { GUI.color=previous; }
+        }
 
         public static void DrawPackCard(Rect card,ShardPack pack,int tier)
         {
