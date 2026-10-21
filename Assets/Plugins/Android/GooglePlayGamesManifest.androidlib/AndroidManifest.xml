@@ -12,13 +12,14 @@
 
      
 
-        <!-- The space in these forces it to be interpreted as a string vs. int -->
+        <!-- Encode the first digit to keep the App ID a string with digits only.
+             A leading space breaks numeric parsing in the Google Games SDK. -->
         <meta-data android:name="com.google.android.gms.games.APP_ID"
-            android:value="\u00201029475752167" />
+            android:value="\u0031029475752167" />
 
         <!-- Keep track of which plugin is being used -->
         <meta-data android:name="com.google.android.gms.games.unityVersion"
-            android:value="\u00202.2.1" />
+            android:value="\u0032.2.1" />
 
         <activity android:name="com.google.games.bridge.NativeBridgeActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
