@@ -81,5 +81,8 @@ namespace Alterverse.Profile
  public static class SafeIdentityCatalog{public static bool IsPlayerName(string name)=>name!=null&&name.StartsWith("SolarFox",StringComparison.Ordinal);}
  public class AccountServerBootstrap{public static AccountServerBootstrap Instance;public bool Busy;}
 }
-namespace Alterverse.Shop{public static class ShardPacks{public static bool Contains(string id)=>id=="dimensions_shards_500";}}
+namespace Alterverse.Shop{public static class ShardPacks{public static bool IsSubscription(string id)=>id=="dimensions_shards_monthly";
+        public static bool IsProduct(string id)=>Contains(id)||IsSubscription(id);
+        public static bool Contains(string id)=>id=="dimensions_shards_500";}}
 namespace Alterverse.Audio{public enum DimensionSound{Purchase}public static class DimensionAudio{public static void Play(DimensionSound sound,float volume){}}}
+

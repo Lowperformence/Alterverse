@@ -76,6 +76,29 @@ class BillingStartupTests(unittest.TestCase):
                          None)
         self.authorized_session.assert_not_called()
 
+    def test_subscription_flag_requires_the_verified_push_configuration(self):
+        config = {'DF_UNITY_PROJECT_ID': 'unity-project', 'DF_ACCOUNT_STORAGE': 'firestore',
+                  'DF_ENABLE_GOOGLE_PLAY': '1', 'DF_ANDROID_PACKAGE_NAME': 'com.lowperformence.dimensionsfront',
+                  'DF_ENABLE_SHARD_SUBSCRIPTIONS': '1'}
+        with patch.dict(os.environ, config, clear=True):
+            with self.assertRaises(KeyError): self.namespace['create_application']()
+
+    def test_subscription_flag_wires_the_durable_ledger_and_exact_push_identity(self):
+        config = {'DF_UNITY_PROJECT_ID': 'unity-project', 'DF_ACCOUNT_STORAGE': 'firestore',
+                  'DF_ENABLE_GOOGLE_PLAY': '1', 'DF_ANDROID_PACKAGE_NAME': 'com.lowperformence.dimensionsfront',
+                  'DF_ENABLE_SHARD_SUBSCRIPTIONS': '1',
+                  'DF_RTDN_AUDIENCE': 'https://account.example/google-play/rtdn',
+                  'DF_RTDN_SERVICE_ACCOUNT': 'push@project.iam.gserviceaccount.com'}
+        with patch.dict(os.environ, config, clear=True), \
+             patch('subscriptions.GooglePushAuthenticator') as push, \
+             patch('subscriptions.SubscriptionService') as subscriptions:
+            self.namespace['create_application']()
+            push.assert_called_once_with(config['DF_RTDN_AUDIENCE'], config['DF_RTDN_SERVICE_ACCOUNT'])
+            subscriptions.assert_called_once_with('durable-firestore-ledger', 'trusted-google-session',
+                                                  config['DF_ANDROID_PACKAGE_NAME'], push.return_value)
+            self.assertIs(self.commerce.call_args.kwargs['subscriptions'], subscriptions.return_value)
+
 
 if __name__ == '__main__':
     unittest.main()
+

@@ -10,8 +10,9 @@ from ledger import Ledger, PACKS, COSMETICS, ProfileConflict
 from social import Social, SocialForbidden
 
 class CommerceApplication:
-    def __init__(self, ledger_or_path, authenticate, google_session, package_name, ranked=None, ranked_server_key='', chat_config=None):
+    def __init__(self, ledger_or_path, authenticate, google_session, package_name, ranked=None, ranked_server_key='', chat_config=None, subscriptions=None):
         self.ranked, self.ranked_server_key = ranked, ranked_server_key
+        self.subscriptions = subscriptions
         self.ledger = ledger_or_path if hasattr(ledger_or_path, 'wallet') else Ledger(ledger_or_path)
         if hasattr(self.ledger, 'connect'):
             self.social = Social(self.ledger, chat_config=chat_config)
@@ -23,6 +24,13 @@ class CommerceApplication:
         self.authenticate = authenticate
         self.google = google_session  # google.auth.transport.requests.AuthorizedSession, server credentials only
         self.package = package_name
+    def decorate_wallet(self, account, wallet):
+        wallet['accountHash'] = account
+        wallet['billingReady'] = self.google is not None and bool(self.package)
+        wallet['subscriptionsReady'] = self.subscriptions is not None and self.subscriptions.ready
+        wallet['subscriptionActive'] = self.subscriptions is not None and self.subscriptions.storage.active(account)
+        return wallet
+
     def __call__(self, env, start_response):
         try:
             if env.get('REQUEST_METHOD') != 'POST': raise ValueError('POST required')
@@ -30,6 +38,13 @@ class CommerceApplication:
             if size < 0 or size > 262144: raise ValueError('Request too large')
             # Must validate signature/issuer/audience/expiry and return the stable obfuscated account hash.
             path = env.get('PATH_INFO', '')
+            if path == '/google-play/rtdn':
+                data = json.loads(env['wsgi.input'].read(size) or b'{}')
+                if not isinstance(data, dict): raise ValueError('JSON object required')
+                if self.subscriptions is None: raise RuntimeError('Subscriptions unavailable')
+                self.subscriptions.push(env.get('HTTP_AUTHORIZATION', ''), data)
+                start_response('204 No Content', [('Cache-Control', 'no-store')])
+                return [b'']
             server_ranked = path.startswith('/ranked/server/')
             if server_ranked:
                 supplied = env.get('HTTP_AUTHORIZATION', '')
@@ -60,8 +75,7 @@ class CommerceApplication:
                 else:
                     social = self.social.dispatch(account, path, data)
                 if social.get('wallet') is not None:
-                    social['wallet']['accountHash'] = account
-                    social['wallet']['billingReady'] = self.google is not None and bool(self.package)
+                    self.decorate_wallet(account, social['wallet'])
                 body = json.dumps({'fulfilled': True, 'social': social}).encode()
                 start_response('200 OK', [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')])
                 return [body]
@@ -75,6 +89,9 @@ class CommerceApplication:
                 sku = data.get('cosmeticId')
                 if not isinstance(sku, str) or sku not in COSMETICS: raise ValueError('Unknown cosmetic')
                 wallet = self.ledger.buy(account, sku)
+            elif path == '/google-play/subscription':
+                if self.subscriptions is None: raise RuntimeError('Subscriptions unavailable')
+                wallet, _ = self.subscriptions.fulfill(data.get('productId'), data.get('purchaseToken'), account)
             elif path == '/google-play/fulfill':
                 if self.google is None or not self.package: raise ValueError('Billing unavailable')
                 product, token = data.get('productId'), data.get('purchaseToken')
@@ -88,8 +105,7 @@ class CommerceApplication:
             else: raise ValueError('Unknown route')
             if hasattr(self.social, 'sync_wallet'):
                 self.social.sync_wallet(account, wallet)
-            wallet['accountHash'] = account
-            wallet['billingReady'] = self.google is not None and bool(self.package)
+            self.decorate_wallet(account, wallet)
             body = json.dumps({'fulfilled': True, 'wallet': wallet}).encode()
             start_response('200 OK', [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')])
         except ProfileConflict:
@@ -118,6 +134,7 @@ class CommerceApplication:
             # Do not expose purchase tokens/credentials in response or logs. Upstream outage is retryable.
             body = b'{"fulfilled":false}'; start_response('503 Service Unavailable', [('Content-Type', 'application/json')])
         return [body]
+
 
 
 

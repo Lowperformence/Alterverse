@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 #if UNITY_ANDROID && !UNITY_EDITOR
 using UnityEngine.Purchasing;
@@ -51,11 +52,36 @@ namespace Alterverse.Shop
         public bool Busy{get;private set;}
         public bool PendingRecovery{get;private set;}
         readonly Dictionary<string,string> prices=new();
+        readonly Dictionary<string,decimal> numericPrices=new();
+        readonly Dictionary<string,string> currencies=new();
+        public bool SubscriptionActive=>PaidShardCommerce.Instance?.SubscriptionActive==true;
+        public string SubscriptionStatus=>SubscriptionActive?"Active · manage in Google Play":
+            PaidShardCommerce.Instance?.SubscriptionsReady==true?"Renews monthly · cancel in Google Play":"Subscription setup in progress";
+
+        // Compare current, purchasable prices in the same currency. Never invent a crossed-out price.
+        public int SubscriptionDiscount
+        {
+            get
+            {
+                var sub=ShardPacks.Subscription;
+                if(sub==null||sub.Amount<=0||!numericPrices.TryGetValue(sub.Id,out decimal recurring)||recurring<=0||
+                   !currencies.TryGetValue(sub.Id,out string currency)||string.IsNullOrEmpty(currency))return 0;
+                decimal best=decimal.MaxValue;
+                foreach(var pack in ShardPacks.All)
+                    if(pack.Amount>0&&numericPrices.TryGetValue(pack.Id,out decimal value)&&value>0&&
+                       currencies.TryGetValue(pack.Id,out string code)&&code==currency)best=Math.Min(best,value/pack.Amount);
+                return best==decimal.MaxValue?0:Math.Max(0,(int)decimal.Floor(100m*(1m-recurring/sub.Amount/best)));
+            }
+        }
+
+        public void ManageSubscription()=>Application.OpenURL("https://play.google.com/store/account/subscriptions?sku=dimensions_shards_monthly&package=com.lowperformence.dimensionsfront");
 
         public string Price(string id)=>prices.TryGetValue(id,out string price)?price:"Unavailable";
 
         public bool CanBuy(string id)
         {
+            if(ShardPacks.IsSubscription(id)&&(LocalBillingTestMode||
+               PaidShardCommerce.Instance?.SubscriptionsReady!=true||SubscriptionActive))return false;
             bool productionReady=PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.PurchasesReady&&
                 Alterverse.Profile.AccountServerBootstrap.Instance?.GooglePlayAccountReady==true;
             return Ready&&!Busy&&!PendingRecovery&&Alterverse.Profile.AccountServerBootstrap.Instance?.Busy!=true&&
@@ -69,6 +95,20 @@ namespace Alterverse.Shop
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         StoreController store;bool connecting,retryRequested;float nextConnect;
+        const float StoreCallbackTimeout=30f;
+        enum StartupStage { None, Connecting, Products, Purchases }
+        StartupStage startupStage;float startupDeadline;
+        int connectionGeneration;
+        TaskCompletionSource<bool> connectionInterrupted;
+        Action<List<Product>> onProducts;
+        Action<ProductFetchFailed> onProductsFailed;
+        Action<PendingOrder> onPending;
+        Action<Order> onConfirmed;
+        Action<FailedOrder> onFailed;
+        Action<DeferredOrder> onDeferred;
+        Action<Orders> onFetched;
+        Action<PurchasesFetchFailureDescription> onFetchFailed;
+        Action<StoreConnectionFailureDescription> onDisconnected;
         readonly HashSet<string> processing=new();
         readonly HashSet<string> unconfirmed=new();
         string connectedAccount;int connectedSession;
@@ -96,9 +136,19 @@ namespace Alterverse.Shop
 
         void Update()
         {
+            // Native callbacks can be lost. Bound every startup stage, including
+            // the Connect task, without abandoning a payment being verified.
+            if(startupStage!=StartupStage.None&&Time.unscaledTime>=startupDeadline&&processing.Count==0&&!Busy)
+            {
+                string stage=startupStage==StartupStage.Connecting?"connection":startupStage==StartupStage.Products?"product loading":"purchase recovery";
+                Status="Google Play "+stage+" timed out. Retrying…";
+                ResetConnection();PendingRecovery=true;
+                nextConnect=Time.unscaledTime+15;
+                return;
+            }
             if(retryRequested&&!connecting&&processing.Count==0&&Time.unscaledTime>=nextConnect)
             {
-                Unbind();store=null;prices.Clear();Ready=false;Busy=false;
+                ResetConnection();
                 PendingRecovery=true;retryRequested=false;
             }
 
@@ -110,7 +160,7 @@ namespace Alterverse.Shop
                     // Losing identity alone is not an outstanding payment. Keep actual recovery
                     // state, otherwise a clean Google account switch can never be restored.
                     PendingRecovery=PendingRecovery||unconfirmed.Count>0||Busy;
-                    Unbind();store=null;prices.Clear();unconfirmed.Clear();Busy=false;
+                    ResetConnection();unconfirmed.Clear();
                 }
             }
 
@@ -120,6 +170,8 @@ namespace Alterverse.Shop
         async void Initialize()
         {
             connecting=true;retryRequested=false;
+            int attempt=++connectionGeneration;
+            StoreController openingStore=null;
             try
             {
 #if DF_GOOGLE_PLAY_SHARD_TEST
@@ -132,49 +184,97 @@ namespace Alterverse.Shop
 #endif
                 PendingRecovery=true;
                 store=new StoreController("GooglePlay");
+                openingStore=store;
                 store.ProcessPendingOrdersOnPurchasesFetched(false);
-                store.OnProductsFetched+=Products;
-                store.OnProductsFetchFailed+=ProductsFailed;
-                store.OnPurchasePending+=Pending;
-                store.OnPurchaseConfirmed+=Confirmed;
-                store.OnPurchaseFailed+=Failed;
-                store.OnPurchaseDeferred+=Deferred;
-                store.OnPurchasesFetched+=Fetched;
-                store.OnPurchasesFetchFailed+=FetchFailed;
-                store.OnStoreDisconnected+=Disconnected;
+                Bind(openingStore,attempt);
 #if !DF_GOOGLE_PLAY_SHARD_TEST
                 store.GooglePlayStoreExtendedService?.SetObfuscatedAccountId(PaidShardCommerce.Instance.AccountHash);
 #endif
-                var openingStore=store;
-                await openingStore.Connect();
-                if(this==null)return;
+                BeginStartup(StartupStage.Connecting,"Connecting to Google Play…");
+                var interrupted=new TaskCompletionSource<bool>();
+                connectionInterrupted=interrupted;
+                Task connection=openingStore.Connect();
+                if(await Task.WhenAny(connection,interrupted.Task)!=connection)
+                {
+                    // Observe a possible late fault; it must never resume a retired
+                    // controller or load prices into a newer account's connection.
+                    _=ObserveRetiredConnection(connection);
+                    return;
+                }
+                await connection;
+                if(!Current(openingStore,attempt))return;
+                connectionInterrupted=null;
 
                 if(store!=openingStore||!SessionMatches())
                 {
-                    Unbind();store=null;Ready=false;prices.Clear();Busy=false;
+                    ResetConnection();
                     Status="Account changed. Reconnecting the store.";
                     return;
                 }
 
                 var definitions=new List<ProductDefinition>();
                 foreach(var p in ShardPacks.All)definitions.Add(new ProductDefinition(p.Id,ProductType.Consumable));
+                if(ShardPacks.Subscription!=null)definitions.Add(new ProductDefinition(ShardPacks.Subscription.Id,ProductType.Subscription));
+                BeginStartup(StartupStage.Products,"Loading Google Play prices…");
                 store.FetchProducts(definitions);
             }
             catch(Exception)
             {
-                if(this==null)return;
+                if(!Current(openingStore,attempt))return;
                 Status="Google Play connection failed. Reconnect to retry.";
-                Unbind();store=null;nextConnect=Time.unscaledTime+15;
+                ResetConnection();nextConnect=Time.unscaledTime+15;
             }
-            finally{if(this!=null)connecting=false;}
+            finally{if(this!=null&&attempt==connectionGeneration)connecting=false;}
+        }
+
+        bool Current(StoreController source,int attempt)=>this!=null&&store==source&&attempt==connectionGeneration;
+        static async Task ObserveRetiredConnection(Task task){try{await task;}catch(Exception){}}
+        void BeginStartup(StartupStage stage,string message)
+        {startupStage=stage;startupDeadline=Time.unscaledTime+StoreCallbackTimeout;Status=message;}
+        void Bind(StoreController source,int attempt)
+        {
+            // Capture the actual controller. A late old callback cannot alter the
+            // prices, pending-token set or status of a replacement connection.
+            onProducts=p=>{if(Current(source,attempt))Products(p);};
+            onProductsFailed=p=>{if(Current(source,attempt))ProductsFailed(p);};
+            onPending=p=>{if(Current(source,attempt))Pending(p);};
+            onConfirmed=p=>{if(Current(source,attempt))Confirmed(p);};
+            onFailed=p=>{if(Current(source,attempt))Failed(p);};
+            onDeferred=p=>{if(Current(source,attempt))Deferred(p);};
+            onFetched=p=>{if(Current(source,attempt))Fetched(p);};
+            onFetchFailed=p=>{if(Current(source,attempt))FetchFailed(p);};
+            onDisconnected=p=>{if(Current(source,attempt))Disconnected(p);};
+            source.OnProductsFetched+=onProducts;source.OnProductsFetchFailed+=onProductsFailed;
+            source.OnPurchasePending+=onPending;source.OnPurchaseConfirmed+=onConfirmed;
+            source.OnPurchaseFailed+=onFailed;source.OnPurchaseDeferred+=onDeferred;
+            source.OnPurchasesFetched+=onFetched;source.OnPurchasesFetchFailed+=onFetchFailed;
+            source.OnStoreDisconnected+=onDisconnected;
+        }
+        void ResetConnection()
+        {
+            ++connectionGeneration;
+            Unbind();store=null;prices.Clear();numericPrices.Clear();currencies.Clear();Ready=false;Busy=processing.Count>0;
+            connecting=false;retryRequested=false;startupStage=StartupStage.None;
+            var interrupted=connectionInterrupted;connectionInterrupted=null;
+            interrupted?.TrySetResult(false);
         }
 
         void Products(List<Product> products)
         {
-            prices.Clear();
+            startupStage=StartupStage.None;
+            prices.Clear();numericPrices.Clear();currencies.Clear();
             foreach(var p in products)
-                if(p.availableToPurchase&&ShardPacks.Contains(p.definition.id))
-                    prices[p.definition.id]=p.metadata.localizedPriceString;
+            {
+                if(!p.availableToPurchase||!ShardPacks.IsProduct(p.definition.id))continue;
+                // This catalog uses one monthly, recurring base plan, without trial or intro offers.
+                // Refuse mismatched metadata rather than misstate a recurring price.
+                if(ShardPacks.IsSubscription(p.definition.id)&&
+                   (!(p.metadata is GoogleProductMetadata meta)||meta.subscriptionPeriod!="P1M"||
+                    !string.IsNullOrEmpty(meta.freeTrialPeriod)||meta.introductoryPriceCycles>0))continue;
+                prices[p.definition.id]=p.metadata.localizedPriceString;
+                numericPrices[p.definition.id]=p.metadata.localizedPrice;
+                currencies[p.definition.id]=p.metadata.isoCurrencyCode;
+            }
 
             Ready=prices.Count>0;
 #if DF_GOOGLE_PLAY_SHARD_TEST
@@ -185,6 +285,7 @@ namespace Alterverse.Shop
             Status=Ready?"Prices supplied by Google Play.":"Products unavailable. Retrying…";
 #endif
             if(!Ready)ScheduleRetry();
+            if(Ready)BeginStartup(StartupStage.Purchases,"Restoring Google Play purchases…");
             store.FetchPurchases();
         }
 
@@ -213,7 +314,12 @@ namespace Alterverse.Shop
             ScheduleRetry();
         }
 
-        void ScheduleRetry(){retryRequested=true;nextConnect=Time.unscaledTime+15;}
+        void ScheduleRetry()
+        {
+            startupStage=StartupStage.None;
+            retryRequested=true;nextConnect=Time.unscaledTime+15;
+            connectionInterrupted?.TrySetResult(false);
+        }
 
         void Confirmed(Order order)
         {
@@ -247,6 +353,7 @@ namespace Alterverse.Shop
 
         void Fetched(Orders orders)
         {
+            startupStage=StartupStage.None;
             if(processing.Count==0)unconfirmed.Clear();
             foreach(var order in orders.PendingOrders)
             {
@@ -255,6 +362,31 @@ namespace Alterverse.Shop
             }
             PendingRecovery=unconfirmed.Count>0||orders.PendingOrders.Count>0;
             foreach(var order in orders.PendingOrders)Pending(order);
+#if !DF_GOOGLE_PLAY_SHARD_TEST
+            foreach(var order in orders.ConfirmedOrders)RestoreSubscription(order);
+#endif
+            if(Ready&&!PendingRecovery)Status=LocalBillingTestMode?
+                "TEST MODE: Google Play connected. Purchases credit local test shards only.":
+                "Google Play connected. Prices supplied by Google Play.";
+        }
+
+        async void RestoreSubscription(Order order)
+        {
+            var items=order.CartOrdered.Items();
+            string token=order.Info.Google?.PurchaseToken;
+            if(items.Count!=1||!ShardPacks.IsSubscription(items[0].Product.definition.id)||
+               string.IsNullOrEmpty(token)||!processing.Add(token))return;
+            Busy=true;unconfirmed.Add(token);PendingRecovery=true;
+            try
+            {
+                var backend=PaidShardCommerce.Instance;
+                if(!SessionMatches()||backend==null||!await backend.Fulfill(items[0].Product.definition.id,token))
+                {Status="Subscription recovery pending. Retrying…";ScheduleRetry();return;}
+                if(!SessionMatches())return;
+                unconfirmed.Remove(token);PendingRecovery=unconfirmed.Count>0;
+            }
+            catch(Exception){Status="Subscription recovery pending. Retrying…";ScheduleRetry();}
+            finally{processing.Remove(token);if(this!=null)Busy=processing.Count>0;}
         }
 
         async void Pending(PendingOrder order)
@@ -276,6 +408,7 @@ namespace Alterverse.Shop
                 string product=items[0].Product.definition.id;
 
 #if DF_GOOGLE_PLAY_SHARD_TEST
+                if(ShardPacks.IsSubscription(product)){Status="TEST MODE: subscriptions require server verification.";return;}
                 if(!Alterverse.Profile.PlayerWallet.GrantGooglePlayBillingTest(product,token))
                 {
                     Status="TEST MODE: purchase received but local shard credit failed.";
@@ -324,15 +457,15 @@ namespace Alterverse.Shop
         void Unbind()
         {
             if(store==null)return;
-            store.OnProductsFetched-=Products;
-            store.OnProductsFetchFailed-=ProductsFailed;
-            store.OnPurchasePending-=Pending;
-            store.OnPurchaseConfirmed-=Confirmed;
-            store.OnPurchaseFailed-=Failed;
-            store.OnPurchaseDeferred-=Deferred;
-            store.OnPurchasesFetched-=Fetched;
-            store.OnPurchasesFetchFailed-=FetchFailed;
-            store.OnStoreDisconnected-=Disconnected;
+            store.OnProductsFetched-=onProducts;
+            store.OnProductsFetchFailed-=onProductsFailed;
+            store.OnPurchasePending-=onPending;
+            store.OnPurchaseConfirmed-=onConfirmed;
+            store.OnPurchaseFailed-=onFailed;
+            store.OnPurchaseDeferred-=onDeferred;
+            store.OnPurchasesFetched-=onFetched;
+            store.OnPurchasesFetchFailed-=onFetchFailed;
+            store.OnStoreDisconnected-=onDisconnected;
         }
 #endif
 
@@ -361,8 +494,9 @@ namespace Alterverse.Shop
             PaidShardCommerce.Instance?.Refresh();
 #endif
 #if UNITY_ANDROID && !UNITY_EDITOR
-            if(Busy||connecting||processing.Count>0)return;
-            Unbind();store=null;prices.Clear();Ready=false;PendingRecovery=true;
+            if(Busy||processing.Count>0)return;
+            ResetConnection();PendingRecovery=true;
+            Status="Reconnecting to Google Play…";
             retryRequested=false;nextConnect=0;
 #endif
         }
@@ -371,9 +505,10 @@ namespace Alterverse.Shop
         {
             if(Instance==this)Instance=null;
 #if UNITY_ANDROID && !UNITY_EDITOR
-            Unbind();
+            ResetConnection();
 #endif
         }
     }
 }
+
 

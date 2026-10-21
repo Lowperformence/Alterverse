@@ -24,21 +24,22 @@ namespace Alterverse.Profile
 #endif
             }
         }
-        public static string ConfigurationError
+        // Native sign-in / leaderboard browsing do not request a server auth code.
+        // Only linking the cloud account requires the OAuth Web Client ID.
+        public static string NativeConfigurationError=>ReadConfigurationError(false);
+        public static string ConfigurationError=>ReadConfigurationError(true);
+        static string ReadConfigurationError(bool requireWebClient)
         {
-            get
-            {
                 var asset=Resources.Load("PlayGamesSettings");
                 if(asset==null)return "Google Play Games setup is missing.";
                 try
                 {
                     var settings=JsonUtility.FromJson<Settings>(JsonUtility.ToJson(asset));
                     if(!ulong.TryParse(settings?.mAppId,out ulong id)||id==0)return "Google Play Games App ID is missing.";
-                    if(string.IsNullOrWhiteSpace(settings.mWebClientId))return "Google Play Games Web Client ID is missing.";
+                    if(requireWebClient&&string.IsNullOrWhiteSpace(settings.mWebClientId))return "Google Play Games Web Client ID is missing.";
                     return "";
                 }
                 catch(Exception){return "Google Play Games setup could not be read.";}
-            }
         }
         public static bool IsAuthenticated
         {
@@ -119,4 +120,5 @@ namespace Alterverse.Profile
         }
     }
 }
+
 

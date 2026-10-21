@@ -14,6 +14,11 @@
       "id": "dimensions_shards_5500",
       "name": "PREMIUM",
       "amount": 5500
+    },
+    {
+      "id": "dimensions_shards_12000",
+      "name": "VAULT",
+      "amount": 12000
     }
   ],
   "cosmetics": [
@@ -1248,6 +1253,11 @@
       ],
       "available": false
     }
-  ]
+  ],
+  "subscription": {
+    "id": "dimensions_shards_monthly",
+    "name": "SHARDS CLUB",
+    "amount": 1200,
+    "basePlanId": "monthly"
+  }
 }
-

@@ -50,7 +50,16 @@ def create_application():
         ranked = Ranked(ledger, EdgegapRankedGateway(os.environ['DF_RANKED_MATCHMAKER_URL'],
                         os.environ['DF_RANKED_MATCHMAKER_TOKEN']), os.environ['DF_RANKED_ADMISSION_KEY'],
                         os.environ.get('DF_RANKED_SEASON', 'S1'))
+    subscription_options = {}
+    if os.environ.get('DF_ENABLE_SHARD_SUBSCRIPTIONS', '0') == '1':
+        from subscriptions import SubscriptionService, GooglePushAuthenticator
+        if publisher_session is None or not package:
+            raise ValueError('Subscriptions require Google Play publisher access')
+        push_auth = GooglePushAuthenticator(os.environ['DF_RTDN_AUDIENCE'], os.environ['DF_RTDN_SERVICE_ACCOUNT'])
+        subscription_options['subscriptions'] = SubscriptionService(ledger, publisher_session, package, push_auth)
     return CommerceApplication(ledger,UnityPlayerAuthenticator(unity_project_id),publisher_session,package,
+                               **subscription_options,
                                **({'ranked': ranked, 'ranked_server_key': server_key} if ranked is not None else {}))
 
 application=create_application()
+

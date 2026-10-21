@@ -14,49 +14,47 @@ namespace Alterverse.UI
         private static GUIStyle amountStyle;
         private static GUIStyle packStyle;
 
-        public static void DrawPackCard(float x,float width,ShardPack pack,int tier)
+        public static void DrawPackCard(Rect card,ShardPack pack,int tier)
         {
             if(Event.current.type!=EventType.Repaint)return;
-            EnsureArtwork();
-            tier=Mathf.Clamp(tier,0,3);
-
-            Fill(new Rect(x+2f,370f,width-4f,136f),new Color(.008f,.016f,.055f,.99f));
-            Fill(new Rect(x+2f,370f,width-4f,3f),new Color(.10f,.76f,1f,.95f));
-            Fill(new Rect(x+2f,503f,width-4f,2f),new Color(.32f,.28f,1f,.72f));
-            GUI.Label(new Rect(x+12f,376f,width-24f,21f),pack.Name,packStyle);
-
-            float artScale=.76f+tier*.10f;
-            float artW=Mathf.Min(width-24f,126f*artScale);
-            float artH=92f*artScale;
-            Rect art=new Rect(x+(width-artW)*.5f,393f-tier*2f,artW,artH);
-            Rect halo=new Rect(art.center.x-art.width*.72f,art.center.y-art.height*.68f,
-                art.width*1.44f,art.height*1.36f);
-            Color previous=GUI.color;
-            GUI.color=tier>=3?new Color(.62f,.50f,1f,.88f):new Color(.20f,.74f,1f,.82f);
-            GUI.DrawTexture(halo,glow,ScaleMode.StretchToFill,true);
-            GUI.color=Color.white;
-            if(tier>=1)GUI.DrawTexture(new Rect(art.x-22f,art.y+18f,art.width*.62f,art.height*.72f),crystal,ScaleMode.ScaleToFit,true);
-            if(tier>=2)GUI.DrawTexture(new Rect(art.xMax-art.width*.47f,art.y+22f,art.width*.58f,art.height*.68f),crystal,ScaleMode.ScaleToFit,true);
-            if(tier>=3)
-            {
-                GUI.DrawTexture(new Rect(art.x-34f,art.y+36f,art.width*.50f,art.height*.56f),crystal,ScaleMode.ScaleToFit,true);
-                GUI.DrawTexture(new Rect(art.xMax-18f,art.y+38f,art.width*.46f,art.height*.52f),crystal,ScaleMode.ScaleToFit,true);
-            }
-            GUI.DrawTexture(art,crystal,ScaleMode.ScaleToFit,true);
-            GUI.color=previous;
-            GUI.Label(new Rect(x+10f,474f,width-20f,29f),pack.Amount.ToString("N0")+" SHARDS",amountStyle);
+            EnsureArtwork();tier=Mathf.Clamp(tier,0,3);
+            Color accent=tier==3?new Color(.72f,.48f,1f):new Color(.20f,.88f,1f);
+            Fill(new Rect(card.x+2,card.y+2,card.width-4,3),accent);
+            Fill(new Rect(card.x+2,card.y+5,card.width-4,106),new Color(.015f,.035f,.09f,.82f));
+            GUI.Label(new Rect(card.x+10,card.y+9,card.width-20,22),pack.Name,packStyle);
+            float artWidth=Mathf.Min(124,card.width-48);
+            DrawCluster(new Rect(card.center.x-artWidth*.5f,card.y+26,artWidth,80),tier,accent);
+            amountStyle.fontSize=Mathf.Min(20,Mathf.FloorToInt(card.width*.105f));
+            GUI.Label(new Rect(card.x+8,card.y+108,card.width-16,30),pack.Amount.ToString("N0")+" SHARDS",amountStyle);
         }
 
-        public static void DrawPurchaseIcon(float x,float width,int tier)
+        public static void DrawSubscriptionArtwork(Rect card)
         {
             if(Event.current.type!=EventType.Repaint)return;
             EnsureArtwork();
+            Fill(new Rect(card.x+2,card.y+2,card.width-4,3),new Color(.43f,1f,.88f));
+            DrawCluster(new Rect(card.x+16,card.y+8,86,94),2,new Color(.40f,1f,.90f));
+        }
+
+        static void DrawCluster(Rect art,int tier,Color accent)
+        {
             Color previous=GUI.color;
-            float iconX=x+28f,iconY=519f;
-            GUI.color=tier>=2?new Color(.58f,.43f,1f,.70f):new Color(.20f,.76f,1f,.68f);
-            GUI.DrawTexture(new Rect(iconX-9f,iconY-9f,52f,52f),glow,ScaleMode.StretchToFill,true);
+            float pulse=.90f+.10f*Mathf.Sin(Time.unscaledTime*1.6f+tier);
+            GUI.color=new Color(accent.r,accent.g,accent.b,.80f*pulse);
+            GUI.DrawTexture(new Rect(art.x-22,art.y-15,art.width+44,art.height+30),glow,ScaleMode.StretchToFill,true);
             GUI.color=Color.white;
-            GUI.DrawTexture(new Rect(iconX,iconY,34f,34f),crystal,ScaleMode.ScaleToFit,true);
+            if(tier>=1)GUI.DrawTexture(new Rect(art.x-12,art.y+24,art.width*.60f,art.height*.72f),crystal,ScaleMode.ScaleToFit,true);
+            if(tier>=2)GUI.DrawTexture(new Rect(art.x+art.width*.52f,art.y+28,art.width*.57f,art.height*.68f),crystal,ScaleMode.ScaleToFit,true);
+            if(tier>=3)
+            {
+                GUI.DrawTexture(new Rect(art.x-26,art.y+44,art.width*.45f,art.height*.50f),crystal,ScaleMode.ScaleToFit,true);
+                GUI.DrawTexture(new Rect(art.x+art.width*.80f,art.y+46,art.width*.42f,art.height*.48f),crystal,ScaleMode.ScaleToFit,true);
+            }
+            GUI.DrawTexture(art,crystal,ScaleMode.ScaleToFit,true);
+            // Small white glints remain inside the artwork; no per-frame textures.
+            float cx=art.center.x+art.width*.22f,cy=art.y+22;
+            Fill(new Rect(cx-5,cy,11,1.5f),new Color(1,1,1,.85f*pulse));
+            Fill(new Rect(cx,cy-5,1.5f,11),new Color(1,1,1,.85f*pulse));
             GUI.color=previous;
         }
 
@@ -96,10 +94,10 @@ namespace Alterverse.UI
             Vector2 d = new Vector2(32, 60);
             Vector2 m = new Vector2(65, 58);
 
-            Triangle(p, size, a, b, m, new Color32(92, 235, 255, 255));
-            Triangle(p, size, b, c, m, new Color32(34, 151, 255, 255));
-            Triangle(p, size, c, d, m, new Color32(91, 82, 236, 255));
-            Triangle(p, size, d, a, m, new Color32(171, 247, 255, 255));
+            Triangle(p, size, a, b, m, new Color32(130, 250, 255, 255));
+            Triangle(p, size, b, c, m, new Color32(32, 190, 255, 255));
+            Triangle(p, size, c, d, m, new Color32(115, 95, 255, 255));
+            Triangle(p, size, d, a, m, new Color32(222, 255, 255, 255));
             Line(p, size, a, b, new Color32(224, 255, 255, 255));
             Line(p, size, b, c, new Color32(184, 244, 255, 255));
             Line(p, size, c, d, new Color32(155, 172, 255, 255));
@@ -130,7 +128,7 @@ namespace Alterverse.UI
                 float d = Vector2.Distance(new Vector2(x, y), center) / 31.5f;
                 if (d >= 1f) continue;
                 float a = Mathf.Pow(1f - d, 2.2f);
-                p[y * size + x] = new Color32(90, 90, 255, (byte)(a * 150f));
+                p[y * size + x] = new Color32(255, 255, 255, (byte)(a * 225f));
             }
             tex.SetPixels32(p);
             tex.Apply(false, true);
@@ -182,3 +180,4 @@ namespace Alterverse.UI
         }
     }
 }
+

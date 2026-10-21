@@ -12,7 +12,7 @@ namespace Alterverse.Online
     /// <summary>Google Play Games all-time lifetime match wins.</summary>
     public static class GooglePlayLevelLeaderboard
     {
-        public const string MostWinsLeaderboardId="CgkI57GIjPsdEAIQAA";
+        public const string MostWinsLeaderboardId="CgkI57GljPsdEAIQAA";
         public enum ConnectionState { NotConfigured, Idle, Authenticating, Ready, Submitting, Error, Unsupported }
 
         [Serializable] private sealed class SettingsSnapshot { public string mAppId; }
@@ -26,12 +26,12 @@ namespace Alterverse.Online
         public static bool HasLeaderboardId=>!string.IsNullOrWhiteSpace(MostWinsLeaderboardId)&&
             !MostWinsLeaderboardId.StartsWith("REPLACE_",StringComparison.Ordinal);
         public static bool IsConfigured=>HasLeaderboardId&&HasGameAppId&&
-            string.IsNullOrEmpty(GooglePlayAccountSession.ConfigurationError);
+            string.IsNullOrEmpty(GooglePlayAccountSession.NativeConfigurationError);
         public static ConnectionState State=>IsConfigured?state:ConnectionState.NotConfigured;
         public static string Status=>!HasLeaderboardId?"Add the MOST WINS leaderboard ID from Google Play Console.":
             !HasGameAppId?"Play Games setup incomplete: game App ID is missing. Run Android Setup with the Play Console resources.":
-            !string.IsNullOrEmpty(GooglePlayAccountSession.ConfigurationError)?
-                GooglePlayAccountSession.ConfigurationError:status;
+            !string.IsNullOrEmpty(GooglePlayAccountSession.NativeConfigurationError)?
+                GooglePlayAccountSession.NativeConfigurationError:status;
         public static bool IsBusy=>authenticating||submitting||openingUi;
         public static bool IsAuthenticated
         {
@@ -121,7 +121,13 @@ namespace Alterverse.Online
             if(!IsAuthenticated){AuthenticateAndSync();return;}
             if(AccountServerBootstrap.Instance?.GooglePlayAccountReady!=true||PaidShardCommerce.Instance?.Ready!=true||
                 !AccountProfilePrefs.Attached||AccountProfilePrefs.Account!=PaidShardCommerce.Instance.AccountHash)
-            {state=ConnectionState.Idle;status="Waiting for the linked Google cloud profile before syncing wins.";return;}
+            {
+                state=ConnectionState.Idle;
+                string setup=GooglePlayAccountSession.ConfigurationError;
+                status=!string.IsNullOrEmpty(setup)?setup+" Cloud win sync is unavailable.":
+                    "Waiting for the linked Google cloud profile before syncing wins. Connect Google in PROFILE.";
+                return;
+            }
             if(submitting)return;
             string player=PlayGamesPlatform.Instance.localUser.id;
             if(lastSubmittedPlayer!=player){lastSubmittedPlayer=player;lastSubmittedScore=-1;}
@@ -152,12 +158,8 @@ namespace Alterverse.Online
         {
             if(!IsConfigured){state=ConnectionState.NotConfigured;return;}
 #if UNITY_ANDROID && !UNITY_EDITOR
-            if(!AccountServerBootstrap.CloudProfileReady)
-            {
-                state=ConnectionState.Idle;
-                status="Waiting for the verified Google account and cloud profile. Connect Google in PROFILE.";
-                return;
-            }
+            // Viewing Google's ranking only needs native Play Games sign-in.
+            // SubmitCurrentScore retains the verified cloud-profile/account guard.
             if(openingUi)return;
             if(!IsAuthenticated)
             {
@@ -194,4 +196,5 @@ namespace Alterverse.Online
         private static void Fail(string message){state=ConnectionState.Error;status=message;Debug.LogWarning("DIMENSIONS FRONT: "+message);}
     }
 }
+
 

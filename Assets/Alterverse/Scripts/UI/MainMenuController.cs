@@ -801,23 +801,39 @@ namespace Alterverse.UI
 
         private void DrawShardShop()
         {
-            theme.Label(new Rect(Left,276,ContentWidth,36),"Shard Packs",theme.Heading);
-            theme.Label(new Rect(Left,316,ContentWidth,32),$"BALANCE: {PlayerWallet.Balance} SHARDS  •  Earned and purchased shards are identical.",theme.Small,true);
+            theme.Label(new Rect(Left,270,ContentWidth*.5f,32),"SHARD EXCHANGE",theme.Heading);
+            theme.Label(new Rect(Left+ContentWidth*.5f,274,ContentWidth*.5f,26),$"BALANCE  {PlayerWallet.Balance:N0} SHARDS",theme.Small);
             var store=GooglePlayShardStore.Instance;
-            int packCount=ShardPacks.All.Length;
-            float w=packCount>0?(ContentWidth-16f*(packCount-1))/packCount:0f;
-            for(int i=0;i<ShardPacks.All.Length;i++)
+            var sub=ShardPacks.Subscription;
+            if(sub!=null)
             {
-                var pack=ShardPacks.All[i];float x=Left+i*(w+16);theme.Panel(new Rect(x,368,w,220));
-                theme.Label(new Rect(x+18,384,w-36,28),pack.Name,theme.Small,true);
-                theme.Label(new Rect(x+18,424,w-36,48),pack.Amount+" SHARDS",theme.Heading);
-                ShardShopVisualOverlay.DrawPackCard(x,w,pack,i==packCount-1?3:i);
-                if(theme.Action(new Rect(x+18,508,w-36,60),store!=null?store.Price(pack.Id):"Unavailable",true,enabled:store!=null&&store.CanBuy(pack.Id)))store.Buy(pack.Id);
-                ShardShopVisualOverlay.DrawPurchaseIcon(x,w,i==packCount-1?3:i);
+                Rect club=new Rect(Left,312,ContentWidth,128);
+                theme.Panel(club);ShardShopVisualOverlay.DrawSubscriptionArtwork(club);
+                theme.Label(new Rect(Left+124,322,ContentWidth-400,27),sub.Name+"  /  MONTHLY SUBSCRIPTION",theme.Small);
+                theme.Label(new Rect(Left+124,350,ContentWidth-400,34),$"{sub.Amount:N0} SHARDS EVERY MONTH",theme.Heading);
+                int discount=store?.SubscriptionDiscount??0;
+                string benefit=discount>0?$"SAVE {discount}% per shard vs. available one-time packs":store?.SubscriptionStatus??"Subscription setup in progress";
+                theme.Label(new Rect(Left+124,385,ContentWidth-400,22),benefit,theme.Small,true);
+                bool active=store?.SubscriptionActive==true;
+                string price=store?.Price(sub.Id)??"Unavailable";
+                string action=active?"SUBSCRIPTION ACTIVE":price=="Unavailable"?"COMING SOON":price+" / MONTH";
+                if(theme.Action(new Rect(Right-250,328,232,48),action,true,enabled:store!=null&&store.CanBuy(sub.Id)))store.Buy(sub.Id);
+                if(theme.Action(new Rect(Right-250,382,232,26),"MANAGE / CANCEL"))store?.ManageSubscription();
+                theme.Label(new Rect(Left+16,410,ContentWidth-32,28),"Optional. Automatically bills monthly until cancelled in Google Play. Shards after each successful payment.",theme.Small,true);
             }
-            theme.Label(new Rect(Left,608,ContentWidth-190,64),store!=null?store.Status:"Store unavailable.",theme.Body,true);
-            if(theme.Action(new Rect(Right-170,614,170,54),"RECONNECT",enabled:store!=null&&!store.Busy))store.Reconnect();
+            int packCount=ShardPacks.All.Length;
+            float w=packCount>0?(ContentWidth-14f*(packCount-1))/packCount:0f;
+            for(int i=0;i<packCount;i++)
+            {
+                var pack=ShardPacks.All[i];float x=Left+i*(w+14);
+                Rect card=new Rect(x,446,w,192);theme.Panel(card);
+                ShardShopVisualOverlay.DrawPackCard(card,pack,i);
+                if(theme.Action(new Rect(x+14,584,w-28,44),store!=null?store.Price(pack.Id):"Unavailable",true,enabled:store!=null&&store.CanBuy(pack.Id)))store.Buy(pack.Id);
+            }
+            theme.Label(new Rect(Left,648,ContentWidth-190,42),store!=null?store.Status:"Store unavailable.",theme.Small,true);
+            if(theme.Action(new Rect(Right-170,648,170,42),"RECONNECT",enabled:store!=null&&!store.Busy))store.Reconnect();
         }
+
         private void DrawSkinShop()
         {
             collection.Draw(theme,new Rect(Left,270,ContentWidth,410),(HeroId)selectedHero,false,showcase,changeCollectionHero);
@@ -1540,5 +1556,6 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 

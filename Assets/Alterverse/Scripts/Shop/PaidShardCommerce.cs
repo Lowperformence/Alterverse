@@ -13,7 +13,7 @@ namespace Alterverse.Shop
         {
             public long revision, profileRevision;
             public int balance;
-            public bool voidfall,billingReady;
+            public bool voidfall,billingReady,subscriptionsReady,subscriptionActive;
             public int[] avatars;
             public string[] owned;
             public AccountProfilePrefs.Entry[] profile;
@@ -33,6 +33,8 @@ namespace Alterverse.Shop
         public static bool Spending => Instance != null && (Instance.spending || Instance.socialSpending || Instance.fulfilling || !string.IsNullOrEmpty(Instance.AccountHash) && PlayerPrefs.HasKey(Instance.OperationKey));
         public bool Ready => ready && !string.IsNullOrEmpty(ReadCredential());
         public bool PurchasesReady => Ready && snapshot.billingReady;
+        public bool SubscriptionsReady => PurchasesReady && snapshot.subscriptionsReady;
+        public bool SubscriptionActive => Ready && snapshot.subscriptionActive;
         // Revision survives spending the entire balance; switching must not strand paid history.
         public bool HasPaidHistory=>snapshot.revision>0||snapshot.balance>0||(snapshot.owned?.Length??0)>0;
         public string AccountHash { get; private set; }
@@ -156,7 +158,7 @@ namespace Alterverse.Shop
         public Task<bool> Fulfill(string product,string purchaseToken)
         {
             var task = new TaskCompletionSource<bool>();
-            if (!Ready || !ShardPacks.Contains(product) || string.IsNullOrEmpty(purchaseToken)) { task.SetResult(false); return task.Task; }
+            if (!Ready || !ShardPacks.IsProduct(product) || string.IsNullOrEmpty(purchaseToken)) { task.SetResult(false); return task.Task; }
             pending.Add(task); StartCoroutine(FulfillPurchase(product,purchaseToken,task)); return task.Task;
         }
         IEnumerator FulfillPurchase(string product,string purchaseToken,TaskCompletionSource<bool> task)
@@ -169,7 +171,7 @@ namespace Alterverse.Shop
             try
             {
                 Response response = null;
-                yield return Send("/google-play/fulfill",new Request { productId = product,purchaseToken = purchaseToken },r => response = r);
+                yield return Send(ShardPacks.IsSubscription(product)?"/google-play/subscription":"/google-play/fulfill",new Request { productId = product,purchaseToken = purchaseToken },r => response = r);
                 ok = response?.wallet != null;
                 if (ok) { ApplyWallet(response.wallet); Status = "Shards added. Account balance saved on server."; }
             }
@@ -306,5 +308,6 @@ namespace Alterverse.Shop
         }
     }
 }
+
 
 
