@@ -196,5 +196,3 @@ namespace Alterverse.Online
         private static void Fail(string message){state=ConnectionState.Error;status=message;Debug.LogWarning("DIMENSIONS FRONT: "+message);}
     }
 }
-
-

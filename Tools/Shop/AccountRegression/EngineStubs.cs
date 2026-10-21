@@ -85,4 +85,3 @@ namespace Alterverse.Shop{public static class ShardPacks{public static bool IsSu
         public static bool IsProduct(string id)=>Contains(id)||IsSubscription(id);
         public static bool Contains(string id)=>id=="dimensions_shards_500";}}
 namespace Alterverse.Audio{public enum DimensionSound{Purchase}public static class DimensionAudio{public static void Play(DimensionSound sound,float volume){}}}
-

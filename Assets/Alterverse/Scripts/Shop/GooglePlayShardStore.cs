@@ -510,5 +510,3 @@ namespace Alterverse.Shop
         }
     }
 }
-
-

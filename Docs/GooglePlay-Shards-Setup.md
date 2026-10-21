@@ -51,4 +51,3 @@ References: [Unity purchase lifecycle](https://docs.unity.com/en-us/iap/purchase
 Aktuelle Freigabegrenzen und Data-Safety-Befunde: [GooglePlayReleaseChecklist.md](GooglePlayReleaseChecklist.md). Kontowechsel während Store-Connect wird erneut geprüft; fehlerhafte Credential-Provider werden abgefangen und 401/403 sperrt die Session. Alte Founder-/Recall-Entwicklungs-Grants sind Editor-only. Das ersetzt keine echten Login-, Pending-Order-, Accountwechsel- oder Geräteprüfungen. Refund-/Chargeback-Reconciliation fehlt weiterhin.
 
 Der Microsoft-GDK-Dialog aus Purchasing 5.4.3 erscheint für Windows/Xbox-Buildziele; für Android kein GDK installieren und in Unity das Android-Build-Profil aktivieren. Der Projektadapter erzeugt explizit `StoreController("GooglePlay")` ausschließlich in `UNITY_ANDROID && !UNITY_EDITOR`.
-

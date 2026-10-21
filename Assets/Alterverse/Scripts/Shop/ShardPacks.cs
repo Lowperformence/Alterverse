@@ -20,4 +20,3 @@ namespace Alterverse.Shop
         public static bool Contains(string id){foreach(var p in All)if(p.Id==id)return true;return false;}
     }
 }
-

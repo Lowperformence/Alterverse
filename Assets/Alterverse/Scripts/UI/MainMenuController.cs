@@ -1556,6 +1556,3 @@ namespace Alterverse.UI
         }
     }
 }
-
-
-

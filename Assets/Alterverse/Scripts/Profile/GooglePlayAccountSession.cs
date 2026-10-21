@@ -120,5 +120,3 @@ namespace Alterverse.Profile
         }
     }
 }
-
-

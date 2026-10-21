@@ -134,9 +134,3 @@ class CommerceApplication:
             # Do not expose purchase tokens/credentials in response or logs. Upstream outage is retryable.
             body = b'{"fulfilled":false}'; start_response('503 Service Unavailable', [('Content-Type', 'application/json')])
         return [body]
-
-
-
-
-
-

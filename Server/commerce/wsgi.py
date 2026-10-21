@@ -62,4 +62,3 @@ def create_application():
                                **({'ranked': ranked, 'ranked_server_key': server_key} if ranked is not None else {}))
 
 application=create_application()
-

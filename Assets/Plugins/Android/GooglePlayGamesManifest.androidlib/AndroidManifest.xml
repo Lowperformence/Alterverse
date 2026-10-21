@@ -24,5 +24,3 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
     </application>
 </manifest>
-
-
