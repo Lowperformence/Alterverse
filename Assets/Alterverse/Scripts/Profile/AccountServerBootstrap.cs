@@ -304,7 +304,7 @@ namespace Alterverse.Profile
             string configuration=GooglePlayAccountSession.ConfigurationError;
             if(!string.IsNullOrEmpty(configuration)){GoogleStatus=configuration;return false;}
             if(!await GooglePlayAccountSession.AuthenticateAsync(interactive))
-            {GoogleStatus="Google Play sign-in failed or timed out. Tap CONNECT GOOGLE to retry.";return false;}
+            {GoogleStatus=GooglePlayAccountSession.LastError;return false;}
             if(await VerifyGoogleLinkAsync())return true;
             var auth=AuthenticationService.Instance;
             var info=await auth.GetPlayerInfoAsync();
@@ -386,7 +386,3 @@ namespace Alterverse.Profile
         }
     }
 }
-
-
-
-

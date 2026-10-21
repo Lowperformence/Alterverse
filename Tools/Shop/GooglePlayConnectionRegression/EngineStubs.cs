@@ -112,12 +112,20 @@ namespace GooglePlayGames
     {
         public static PlayGamesPlatform Instance=new();
         public bool Authenticated;public int SignIns,Views,Reports;public long Score;public string ViewedId;
+        public int ManualSignIns;public bool DeferSignIn,ThrowOnSignIn;
+        public SignInStatus SignInResult=SignInStatus.Success;public Action<SignInStatus> PendingSignIn;
         public LocalUser localUser=new();
         public static void Activate(){}
         public bool IsAuthenticated()=>Authenticated;
         public string GetUserDisplayName()=>"Player";
-        public void Authenticate(Action<SignInStatus> done){SignIns++;Authenticated=true;done(SignInStatus.Success);}
-        public void ManuallyAuthenticate(Action<SignInStatus> done)=>Authenticate(done);
+        public void Authenticate(Action<SignInStatus> done)
+        {
+            SignIns++;
+            if(ThrowOnSignIn)throw new InvalidOperationException("sensitive-native-message");
+            if(DeferSignIn){PendingSignIn=done;return;}
+            Authenticated=SignInResult==SignInStatus.Success;done(SignInResult);
+        }
+        public void ManuallyAuthenticate(Action<SignInStatus> done){ManualSignIns++;Authenticate(done);}
         public void RequestServerSideAccess(bool refresh,Action<string> done)=>done("single-use-code");
         public void ReportScore(long score,string id,Action<bool> done){Reports++;Score=score;done(true);}
         public void ShowLeaderboardUI(string id,LeaderboardTimeSpan span,Action<UIStatus> done){Views++;ViewedId=id;done(UIStatus.UserClosedUI);}
@@ -127,7 +135,21 @@ namespace GooglePlayGames
 namespace Alterverse.Profile
 {
     public sealed class AccountServerBootstrap
-    {public static AccountServerBootstrap Instance;public bool Busy,GooglePlayAccountReady;public string GoogleStatus="Connect Google Play Games.";public string Status="Account unavailable.";}
+    {
+        public static AccountServerBootstrap Instance;public bool Busy,GooglePlayAccountReady;
+        public string GoogleStatus="Connect Google Play Games.";public string Status="Account unavailable.";
+        public int GoogleConnections;public bool ReconnectSucceeds=true,ThrowOnReconnect;
+        public TaskCompletionSource<bool> GoogleConnection;public Action OnGoogleConnected;
+        public async Task<bool> ConnectGoogleAsync(bool restore=false)
+        {
+            GoogleConnections++;
+            if(ThrowOnReconnect)throw new InvalidOperationException("sensitive-native-message");
+            bool success=GoogleConnection!=null?await GoogleConnection.Task:ReconnectSucceeds;
+            if(success){GooglePlayAccountReady=true;OnGoogleConnected?.Invoke();}
+            else GoogleStatus="Google Play sign-in failed (Failed, 1). Tap RECONNECT to retry.";
+            return success;
+        }
+    }
     public static class PlayerWallet {public static int TestGrants;public static bool GrantGooglePlayBillingTest(string id,string token){TestGrants++;return true;}}
     public static class PlayerProfile {public static string PlayerName=>"Player";}
     public static class AccountProfilePrefs {public static bool Attached;public static string Account;}
@@ -140,9 +162,9 @@ namespace Alterverse.Shop
     {
         public static PaidShardCommerce Instance;public bool Ready,PurchasesReady,SubscriptionsReady,SubscriptionActive;
         public string AccountHash="account-a",Status="Account unavailable.";public int SessionVersion=1;
-        public int Fulfillments;public TaskCompletionSource<bool> Fulfillment;
+        public int Fulfillments,Refreshes;public TaskCompletionSource<bool> Fulfillment;
         public Task<bool> Fulfill(string product,string token){Fulfillments++;return Fulfillment?.Task??Task.FromResult(true);}
-        public void Refresh(){}
+        public void Refresh(){Refreshes++;}
     }
 }
 namespace Alterverse.Audio

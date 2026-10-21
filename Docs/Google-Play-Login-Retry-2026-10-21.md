@@ -1,0 +1,11 @@
+# Google Play login retry
+
+The shop could show `Google Play sign-in failed or timed out` while its RECONNECT button only refreshed commerce and reset the billing controller. It never called the Google account recovery flow, so tapping that button could not retry the failed identity step.
+
+RECONNECT now invokes `AccountServerBootstrap.ConnectGoogleAsync()` when Google identity is not ready, before refreshing commerce or reconnecting billing. Concurrent taps and the account flow's nested store reconnect cannot start duplicate recovery. A failed login preserves its account status and does not manufacture an outstanding purchase. Existing identity, purchase-verification and account-switch guards remain authoritative. Explicit local billing test builds keep their separate connection path.
+
+`GooglePlayAccountSession.LastError` now distinguishes native SDK rejection (enum and numeric value), missing native configuration, a callback timeout and an exception starting authentication. The account UI uses this diagnostic. Exception messages, authorization codes and credentials are not logged.
+
+Validation: `python Tools/Shop/GooglePlayConnectionRegression/run.py --dotnet-root /path/to/dotnet` passes 47 production and 34 isolated billing-test checks, plus non-Android compilation and the native manifest App ID check. New coverage includes failed and successful shop-driven Google recovery, concurrent taps, a reentrant account callback, recovery exceptions, native status reporting, interactive retry and concurrent native callers. The original shop fails the new login-retry scenario as a negative control. Native SDK callbacks, Unity engine and network remain fixtures.
+
+This fixes the retry path and diagnostics in source. It does not establish the cause of the installed build's original Google rejection. Compile in Unity, install the signed Android build and retry sign-in. If Google still rejects it, capture the displayed SDK status and device logcat, then verify package name, installed signing-certificate SHA-1, Play Games tester access and published game settings. A direct Unity APK and a Play-delivered build can use different signing certificates. Unity Authentication's web-client provider is a later account-linking step; Edgegap hosts multiplayer and cannot repair a native Google Play Games sign-in rejection.

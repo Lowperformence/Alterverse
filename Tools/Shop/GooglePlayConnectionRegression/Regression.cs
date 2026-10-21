@@ -116,6 +116,52 @@ static class Regression
         Check(shop.Price(ShardPacks.Subscription.Id)=="Unavailable","Unsupported trial cannot silently replace the advertised recurring offer");
         Destroy(shop);
 
+#if !DF_GOOGLE_PLAY_SHARD_TEST
+        shop=New(true,true,true);
+        var account=AccountServerBootstrap.Instance;account.GooglePlayAccountReady=false;
+        account.ReconnectSucceeds=false;shop.Reconnect();Tick(shop);
+        Check(account.GoogleConnections==1&&StoreController.Created.Count==0&&!shop.PendingRecovery,
+            "Shop RECONNECT retries Google login without inventing a pending purchase after login fails");
+        Check(shop.Status.Contains("Failed, 1")&&PaidShardCommerce.Instance.Refreshes==0,
+            "Failed login remains visible and does not refresh a different or unavailable account");
+        account.ReconnectSucceeds=true;account.GoogleConnection=new();
+        account.OnGoogleConnected=shop.Reconnect;
+        shop.Reconnect();shop.Reconnect();
+        Check(account.GoogleConnections==2&&StoreController.Created.Count==0,
+            "Repeated taps share one pending account recovery before connecting billing");
+        account.GoogleConnection.SetResult(true);await Task.Delay(10);Tick(shop);
+        Check(shop.Ready&&!shop.PendingRecovery&&account.GoogleConnections==2&&PaidShardCommerce.Instance.Refreshes==1,
+            "Successful identity recovery reconnects billing once, including a reentrant account callback");
+        Destroy(shop);
+
+        shop=New();account=AccountServerBootstrap.Instance;account.GooglePlayAccountReady=false;
+        account.ThrowOnReconnect=true;shop.Reconnect();await Task.Delay(10);
+        account.ThrowOnReconnect=false;shop.Reconnect();Tick(shop);
+        Check(account.GoogleConnections==2&&StoreController.Created.Count==1,
+            "An account recovery exception releases the retry guard without escaping async void");
+        Destroy(shop);
+#endif
+
+        Resources.Settings=new(){mWebClientId="configured.apps.googleusercontent.com"};
+        PlayGamesPlatform.Instance=new(){SignInResult=GooglePlayGames.BasicApi.SignInStatus.Failed};
+        Check(!await GooglePlayAccountSession.AuthenticateAsync()&&GooglePlayAccountSession.LastError.Contains("Failed, 1"),
+            "Native sign-in preserves the SDK status and numeric code instead of a generic timeout");
+        PlayGamesPlatform.Instance.SignInResult=GooglePlayGames.BasicApi.SignInStatus.Success;
+        Check(await GooglePlayAccountSession.AuthenticateAsync(true)&&PlayGamesPlatform.Instance.ManualSignIns==1&&GooglePlayAccountSession.LastError=="",
+            "Manual retry invokes native interactive sign-in and clears the previous error on success");
+        PlayGamesPlatform.Instance=new(){DeferSignIn=true};
+        var nativeFirst=GooglePlayAccountSession.AuthenticateAsync();
+        var nativeSecond=GooglePlayAccountSession.AuthenticateAsync();
+        Check(ReferenceEquals(nativeFirst,nativeSecond)&&PlayGamesPlatform.Instance.SignIns==1,
+            "Diagnostics retain serialization of concurrent native sign-ins");
+        PlayGamesPlatform.Instance.Authenticated=true;
+        PlayGamesPlatform.Instance.PendingSignIn(GooglePlayGames.BasicApi.SignInStatus.Success);
+        Check(await nativeFirst&&await nativeSecond,"Shared native callback completes both callers");
+        PlayGamesPlatform.Instance=new(){ThrowOnSignIn=true};
+        Check(!await GooglePlayAccountSession.AuthenticateAsync()&&GooglePlayAccountSession.LastError.Contains("InvalidOperationException")&&
+            !GooglePlayAccountSession.LastError.Contains("sensitive-native-message"),
+            "Native exceptions identify the failure without exposing exception messages or credentials");
+
         Resources.Settings=new(){mWebClientId=""};PlayGamesPlatform.Instance=new();
         Check(GooglePlayAccountSession.NativeConfigurationError==""&&GooglePlayAccountSession.ConfigurationError.Contains("Web Client"),"Native sign-in and server authorization have distinct setup requirements");
         AccountServerBootstrap.Instance.GooglePlayAccountReady=false;

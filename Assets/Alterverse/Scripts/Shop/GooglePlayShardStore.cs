@@ -94,7 +94,7 @@ namespace Alterverse.Shop
         void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;DontDestroyOnLoad(gameObject);}
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-        StoreController store;bool connecting,retryRequested;float nextConnect;
+        StoreController store;bool connecting,retryRequested,reconnectingAccount;float nextConnect;
         const float StoreCallbackTimeout=30f;
         enum StartupStage { None, Connecting, Products, Purchases }
         StartupStage startupStage;float startupDeadline;
@@ -488,17 +488,37 @@ namespace Alterverse.Shop
 #endif
         }
 
-        public void Reconnect()
+        public async void Reconnect()
         {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if(Busy||processing.Count>0||reconnectingAccount)return;
+#if !DF_GOOGLE_PLAY_SHARD_TEST
+            var account=Alterverse.Profile.AccountServerBootstrap.Instance;
+            if(account!=null&&!account.GooglePlayAccountReady)
+            {
+                // The shop surfaces GoogleStatus, so its retry must also recover
+                // that identity. Do not mark a purchase pending before account login.
+                reconnectingAccount=true;
+                try { if(!await account.ConnectGoogleAsync())return; }
+                catch(Exception error)
+                {
+                    Debug.LogWarning("DIMENSIONS FRONT: Google account reconnect failed ("+error.GetType().Name+").");
+                    return;
+                }
+                finally { reconnectingAccount=false; }
+                if(this==null||Busy||processing.Count>0)return;
+            }
+#endif
+#endif
 #if !DF_GOOGLE_PLAY_SHARD_TEST
             PaidShardCommerce.Instance?.Refresh();
 #endif
 #if UNITY_ANDROID && !UNITY_EDITOR
-            if(Busy||processing.Count>0)return;
             ResetConnection();PendingRecovery=true;
             Status="Reconnecting to Google Play…";
             retryRequested=false;nextConnect=0;
 #endif
+            await Task.CompletedTask;
         }
 
         void OnDestroy()

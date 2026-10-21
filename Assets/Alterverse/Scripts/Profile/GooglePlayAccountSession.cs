@@ -13,6 +13,7 @@ namespace Alterverse.Profile
     {
         [Serializable] sealed class Settings { public string mAppId,mWebClientId; }
         static Task<bool> signingIn;
+        public static string LastError { get; private set; } = "";
         public static bool Supported
         {
             get
@@ -76,7 +77,14 @@ namespace Alterverse.Profile
             }
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void Reset()=>signingIn=null;
+        static void Reset(){signingIn=null;LastError="";}
+
+        static bool SignInFailed(string message)
+        {
+            LastError=message;
+            Debug.LogWarning("DIMENSIONS FRONT: "+message);
+            return false;
+        }
 
         public static Task<bool> AuthenticateAsync(bool interactive=false)
         {
@@ -86,17 +94,23 @@ namespace Alterverse.Profile
         static async Task<bool> AuthenticateCoreAsync(bool interactive)
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
-            var done=new TaskCompletionSource<bool>();
+            LastError="";
+            string configuration=NativeConfigurationError;
+            if(!string.IsNullOrEmpty(configuration))return SignInFailed(configuration);
+            var done=new TaskCompletionSource<SignInStatus>();
             try
             {
                 PlayGamesPlatform.Activate();
                 if(IsAuthenticated)return true;
-                if(interactive)PlayGamesPlatform.Instance.ManuallyAuthenticate(result=>done.TrySetResult(result==SignInStatus.Success));
-                else PlayGamesPlatform.Instance.Authenticate(result=>done.TrySetResult(result==SignInStatus.Success));
-                if(await Task.WhenAny(done.Task,Task.Delay(30000))!=done.Task)return false;
-                return await done.Task;
+                if(interactive)PlayGamesPlatform.Instance.ManuallyAuthenticate(result=>done.TrySetResult(result));
+                else PlayGamesPlatform.Instance.Authenticate(result=>done.TrySetResult(result));
+                if(await Task.WhenAny(done.Task,Task.Delay(30000))!=done.Task)
+                    return SignInFailed("Google Play sign-in timed out. Tap RECONNECT to retry.");
+                var result=await done.Task;
+                return result==SignInStatus.Success || SignInFailed("Google Play sign-in failed ("+result+", "+(int)result+"). Tap RECONNECT to retry.");
             }
-            catch(Exception){return false;}
+            // Do not include exception messages: native errors may contain credentials.
+            catch(Exception error){return SignInFailed("Google Play sign-in could not start ("+error.GetType().Name+"). Tap RECONNECT to retry.");}
 #else
             await Task.CompletedTask;return false;
 #endif
