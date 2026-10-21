@@ -123,7 +123,8 @@ namespace Alterverse.Profile
                         if(!auth.IsSignedIn)
                         {
                             Status="Google Play sign-in required. Existing progress is safe.";
-                            GoogleStatus="Unable to sign in to Google Play. Tap CONNECT GOOGLE to retry. No guest account was created.";
+                            GoogleStatus=string.IsNullOrEmpty(GooglePlayAccountSession.LastError)?
+                                "Unable to sign in to Google Play. Tap CONNECT GOOGLE to retry. No guest account was created.":GooglePlayAccountSession.LastError;
                             return false;
                         }
                     }
@@ -255,7 +256,8 @@ namespace Alterverse.Profile
                     string code=await GooglePlayAccountSession.AuthorizationCodeAsync(true);
                     if(string.IsNullOrEmpty(code))
                     {
-                        GoogleStatus="Google authorization unavailable. Check Play Games configuration.";
+                        GoogleStatus=string.IsNullOrEmpty(GooglePlayAccountSession.LastError)?
+                            "Google authorization unavailable. Check Play Games configuration.":GooglePlayAccountSession.LastError;
                         return false;
                     }
                     // A genuinely fresh installation may create its first Google-linked
@@ -304,7 +306,8 @@ namespace Alterverse.Profile
             string configuration=GooglePlayAccountSession.ConfigurationError;
             if(!string.IsNullOrEmpty(configuration)){GoogleStatus=configuration;return false;}
             if(!await GooglePlayAccountSession.AuthenticateAsync(interactive))
-            {GoogleStatus=GooglePlayAccountSession.LastError;return false;}
+            {GoogleStatus=string.IsNullOrEmpty(GooglePlayAccountSession.LastError)?
+                "Google Play sign-in failed. Tap RECONNECT to retry.":GooglePlayAccountSession.LastError;return false;}
             if(await VerifyGoogleLinkAsync())return true;
             var auth=AuthenticationService.Instance;
             var info=await auth.GetPlayerInfoAsync();
@@ -320,7 +323,8 @@ namespace Alterverse.Profile
                 {GoogleStatus="Save the current cloud account before restoring another account.";return false;}
             }
             string code=await GooglePlayAccountSession.AuthorizationCodeAsync(interactive);
-            if(string.IsNullOrEmpty(code)){GoogleStatus="Google authorization unavailable. Check the Web Client ID and identity provider setup.";return false;}
+            if(string.IsNullOrEmpty(code)){GoogleStatus=string.IsNullOrEmpty(GooglePlayAccountSession.LastError)?
+                "Google authorization unavailable. Check the Web Client ID and identity provider setup.":GooglePlayAccountSession.LastError;return false;}
             string previousPlayer=auth.PlayerId;
             try
             {
