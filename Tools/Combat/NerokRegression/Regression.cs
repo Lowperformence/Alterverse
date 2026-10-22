@@ -209,11 +209,12 @@ class Regression
         var manager=new Unity.Netcode.NetworkManager{IsListening=true,IsConnectedClient=true,IsServer=false};Unity.Netcode.NetworkManager.Singleton=manager;
         CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Call(commands,"Update");
         Check(CoopGameplayCommands.TrySendAbility(actor,0,pose),"client sends captured hook point");
+        Check(manager.CustomMessagingManager.LastMessage=="DF_COOP_ABILITY_V7","hook uses the current ability wire format");
         var packet=manager.CustomMessagingManager.LastPacket;
         CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;
         CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
         actor.transform.position=Vector3.right*.7f;
-        manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(packet));Run(1);
+        manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V7"](1,new Unity.Netcode.FastBufferReader(packet));Run(1);
         Near(Hp(target),972,"host uses same captured hook trajectory after caster movement");
     }
     static void Main()

@@ -27,7 +27,7 @@ names = [
     'Combat/SoftTargeting.cs', 'Combat/ManualAiming.cs', 'Multiplayer/CoopGameplayCommands.cs',
     'Audio/HeroCombatAudio.cs', 'Audio/CombatSoundPalette.cs', 'UI/HeroAttackCatalog.cs',
     'UI/CombatHudLayout.cs', 'UI/AbilityRangePreviewOverlay.cs',
-    'Visuals/HeroSkillVfx.VoidKnight.cs', 'Visuals/VoidKnightPresentation.cs',
+    'Visuals/HeroVfxEvents.cs', 'Visuals/HeroSkillVfx.VoidKnight.cs', 'Visuals/VoidKnightPresentation.cs',
 ]
 # Reuse the existing combat fixtures; compile the complete current ability partials unchanged.
 engine = (root / 'Tools/Aiming/Regression/EngineStubs.cs').read_text()

@@ -185,7 +185,7 @@ partial class Regression
   Check(HeroCombatStatus.CanAct(a)&&HeroCombatStatus.Speed(a)>0,"Timmy remains free after moving away");
   Run(.5f);Near(Total(b),1000-TimmyBalance.BasicDamage-TimmyBalance.ClawDamage-TimmyBalance.ScratchDamage,"Scratch applies four ticks after caster movement without duplicate damage");
   Check(!b.GetComponent<HeroCombatStatus>().Rooted,"victim hold ends on schedule after caster movement");
-  Near(TimmyBalance.BaseShield,50,"Timmy's rechargeable shield capacity is explicit");
+  Near(TimmyBalance.BaseShield,80,"Timmy's rechargeable shield capacity is explicit");
   Near(AimingSettings.Current.For(HeroId.Timmy,2).castRange,4.5f,"Jet Pounce execution and aim preview share the requested 4.5m range");
 
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*10);
