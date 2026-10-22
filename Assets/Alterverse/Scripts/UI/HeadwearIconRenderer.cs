@@ -5,8 +5,17 @@ namespace Alterverse.UI
     internal static class HeadwearIconRenderer
     {
         static GUIStyle label;
-        public static void Draw(Rect rect)
+        static Texture2D ufoIcon;
+        static bool ufoLoaded;
+        public static void Draw(Rect rect,Alterverse.Shop.UniversalHeroCosmetic item=Alterverse.Shop.UniversalHeroCosmetic.BetaCap)
         {
+            if(item==Alterverse.Shop.UniversalHeroCosmetic.UfoTestHat)
+            {
+                if(!ufoLoaded){ufoIcon=Resources.Load<Texture2D>("Headwear/UfoTestHatIcon");ufoLoaded=true;}
+                if(ufoIcon!=null)GUI.DrawTexture(rect,ufoIcon,ScaleMode.ScaleToFit,true);
+                else GUI.Label(rect,"UFO");
+                return;
+            }
             Color old=GUI.color;
             Vector2 c=rect.center;
             float s=Mathf.Min(rect.width,rect.height);

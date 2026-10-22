@@ -280,7 +280,7 @@ namespace Alterverse.UI
         }
         private static void CosmeticIcon(Rect rect,CosmeticDefinition definition,bool owned)
         {
-            if(definition.Headwear){HeadwearIconRenderer.Draw(rect);return;}
+            if(definition.Headwear){HeadwearIconRenderer.Draw(rect,definition.Id);return;}
             Texture2D icon=WingPreviewIcons.Load(definition.Id);
             if(icon!=null)
             {

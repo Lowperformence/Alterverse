@@ -39,7 +39,10 @@ namespace Alterverse.Shop
             new(UniversalHeroCosmetic.DeluxeWings,DeluxeWings.Name,DeluxeWings.Price,DeluxeWings.OwnedKey,CosmeticCategory.Wings,"Faceted silver crystal wings with icy cyan fractures.",new Color(.72f,.92f,1f)),
             new(UniversalHeroCosmetic.BetaCap,HeadwearSelection.BetaCapName,0,HeadwearSelection.BetaCapOwnedKey,CosmeticCategory.Skins,
                 "Exclusive BETA cap. Separate headwear slot for every hero; can be worn with wings.",new Color(.45f,.83f,1f),
-                headwear:true,purchasable:false,unlockLabel:"PREMIUM BATTLE PASS / LEVEL 50")
+                headwear:true,purchasable:false,unlockLabel:"PREMIUM BATTLE PASS / LEVEL 50"),
+            new(UniversalHeroCosmetic.UfoTestHat,HeadwearSelection.UfoName,HeadwearSelection.UfoPrice,HeadwearSelection.UfoOwnedKey,
+                CosmeticCategory.Skins,"A confused little UFO with crooked antennae. Test headwear; wear it with wings.",
+                new Color(.25f,.9f,.7f),headwear:true,unlockLabel:"1 SHARD")
         };
         public static IReadOnlyList<CosmeticDefinition> All { get; }=System.Array.AsReadOnly(definitions);
         public static CosmeticDefinition Find(UniversalHeroCosmetic id)
@@ -59,6 +62,7 @@ namespace Alterverse.Shop
             UniversalHeroCosmetic.DeluxeWings=>"deluxe_wings",
             UniversalHeroCosmetic.AngelWings=>"angel_wings",
             UniversalHeroCosmetic.RgbRiftWings=>"rgb_rift_wings",
+            UniversalHeroCosmetic.UfoTestHat=>"ufo_test_hat",
             _=>""
         };
         public static AvatarPurchaseResult Purchase(UniversalHeroCosmetic id)

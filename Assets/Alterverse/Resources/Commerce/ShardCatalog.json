@@ -22,6 +22,7 @@
     }
   ],
   "cosmetics": [
+    {"id":"ufo_test_hat","price":1,"writes":[{"key":"DF_HeadwearOwned_UfoTestHat","kind":0,"number":1}]},
     {
       "id": "angel_wings",
       "price": 11000,

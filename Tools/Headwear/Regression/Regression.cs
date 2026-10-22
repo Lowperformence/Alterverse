@@ -195,7 +195,52 @@ static class Regression
         {Check(list.Length%3==0,"Invalid triangles.");foreach(int index in list)Check(index>=0&&index<mesh.vertexCount,"Out-of-range triangle index.");}
         Check(mesh.bounds.max.z>1.5f&&mesh.bounds.max.y>.7f,"Cap has no visor or crown.");
         Check(mesh.Indices[2].Length>0,"BETA lettering missing.");
-        AttachmentChecks();NetworkChecks();
+        AttachmentChecks();NetworkChecks();UfoChecks();
         Console.WriteLine("PASS "+checks+" headwear, battle-pass, persistence, mesh and message checks; Unity fit/device/live multiplayer validation remains required.");
+    }
+    static void UfoChecks()
+    {
+        Reset(1,false);
+        var item=CosmeticCatalog.Find(UniversalHeroCosmetic.UfoTestHat);
+        Check(item.Headwear&&item.Purchasable&&item.Price==1&&item.PriceLabel=="1 SHARD","UFO is not the requested 1-shard shop item.");
+        Check(CosmeticCatalog.Sku(item.Id)=="ufo_test_hat","UFO client/server SKU mismatch.");
+        Check(CosmeticCatalog.Purchase(item.Id)==AvatarPurchaseResult.InsufficientShards&&!CosmeticCatalog.IsOwned(item.Id),"Zero-shard account received the UFO.");
+        AccountProfilePrefs.SetInt("DF_Shards",1);AccountProfilePrefs.SetInt("DF_AccountXP",777);
+        Check(CosmeticCatalog.Purchase(item.Id)==AvatarPurchaseResult.Purchased,"Exact 1-shard purchase failed.");
+        Check(PlayerWallet.Balance==0&&CosmeticCatalog.IsOwned(item.Id),"Purchase did not charge exactly one shard and grant ownership.");
+        Check(HeadwearSelection.EquippedFor(HeroId.Rook)==UniversalHeroCosmetic.Original,"Purchase auto-equipped the UFO.");
+        Check(CosmeticCatalog.Purchase(item.Id)==AvatarPurchaseResult.AlreadyOwned&&PlayerWallet.Balance==0,"Repeated purchase charged twice.");
+        AccountProfilePrefs.SetInt(UniversalSkin.OwnedKey,1);
+        for(int i=0;i<HeroIdentity.HeroCount;i++)
+        {
+            var hero=(HeroId)i;UniversalCosmeticSelection.EquipFor(hero,UniversalHeroCosmetic.Voidfall);
+            Check(UniversalCosmeticSelection.EquipFor(hero,item.Id)&&HeadwearSelection.EquippedFor(hero)==item.Id,"UFO cannot equip on a catalog hero.");
+            Check(UniversalCosmeticSelection.EquippedFor(hero)==UniversalHeroCosmetic.Voidfall,"UFO displaced wings.");
+        }
+        string snapshot=JsonSerializer.Serialize(AccountProfilePrefs.Ints);
+        AccountProfilePrefs.Ints=JsonSerializer.Deserialize<Dictionary<string,int>>(snapshot);
+        Check(HeadwearSelection.EquippedFor(HeroId.Rook)==item.Id&&AccountProfilePrefs.GetInt("DF_AccountXP")==777,"UFO loadout/profile reload failed.");
+        Check(Alterverse.Match.WingMatchRewardBonus.Percent(item.Id)==0,"UFO introduced a progression bonus.");
+        int commits=ProfileTransaction.Commits.Count;
+        Check(UfoHatMesh.TryBuild(Matrix4x4.identity,Shader.Find("fixture"),out Mesh mesh,out Material[] materials,out string error),"Blender mesh did not load: "+error);
+        Check(mesh.vertexCount==2579&&mesh.Indices.Values.Sum(x=>x.Length)==4984*3&&mesh.subMeshCount==6&&materials.Length==6,"Runtime mesh differs from the real Blender export.");
+        foreach(bool authored in new[]{false,true})
+        {
+            var actor=Actor(authored);var view=actor.GetComponent<HeadwearPresentation>();
+            Check(view.Apply(item.Id)&&view.Head.Find("DF_Headwear_UfoTestHat")!=null,"UFO failed real/procedural head-bound attachment.");
+            Check(view.Apply(UniversalHeroCosmetic.BetaCap)&&view.Head.Find("DF_Headwear_UfoTestHat")==null,"Switching hats retained UFO geometry.");
+            Check(view.Apply(item.Id)&&view.Head.Find("DF_Headwear_BetaCap")==null,"Switching back retained cap geometry.");
+            Check(view.Apply(UniversalHeroCosmetic.Original),"UFO unequip failed.");
+        }
+        Check(ProfileTransaction.Commits.Count==commits,"UFO rendering changed account progress.");
+        var manager=new Unity.Netcode.NetworkManager{IsServer=true};Unity.Netcode.NetworkManager.Singleton=manager;
+        Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority=true;
+        var sync=new Alterverse.Multiplayer.CoopHeroStateSync();sync.Initialize();sync.Put(1,Actor());
+        sync.Request(7,Alterverse.Multiplayer.CoopPlanHandshake.Round,1,new Unity.Collections.FixedString128Bytes("player"),8);
+        Check(sync.Value(1)==item.Id&&sync.Messages.Sent.Count==1,"Server did not accept/relay the new UFO ID.");sync.Stop();
+        manager.IsServer=false;Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority=false;
+        var remote=Actor();var client=new Alterverse.Multiplayer.CoopHeroStateSync();client.Initialize();client.Put(1,remote);client.State(0,StatePacket(8));
+        Check(remote.GetComponent<HeadwearPresentation>().Current==item.Id,"Client did not apply server UFO state.");client.Stop();
+        Reset(1,false);Check(!CosmeticCatalog.IsOwned(item.Id)&&!HeadwearSelection.EquipFor(HeroId.Rook,item.Id),"Another profile inherited the UFO.");
     }
 }

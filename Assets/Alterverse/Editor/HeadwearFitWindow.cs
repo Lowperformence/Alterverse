@@ -12,7 +12,9 @@ namespace Alterverse.EditorChecks
         PreviewRenderUtility preview;
         GameObject actor;
         HeroId hero;
-        bool cap=true,wings,closeup=true;
+        enum Hat {None,BetaCappy,UfoTestHat}
+        Hat hat=Hat.BetaCappy;
+        bool wings,closeup=true;
         float yaw=15,pitch,headTilt;
         Quaternion headRest;
         string status="";
@@ -22,24 +24,27 @@ namespace Alterverse.EditorChecks
         void Build()
         {
             preview?.Cleanup();preview=new PreviewRenderUtility();
-            actor=CreatePreviewActor(hero,cap,wings);
+            var selected=hat==Hat.BetaCappy?UniversalHeroCosmetic.BetaCap:hat==Hat.UfoTestHat?UniversalHeroCosmetic.UfoTestHat:UniversalHeroCosmetic.Original;
+            actor=CreatePreviewActor(hero,selected,wings);
             preview.AddSingleGO(actor);
             var view=actor.GetComponent<HeadwearPresentation>();
             if(view.Head!=null)headRest=view.Head.localRotation;
-            status=cap?(view.Current==UniversalHeroCosmetic.BetaCap?
-                "Head found: "+view.Head.name+" · bounds "+view.HeadBounds.size: view.LastFitError):"Cappy removed; wing selection retained.";
+            status=selected!=UniversalHeroCosmetic.Original?(view.Current==selected?
+                "Head found: "+view.Head.name+" · bounds "+view.HeadBounds.size: view.LastFitError):"Headwear removed; wing selection retained.";
             preview.camera.nearClipPlane=.01f;preview.camera.farClipPlane=50;
             preview.camera.clearFlags=CameraClearFlags.SolidColor;preview.camera.backgroundColor=new Color(.025f,.035f,.055f);
             preview.lights[0].intensity=1.3f;preview.lights[0].transform.rotation=Quaternion.Euler(35,25,0);
             preview.lights[1].intensity=.8f;preview.lights[1].transform.rotation=Quaternion.Euler(10,210,0);
         }
         internal static GameObject CreatePreviewActor(HeroId id,bool cap,bool wings)
+            =>CreatePreviewActor(id,cap?UniversalHeroCosmetic.BetaCap:UniversalHeroCosmetic.Original,wings);
+        internal static GameObject CreatePreviewActor(HeroId id,UniversalHeroCosmetic headwear,bool wings)
         {
             var go=new GameObject("DF_HeadwearPreview_"+id){hideFlags=HideFlags.HideAndDontSave};
             go.AddComponent<HeroIdentity>().Configure(id);
             var selection=go.AddComponent<SkinPreviewSelection>();
             selection.UniversalCosmetic=wings?UniversalHeroCosmetic.Voidfall:UniversalHeroCosmetic.Original;
-            selection.Headwear=cap?UniversalHeroCosmetic.BetaCap:UniversalHeroCosmetic.Original;
+            selection.Headwear=headwear;
             go.AddComponent<StylizedHeroVisual>().Build();
             return go;
         }
@@ -48,7 +53,7 @@ namespace Alterverse.EditorChecks
             EditorGUILayout.HelpBox("Isolated model preview. No ownership, purchases, player saves, levels or scenes are changed.",MessageType.Info);
             EditorGUI.BeginChangeCheck();
             hero=(HeroId)EditorGUILayout.EnumPopup("Hero",hero);
-            cap=EditorGUILayout.Toggle("BETA Cappy",cap);
+            hat=(Hat)EditorGUILayout.EnumPopup("Headwear",hat);
             wings=EditorGUILayout.Toggle("Preview with Voidfall wings",wings);
             bool rebuild=EditorGUI.EndChangeCheck();
             closeup=EditorGUILayout.Toggle("Head close-up",closeup);

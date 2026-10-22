@@ -9,14 +9,14 @@ Add a navy 3D baseball cap with cyan stitching and white BETA lettering. One acc
 | 25 | Beta Crown avatar (ID 16), moved from tier 50 | Retained |
 | 50, final tier | BETA Cappy | Retained: 200 shards and 3 shield cores |
 
-The cap appears in **Inventory > Cosmetics > Skins** after it is unlocked. It cannot be bought for shards or accidentally purchased at its catalog price of zero. No new headwear shop purchases are introduced.
+The cap appears in **Inventory > Cosmetics > Skins** after it is unlocked. It cannot be bought for shards or accidentally purchased at its catalog price of zero. The separately requested UFO test hat is a 1-shard shop item; see `Docs/UFO-Test-Hat.md`.
 
 The free track, pass XP curve, prices, 800-shard premium return, combat, existing wing behavior, heroes and maps retain their existing behavior. Changes outside this scope require the owner's agreement.
 
 ## Unlock and storage
 
 - Cap ownership: `DF_HeadwearOwned_BetaCap`.
-- Per-hero selection: `DF_HeadwearEquipped_<hero ID>`; zero means no headwear, seven means BETA Cappy.
+- Per-hero selection: `DF_HeadwearEquipped_<hero ID>`; zero means no headwear, seven means BETA Cappy, eight means UFO test hat.
 - Claims use the existing profile transaction and account-profile storage path. No account endpoint or server configuration is changed here.
 - Existing premium claims are retained. A player who already claimed tier 25 receives the newly moved avatar; a player who already claimed tier 50 receives the cap. This backfill checks premium entitlement, XP and the original claim bit. It grants only missing cosmetics, never replays currency/items, and does not auto-equip either item.
 - Owners of the old final avatar keep it. The claim does not remove any old reward.
@@ -53,7 +53,7 @@ Use the project's Unity **6000.6.1f1** version.
 
 1. Open **DIMENSIONS FRONT > Headwear > BETA Cappy fitting studio**.
 2. Run **Check head attachment on all 10 heroes**. The same check is available under **DIMENSIONS FRONT > Checks > BETA Cappy all-hero attachment**.
-3. Select every hero. Inspect front, both sides, back and top by dragging the preview. Toggle full-body/head close-up, cap, wings and head tilt.
+3. Select every hero and choose BETA Cappy or UFO test hat. Inspect front, both sides, back and top by dragging the preview. Toggle full-body/head close-up, wings and head tilt.
 4. Check that the BETA text faces forward, the visor is visible, and the cap clears the head/helmet/hair without floating. Inspect lighting and text on small screens.
 
 The studio uses isolated preview actors and override selections. It performs no purchases or profile writes and does not edit the current scene. The automatic Unity check checks attachment, repeat apply/unequip, material/vertex budgets and lack of cap colliders; human review must still check clipping and appearance.

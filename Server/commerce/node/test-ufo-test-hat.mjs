@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {enableUfoTestHat,entry} from './enable-ufo-test-hat.mjs';
+const source="const w = k => k;\nconst item = (p,w) => ({p,w});\nconst ITEMS = {\n  voidfall: item(2000, [w('DF_SkinOwned_Voidfall')]),\n};\n";
+const patched=enableUfoTestHat(source);
+assert.equal(patched.replace(entry,''),source);
+assert.equal(enableUfoTestHat(patched),patched);
+assert.throws(()=>enableUfoTestHat(patched.replace('ufo_test_hat: item(1,','ufo_test_hat: item(2,')));
+assert.throws(()=>enableUfoTestHat('different source layout'));
+assert.throws(()=>enableUfoTestHat(patched.replace('ufo_test_hat:',"'ufo_test_hat':")));
+const catalog=JSON.parse(await readFile(new URL('../../../Assets/Alterverse/Resources/Commerce/ShardCatalog.json',import.meta.url)));
+const item=catalog.cosmetics.find(x=>x.id==='ufo_test_hat');
+assert.equal(item.price,1);
+assert.deepEqual(item.writes,[{key:'DF_HeadwearOwned_UfoTestHat',kind:0,number:1}]);
+console.log('PASS Node one-item patch guards, idempotence and shared 1-shard ownership contract.');

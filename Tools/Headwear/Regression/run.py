@@ -11,7 +11,7 @@ refs=sorted((a.dotnet_root/'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0
 source=root/'Assets/Alterverse/Scripts'
 files=['Shop/UniversalSkin.cs','Shop/CosmeticCatalog.cs','Shop/CosmeticProfile.cs','Shop/HeadwearSelection.cs',
        'Shop/WingPreviewIcons.cs','Match/WingMatchRewardBonus.cs','Profile/BattlePassProgress.cs',
-       'Visuals/BetaCapMesh.cs','Visuals/HeadwearPresentation.cs','UI/CosmeticCollectionChecks.cs',
+       'Visuals/BetaCapMesh.cs','Visuals/UfoHatMesh.cs','Visuals/HeadwearPresentation.cs','UI/CosmeticCollectionChecks.cs',
        'Multiplayer/CoopHeroStateSync.Headwear.cs']
 with tempfile.TemporaryDirectory(prefix='df-headwear-') as folder:
     tmp=Path(folder)

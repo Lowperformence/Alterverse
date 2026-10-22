@@ -176,7 +176,8 @@ namespace Alterverse.UI
                 string name = filter.name;
                 if (filter.sharedMesh == null ||
                     !(name.EndsWith("WingLeft", System.StringComparison.Ordinal) ||
-                      name.EndsWith("WingRight", System.StringComparison.Ordinal))) continue;
+                      name.EndsWith("WingRight", System.StringComparison.Ordinal) ||
+                      name.StartsWith("DF_Headwear_", System.StringComparison.Ordinal))) continue;
                 Bounds bounds = filter.sharedMesh.bounds;
                 for (int corner = 0; corner < 8; corner++)
                 {

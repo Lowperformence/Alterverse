@@ -41,8 +41,17 @@ namespace Alterverse.Visuals
             Head=head;HeadBounds=bounds;
             Vector3 size=bounds.size;
             Vector3 seat=new Vector3(bounds.center.x,bounds.max.y-size.y*.18f,bounds.center.z);
-            Matrix4x4 fit=Matrix4x4.TRS(seat,Quaternion.identity,new Vector3(size.x*.56f,size.y*.60f,size.z*.56f));
-            mesh=BetaCapMesh.Build(head.worldToLocalMatrix*visualRoot.localToWorldMatrix*fit);
+            bool ufo=selected==UniversalHeroCosmetic.UfoTestHat;
+            Vector3 scale=ufo?new Vector3(size.x*.54f,Mathf.Min(size.x,size.z)*.54f,size.z*.60f):new Vector3(size.x*.56f,size.y*.60f,size.z*.56f);
+            Matrix4x4 fit=head.worldToLocalMatrix*visualRoot.localToWorldMatrix*Matrix4x4.TRS(seat,Quaternion.identity,scale);
+            if(ufo)
+            {
+                if(!UfoHatMesh.TryBuild(fit,shader,out mesh,out materials,out string message))
+                {LastFitError=message;return false;}
+            }
+            else
+            {
+            mesh=BetaCapMesh.Build(fit);
             Color[] colors={new Color(.055f,.085f,.15f),new Color(.28f,.72f,.94f),new Color(.94f,.96f,1f)};
             materials=new Material[colors.Length];
             for(int i=0;i<materials.Length;i++)
@@ -53,7 +62,8 @@ namespace Alterverse.Visuals
                 if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",i==0?.18f:.3f);
                 materials[i]=material;
             }
-            mounted=new GameObject("DF_Headwear_BetaCap");mounted.layer=visualRoot.gameObject.layer;
+            }
+            mounted=new GameObject(ufo?"DF_Headwear_UfoTestHat":"DF_Headwear_BetaCap");mounted.layer=visualRoot.gameObject.layer;
             mounted.transform.SetParent(head,false);
             mounted.AddComponent<MeshFilter>().sharedMesh=mesh;
             mounted.AddComponent<MeshRenderer>().sharedMaterials=materials;

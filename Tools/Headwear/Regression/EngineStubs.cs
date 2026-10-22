@@ -79,20 +79,24 @@ namespace UnityEngine
     public class MeshRenderer:Component{public Material[] sharedMaterials;}
     public class SkinnedMeshRenderer:Component{public Mesh sharedMesh;public Transform[] bones;public void BakeMesh(Mesh mesh){mesh.vertices=sharedMesh.vertices;}}
     public class Shader:Object{public static bool Available=true;public static Shader Find(string n)=>Available?new():null;}
-    public class Material:Object{public Material(Shader s){}public bool HasProperty(string p)=>true;public void SetColor(string p,Color c){}public void SetFloat(string p,float f){}}
+    public class Material:Object{public Material(Shader s){}public bool HasProperty(string p)=>true;public void SetColor(string p,Color c){}public void SetFloat(string p,float f){}public void EnableKeyword(string name){}}
     public static class Application{public static bool isPlaying;}
     public class Texture2D{public string Resource;}
+    public class TextAsset{public string text;}
+    public static class JsonUtility{public static T FromJson<T>(string text)=>System.Text.Json.JsonSerializer.Deserialize<T>(text,new System.Text.Json.JsonSerializerOptions{IncludeFields=true});}
     public struct Color{public Color(float r,float g,float b,float a=1){}}
     public static class Resources
     {
         public static readonly Dictionary<string,int> Loads=new();
-        public static T Load<T>(string p) where T:class{Loads[p]=Loads.GetValueOrDefault(p)+1;return new Texture2D{Resource=p} as T;}
+        public static T Load<T>(string p) where T:class
+        {Loads[p]=Loads.GetValueOrDefault(p)+1;if(typeof(T)==typeof(TextAsset))return new TextAsset{text=System.IO.File.ReadAllText("Assets/Alterverse/Resources/"+p+".json")} as T;return new Texture2D{Resource=p} as T;}
     }
     public static class Mathf
     {
         public const float PI=(float)Math.PI;
         public static float Cos(float v)=>(float)Math.Cos(v);public static float Sin(float v)=>(float)Math.Sin(v);
         public static float Sqrt(float v)=>(float)Math.Sqrt(v);
+        public static float Abs(float v)=>Math.Abs(v);
         public static int Max(int a,int b)=>Math.Max(a,b);public static float Max(float a,float b)=>Math.Max(a,b);
         public static float Min(float a,float b)=>Math.Min(a,b);public static int Min(int a,int b)=>Math.Min(a,b);
         public static float Floor(float v)=>(float)Math.Floor(v);public static int FloorToInt(float v)=>(int)Math.Floor(v);
