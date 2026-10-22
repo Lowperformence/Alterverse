@@ -18,6 +18,7 @@ namespace Alterverse.UI
         private HeroId selected;
         private bool hasSelection,selectedWeapon;
         private Alterverse.Shop.UniversalHeroCosmetic selectedCosmetic;
+        private Alterverse.Shop.UniversalHeroCosmetic selectedHeadwear,cachedHeadwear;
         private float selectedAt;
         private bool needsFit;
         private bool loadoutDirty=true,cachedWeapon;
@@ -88,6 +89,7 @@ namespace Alterverse.UI
             {
                 cachedHero=hero;
                 cachedCosmetic=Alterverse.Shop.UniversalCosmeticSelection.EquippedFor(hero);
+                cachedHeadwear=Alterverse.Shop.HeadwearSelection.EquippedFor(hero);
                 cachedWeaponVariant=EquippedWeaponVariant(hero);
                 cachedWeapon=cachedWeaponVariant>=0;
                 loadoutDirty=false;
@@ -96,11 +98,15 @@ namespace Alterverse.UI
                 (skinOverride.HasValue
                     ? (skinOverride.Value?Alterverse.Shop.UniversalHeroCosmetic.Voidfall:Alterverse.Shop.UniversalHeroCosmetic.Original)
                     : cachedCosmetic);
+            var headwear=cachedHeadwear;
+            if(Alterverse.Shop.CosmeticCatalog.Find(cosmetic)?.Headwear==true)
+            {headwear=cosmetic;cosmetic=cachedCosmetic;}
             bool weapon=weaponOverride??cachedWeapon;
             int weaponVariant=weaponVariantOverride??(weapon?(cachedWeaponVariant>=0?cachedWeaponVariant:0):-1);
             weapon=weapon&&weaponVariant>=0;
 
-            if (hasSelection && selected == hero && selectedCosmetic==cosmetic && selectedWeapon==weapon && selectedWeaponVariant==weaponVariant) return;
+            if (hasSelection && selected == hero && selectedCosmetic==cosmetic && selectedHeadwear==headwear && selectedWeapon==weapon && selectedWeaponVariant==weaponVariant) return;
+            selectedHeadwear=headwear;
             selectedCosmetic=cosmetic;selectedWeapon=weapon;selectedWeaponVariant=weaponVariant;
             if (actor != null) { actor.SetActive(false); Destroy(actor); }
             selected = hero; hasSelection = true; selectedAt = Time.unscaledTime;
@@ -110,6 +116,7 @@ namespace Alterverse.UI
             actor.AddComponent<HeroIdentity>().Configure(hero);
             var preview=actor.AddComponent<Alterverse.Shop.SkinPreviewSelection>();
             preview.UniversalCosmetic=cosmetic;
+            preview.Headwear=headwear;
             preview.WeaponOverdrive=weapon;
             SetPreviewWeaponVariant(preview,weaponVariant);
             actor.AddComponent<StylizedHeroVisual>().Build();

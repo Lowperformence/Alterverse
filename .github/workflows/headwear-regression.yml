@@ -1,0 +1,21 @@
+name: BETA Cappy regression
+on:
+  pull_request:
+    paths: ['Assets/Alterverse/Scripts/Shop/**', 'Assets/Alterverse/Scripts/Profile/BattlePassProgress.cs', 'Assets/Alterverse/Scripts/Visuals/*Cap*.cs', 'Assets/Alterverse/Scripts/Visuals/Headwear*.cs', 'Assets/Alterverse/Scripts/UI/**', 'Assets/Alterverse/Scripts/Multiplayer/CoopHeroStateSync*.cs', 'Assets/Alterverse/Editor/Headwear*.cs', 'Tools/Headwear/**', 'Tools/Shop/PremiumWingsRegression/**', 'Tools/Multiplayer/Regression/**', '.github/workflows/headwear-regression.yml']
+  push:
+    branches: ['dev/vertical-slice']
+    paths: ['Assets/Alterverse/Scripts/Shop/**', 'Assets/Alterverse/Scripts/Profile/BattlePassProgress.cs', 'Assets/Alterverse/Scripts/Visuals/*Cap*.cs', 'Assets/Alterverse/Scripts/Visuals/Headwear*.cs', 'Assets/Alterverse/Scripts/UI/**', 'Assets/Alterverse/Scripts/Multiplayer/CoopHeroStateSync*.cs', 'Assets/Alterverse/Editor/Headwear*.cs', 'Tools/Headwear/**', 'Tools/Shop/PremiumWingsRegression/**', 'Tools/Multiplayer/Regression/**', '.github/workflows/headwear-regression.yml']
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python Tools/Headwear/Regression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Shop/PremiumWingsRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Multiplayer/Regression/run.py --dotnet-root "$DOTNET_ROOT"

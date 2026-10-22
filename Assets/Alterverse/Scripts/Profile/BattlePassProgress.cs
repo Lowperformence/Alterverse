@@ -10,17 +10,20 @@ namespace Alterverse.Profile
         public readonly BattleItemType Item;
         public readonly int ItemAmount;
         public readonly int AvatarId;
+        public readonly Alterverse.Shop.UniversalHeroCosmetic Headwear;
 
-        public BattlePassReward(int shards=0,BattleItemType item=BattleItemType.None,int itemAmount=0,int avatarId=-1)
+        public BattlePassReward(int shards=0,BattleItemType item=BattleItemType.None,int itemAmount=0,int avatarId=-1,
+            Alterverse.Shop.UniversalHeroCosmetic headwear=Alterverse.Shop.UniversalHeroCosmetic.Original)
         {
             Shards=Mathf.Max(0,shards);
             Item=item;
             ItemAmount=Mathf.Max(0,itemAmount);
             AvatarId=avatarId;
+            Headwear=headwear;
         }
 
         public static BattlePassReward Empty=>new BattlePassReward(0,BattleItemType.None,0,-1);
-        public bool IsEmpty=>Shards<=0&&(Item==BattleItemType.None||ItemAmount<=0)&&AvatarId<0;
+        public bool IsEmpty=>Shards<=0&&(Item==BattleItemType.None||ItemAmount<=0)&&AvatarId<0&&Headwear==Alterverse.Shop.UniversalHeroCosmetic.Original;
 
         public string Label
         {
@@ -31,6 +34,7 @@ namespace Alterverse.Profile
                 if(Shards>0)parts.Add(Shards+" SHARDS");
                 if(Item!=BattleItemType.None&&ItemAmount>0)parts.Add(ItemAmount+"× "+BattleItemInventory.Name(Item));
                 if(AvatarId>=0)parts.Add(AvatarId==BattlePassProgress.BetaCrownAvatarId?"BETA CROWN":"AVATAR");
+                if(Headwear==Alterverse.Shop.UniversalHeroCosmetic.BetaCap)parts.Add(Alterverse.Shop.HeadwearSelection.BetaCapName);
                 return string.Join(" + ",parts);
             }
         }
@@ -159,6 +163,7 @@ namespace Alterverse.Profile
         public static BattlePassReward PremiumRewardFor(int level)
         {
             if(level<1||level>MaxLevel)return BattlePassReward.Empty;
+            ReconcileCosmeticRewards();
 
             int shards=level switch
             {
@@ -176,8 +181,26 @@ namespace Alterverse.Profile
             int amount=level>=41?2:1;
             if(level==15||level==25||level==35||level==45)amount=3;
             if(level==50)amount=3;
-            int avatar=level==50?BetaCrownAvatarId:-1;
-            return new BattlePassReward(shards,item,amount,avatar);
+            int avatar=level==25?BetaCrownAvatarId:-1;
+            return new BattlePassReward(shards,item,amount,avatar,
+                level==MaxLevel?Alterverse.Shop.UniversalHeroCosmetic.BetaCap:Alterverse.Shop.UniversalHeroCosmetic.Original);
+        }
+
+        // Keep old claim bits. Grant only newly mapped cosmetics, never replay
+        // shard/item rewards and never change the player's chosen loadout.
+        public static void ReconcileCosmeticRewards()
+        {
+            if(!PremiumUnlocked)return;
+            ulong claims=ReadMask(PremiumClaimKey);
+            int xp=AccountProfilePrefs.GetInt(XpKey,0);
+            List<ProfileTransaction.Write> writes=null;
+            if(xp>=TotalXpForLevel(25)&&(claims&(1UL<<24))!=0&&
+                AccountProfilePrefs.GetInt(AvatarInventory.StorageKey(BetaCrownAvatarId),0)!=1)
+                (writes??=new()).Add(new ProfileTransaction.Write(AvatarInventory.StorageKey(BetaCrownAvatarId),1));
+            if(xp>=TotalXpForLevel(MaxLevel)&&(claims&(1UL<<(MaxLevel-1)))!=0&&
+                AccountProfilePrefs.GetInt(Alterverse.Shop.HeadwearSelection.BetaCapOwnedKey,0)!=1)
+                (writes??=new()).Add(new ProfileTransaction.Write(Alterverse.Shop.HeadwearSelection.BetaCapOwnedKey,1));
+            if(writes!=null)ProfileTransaction.Commit(writes.ToArray());
         }
 
         public static bool FreeClaimed(int level)=>Claimed(FreeClaimKey,level);
@@ -269,6 +292,8 @@ namespace Alterverse.Profile
                     ProfileTransaction.Add(BattleItemInventory.Count(reward.Item),reward.ItemAmount)));
             if(reward.AvatarId>=0)
                 writes.Add(new ProfileTransaction.Write(AvatarInventory.StorageKey(reward.AvatarId),1));
+            if(reward.Headwear==Alterverse.Shop.UniversalHeroCosmetic.BetaCap)
+                writes.Add(new ProfileTransaction.Write(Alterverse.Shop.HeadwearSelection.BetaCapOwnedKey,1));
 
             mask|=bit;
             writes.Add(new ProfileTransaction.Write(maskKey,mask.ToString()));

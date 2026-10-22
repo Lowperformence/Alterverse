@@ -59,9 +59,9 @@ namespace Alterverse.UI
             for(int i=0;i<CosmeticCatalog.All.Count;i++)
             {
                 var definition=CosmeticCatalog.All[i];bool owned=CosmeticCatalog.IsOwned(definition.Id);
-                bool active=equipped==definition.Id;
+                bool active=definition.Headwear?HeadwearSelection.EquippedFor(hero)==definition.Id:equipped==definition.Id;
                 var card=new Card{Definition=definition,Owned=owned,Equipped=active,Status=active?"EQUIPPED":owned?"OWNED":"LOCKED"};
-                shopCards.Add(card);if(owned)inventoryCards.Add(card);
+                if(definition.Purchasable)shopCards.Add(card);if(owned)inventoryCards.Add(card);
                 skins|=definition.Category==CosmeticCategory.Skins;wings|=definition.Category==CosmeticCategory.Wings;
             }
             categoriesAvailable=CosmeticCatalog.All.Count>=6&&skins&&wings;
@@ -167,10 +167,11 @@ namespace Alterverse.UI
         }
         private void DrawDetail(FrontEndTheme theme,Rect rect,ViewState state,bool ownedOnly,MenuHeroShowcase showcase)
         {
-            CosmeticDefinition definition=null;foreach(var card in shopCards)if(card.Definition.Id==state.Selected){definition=card.Definition;break;}
+            var sourceCards=ownedOnly?inventoryCards:shopCards;
+            CosmeticDefinition definition=null;foreach(var card in sourceCards)if(card.Definition.Id==state.Selected){definition=card.Definition;break;}
             if(definition==null)return;
-            bool owned=false;foreach(var card in shopCards)if(card.Definition.Id==definition.Id){owned=card.Owned;break;}
-            bool active=equipped==definition.Id;
+            bool owned=false;foreach(var card in sourceCards)if(card.Definition.Id==definition.Id){owned=card.Owned;break;}
+            bool active=definition.Headwear?HeadwearSelection.EquippedFor(hero)==definition.Id:equipped==definition.Id;
             theme.Panel(rect);FrontEndTheme.Fill(new Rect(rect.x,rect.y,rect.width,2),definition.Accent);
             theme.FitLabel(new Rect(rect.x+16,rect.y+12,rect.width-32,36),definition.Name,theme.Heading);
             float previewWidth=rect.width*.45f;
@@ -198,7 +199,11 @@ namespace Alterverse.UI
                 }
             }
             if(!previewOnly&&ownedOnly&&active&&definition.Id!=UniversalHeroCosmetic.Original&&theme.Action(new Rect(rect.x+28+actionWidth,rect.yMax-75,rect.width-actionWidth-44,48),"UNEQUIP"))
-            {UniversalCosmeticSelection.EquipFor(hero,UniversalHeroCosmetic.Original);state.Message="ORIGINAL EQUIPPED";dirty=true;}
+            {
+                if(definition.Headwear)HeadwearSelection.EquipFor(hero,UniversalHeroCosmetic.Original);
+                else UniversalCosmeticSelection.EquipFor(hero,UniversalHeroCosmetic.Original);
+                state.Message=definition.Headwear?"HEADWEAR UNEQUIPPED":"ORIGINAL EQUIPPED";dirty=true;
+            }
             theme.FitLabel(new Rect(rect.x+16,rect.yMax-24,rect.width-32,20),(state.Message=="Saving purchase…"?PaidShardCommerce.Instance?.Status??state.Message:state.Message),theme.Small,true);
         }
         private void DrawBag(FrontEndTheme theme,Rect area,bool compact)
@@ -275,6 +280,7 @@ namespace Alterverse.UI
         }
         private static void CosmeticIcon(Rect rect,CosmeticDefinition definition,bool owned)
         {
+            if(definition.Headwear){HeadwearIconRenderer.Draw(rect);return;}
             Texture2D icon=WingPreviewIcons.Load(definition.Id);
             if(icon!=null)
             {

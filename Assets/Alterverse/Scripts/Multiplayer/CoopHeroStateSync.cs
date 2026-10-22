@@ -55,6 +55,7 @@ namespace Alterverse.Multiplayer
             Attach(manager.CustomMessagingManager);
 
             if(Time.unscaledTime>=nextRefresh)RefreshSlots(false);
+            TickHeadwear(manager);
 
             if(CoopAuthority.LocalHasServerAuthority)
             {
@@ -120,6 +121,7 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(TimmyEffectMessage,OnTimmyEffect);
             messaging.RegisterNamedMessageHandler(VoidKnightEffectMessage,OnVoidKnightEffect);
             messaging.RegisterNamedMessageHandler(OrunOverdriveMessage,OnOrunOverdrive);
+            RegisterHeadwear();
             attached=true;
         }
 
@@ -136,6 +138,7 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(TimmyEffectMessage);
             messaging.UnregisterNamedMessageHandler(VoidKnightEffectMessage);
             messaging.UnregisterNamedMessageHandler(OrunOverdriveMessage);
+            UnregisterHeadwear();
             messaging=null;attached=false;
             senderOwners.Clear();
             ResetPoseTransport();
