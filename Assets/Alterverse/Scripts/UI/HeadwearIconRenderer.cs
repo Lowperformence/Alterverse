@@ -6,12 +6,16 @@ namespace Alterverse.UI
     {
         static GUIStyle label;
         static Texture2D ufoIcon;
-        static bool ufoLoaded;
+        static float ufoLastLoad=-1f;
         public static void Draw(Rect rect,Alterverse.Shop.UniversalHeroCosmetic item=Alterverse.Shop.UniversalHeroCosmetic.BetaCap)
         {
             if(item==Alterverse.Shop.UniversalHeroCosmetic.UfoTestHat)
             {
-                if(!ufoLoaded){ufoIcon=Resources.Load<Texture2D>("Headwear/UfoTestHatIcon");ufoLoaded=true;}
+                // An Editor refresh can import the icon after its first draw. Cache only
+                // successful loads; throttle retries while the resource is unavailable.
+                float now=Time.unscaledTime;
+                if(ufoIcon==null&&(ufoLastLoad<0f||now<ufoLastLoad||now-ufoLastLoad>=1f))
+                {ufoLastLoad=now;ufoIcon=Resources.Load<Texture2D>("Headwear/UfoTestHatIcon");}
                 if(ufoIcon!=null)GUI.DrawTexture(rect,ufoIcon,ScaleMode.ScaleToFit,true);
                 else GUI.Label(rect,"UFO");
                 return;
