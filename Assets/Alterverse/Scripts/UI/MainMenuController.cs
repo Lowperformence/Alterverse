@@ -1026,10 +1026,10 @@ namespace Alterverse.UI
 
             if(theme.Action(new Rect(px,270,previewW,94),"",selected:battlePassPreviewLevel==50&&battlePassPreviewPremium))
             {battlePassPreviewLevel=50;battlePassPreviewPremium=true;battlePassPageStart=47;}
-            AvatarBadgeRenderer.Draw(new Rect(px+14,284,64,64),BattlePassProgress.BetaCrownAvatarId,Texture2D.whiteTexture,Time.unscaledTime);
+            HeadwearIconRenderer.Draw(new Rect(px+14,284,64,64));
             theme.FitLabel(new Rect(px+92,283,previewW-108,20),"THE FINAL REWARD",theme.Small,true);
-            theme.FitLabel(new Rect(px+92,307,previewW-108,28),"BETA CROWN",theme.Heading);
-            theme.FitLabel(new Rect(px+92,339,previewW-108,18),"LEVEL 50  •  PREMIUM AVATAR",theme.Small,true);
+            theme.FitLabel(new Rect(px+92,307,previewW-108,28),HeadwearSelection.BetaCapName,theme.Heading);
+            theme.FitLabel(new Rect(px+92,339,previewW-108,18),"LEVEL 50  •  PREMIUM HEADWEAR",theme.Small,true);
 
             if(theme.Action(new Rect(Left,378,108,36),"FREE",selected:!battlePassPreviewPremium))battlePassPreviewPremium=false;
             if(theme.Action(new Rect(Left+116,378,132,36),"PREMIUM",selected:battlePassPreviewPremium))battlePassPreviewPremium=true;
@@ -1086,7 +1086,7 @@ namespace Alterverse.UI
                 float iconSize=62f;
                 Rect icon=new Rect(rect.center.x-iconSize*.5f,rect.y+42,iconSize,iconSize);
                 DrawBattlePassRewardIcon(icon,reward);
-                string title=reward.AvatarId>=0?"BETA CROWN":reward.Shards>0?$"{reward.Shards} SHARDS + CORE":$"{reward.ItemAmount}× {BattleItemInventory.Name(reward.Item)}";
+                string title=reward.Headwear==UniversalHeroCosmetic.BetaCap?HeadwearSelection.BetaCapName:reward.AvatarId>=0?"BETA CROWN":reward.Shards>0?$"{reward.Shards} SHARDS + CORE":$"{reward.ItemAmount}× {BattleItemInventory.Name(reward.Item)}";
                 theme.FitLabel(new Rect(rect.x+10,rect.y+111,rect.width-20,22),title,theme.Small);
             }
             else theme.Center(new Rect(rect.x+10,rect.y+48,rect.width-20,72),"KEEP GOING");
@@ -1103,7 +1103,7 @@ namespace Alterverse.UI
             FrontEndTheme.Fill(new Rect(rect.x+16,rect.y+4,rect.width-32,3),accent);
             theme.FitLabel(new Rect(rect.x+16,rect.y+13,rect.width-32,22),$"{(premium?"PREMIUM":"FREE")}  /  LEVEL {level}",theme.Small,true);
             DrawBattlePassRewardIcon(new Rect(rect.x+18,rect.y+45,82,82),reward);
-            theme.FitLabel(new Rect(rect.x+114,rect.y+46,rect.width-130,28),reward.AvatarId>=0?"BETA CROWN":reward.Shards>0?$"{reward.Shards} SHARDS":reward.IsEmpty?"KEEP GOING":$"{reward.ItemAmount}× CORE",theme.Heading);
+            theme.FitLabel(new Rect(rect.x+114,rect.y+46,rect.width-130,28),reward.Headwear==UniversalHeroCosmetic.BetaCap?HeadwearSelection.BetaCapName:reward.AvatarId>=0?"BETA CROWN":reward.Shards>0?$"{reward.Shards} SHARDS":reward.IsEmpty?"KEEP GOING":$"{reward.ItemAmount}× CORE",theme.Heading);
             theme.Label(new Rect(rect.x+114,rect.y+80,rect.width-130,50),BattlePassRewardDescription(reward),theme.Small,true);
             theme.FitLabel(new Rect(rect.x+16,rect.y+141,rect.width-32,22),reward.IsEmpty?"No free reward at this level.":reward.Label,theme.Small);
             bool canClaim=premium?BattlePassProgress.CanClaimPremium(level):BattlePassProgress.CanClaimFree(level);
@@ -1118,6 +1118,7 @@ namespace Alterverse.UI
 
         private void DrawBattlePassRewardIcon(Rect rect,BattlePassReward reward)
         {
+            if(reward.Headwear==UniversalHeroCosmetic.BetaCap){HeadwearIconRenderer.Draw(rect);return;}
             if(reward.AvatarId>=0) { AvatarBadgeRenderer.Draw(rect,reward.AvatarId,Texture2D.whiteTexture,Time.unscaledTime); return; }
             if(reward.Item!=BattleItemType.None) { BattleItemIconRenderer.Draw(rect,reward.Item); return; }
             if(reward.Shards>0) { DrawShardRewardIcon(rect); return; }
@@ -1137,6 +1138,7 @@ namespace Alterverse.UI
 
         private string BattlePassRewardDescription(BattlePassReward reward)
         {
+            if(reward.Headwear==UniversalHeroCosmetic.BetaCap)return "Exclusive BETA cap. Equip per hero in Inventory > Cosmetics > Skins. Works with wings.";
             if(reward.AvatarId==BattlePassProgress.BetaCrownAvatarId)return "Exclusive Beta Crown avatar.";
             if(reward.Item!=BattleItemType.None)return BattleItemInventory.ShortDescription(reward.Item);
             if(reward.Shards>0)return "Shard currency reward.";

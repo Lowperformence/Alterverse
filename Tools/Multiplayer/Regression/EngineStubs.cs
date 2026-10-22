@@ -166,6 +166,8 @@ namespace Alterverse.Multiplayer
   private float nextOwnerSend,nextHostSnapshot,nextRefresh;
   private void RefreshSlots(bool immediate){}
   private void Attach(Unity.Netcode.CustomMessagingManager value){}
+  // Cosmetic traffic has its own production regression fixture.
+  private void TickHeadwear(Unity.Netcode.NetworkManager value){}
   public void Tick()=>Update();
   public Unity.Netcode.CustomMessagingManager Messages=>messaging;
   internal OwnerPoseHistory History=>ownerPoseHistory;

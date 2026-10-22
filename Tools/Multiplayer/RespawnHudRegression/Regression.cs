@@ -65,8 +65,14 @@ namespace Alterverse.Profile
 namespace Alterverse.Multiplayer
 {
     public class CoopMatchPlan {}
-    public static class CoopAuthority {public static bool Active;public static CoopMatchPlan ActivePlan=new();}
-    public class CoopHeroSlot:Component {public bool IsLocalHuman;}
+    public static class CoopAuthority {public static bool Active,LocalHasServerAuthority;public static CoopMatchPlan ActivePlan=new();}
+    public class CoopHeroSlot:Component {public bool IsLocalHuman;public int Slot;}
+    public static class CoopMatchResultSync
+    {
+        public struct SlotResult {public int Kills,Deaths,Assists;public float DamageDealt,DamageTaken,Healing,FrontContribution;}
+        public static readonly Dictionary<int,SlotResult> Results=new();
+        public static bool TryGetSlotResult(int slot,out SlotResult result)=>Results.TryGetValue(slot,out result);
+    }
     public class CoopRespawnReplica:Component {public bool IsRespawning;public float RemainingSeconds;}
 }
 namespace Alterverse.UI
@@ -93,9 +99,10 @@ namespace Alterverse.Match
     public class DimensionsFront {public float ZeroControl,LumenControl;}
     public class MatchTelemetry
     {
-        public class HeroStats {public float MvpScore;}
+        public class HeroStats {public float MvpScore,DamageDealt,DamageTaken,Healing,FrontContribution;}
         public static MatchTelemetry Instance=new();public static int Reads;
-        public HeroStats GetStats(Health h){Reads++;return null;}
+        public readonly Dictionary<Health,HeroStats> Stats=new();
+        public HeroStats GetStats(Health h){Reads++;return Stats.TryGetValue(h,out var stats)?stats:null;}
     }
     public sealed partial class MatchScoreboard
     {
@@ -119,6 +126,7 @@ namespace Alterverse.Match
         public void Seed(GameObject actor,string name,int kills=0)
         {var h=actor.GetComponent<Health>();entries[h]=new Entry{Health=h,Member=actor.GetComponent<TeamMember>(),Name=name,Kills=kills};}
         public void KillScore(GameObject actor,int value)=>entries[actor.GetComponent<Health>()].Kills=value;
+        public float Score(GameObject actor)=>Performance(entries[actor.GetComponent<Health>()]);
         public string FirstName(int team)=>(team==0?respawnZero:respawnLumen)[0].Name;
         public string FirstKills(int team)=>(team==0?respawnZero:respawnLumen)[0].BoardKills;
         public object TeamList=>respawnZero;
@@ -156,6 +164,7 @@ class Regression
     }
     static void Main()
     {
+        PerformanceCases();
         RosterCases();
         CoopAuthority.Active=true;
         var board=new MatchScoreboard();var local=Hero(0,true);var ally=Hero(0);var enemy=Hero(1);
@@ -199,5 +208,24 @@ class Regression
         var later=Hero(0,true);Time.unscaledTime+=.51f;missing.Discover();
         Check(missing.Local()==later.GetComponent<TeamMember>(),"missing owner is discovered after the retry interval");
         Console.WriteLine($"PASS: {checks} respawn HUD checks; 1200 paints: {allocated} managed bytes and no scene scans. Native GUI/Android untested.");
+    }
+    static void PerformanceCases()
+    {
+        var actor=Hero(0,true);var health=actor.GetComponent<Health>();actor.GetComponent<CoopHeroSlot>().Slot=3;
+        var board=new MatchScoreboard();board.Seed(actor,"PERFORMANCE",2);
+        CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;
+        Check(board.Score(actor)==200,"live client without a final result retains K/D/A fallback");
+        MatchTelemetry.Instance.Stats[health]=new MatchTelemetry.HeroStats{DamageDealt=100,DamageTaken=200,Healing=50,FrontContribution=2};
+        Check(board.Score(actor)==200,"live client does not rank by incomplete local combat telemetry");
+        CoopMatchResultSync.Results[3]=new CoopMatchResultSync.SlotResult{Kills=1,Deaths=2,Assists=3,DamageDealt=100,DamageTaken=200,Healing=50,FrontContribution=2};
+        Check(Math.Abs(board.Score(actor)-344.75f)<.01f,"client ranks completed results using authoritative totals");
+        CoopAuthority.LocalHasServerAuthority=true;
+        Check(Math.Abs(board.Score(actor)-309.75f)<.01f,"server uses its current roster and authoritative telemetry");
+        CoopAuthority.Active=false;
+        Check(Math.Abs(board.Score(actor)-309.75f)<.01f,"solo scoreboard retains full local performance calculation");
+        MatchTelemetry.Instance.Stats.Clear();
+        Check(board.Score(actor)==200,"missing telemetry keeps the existing K/D/A fallback");
+        CoopMatchResultSync.Results.Clear();CoopAuthority.LocalHasServerAuthority=false;
+        Health.Active.Clear();UnityEngine.Object.Scene.Clear();
     }
 }

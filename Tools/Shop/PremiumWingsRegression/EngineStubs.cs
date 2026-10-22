@@ -33,6 +33,7 @@ namespace Alterverse.Characters
 }
 namespace Alterverse.Profile
 {
+    public static class BattlePassProgress { public static void ReconcileCosmeticRewards(){} }
     public static class ProfileTransaction
     {
         public readonly struct Write { public readonly string key;public readonly int number;public Write(string k,int n){key=k;number=n;} }

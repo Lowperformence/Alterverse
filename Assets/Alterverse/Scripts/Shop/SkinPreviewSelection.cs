@@ -5,6 +5,7 @@ namespace Alterverse.Shop
     public sealed class SkinPreviewSelection:MonoBehaviour
     {
         public UniversalHeroCosmetic UniversalCosmetic=UniversalHeroCosmetic.Original;
+        public UniversalHeroCosmetic Headwear=UniversalHeroCosmetic.Original;
         public bool WeaponOverdrive;
         public int WeaponSkinVariant=-1;
 

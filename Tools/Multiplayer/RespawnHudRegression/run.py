@@ -30,7 +30,9 @@ methods = ['private sealed class Entry', 'private void RefreshLocalRespawn()',
            'private void UpdateRespawnBoard()', 'private void RefreshRespawnBoard()',
            'private void DrawHud()', 'private void DrawTeam(', 'private void RefreshRoster()']
 fields = text[text.index('private CoopHeroSlot localHeroSlot;'):text.index('public bool ResultCommitted')]
-production = 'using System.Collections.Generic;using UnityEngine;using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Multiplayer;using Alterverse.Profile;using Alterverse.UI;namespace Alterverse.Match {public sealed partial class MatchScoreboard {' + fields + ''.join(block(text, m) for m in methods) + '}}'
+score_start = text.index('private static float PerformanceScore(')
+score = text[score_start:text.index(';', score_start) + 1]
+production = 'using System.Collections.Generic;using UnityEngine;using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Multiplayer;using Alterverse.Profile;using Alterverse.UI;namespace Alterverse.Match {public sealed partial class MatchScoreboard {' + fields + ''.join(block(text, m) for m in methods) + score + '}}'
 runtime = args.dotnet_root.resolve()
 refs = sorted((runtime / 'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'))[-1]
 csc = sorted((runtime / 'sdk').glob('*/Roslyn/bincore/csc.dll'))[-1]

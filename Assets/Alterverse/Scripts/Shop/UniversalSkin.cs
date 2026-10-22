@@ -11,7 +11,9 @@ namespace Alterverse.Shop
         PlagueWings=3,
         DeluxeWings=4,
         AngelWings=5,
-        RgbRiftWings=6
+        RgbRiftWings=6,
+        BetaCap=7,
+        UfoTestHat=8
     }
 
     /// <summary>Account ownership, one exclusive cosmetic slot per hero. Legacy keys are retained.</summary>
@@ -47,10 +49,11 @@ namespace Alterverse.Shop
             EnsureMigrated(PlayerHeroSelection.Selected);
             var selected=(UniversalHeroCosmetic)CosmeticProfile.GetInt(HeroKey(hero),0);
             // Invalid or temporarily unavailable entitlements fall back without destroying saved intent.
-            return IsOwned(selected)?selected:UniversalHeroCosmetic.Original;
+            return !HeadwearSelection.IsHeadwear(selected)&&IsOwned(selected)?selected:UniversalHeroCosmetic.Original;
         }
         public static bool EquipFor(HeroId hero,UniversalHeroCosmetic cosmetic)
         {
+            if(HeadwearSelection.IsHeadwear(cosmetic))return HeadwearSelection.EquipFor(hero,cosmetic);
             EnsureMigrated(PlayerHeroSelection.Selected);
             if((int)hero<0||(int)hero>=HeroIdentity.HeroCount||!IsOwned(cosmetic))return false;
             CosmeticProfile.Commit(new ProfileTransaction.Write(HeroKey(hero),(int)cosmetic));
