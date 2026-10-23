@@ -17,6 +17,8 @@ jobs:
         with:
           dotnet-version: '8.0.x'
       - run: python Tools/Headwear/Regression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Headwear/validate_assets.py
       - run: python Tools/Shop/PremiumWingsRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Multiplayer/Regression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: node Server/commerce/node/test-ufo-test-hat.mjs
+

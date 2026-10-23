@@ -11,20 +11,26 @@ namespace Alterverse.Visuals
         {public float r,g,b,metallic,smoothness,emission;}
         [Serializable] public sealed class Definition
         {public float[] vertices;public int[] triangles,submeshes;public Surface[] materials;}
-        static Definition cached;
+        static readonly Dictionary<string,Definition> cache=new();
 
         public static bool TryBuild(Matrix4x4 toHead,Shader shader,out Mesh mesh,out Material[] materials,out string error)
+            =>TryBuildResource("UfoTestHat",toHead,shader,out mesh,out materials,out error);
+
+        // Shared serialized mesh format; prototypes use the same geometry/material loader as the UFO.
+        public static bool TryBuildResource(string resource,Matrix4x4 toHead,Shader shader,out Mesh mesh,out Material[] materials,out string error)
         {
             mesh=null;materials=null;error=null;
-            if(cached==null)
+            if(resource!="UfoTestHat"&&resource!="WizardHat"&&resource!="PropellerCap"&&resource!="MushroomHat")
+            {error="Unknown headwear mesh resource.";return false;}
+            if(!cache.TryGetValue(resource,out Definition cached))
             {
-                var resource=Resources.Load<TextAsset>("Headwear/UfoTestHat");
-                if(resource==null){error="UFO Blender mesh resource missing.";return false;}
+                var asset=Resources.Load<TextAsset>("Headwear/"+resource);
+                if(asset==null){error="Headwear Blender mesh resource missing.";return false;}
                 Definition data;
-                try{data=JsonUtility.FromJson<Definition>(resource.text);}
-                catch(ArgumentException){error="UFO Blender mesh resource invalid.";return false;}
-                if(!Valid(data)){error="UFO Blender mesh layout invalid.";return false;}
-                cached=data;
+                try{data=JsonUtility.FromJson<Definition>(asset.text);}
+                catch(ArgumentException){error="Headwear Blender mesh resource invalid.";return false;}
+                if(!Valid(data)){error="Headwear Blender mesh layout invalid.";return false;}
+                cached=data;cache.Add(resource,data);
             }
             if(shader==null){error="UFO material shader missing.";return false;}
             var vertices=new List<Vector3>(cached.vertices.Length/3);
@@ -33,14 +39,14 @@ namespace Alterverse.Visuals
             var indices=new List<int>[cached.materials.Length];
             for(int i=0;i<indices.Length;i++)indices[i]=new List<int>();
             for(int i=0;i<cached.triangles.Length;i++)indices[cached.submeshes[i/3]].Add(cached.triangles[i]);
-            mesh=new Mesh{name="DF_UfoTestHat_Blender",subMeshCount=indices.Length};mesh.SetVertices(vertices);
+            mesh=new Mesh{name="DF_"+resource+"_Blender",subMeshCount=indices.Length};mesh.SetVertices(vertices);
             for(int i=0;i<indices.Length;i++)mesh.SetTriangles(indices[i],i);
             mesh.RecalculateNormals();mesh.RecalculateBounds();
             materials=new Material[cached.materials.Length];
             for(int i=0;i<materials.Length;i++)
             {
                 var source=cached.materials[i];var color=new Color(source.r,source.g,source.b);
-                var material=new Material(shader){name="DF_UfoTestHat_"+i};
+                var material=new Material(shader){name="DF_"+resource+"_"+i};
                 if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",color);
                 if(material.HasProperty("_Color"))material.SetColor("_Color",color);
                 if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",source.metallic);
@@ -65,3 +71,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

@@ -12,26 +12,31 @@ namespace Alterverse.EditorChecks
         PreviewRenderUtility preview;
         GameObject actor;
         HeroId hero;
-        enum Hat {None,BetaCappy,UfoTestHat}
-        Hat hat=Hat.BetaCappy;
+        enum Hat {None,BetaTruckerCap,UfoTestHat,WizardHat,PropellerCap,MushroomHat}
+        Hat hat=Hat.BetaTruckerCap;
         bool wings,closeup=true;
         float yaw=15,pitch,headTilt;
         Quaternion headRest;
         string status="";
         [MenuItem("DIMENSIONS FRONT/Headwear/BETA Cappy fitting studio")]
-        public static void Open()=>GetWindow<HeadwearFitWindow>("BETA Cappy");
+        public static void Open()=>GetWindow<HeadwearFitWindow>("Headwear studio");
+        [MenuItem("DIMENSIONS FRONT/Headwear/Fitting studio")]
+        public static void OpenAll()=>Open();
         void OnDisable(){preview?.Cleanup();preview=null;actor=null;}
         void Build()
         {
             preview?.Cleanup();preview=new PreviewRenderUtility();
-            var selected=hat==Hat.BetaCappy?UniversalHeroCosmetic.BetaCap:hat==Hat.UfoTestHat?UniversalHeroCosmetic.UfoTestHat:UniversalHeroCosmetic.Original;
-            actor=CreatePreviewActor(hero,selected,wings);
+            var selected=hat==Hat.BetaTruckerCap?UniversalHeroCosmetic.BetaCap:hat==Hat.UfoTestHat?UniversalHeroCosmetic.UfoTestHat:UniversalHeroCosmetic.Original;
+            bool prototype=(int)hat>=(int)Hat.WizardHat;
+            actor=prototype?CreatePrototypeActor(hero,hat.ToString(),wings):CreatePreviewActor(hero,selected,wings);
             preview.AddSingleGO(actor);
             var view=actor.GetComponent<HeadwearPresentation>();
             if(view.Head!=null)headRest=view.Head.localRotation;
-            status=selected!=UniversalHeroCosmetic.Original?(view.Current==selected?
+            status=prototype?"Prototype · "+hat+" · Head: "+view.Head.name:
+                selected!=UniversalHeroCosmetic.Original?(view.Current==selected?
                 "Head found: "+view.Head.name+" · bounds "+view.HeadBounds.size: view.LastFitError):"Headwear removed; wing selection retained.";
             preview.camera.nearClipPlane=.01f;preview.camera.farClipPlane=50;
+            preview.camera.fieldOfView=30;
             preview.camera.clearFlags=CameraClearFlags.SolidColor;preview.camera.backgroundColor=new Color(.025f,.035f,.055f);
             preview.lights[0].intensity=1.3f;preview.lights[0].transform.rotation=Quaternion.Euler(35,25,0);
             preview.lights[1].intensity=.8f;preview.lights[1].transform.rotation=Quaternion.Euler(10,210,0);
@@ -48,6 +53,14 @@ namespace Alterverse.EditorChecks
             go.AddComponent<StylizedHeroVisual>().Build();
             return go;
         }
+        internal static GameObject CreatePrototypeActor(HeroId id,string resource,bool wings)
+        {
+            var go=CreatePreviewActor(id,UniversalHeroCosmetic.Original,wings);
+            var view=go.GetComponent<HeadwearPresentation>();
+            if(view.ApplyPrototype(resource))return go;
+            string error=view.LastFitError;DestroyImmediate(go);
+            throw new System.InvalidOperationException(resource+": "+error);
+        }
         void OnGUI()
         {
             EditorGUILayout.HelpBox("Isolated model preview. No ownership, purchases, player saves, levels or scenes are changed.",MessageType.Info);
@@ -58,12 +71,17 @@ namespace Alterverse.EditorChecks
             bool rebuild=EditorGUI.EndChangeCheck();
             closeup=EditorGUILayout.Toggle("Head close-up",closeup);
             headTilt=EditorGUILayout.Slider("Head tilt",headTilt,-25,25);
-            if(GUILayout.Button("Check head attachment on all 10 heroes"))HeadwearRegression.Run();
+            if(GUILayout.Button("Check all 5 hats on all 10 heroes"))HeadwearRegression.Run();
             if(preview==null||rebuild)
             {
                 try{Build();}catch(System.Exception error){status=error.Message;}
             }
             EditorGUILayout.HelpBox(status??"Head attachment unavailable.",MessageType.None);
+            if((int)hat>=(int)Hat.WizardHat)
+                EditorGUILayout.HelpBox("Test model. No shop price or reward assigned. Previewing never grants ownership.",MessageType.Info);
+            string art=hat==Hat.BetaTruckerCap?"BetaCap":hat.ToString();
+            var icon=hat==Hat.None?null:Resources.Load<Texture2D>("Headwear/"+art+"Icon");
+            if(icon!=null)GUILayout.Label(icon,GUILayout.Height(100));
             Rect rect=GUILayoutUtility.GetRect(100,10000,200,10000);
             if(actor==null||preview==null||rect.width<1||rect.height<1)return;
             Event e=Event.current;
@@ -72,8 +90,29 @@ namespace Alterverse.EditorChecks
             actor.transform.rotation=Quaternion.Euler(0,yaw,0);
             var view=actor.GetComponent<HeadwearPresentation>();
             if(view.Head!=null)view.Head.localRotation=headRest*Quaternion.Euler(headTilt,0,headTilt*.25f);
-            Vector3 target=closeup&&view.Head!=null?view.Head.position+actor.transform.up*.07f:actor.transform.position+Vector3.up*.6f;
-            Vector3 offset=Quaternion.Euler(pitch,0,0)*new Vector3(0,.04f,closeup?1.1f:3.7f);
+            Vector3 target=actor.transform.position+Vector3.up*.6f;
+            float distance=3.7f;
+            if(closeup&&view.Head!=null)
+            {
+                Transform root=actor.transform.Find("DF_VisualRoot");
+                Bounds frame=new Bounds(view.Head.position,Vector3.zero);
+                for(int i=0;i<8;i++)
+                {
+                    Vector3 corner=view.HeadBounds.center+Vector3.Scale(view.HeadBounds.extents,
+                        new Vector3((i&1)==0?-1:1,(i&2)==0?-1:1,(i&4)==0?-1:1));
+                    frame.Encapsulate(root.TransformPoint(corner));
+                }
+                foreach(Transform part in view.Head.GetComponentsInChildren<Transform>(true))
+                    if(part.name.StartsWith("DF_Headwear_"))
+                    {
+                        var renderer=part.GetComponent<Renderer>();
+                        if(renderer!=null)frame.Encapsulate(renderer.bounds);
+                    }
+                target=frame.center;
+                float aspect=Mathf.Max(.1f,rect.width/rect.height);
+                distance=Mathf.Max(frame.size.y,frame.size.x/aspect)*.5f/Mathf.Tan(15*Mathf.Deg2Rad)*1.2f+frame.extents.z;
+            }
+            Vector3 offset=Quaternion.Euler(pitch,0,0)*new Vector3(0,0,distance);
             preview.camera.transform.position=target+offset;
             preview.camera.transform.rotation=Quaternion.LookRotation(target-preview.camera.transform.position,Vector3.up);
             if(e.type==EventType.Repaint)
@@ -86,3 +125,4 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+

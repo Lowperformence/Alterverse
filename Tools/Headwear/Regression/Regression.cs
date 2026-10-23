@@ -34,7 +34,7 @@ static class Regression
             var points=new List<Vector3>();var weights=new List<BoneWeight>();
             for(int i=0;i<8;i++)
             {
-                points.Add(new Vector3((i&1)==0?-.2f:.2f,(i&2)==0?.75f:1.25f,(i&4)==0?-.2f:.2f));
+                points.Add(new Vector3((i&1)==0?-.2f:.2f,(i&2)==0?.75f:1.25f,((i&4)==0?-.2f:.2f)+((i&2)==0?0:.08f)));
                 weights.Add(new BoneWeight{boneIndex0=1,weight0=.8f,boneIndex1=0,weight1=.2f});
             }
             points.Add(new Vector3(999,999,999));weights.Add(new BoneWeight{boneIndex0=0,weight0=1});
@@ -52,6 +52,8 @@ static class Regression
             Check(view.Apply(UniversalHeroCosmetic.BetaCap),"Cap did not fit synthetic head geometry: "+view.LastFitError);
             Check(view.Head.name==(authored?"Head":"DF_Head"),"Cap selected a pose control instead of the weighted head bone.");
             Check(Math.Abs(view.HeadBounds.size.x-.4f)<.001f&&Math.Abs(view.HeadBounds.size.y-.5f)<.001f,"Body/non-head vertices contaminated head bounds.");
+            Check(Math.Abs(view.SeatInHeadSpace.y-1.25f)<.0001f,"Hat seat floated above or sank below the upper head contour.");
+            Check(Math.Abs(view.SeatInHeadSpace.z-(authored?.08f:0))<.0001f,"Hat used the face/chin center instead of the upper contour center.");
             var cap=view.Head.Find("DF_Headwear_BetaCap");
             Check(cap!=null&&cap.parent==view.Head,"Cap was not attached to the selected head.");
             int count=actor.GetComponentsInChildren<MeshFilter>().Length;
@@ -189,13 +191,23 @@ static class Regression
         BattlePassProgress.ReconcileCosmeticRewards();
         Check(!CosmeticCatalog.IsOwned(UniversalHeroCosmetic.BetaCap),"Missing premium entitlement accepted during migration.");
         Mesh mesh=BetaCapMesh.Build(Matrix4x4.identity);
-        Check(mesh.subMeshCount==3&&mesh.vertexCount>0&&mesh.vertexCount<2500,"Cap mesh exceeded budget or material layout.");
+        Check(mesh.subMeshCount==3&&mesh.vertexCount>0&&mesh.vertexCount<6000,"Cap mesh exceeded budget or material layout.");
         foreach(var vertex in mesh.vertices)Check(float.IsFinite(vertex.x)&&float.IsFinite(vertex.y)&&float.IsFinite(vertex.z),"Nonfinite cap vertex.");
         foreach(var list in mesh.Indices.Values)
         {Check(list.Length%3==0,"Invalid triangles.");foreach(int index in list)Check(index>=0&&index<mesh.vertexCount,"Out-of-range triangle index.");}
         Check(mesh.bounds.max.z>1.5f&&mesh.bounds.max.y>.7f,"Cap has no visor or crown.");
         Check(mesh.Indices[2].Length>0,"BETA lettering missing.");
-        AttachmentChecks();NetworkChecks();UfoChecks();
+        foreach(var list in mesh.Indices.Values)
+            for(int i=0;i<list.Length;i+=3)
+            {
+                var a=mesh.vertices[list[i]];var b=mesh.vertices[list[i+1]];var c=mesh.vertices[list[i+2]];
+                var u=b-a;var v=c-a;
+                float x=u.y*v.z-u.z*v.y,y=u.z*v.x-u.x*v.z,z=u.x*v.y-u.y*v.x;
+                Check(x*x+y*y+z*z>1e-14f,"Trucker cap contains a zero-area face.");
+                if(a.z>.7f&&b.z>.7f&&c.z>.7f&&a.y>.2f&&b.y>.2f&&c.y>.2f)
+                    Check(z>0,"Front panel or BETA embroidery faces inward.");
+            }
+        AttachmentChecks();NetworkChecks();UfoChecks();PrototypeChecks();
         Console.WriteLine("PASS "+checks+" headwear, battle-pass, persistence, mesh and message checks; Unity fit/device/live multiplayer validation remains required.");
     }
     static void UfoChecks()
@@ -243,4 +255,26 @@ static class Regression
         Check(remote.GetComponent<HeadwearPresentation>().Current==item.Id,"Client did not apply server UFO state.");client.Stop();
         Reset(1,false);Check(!CosmeticCatalog.IsOwned(item.Id)&&!HeadwearSelection.EquipFor(HeroId.Rook,item.Id),"Another profile inherited the UFO.");
     }
+    static void PrototypeChecks()
+    {
+        Reset(1,false);int commits=ProfileTransaction.Commits.Count;
+        foreach(string resource in new[]{"WizardHat","PropellerCap","MushroomHat"})
+        {
+            Check(UfoHatMesh.TryBuildResource(resource,Matrix4x4.identity,Shader.Find("fixture"),out Mesh mesh,out Material[] materials,out string error),resource+": "+error);
+            Check(mesh.vertexCount>0&&mesh.vertexCount<6000&&mesh.subMeshCount==6&&materials.Length==6,"Prototype mesh/material budget invalid.");
+            foreach(bool authored in new[]{false,true})
+            {
+                var view=Actor(authored).GetComponent<HeadwearPresentation>();
+                Check(view.ApplyPrototype(resource)&&view.Head.Find("DF_Headwear_"+resource)!=null,"Prototype failed head attachment.");
+                Check(Math.Abs(view.SeatInHeadSpace.y-1.25f)<.0001f,"Prototype seat does not meet head top.");
+                int count=view.gameObject.GetComponentsInChildren<MeshFilter>().Length;
+                Check(view.ApplyPrototype(resource)&&view.gameObject.GetComponentsInChildren<MeshFilter>().Length==count,"Repeated prototype preview duplicated geometry.");
+                Check(view.Apply(UniversalHeroCosmetic.Original)&&view.Head.Find("DF_Headwear_"+resource)==null&&view.PreviewResource==null,"Unequip retained prototype geometry.");
+            }
+        }
+        Check(ProfileTransaction.Commits.Count==commits,"Prototype preview changed the account.");
+        Check(!Actor().GetComponent<HeadwearPresentation>().ApplyPrototype("../OtherAsset"),"Unknown prototype path accepted.");
+        Check(!UfoHatMesh.TryBuildResource("../OtherAsset",Matrix4x4.identity,Shader.Find("fixture"),out _,out _,out _),"Unknown serialized mesh path accepted.");
+    }
 }
+

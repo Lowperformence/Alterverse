@@ -1,5 +1,6 @@
 using Alterverse.Characters;
 using Alterverse.Shop;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Alterverse.Visuals
@@ -13,6 +14,8 @@ namespace Alterverse.Visuals
         Material[] materials;
         public Transform Head {get;private set;}
         public Bounds HeadBounds {get;private set;}
+        public Vector3 SeatInHeadSpace {get;private set;}
+        public string PreviewResource {get;private set;}
         public UniversalHeroCosmetic Current {get;private set;}
         public string LastFitError {get;private set;}
 
@@ -29,24 +32,41 @@ namespace Alterverse.Visuals
         public bool Apply(UniversalHeroCosmetic selected)
         {
             if(!HeadwearSelection.Supported(selected))return false;
-            if(selected==Current&&(selected==UniversalHeroCosmetic.Original||mounted!=null))return true;
+            if(PreviewResource==null&&selected==Current&&
+                (selected==UniversalHeroCosmetic.Original&&mounted==null||selected!=UniversalHeroCosmetic.Original&&mounted!=null))return true;
+            return ApplyVisual(selected,null);
+        }
+
+#if UNITY_EDITOR
+        // Test models are preview-only until their unlock path has been chosen.
+        // This method never grants ownership, writes a profile or changes the network cosmetic IDs.
+        public bool ApplyPrototype(string resource)
+        {
+            if(resource!="WizardHat"&&resource!="PropellerCap"&&resource!="MushroomHat")return false;
+            if(PreviewResource==resource&&mounted!=null)return true;
+            return ApplyVisual(UniversalHeroCosmetic.Original,resource);
+        }
+#endif
+        bool ApplyVisual(UniversalHeroCosmetic selected,string prototype)
+        {
             Clear();
-            if(selected==UniversalHeroCosmetic.Original)return true;
+            if(selected==UniversalHeroCosmetic.Original&&prototype==null)return true;
             if(visualRoot==null)visualRoot=transform.Find("DF_VisualRoot");
-            Transform head=null;Bounds bounds=default;string error=null;
-            if(visualRoot==null||!TryFindHead(visualRoot,out head,out bounds,out error))
+            Transform head=null;Bounds bounds=default;Vector3 seat=default;string error=null;
+            if(visualRoot==null||!TryFindHead(visualRoot,out head,out bounds,out seat,out error))
             {LastFitError=visualRoot==null?"Visual root not ready.":error;return false;}
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
             if(shader==null){LastFitError="Headwear material shader unavailable.";return false;}
             Head=head;HeadBounds=bounds;
             Vector3 size=bounds.size;
-            Vector3 seat=new Vector3(bounds.center.x,bounds.max.y-size.y*.18f,bounds.center.z);
             bool ufo=selected==UniversalHeroCosmetic.UfoTestHat;
-            Vector3 scale=ufo?new Vector3(size.x*.54f,Mathf.Min(size.x,size.z)*.54f,size.z*.60f):new Vector3(size.x*.56f,size.y*.60f,size.z*.56f);
+            bool asset=ufo||prototype!=null;
+            Vector3 scale=asset?new Vector3(size.x*.54f,Mathf.Min(size.x,size.z)*.54f,size.z*.60f):new Vector3(size.x*.54f,size.y*.45f,size.z*.56f);
             Matrix4x4 fit=head.worldToLocalMatrix*visualRoot.localToWorldMatrix*Matrix4x4.TRS(seat,Quaternion.identity,scale);
-            if(ufo)
+            SeatInHeadSpace=fit.MultiplyPoint3x4(Vector3.zero);
+            if(asset)
             {
-                if(!UfoHatMesh.TryBuild(fit,shader,out mesh,out materials,out string message))
+                if(!UfoHatMesh.TryBuildResource(prototype??"UfoTestHat",fit,shader,out mesh,out materials,out string message))
                 {LastFitError=message;return false;}
             }
             else
@@ -63,17 +83,21 @@ namespace Alterverse.Visuals
                 materials[i]=material;
             }
             }
-            mounted=new GameObject(ufo?"DF_Headwear_UfoTestHat":"DF_Headwear_BetaCap");mounted.layer=visualRoot.gameObject.layer;
+            mounted=new GameObject("DF_Headwear_"+(prototype??(ufo?"UfoTestHat":"BetaCap")));mounted.layer=visualRoot.gameObject.layer;
             mounted.transform.SetParent(head,false);
             mounted.AddComponent<MeshFilter>().sharedMesh=mesh;
             mounted.AddComponent<MeshRenderer>().sharedMaterials=materials;
-            Current=selected;LastFitError=null;
+            Current=selected;PreviewResource=prototype;LastFitError=null;
             return true;
         }
 
         public static bool TryFindHead(Transform root,out Transform head,out Bounds bounds,out string error)
+            =>TryFindHead(root,out head,out bounds,out _,out error);
+
+        static bool TryFindHead(Transform root,out Transform head,out Bounds bounds,out Vector3 seat,out string error)
         {
-            head=null;bounds=default;error=null;bool found=false;
+            head=null;bounds=default;seat=default;error=null;bool found=false;
+            var surface=new List<Vector3>();
             foreach(var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
                 Mesh source=skin.sharedMesh;
@@ -97,6 +121,7 @@ namespace Alterverse.Visuals
                         if(weight<.5f)continue;
                         Vector3 point=convert.MultiplyPoint3x4(points[i]);
                         if(!Finite(point))continue;
+                        surface.Add(point);
                         if(!found){bounds=new Bounds(point,Vector3.zero);found=true;}else bounds.Encapsulate(point);
                         head=bones[index];
                     }
@@ -116,6 +141,7 @@ namespace Alterverse.Visuals
                     {
                         Vector3 p=local.center+Vector3.Scale(local.extents,new Vector3((i&1)==0?-1:1,(i&2)==0?-1:1,(i&4)==0?-1:1));
                         p=convert.MultiplyPoint3x4(p);
+                        surface.Add(p);
                         if(!found){bounds=new Bounds(p,Vector3.zero);found=true;}else bounds.Encapsulate(p);
                     }
                     head=part;break;
@@ -123,6 +149,14 @@ namespace Alterverse.Visuals
             }
             if(!found||head==null||!Finite(bounds.size)||bounds.size.x<=.01f||bounds.size.y<=.01f||bounds.size.z<=.01f)
             {error="No readable head geometry and matching head bone found.";return false;}
+            // Center on the upper contour, not on chin, face, fins or the whole-body pivot.
+            // The mesh's head-seat plane meets the actual top with no fixed floating offset.
+            bool upper=false;Bounds crown=default;
+            float threshold=bounds.max.y-bounds.size.y*.10f;
+            foreach(Vector3 point in surface)
+                if(point.y>=threshold)
+                {if(!upper){crown=new Bounds(point,Vector3.zero);upper=true;}else crown.Encapsulate(point);}
+            seat=new Vector3(crown.center.x,bounds.max.y,crown.center.z);
             return true;
         }
         static bool Finite(Vector3 v)=>!float.IsNaN(v.x)&&!float.IsInfinity(v.x)&&
@@ -133,8 +167,9 @@ namespace Alterverse.Visuals
             if(mounted!=null){mounted.SetActive(false);Release(mounted);}
             Release(mesh);
             if(materials!=null)foreach(var material in materials)Release(material);
-            mounted=null;mesh=null;materials=null;Current=UniversalHeroCosmetic.Original;
+            mounted=null;mesh=null;materials=null;PreviewResource=null;Current=UniversalHeroCosmetic.Original;
         }
         void OnDestroy()=>Clear();
     }
 }
+

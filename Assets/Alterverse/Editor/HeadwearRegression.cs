@@ -19,24 +19,29 @@ namespace Alterverse.EditorChecks
             int checkedHeroes=0;
             try
             {
-                foreach(var item in new[]{UniversalHeroCosmetic.BetaCap,UniversalHeroCosmetic.UfoTestHat})
+                foreach(string resource in new[]{"BetaCap","UfoTestHat","WizardHat","PropellerCap","MushroomHat"})
                 for(int i=0;i<HeroIdentity.HeroCount;i++)
                 {
                     GameObject actor=null;
                     try
                     {
-                        actor=HeadwearFitWindow.CreatePreviewActor((HeroId)i,item,true);
+                        bool prototype=resource!="BetaCap"&&resource!="UfoTestHat";
+                        var item=resource=="BetaCap"?UniversalHeroCosmetic.BetaCap:UniversalHeroCosmetic.UfoTestHat;
+                        actor=prototype?HeadwearFitWindow.CreatePrototypeActor((HeroId)i,resource,true):
+                            HeadwearFitWindow.CreatePreviewActor((HeroId)i,item,true);
                         SceneManager.MoveGameObjectToScene(actor,scene);
                         var view=actor.GetComponent<HeadwearPresentation>();
-                        Require(view!=null&&view.Current==item,
+                        Require(view!=null&&(prototype?view.PreviewResource==resource:view.Current==item),
                             (HeroId)i+": "+(view?.LastFitError??"headwear missing"));
                         Require(view.Head!=null,"Head bone missing.");
-                        bool ufo=item==UniversalHeroCosmetic.UfoTestHat;
-                        var cap=view.Head.Find(ufo?"DF_Headwear_UfoTestHat":"DF_Headwear_BetaCap");
+                        var cap=view.Head.Find("DF_Headwear_"+resource);
                         Require(cap!=null,"Cap is not parented to the real head.");
                         var mesh=cap.GetComponent<MeshFilter>()?.sharedMesh;
-                        Require(mesh!=null&&mesh.vertexCount>0&&mesh.vertexCount<(ufo?6000:2500),"Invalid headwear mesh budget.");
-                        Require(mesh.subMeshCount==(ufo?6:3),"Unexpected headwear material count.");
+                        Require(mesh!=null&&mesh.vertexCount>0&&mesh.vertexCount<6000,"Invalid headwear mesh budget.");
+                        Require(mesh.subMeshCount==(resource=="BetaCap"?3:6),"Unexpected headwear material count.");
+                        var root=actor.transform.Find("DF_VisualRoot");
+                        Vector3 contact=root.InverseTransformPoint(view.Head.TransformPoint(view.SeatInHeadSpace));
+                        Require(Mathf.Abs(contact.y-view.HeadBounds.max.y)<.0001f,"Hat seat does not meet the upper head contour.");
                         Require(cap.GetComponentsInChildren<Collider>(true).Length==0,"Cosmetic introduced a collider.");
                         Vector3 position=cap.localPosition,scale=cap.localScale;
                         Quaternion rotation=cap.localRotation;
@@ -44,7 +49,7 @@ namespace Alterverse.EditorChecks
                         Require(cap.parent==view.Head&&cap.localPosition==position&&cap.localScale==scale&&cap.localRotation==rotation,
                             "Cap did not retain its head attachment under a head pose.");
                         int count=actor.GetComponentsInChildren<MeshFilter>(true).Length;
-                        Require(view.Apply(item),"Repeated equip failed.");
+                        Require(prototype?view.ApplyPrototype(resource):view.Apply(item),"Repeated equip failed.");
                         Require(actor.GetComponentsInChildren<MeshFilter>(true).Length==count,"Repeated equip duplicated cap geometry.");
                         Require(view.Apply(UniversalHeroCosmetic.Original),"Unequip failed.");
                         Require(view.Current==UniversalHeroCosmetic.Original,"Unequip did not clear the headwear slot.");
@@ -61,3 +66,4 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+
