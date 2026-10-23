@@ -2,13 +2,10 @@ using UnityEngine;
 
 namespace Alterverse.UI
 {
-    /// <summary>Draws a matching first-frame poster until the menu video is ready, then blends into playback.</summary>
+    /// <summary>Draws the seeded video target, with a still fallback when playback is unavailable.</summary>
     internal sealed class MenuCosmicBackdrop : System.IDisposable
     {
-        private const float VideoRevealDuration = .15f;
         private readonly Texture2D texture;
-        private Texture activeVideo;
-        private float videoRevealedAt;
         private readonly bool ownsTexture;
         private readonly Texture2D cards;
         public MenuCosmicBackdrop()
@@ -28,33 +25,9 @@ namespace Alterverse.UI
         }
         public void Draw(Rect rect,Texture animated=null)
         {
-            if(animated==null)
-            {
-                activeVideo=null;
-                GUI.DrawTexture(rect,texture,ScaleMode.ScaleAndCrop,false);
-                return;
-            }
-            if(activeVideo!=animated)
-            {
-                activeVideo=animated;
-                videoRevealedAt=Time.unscaledTime;
-            }
-            // Unscaled time also works while MatchClock holds the menu paused.
-            float reveal=Mathf.SmoothStep(0,1,Mathf.Clamp01((Time.unscaledTime-videoRevealedAt)/VideoRevealDuration));
-            if(reveal>=1f)
-            {
-                GUI.DrawTexture(rect,animated,ScaleMode.ScaleAndCrop,false);
-                return;
-            }
-            GUI.DrawTexture(rect,texture,ScaleMode.ScaleAndCrop,false);
-            if(reveal<=0f)return;
-            Color previous=GUI.color;
-            try
-            {
-                GUI.color=new Color(previous.r,previous.g,previous.b,previous.a*reveal);
-                GUI.DrawTexture(rect,animated,ScaleMode.ScaleAndCrop,true);
-            }
-            finally { GUI.color=previous; }
+            // MenuBackgroundVideo seeds its render target with the first-frame poster.
+            // Keep one crop and one opaque GUI draw throughout startup and playback.
+            GUI.DrawTexture(rect,animated!=null?animated:texture,ScaleMode.ScaleAndCrop,false);
         }
         public void DrawCard(Rect rect,int index)
         {
