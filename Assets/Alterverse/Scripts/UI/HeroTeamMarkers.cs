@@ -6,6 +6,7 @@ public sealed class HeroTeamMarkers:MonoBehaviour
 private static readonly Color EnemyColor=new(1f,.16f,.13f,.98f);
 private static readonly Color AllyColor=new(.20f,.86f,1f,.94f);
 private static readonly Color FrameColor=new(.018f,.022f,.03f,.94f);
+private static readonly Color ShieldColor=new(.30f,.68f,1f,1f);
 private Texture2D pixel;private Camera cam;private GUIStyle style;private TeamMember player;private HeroIdentity[] heroes=System.Array.Empty<HeroIdentity>();private float nextRefresh;
 private void Awake(){pixel=new Texture2D(1,1);pixel.SetPixel(0,0,Color.white);pixel.Apply();cam=Camera.main;RefreshTargets();}
 private void Update(){if(cam==null)cam=Camera.main;if(Time.unscaledTime>=nextRefresh)RefreshTargets();}
@@ -45,6 +46,7 @@ GUI.DrawTexture(new Rect(frame.x+inset,frame.y+inset,innerWidth*Mathf.Clamp01(hp
 EnsureStyle(scale);
 GUI.color=Color.white;
 GUI.Label(new Rect(p.x-w*.8f,p.y-16f*scale,w*1.6f,14f*scale),$"{hp.Current:0} / {hp.Max:0}",style);
+DrawShield(frame,hp,scale);
 
 if(enemy)DrawEnemyCrystal(p.x,p.y-24f*scale,scale);
 else
@@ -54,6 +56,25 @@ GUI.DrawTexture(new Rect(p.x-4f*scale,p.y-4f*scale,8f*scale,2f*scale),pixel);
 }
 GUI.color=old;
 }
+}
+private void DrawShield(Rect healthFrame,Health hp,float scale)
+{
+float shield=hp.Shield;
+if(!(shield>0f))return;
+// The already-replicated total includes base and temporary ability shields.
+// Base shield capacity keeps a normal shield readable even on high-HP heroes;
+// the number also represents shields above that capacity without truncation.
+float capacity=hp.HeroBaseShieldMax>0f?hp.HeroBaseShieldMax:Mathf.Max(1f,hp.Max);
+Rect frame=new Rect(healthFrame.x,healthFrame.yMax+2f*scale,healthFrame.width,6f*scale);
+float inset=1f*scale,width=Mathf.Max(0f,frame.width-inset*2f);
+GUI.color=FrameColor;GUI.DrawTexture(frame,pixel);
+GUI.color=new Color(.035f,.10f,.18f,.95f);
+GUI.DrawTexture(new Rect(frame.x+inset,frame.y+inset,width,frame.height-inset*2f),pixel);
+GUI.color=ShieldColor;
+float fill=Mathf.Min(width,Mathf.Max(2f*scale,width*Mathf.Clamp01(shield/Mathf.Max(1f,capacity))));
+GUI.DrawTexture(new Rect(frame.x+inset,frame.y+inset,fill,frame.height-inset*2f),pixel);
+GUI.color=Color.white;
+GUI.Label(new Rect(frame.x,frame.yMax+1f*scale,frame.width,12f*scale),$"+{Mathf.CeilToInt(shield)}",style);
 }
 private void DrawEnemyCrystal(float cx,float cy,float scale)
 {
@@ -75,5 +96,6 @@ private void EnsureStyle(float scale){int size=Mathf.RoundToInt(10*scale);if(sty
 private void OnDestroy(){if(pixel!=null)Destroy(pixel);}
 }
 }
+
 
 
