@@ -50,8 +50,26 @@ namespace Alterverse.Editor
             ("Jet","Combat/Flamethrower/Soft/Additive/FlamethrowerAdditiveBlue.prefab",.25f),
             ("BladeWave","Combat/Sword/Wave/SwordWaveWhite.prefab",.45f),
             ("SharpBolt","Combat/Missiles/Sharp/SharpMissileBlue.prefab",.4f),
-            ("LeafDart","Combat/Missiles/Sharp/SharpMissileGreen.prefab",.4f),
-            ("SpinStrike","Combat/Sword/Spin/SwordSpinWhite.prefab",.45f)
+            ("LeafDart","Environment/Weather/Wind & Leaves/LeafExplosion.prefab",.4f),
+            ("SpinStrike","Combat/Sword/Spin/SwordSpinWhite.prefab",.45f),
+            ("BomberNuke","Combat/Explosions/NukeConeExplosion/NukeConeExplosionFire.prefab",.5f),
+            ("LightningMissile","Combat/Missiles/Lightning/LightningMissileYellow.prefab",.4f),
+            ("LightningMuzzle","Combat/Muzzleflash/LightningMuzzle/LightningMuzzleYellow.prefab",.3f),
+            ("LightningImpact","Combat/Explosions/LightningExplosion/LightningExplosionYellow.prefab",.4f),
+            ("LightningNova","Combat/Nova/Lightning/NovaLightningPurple.prefab",.5f),
+            ("HealField","Interactive/Healing/HealField.prefab",.5f),
+            ("HealPod","Interactive/Healing/HealOnceLoop.prefab",.4f),
+            ("HealPickup","Interactive/Healing/HealNova.prefab",.45f),
+            ("TimmyJet","Combat/Flamethrower/Soft/Additive/FlamethrowerAdditiveBlue.prefab",.25f),
+            ("WeatherSnow","Environment/Weather/Snow/SnowLight.prefab",1f),
+            ("WeatherRain","Environment/Weather/Rain/RainLight.prefab",1f),
+            ("WeatherWind","Environment/Weather/Wind & Leaves/Windlines.prefab",1f),
+            ("WeatherFog","Environment/Fog/Grey/FogCalmGrey.prefab",1f),
+            ("SpinPortal","Interactive/Portals/SpinPortal/SpinPortalGold.prefab",.35f),
+            ("MiniHit","Combat/Sword/Hit/SwordHitMini/SwordHitMiniBlue.prefab",.2f),
+            ("SoftHit","Combat/Brawling/Soft/Directional/SoftPunchLight.prefab",.2f),
+            ("LeafHit","Combat/Sword/Hit/SwordHitMini/SwordHitMiniGreen.prefab",.2f),
+            ("MagicHit","Combat/Sword/Hit/SwordHitMagic/SwordHitMagicBlue.prefab",.2f)
         };
         [InitializeOnLoadMethod]
         private static void RegisterInitialBuild() { EditorApplication.delayCall+=BuildIfMissing; }
@@ -130,6 +148,7 @@ namespace Alterverse.Editor
                         // Native delay/lifetime is only used to fit the visual into the already-authoritative slot duration.
                         nativeSeconds=Mathf.Max(nativeSeconds,main.startDelay.constantMax+main.startLifetime.constantMax);
                     }
+                    StripTypography(go);
                     foreach(var renderer in go.GetComponentsInChildren<Renderer>(true))
                     {
                         renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
@@ -165,12 +184,15 @@ namespace Alterverse.Editor
                         if(renderer is ParticleSystemRenderer particle)
                             particle.SetActiveVertexStreams(new List<ParticleSystemVertexStream>{ParticleSystemVertexStream.Position,ParticleSystemVertexStream.Color,ParticleSystemVertexStream.UV});
                     }
+                    float seconds=Mathf.Clamp(nativeSeconds,.1f,2f);
+                    float bounds=MeasureRadius(wrapper,seconds);
                     var prefab=PrefabUtility.SaveAsPrefabAsset(wrapper,Output+"/Prefabs/"+item.key+".prefab");
-                    entries.Add(new EpicVfxLibrary.Entry{key=item.key,prefab=prefab,scale=item.scale,nativeSeconds=Mathf.Clamp(nativeSeconds,.1f,2f)});
+                    entries.Add(new EpicVfxLibrary.Entry{key=item.key,prefab=prefab,scale=item.scale,nativeSeconds=seconds,boundsRadius=bounds});
                 }
                 finally{Object.DestroyImmediate(wrapper);}
             }
             BuildAbilityLooks(entries);
+            BuildBasicAudio();
             var beam=AssetDatabase.LoadAssetAtPath<Material>(Output+"/Materials/ExactBeam.mat");
             bool newBeam=beam==null;if(newBeam)beam=new Material(shader);else beam.shader=shader;
             beam.name="DF_EpicExactBeam";beam.SetTexture("_MainTex",AssetDatabase.LoadAssetAtPath<Texture2D>(Source+"Textures/gradient_horizontal.png"));
@@ -192,7 +214,7 @@ namespace Alterverse.Editor
                 foreach(var variant in new[]{
                     (key:look.Key,source:look.Source,layout:look.Layout,accent:look.Accent,scale:1f),
                     (key:look.Key+"_Cast",source:look.CastSource,layout:look.Slot==3?EpicVfxLibrary.Formation.Crown:look.Layout,accent:(string)null,scale:.55f),
-                    (key:look.Key+"_Hit",source:look.HitSource,layout:look.Slot==3?EpicVfxLibrary.Formation.Fan:EpicVfxLibrary.Formation.Single,accent:(string)null,scale:.70f)})
+                    (key:look.Key+"_Hit",source:look.HitSource,layout:EpicVfxLibrary.Formation.Single,accent:(string)null,scale:.35f)})
                 {
                     if(variant.source=="ExactBeam")continue;
                     var source=families[variant.source];var wrapper=new GameObject("DF_"+variant.key);
@@ -235,19 +257,71 @@ namespace Alterverse.Editor
                         // A complete signature is ONE pooled composition, including all its
                         // native layers. More cuts/runes never multiply the 96-particle budget.
                         var systems=wrapper.GetComponentsInChildren<ParticleSystem>(true);
-                        int cap=Mathf.Max(1,96/Mathf.Max(1,systems.Length));
+                        int cap=Mathf.Max(1,(variant.key.EndsWith("_Hit")?18:96)/Mathf.Max(1,systems.Length));
                         foreach(var system in systems){var main=system.main;main.maxParticles=Mathf.Min(main.maxParticles,cap);}
+                        float bounds=MeasureRadius(wrapper,seconds);
                         var prefab=PrefabUtility.SaveAsPrefabAsset(wrapper,Output+"/Prefabs/"+variant.key+".prefab");
-                        entries.Add(new EpicVfxLibrary.Entry{key=variant.key,prefab=prefab,scale=source.scale*look.Emphasis*variant.scale,nativeSeconds=seconds});
+                        entries.Add(new EpicVfxLibrary.Entry{key=variant.key,prefab=prefab,scale=source.scale*look.Emphasis*variant.scale,nativeSeconds=seconds,boundsRadius=bounds});
                     }
                     finally{Object.DestroyImmediate(wrapper);}
                 }
             }
         }
+        private static float MeasureRadius(GameObject root,float seconds)
+        {
+            // Sample the actual converted systems. Include renderer extents (mesh size,
+            // trails, offsets and every layout copy), rather than guessing from startSize.
+            float radius=.01f;var systems=root.GetComponentsInChildren<ParticleSystem>(true);
+            foreach(var system in systems){system.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);system.Play(false);}
+            for(int sample=0;sample<24;sample++)
+            {
+                foreach(var system in systems)system.Simulate(seconds/24f,false,false,false);
+                foreach(var renderer in root.GetComponentsInChildren<Renderer>(true))
+                {
+                    var ps=renderer.GetComponent<ParticleSystem>();
+                    if(!renderer.enabled||ps!=null&&ps.particleCount==0)continue;
+                    Bounds bounds=renderer.bounds;
+                    radius=Mathf.Max(radius,(bounds.center-root.transform.position).magnitude+bounds.extents.magnitude);
+                }
+            }
+            foreach(var system in systems)system.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);
+            return radius;
+        }
+        private static void StripTypography(GameObject root)
+        {
+            foreach(var renderer in root.GetComponentsInChildren<Renderer>(true))
+                foreach(var mat in renderer.sharedMaterials)
+                {
+                    Texture texture=mat!=null?mat.mainTexture:null;
+                    string name=texture!=null?texture.name.ToLowerInvariant():"";
+                    if(name.StartsWith("text_")||name.StartsWith("word_")||name=="pow"||name=="swoosh"||name=="crack")
+                    {renderer.enabled=false;var ps=renderer.GetComponent<ParticleSystem>();if(ps!=null){var emission=ps.emission;emission.enabled=false;}break;}
+                }
+        }
+        private static void BuildBasicAudio()
+        {
+            const string folder="Assets/Alterverse/Resources/Audio/EpicBasics";
+            Directory.CreateDirectory(folder);AssetDatabase.Refresh();
+            // No sword/claw swishes exist in this package: retain the selected steel/claw
+            // recordings. Only matching basic release/contact banks are replaced.
+            foreach(var item in new[]{
+                (hero:"Kaelon",phase:"Impact",file:"etfx_impact_metal01"),
+                (hero:"Rook",phase:"Impact",file:"etfx_impact_metal03"),
+                (hero:"Nyra",phase:"Cast",file:"etfx_shoot_pistol02"),
+                (hero:"Elyra",phase:"Cast",file:"etfx_shoot_mystic"),
+                (hero:"Mira",phase:"Cast",file:"etfx_shoot_magic"),
+                (hero:"Traveler",phase:"Cast",file:"etfx_shoot_lightning")})
+            {
+                string path=folder+"/"+item.hero+"_"+item.phase+".wav";
+                string source=Source+"Sound/"+item.file+".wav";
+                if(AssetDatabase.LoadAssetAtPath<AudioClip>(source)==null)throw new FileNotFoundException(source);
+                if(!File.Exists(path)&&!AssetDatabase.CopyAsset(source,path))throw new IOException("Cannot import "+path);
+            }
+        }
         private static void PreparePortalGeometry(string key,GameObject source)
         {
-            if(key!="Portal"&&key!="Vortex")return;
-            bool portal=key=="Portal";
+            if(key!="Portal"&&key!="Vortex"&&key!="SpinPortal")return;
+            bool portal=key!="Vortex";
             // The source's 90-degree Z frame plus its discs' 90-degree X rotation
             // puts their normal on X: the gameplay preview sees only their edge.
             // Keep sparks in the portal/floor plane and render the two authored flat
@@ -279,7 +353,7 @@ namespace Alterverse.Editor
                 // drag every emitted particle along with its head and collapse it to a ball.
                 var main=system.main;main.simulationSpace=ParticleSystemSimulationSpace.World;
             }
-            if((key=="Portal"||key=="Vortex")&&
+            if((key=="Portal"||key=="Vortex"||key=="SpinPortal")&&
                 emission.rateOverTime.constantMax>0f&&emission.rateOverTime.constantMax<=2f)
             {
                 // The visible portal discs otherwise first appear at 0.5 seconds. Keep
@@ -307,6 +381,8 @@ namespace Alterverse.Editor
             foreach(var entry in library.entries)
             {
                 if(entry==null||entry.prefab==null)throw new BuildFailedException("Empty Epic VFX entry");
+                if(float.IsNaN(entry.boundsRadius)||float.IsInfinity(entry.boundsRadius)||entry.boundsRadius<=0)
+                    throw new BuildFailedException("Missing measured Epic footprint: "+entry.key);
                 foreach(var component in entry.prefab.GetComponentsInChildren<Component>(true))
                     if(component==null||!(component is Transform||component is ParticleSystem||component is Renderer||component is MeshFilter))
                         throw new BuildFailedException("Non-visual component in Epic VFX: "+entry.key);

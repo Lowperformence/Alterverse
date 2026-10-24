@@ -14,6 +14,7 @@ namespace Alterverse.Visuals
             using var style=HeroVfxEvents.UseAbility(actor,thrust?2:warning?0:3,HeroVfxCue.Spell);
             Color color=StylizedArtDirection.HeroAccent(Alterverse.Characters.HeroId.VoidKnight);Vector3 origin=Ground(fixedOrigin??actor.transform.position);
             direction=Alterverse.Combat.AimGeometry.Direction(direction);
+            HeroVfxEvents.SetAbilityGeometry(origin,origin+direction);
             if(relay)Alterverse.Multiplayer.CoopHeroStateSync.BroadcastVoidKnightEffect(actor,thrust?2:warning?0:1,origin,origin+direction,range,seconds);
             float originalSeconds=seconds;
             seconds=Mathf.Max(0,seconds-elapsed);if(seconds<=0)return;

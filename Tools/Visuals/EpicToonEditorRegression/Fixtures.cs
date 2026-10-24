@@ -12,7 +12,7 @@ namespace UnityEngine
     public class ScriptableObject : Object {}
     public class Component : Object
     {
-        public GameObject gameObject;
+        public Transform transform=>gameObject.transform;public GameObject gameObject;
         public T GetComponent<T>() where T:class=>gameObject.GetComponent<T>();
     }
     public sealed class GameObject : Object
@@ -50,25 +50,26 @@ namespace UnityEngine
     public struct Vector3
     {
         public float x,y,z;public Vector3(float x,float y,float z){this.x=x;this.y=y;this.z=z;}
-        public static Vector3 one=>new(1,1,1);public static Vector3 right=>new(1,0,0);
+        public float magnitude=>MathF.Sqrt(x*x+y*y+z*z);public static Vector3 operator -(Vector3 a,Vector3 b)=>new(a.x-b.x,a.y-b.y,a.z-b.z);public static Vector3 one=>new(1,1,1);public static Vector3 right=>new(1,0,0);
         public static Vector3 up=>new(0,1,0);public static Vector3 forward=>new(0,0,1);
         public static Vector3 operator *(Vector3 a,float s)=>new(a.x*s,a.y*s,a.z*s);
     }
     public sealed class Transform : Component
     {
         public Quaternion localRotation=Quaternion.identity;public Vector3 localPosition,localScale=Vector3.one;
-        public Transform parent;public readonly List<Transform> Children=new();
+        public Vector3 position=>localPosition;public Transform parent;public readonly List<Transform> Children=new();
         public void SetParent(Transform value,bool world){parent?.Children.Remove(this);parent=value;parent?.Children.Add(this);}
     }
     public sealed class MeshFilter : Component {}
-    public class Renderer : Component {public Material[] sharedMaterials=Array.Empty<Material>();}
+    public struct Bounds{public Vector3 center,extents;}public class Renderer : Component {public bool enabled=true;public Bounds bounds=>new(){extents=Vector3.one};public Material[] sharedMaterials=Array.Empty<Material>();}
     public sealed class MeshRenderer : Renderer {}
     public enum ParticleSystemRenderMode{Billboard,Stretch,HorizontalBillboard,VerticalBillboard,Mesh,None}
     public enum ParticleSystemRenderSpace{View,World,Local,Facing,Velocity}
     public enum ParticleSystemSimulationSpace{Local,World,Custom}
     public sealed class ParticleSystemRenderer : Renderer {public ParticleSystemRenderMode renderMode;public ParticleSystemRenderSpace alignment;}
+    public enum ParticleSystemStopBehavior{StopEmittingAndClear}
     public sealed class ParticleSystem : Component
-    {
+    {public int particleCount=>1;public void Stop(bool children,ParticleSystemStopBehavior behavior){}public void Play(bool children){}public void Simulate(float time,bool children,bool restart,bool fixedTime){}
         public sealed class TrailsModule{public bool enabled;}public TrailsModule trails=new();
         public struct MinMaxCurve{public float constantMax;public static implicit operator MinMaxCurve(float v)=>new(){constantMax=v};}
         public struct Burst{public float time;public short minCount;public Burst(float time,short count){this.time=time;minCount=count;}}
@@ -90,7 +91,7 @@ namespace UnityEngine
         public static float Max(float a,float b)=>Math.Max(a,b);
     }
     public sealed class Shader : Object {}
-    public sealed class Material : Object {public Shader shader;public object mainTexture;}
+    public sealed class Texture:Object {}public sealed class Material : Object {public Shader shader;public Texture mainTexture;}
 }
 namespace UnityEditor
 {

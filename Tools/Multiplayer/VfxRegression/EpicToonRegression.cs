@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 using Alterverse.Characters;
+using Alterverse.Match;
 using Alterverse.Combat;
 using Alterverse.Multiplayer;
 using Alterverse.Visuals;
@@ -10,7 +11,7 @@ using UnityEngine;
 
 static partial class VfxRegression
 {
-    static readonly string[] EpicKeys={"Slash","HeavySlash","Claw","SwordImpact","Orb","Missile","Rune","Shield","Heal","Portal","Vortex","Water","Smoke","Nova","Punch","Impact","FireImpact","Spark","Fire","Muzzle","Jet","HeavyImpact","NatureMissile","NatureImpact","NatureNova","ArcaneMissile","MagicImpact","ShadowMissile","FireNova","BladeWave","SharpBolt","LeafDart","SpinStrike"};
+    static readonly string[] EpicKeys={"Slash","HeavySlash","Claw","SwordImpact","Orb","Missile","Rune","Shield","Heal","Portal","Vortex","Water","Smoke","Nova","Punch","Impact","FireImpact","Spark","Fire","Muzzle","Jet","HeavyImpact","NatureMissile","NatureImpact","NatureNova","ArcaneMissile","MagicImpact","ShadowMissile","FireNova","BladeWave","SharpBolt","LeafDart","SpinStrike","BomberNuke","LightningMissile","LightningMuzzle","LightningImpact","LightningNova","HealField","HealPod","HealPickup","TimmyJet","WeatherSnow","WeatherRain","WeatherWind","WeatherFog","SpinPortal","MiniHit","SoftHit","LeafHit","MagicHit"};
     static EpicVfxLibrary TestLibrary()
     {
         var library=ScriptableObject.CreateInstance<EpicVfxLibrary>();
@@ -125,6 +126,8 @@ static partial class VfxRegression
             var look=EpicVfxLibrary.FindLook(id.ToString(),action);
             Check(look!=null&&(keys.Contains(look.Source=="ExactBeam"?"ExactBeam":look.Key)||keys.Any(k=>k.StartsWith(look.Key+"_"))),
                 "Actual action uses its own visual concept "+id+action+" expected="+look?.Key+" observed="+string.Join(",",keys));
+            if(action==3||id==HeroId.Rook&&action==2||id==HeroId.Kaelon&&action==2)
+                Check(keys.Contains(look.Key),"damaging area/ultimate uses its actual primary composition, not only preparation or hit "+id+action);
             Console.WriteLine("CHECKLIST|"+HeroIdentity.NameFor(id)+"|"+(action<0?"Basisangriff":HeroAbilityKit.LoadoutFor(id).Spec(action).Name)+"|"+AimingSettings.Current.For(id,action).aimType+"|"+string.Join(", ",keys.OrderBy(k=>k))+"|Code geprueft; Unity-Sichttest offen");
         }
     }
@@ -175,7 +178,7 @@ static partial class VfxRegression
     }
     static void EpicToonChecks()
     {
-        ExclusiveReplacement();ParticleLifecycle();RenderingParity();RealActionChecklist();NerokPreservation();TimmyPreservation();BackendAvailability();PresentationScaleAndContext();
+        ExclusiveReplacement();ParticleLifecycle();RenderingParity();RealActionChecklist();NerokPreservation();TimmyPreservation();BackendAvailability();PresentationScaleAndContext();FootprintLimits();HealingStations();WeatherBudgets();
         EpicReset();var actor=Hero(HeroId.Veyr,0);
         Check(!actor.AddComponent<HeroAbilityReadabilityBoost>().enabled&&!actor.AddComponent<HeroAttackReadabilityPresentation>().enabled,"Legacy cooldown observers cannot add duplicate attacks");
         Resources.EpicLibrary=null;
@@ -191,22 +194,104 @@ static partial class VfxRegression
             "Timmy retains his original presentation observers");
         EpicReset();actor=Hero(HeroId.Timmy,0);
         HeroSkillVfx.TimmyEffect(actor,3,Vector3.zero,Vector3.forward*3,0,.4f,relay:false);
-        slots=LiveSlots();Check(slots.All(s=>Field(s,"Epic")==null&&!(bool)Field(s,"EpicBeam")),
-            "Direct/replayed Timmy jump uses only original visual layers");
+        slots=LiveSlots();Check(slots.All(s=>Field(s,"Epic")==null||(string)Field(Field(s,"Epic"),"Key")=="TimmyJet"),
+            "Timmy jump replaces only its explicitly requested jet flames");
         Check(slots.Count(s=>(HeroFxShape)Field(s,"Shape")==HeroFxShape.Claw)==3,
             "Original Scratch retains all three attached claws");
     }
+
+    static void FootprintLimits()
+    {
+        foreach(var id in new[]{HeroId.Veyr,HeroId.VoidKnight,HeroId.Kaelon,HeroId.Rook})
+        {
+            EpicReset();var actor=Hero(id,0);actor.transform.position=new Vector3(11,0,7);
+            HeroSkillVfx.Basic(actor,actor.transform.position+Vector3.forward);
+            foreach(var slot in LiveSlots().Where(s=>Field(s,"Epic")!=null))
+            {
+                var visual=Field(slot,"Epic");float limit=actor.GetComponent<HeroCombatProfile>().AttackRange;
+                Check((float)Field(visual,"FootprintRadius")<=limit,"melee/native bounds cannot multiply basic reach "+id);
+                Check((bool)Field(visual,"ClipCone")&&(bool)Field(visual,"ClipReach"),"native melee shader clips both radius and cone "+id);
+                var origin=(Vector3)Field(visual,"Origin");Check((origin-actor.transform.position).sqrMagnitude<.001f,"melee footprint uses the actual caster world position "+id);
+                Step(.08f);
+                var root=(GameObject)Field(visual,"Root");var parent=(Transform)Field(slot,"Transform");
+                float footprint=root.transform.localScale.x*parent.localScale.x*(float)Field(visual,"BoundsRadius");
+                Check(footprint<=(float)Field(visual,"FootprintRadius")+.001f,"native bounds fit despite legacy slot and animation scale "+id);
+            }
+        }
+        foreach(var id in new[]{HeroId.Nyra,HeroId.Elyra,HeroId.Mira,HeroId.Traveler})
+        {
+            EpicReset();var actor=Hero(id,0);HeroSkillVfx.Basic(actor,Vector3.forward*4,.4f);
+            var visual=Field(LiveSlots().First(s=>Field(s,"Epic")!=null),"Epic");
+            Check((float)Field(visual,"FootprintRadius")<=AimingSettings.Current.For(id,-1).projectileWidth,
+                "small shot respects projectile width "+id);
+            Check((bool)Field(visual,"ClipTrail"),"native tail keeps the actual flight segment "+id);
+            var target=Hero(HeroId.Kaelon,1);target.transform.position=Vector3.forward*2;
+            HeroSkillVfx.Impact(actor,target.GetComponent<Health>(),3);
+            var hits=LiveSlots().Select(s=>Field(s,"Epic")).Where(v=>v!=null&&((string)Field(v,"Key")).EndsWith("_Hit")).ToArray();
+            Check(hits.Length>0&&hits.All(v=>(float)Field(v,"FootprintRadius")<=.24f),"ultimate victim feedback stays compact "+id);
+        }
+        EpicReset();var traveler=Hero(HeroId.Traveler,0);HeroSkillVfx.Dash(traveler,Vector3.zero,Vector3.forward*3,1,.2f);
+        foreach(var visual in LiveSlots().Select(s=>Field(s,"Epic")).Where(v=>v!=null))
+            Check(Mathf.Abs((float)Field(visual,"RenderRadius")-.85f*1.5f)<.001f,"Spin Portal grows by 50 percent at both jump endpoints");
+        EpicReset();BomberExplosionVfx.PlayBomber(Vector3.forward,3.24f);
+        var bomber=LiveSlots().Single();var nuke=Field(bomber,"Epic");
+        Check((string)Field(nuke,"Key")=="BomberNuke"&&(bool)Field(nuke,"NativePalette"),"bomber uses selected native fire/smoke palette once");
+        Check((float)Field(nuke,"FootprintRadius")==3.24f,"bomber explosion stays inside the unchanged blast radius");
+        EpicReset();HeroVfxPool.Emit(HeroFxShape.Orb,Vector3.zero,Vector3.forward,new Vector3(.15f,.15f,.15f),Color.white,.2f);
+        var generic=Field(LiveSlots().Single(),"Epic");Check((float)Field(generic,"RenderRadius")<=.15f,"non-hero native shots cannot inherit the obsolete blanket enlargement");
+        EpicReset();Camera.main=new GameObject("camera").AddComponent<Camera>();CombatImpactPool.Emit(Vector3.zero,Color.white,1);
+        var quiet=LiveSlots().Single();var contact=Field(quiet,"Epic");
+        Check((string)Field(contact,"Key")=="MiniHit"&&(float)Field(contact,"FootprintRadius")<=.16f,"non-hero contact uses a quiet purchased mini hit instead of an opaque comic star");
+        Check(((Color)Field(quiet,"Color")).a<=.4f&&!(bool)Field(contact,"NativePalette"),"quiet contact retains the source tint with reduced opacity");
+        EpicReset();var timmy=Hero(HeroId.Timmy,0);HeroSkillVfx.TimmyEffect(timmy,3,Vector3.zero,Vector3.forward*3,0,.3f,relay:false);
+        Check(LiveSlots().Count(s=>Field(s,"Epic")!=null&&(string)Field(Field(s,"Epic"),"Key")=="TimmyJet")==2,"exactly one purchased flamethrower per nozzle");
+        Check(LiveSlots().Count(s=>(HeroFxShape)Field(s,"Shape")==HeroFxShape.Claw&&Field(s,"Epic")==null)==3,"jet replacement preserves all original Scratch claws");
+        // Several distinct heroes emit together. Essential shots/telegraphs remain present;
+        // visual recognition itself still requires the native phone-sized review images.
+        EpicReset();var ids=new[]{HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,HeroId.Mira,HeroId.Rook,HeroId.Traveler,HeroId.VoidKnight};
+        for(int i=0;i<ids.Length;i++){var hero=Hero(ids[i],i);hero.transform.position=Vector3.right*(i%4);HeroSkillVfx.Basic(hero,hero.transform.position+Vector3.forward*2,.3f);}
+        Check(LiveSlots().Where(s=>Field(s,"Epic")!=null).Select(s=>Field(Field(s,"Epic"),"Key")).Distinct().Count()==8,"eight simultaneous heroes retain separate attack signatures");
+    }
+    static void WeatherBudgets()
+    {
+        foreach(ArenaVariant planet in Enum.GetValues(typeof(ArenaVariant)))
+        {
+            string[] keys=EpicPlanetWeather.LayersFor(planet);
+            Check(keys.Length<=2,"weather never uses more than two layers "+planet);
+            Check(keys.All(k=>TestLibrary().Find(k)!=null),"planet weather references converted purchased sources "+planet);
+        }
+        Check(EpicPlanetWeather.LayersFor(ArenaVariant.Moon).Length==0,"no precipitation in Moon vacuum");
+        Check(EpicPlanetWeather.LayersFor(ArenaVariant.Kryon).Contains("WeatherSnow"),"cold Kryon uses snow");
+        Check(EpicPlanetWeather.LayersFor(ArenaVariant.Mars).SequenceEqual(new[]{"WeatherWind"}),"dry Mars uses wind without rain");
+        EpicReset();new GameObject("DF_MatchWorld");Camera.main=new GameObject("camera").AddComponent<Camera>();Camera.main.transform.position=Vector3.up*10;
+        ArenaVariantRuntime.Current=ArenaVariant.Kryon;var weather=new GameObject("weather").AddComponent<EpicPlanetWeather>();GameObject.Invoke(weather,"Update");
+        var layers=(GameObject[])Field(weather,"layers");Check(layers.Count(g=>g!=null)==2,"Kryon creates two bounded local weather layers");
+        Check(layers.Where(g=>g!=null).SelectMany(g=>g.GetComponentsInChildren<ParticleSystem>(true)).Sum(p=>p.main.maxParticles)<=84,"weather has a separate maximum of 84 particles");
+        Alterverse.Performance.AdaptiveVfxBudget.AllowDecorative=false;Step(.6f);GameObject.Invoke(weather,"Update");
+        Check(layers.All(g=>g==null),"weather clears immediately at the next budget refresh under device pressure");
+        Check(LiveSlots().Length==0,"weather cannot consume essential combat slots");
+    }
+    static void HealingStations()
+    {
+        EpicReset();var station=new GameObject("pod").AddComponent<HealingStationVfx>();station.Initialize("HealPod",1.5f);station.SetAvailable(true);
+        GameObject.Invoke(station,"Update");Check(LiveSlots().Length==1,"available healing pod emits one idle layer");
+        station.Pickup();Check(LiveSlots().All(s=>(HeroFxShape)Field(s,"Shape")!=HeroFxShape.Plus),"pickup clears idle healing immediately");
+        Check(LiveSlots().Length==1&&(string)Field(Field(LiveSlots().Single(),"Epic"),"Key")=="HealPickup","pickup emits one distinct healing impulse");
+        Step(1);GameObject.Invoke(station,"Update");Check(LiveSlots().Length==0,"unavailable pod does not emit idle healing");
+        station.SetAvailable(true);GameObject.Invoke(station,"Update");Check(LiveSlots().Length==1,"respawn restores idle healing");
+    }
+
     static void PresentationScaleAndContext()
     {
         EpicReset();var actor=Hero(HeroId.Veyr,0);
         HeroSkillVfx.Basic(actor,Vector3.forward);var visual=Field(LiveSlots().Single(),"Epic");
-        Check(Mathf.Abs(((GameObject)Field(visual,"Root")).transform.localScale.x-1.5f)<.001f,
-            "new particles are three times their previous library scale");
+        Check((bool)Field(visual,"Bounded") && (float)Field(visual,"RenderRadius")<=(float)Field(visual,"FootprintRadius"),
+            "new particles fit inside the actual attack footprint");
         EpicReset();actor=Hero(HeroId.Nyra,0);
         HeroVfxPool.Emit(HeroFxShape.Laser,Vector3.zero,Vector3.forward*4,new Vector3(.2f,.2f,1),Color.white,.4f,HeroFxMotion.LaserBeam,owner:actor);
         var beam=LiveSlots().Single();var mesh=((MeshFilter)Field(beam,"Filter")).sharedMesh;
-        Check(Mathf.Abs(mesh.Vertices.Max(v=>Mathf.Abs(v.x))-.72f)<.001f&&mesh.Vertices.Min(v=>v.z)==0&&mesh.Vertices.Max(v=>v.z)==1,
-            "beam width grows by 200 percent while authored endpoints remain exact");
+        Check(Mathf.Abs(mesh.Vertices.Max(v=>Mathf.Abs(v.x))-.24f)<.001f&&mesh.Vertices.Min(v=>v.z)==0&&mesh.Vertices.Max(v=>v.z)==1,
+            "beam width and authored endpoints are no longer enlarged");
         int published=0;Action<HeroVfxEvent> onCue=_=>published++;HeroVfxEvents.Emitted+=onCue;
         try
         {

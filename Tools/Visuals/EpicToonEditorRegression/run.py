@@ -35,6 +35,8 @@ def main():
                  + output + sources + method('public static void Validate()')
                  + method('private static void PreparePortalGeometry(')
                  + method('private static void BuildAbilityLooks(')
+                 + method('private static float MeasureRadius(')
+                 + method('private static void StripTypography(')
                  + method('private static void PrepareManualEmission(') + '}}')
     dotnet = args.dotnet_root.resolve()
     refs = sorted((dotnet / 'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'))[-1]

@@ -5,7 +5,8 @@ public sealed class CentralHealingPickup:MonoBehaviour
 {
 public static event System.Action<bool,float> NetworkAvailabilityChanged;
 [SerializeField]private float radius=1.5f,healPercent=.286f,respawnSeconds=22f/1.3f;private Transform visual,plus;private float readyAt;private bool available=true;private Material greenMat,stoneMat;
-private void Start(){BuildVisual();}
+private HealingStationVfx healingVfx;
+private void Start(){BuildVisual();if(plus!=null)plus.gameObject.SetActive(available);healingVfx=gameObject.AddComponent<HealingStationVfx>();healingVfx.Initialize("HealPod",radius);healingVfx.SetAvailable(available);}
 private void Update()
 {
 if(Time.timeScale<=0f)return;
@@ -18,12 +19,12 @@ if(!available)
 {
 if(Time.time>=readyAt)
 {
-available=true;if(plus!=null)plus.gameObject.SetActive(true);
+available=true;if(healingVfx!=null)healingVfx.SetAvailable(true);if(plus!=null)plus.gameObject.SetActive(true);
 if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)NetworkAvailabilityChanged?.Invoke(true,0f);
 }
 return;
 }
-foreach(TeamMember member in FindObjectsByType<TeamMember>()){if(member==null)continue;Health h=member.GetComponent<Health>();if(h==null||h.IsDead||h.Normalized>=.995f)continue;Vector3 d=member.transform.position-transform.position;d.y=0;if(d.sqrMagnitude<=radius*radius){h.Heal(h.Max*healPercent);available=false;readyAt=Time.time+respawnSeconds;if(plus!=null)plus.gameObject.SetActive(false);
+foreach(TeamMember member in FindObjectsByType<TeamMember>()){if(member==null)continue;Health h=member.GetComponent<Health>();if(h==null||h.IsDead||h.Normalized>=.995f)continue;Vector3 d=member.transform.position-transform.position;d.y=0;if(d.sqrMagnitude<=radius*radius){h.Heal(h.Max*healPercent);available=false;if(healingVfx!=null)healingVfx.Pickup();readyAt=Time.time+respawnSeconds;if(plus!=null)plus.gameObject.SetActive(false);
 if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)NetworkAvailabilityChanged?.Invoke(false,respawnSeconds);
 break;}}
 AnimateAvailable();
@@ -31,7 +32,8 @@ AnimateAvailable();
 public void ApplyNetworkAvailability(bool value,float readyIn)
 {
 if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
-available=value;readyAt=Time.time+Mathf.Max(0,readyIn);
+if(available&&!value&&healingVfx!=null)healingVfx.Pickup();
+available=value;if(healingVfx!=null)healingVfx.SetAvailable(value);readyAt=Time.time+Mathf.Max(0,readyIn);
 if(plus!=null)plus.gameObject.SetActive(value);
 }
 private void AnimateAvailable(){if(plus!=null&&plus.gameObject.activeSelf){float pulse=1f+Mathf.Sin(Time.time*3.6f)*.10f;plus.localScale=Vector3.one*pulse;plus.localPosition=new Vector3(0,1.22f+Mathf.Sin(Time.time*2.4f)*.08f,0);}}

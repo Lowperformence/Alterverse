@@ -38,7 +38,7 @@ def main():
     names += ['Visuals/HeroSkillVfx.cs', 'Visuals/HeroSkillVfx.AttackPolish.cs', 'Visuals/MonsterAttackVfx.cs', 'Visuals/PrototypeVfx.cs', 'Visuals/BomberExplosionVfx.cs', 'Visuals/HeroSkillVfx.VoidKnight.cs',
               'Characters/VoidKnightBalance.cs', 'Characters/VoidKnightState.cs',
               'Characters/HeroAbilityExecution.VoidKnight.cs', 'Multiplayer/CoopHeroStateSync.Vfx.cs', 'Characters/HeroLocomotion.cs', 'Visuals/HeroPresentationBuffer.cs', 'UI/TargetIndicatorHUD.cs']
-    names += ['Visuals/HeroSkillVfx.NerokOriginal.cs', 'Visuals/EpicVfxLibrary.cs', 'Visuals/HeroVfxPool.EpicToon.cs', 'Visuals/HeroAbilityReadabilityBoost.cs', 'Visuals/HeroAttackReadabilityPresentation.cs']
+    names += ['Visuals/HeroSkillVfx.NerokOriginal.cs', 'Visuals/EpicVfxLibrary.cs', 'Visuals/HeroVfxPool.EpicToon.cs', 'Visuals/HeroAbilityReadabilityBoost.cs', 'Visuals/HeroAttackReadabilityPresentation.cs', 'Visuals/HealingStationVfx.cs', 'Visuals/CombatImpactPool.cs','Visuals/EpicPlanetWeather.cs']
     engine = (shared / 'EngineStubs.cs').read_text()
     engine = remove_class(engine, 'public sealed partial class HeroSkillVfx:')
     engine = remove_class(engine, 'public static class CoopHeroStateSync ')
@@ -89,6 +89,10 @@ def main():
     engine = engine.replace('public static class Resources {', 'public static class Resources {public static object EpicLibrary;')
     engine = engine.replace('where T:class{if(s=="CombatVfx/AttackAtlas"', 'where T:class{if(s=="CombatVfx/EpicToon/Library")return EpicLibrary as T;if(s=="CombatVfx/AttackAtlas"')
     engine = engine.replace('public class Object {', 'public class Object {public static GameObject Instantiate(GameObject source,Transform parent,bool world){var clone=new GameObject(source.name);clone.transform.SetParent(parent,world);clone.AddComponent<ParticleSystem>();clone.AddComponent<ParticleSystemRenderer>().sharedMaterial=new Material(new Shader{name="DimensionsFront/EpicParticles"});return clone;}')
+    engine = engine.replace('public class MaterialPropertyBlock {', 'public class MaterialPropertyBlock {public Dictionary<int,Vector4> Vectors=new();public void SetVector(int id,Vector4 value){Vectors[id]=value;}')
+    engine += '\nnamespace UnityEngine {public struct Vector4 {public float x,y,z,w;public Vector4(float x,float y,float z,float w){this.x=x;this.y=y;this.z=z;this.w=w;}}}\n'
+    engine = engine.replace('SubsystemRegistration,BeforeSceneLoad', 'SubsystemRegistration,BeforeSceneLoad,AfterSceneLoad')
+    engine = engine.replace('public class GameObject:Object {', 'public class GameObject:Object {public static GameObject Find(string name)=>All.FirstOrDefault(g=>g.activeInHierarchy&&g.name==name);')
     with tempfile.TemporaryDirectory(prefix='df-vfx-') as directory:
         directory = Path(directory)
         fixtures = directory / 'Engine.cs'

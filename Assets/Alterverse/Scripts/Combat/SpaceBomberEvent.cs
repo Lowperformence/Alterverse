@@ -509,10 +509,7 @@ namespace Alterverse.Combat
         {
             if(resolved)return;resolved=true;
             Vector3 impact=new(target.x,target.y+.25f,target.z);
-            Color blast=ArenaVariantRuntime.IsKryon?new Color(.72f,.97f,1f):ArenaVariantRuntime.IsNoxara?new Color(1f,.74f,.04f):new Color(1f,.34f,.10f);
-            Color shock=ArenaVariantRuntime.IsKryon?new Color(.24f,.88f,1f):ArenaVariantRuntime.IsNoxara?new Color(1f,.66f,.02f):new Color(1f,.28f,.08f);
-            BomberExplosionVfx.Play(impact,blast,ImpactRadius);
-            PrototypeVfx.Ring(impact,shock,ImpactRadius*1.05f,.3f);
+            BomberExplosionVfx.PlayBomber(impact,ImpactRadius);
             Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Explosion,impact,.65f);
 
             // Track damaged Health components explicitly so multi-collider actors and the

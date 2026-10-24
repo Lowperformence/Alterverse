@@ -9,7 +9,7 @@ using UnityEngine;
 static class Regression
 {
     static int checks;
-    static Material Valid()=>new(){shader=new Shader{name="DimensionsFront/EpicParticles"},mainTexture=new object()};
+    static Material Valid()=>new(){shader=new Shader{name="DimensionsFront/EpicParticles"},mainTexture=new Texture()};
     static EpicVfxLibrary Setup()
     {
         var sources=((string key,string path,float scale)[])typeof(EpicToonReplacementBuilder).GetField("Sources",BindingFlags.NonPublic|BindingFlags.Static).GetValue(null);
@@ -47,17 +47,17 @@ static class Regression
     }
     static void OrientationCases()
     {
-        foreach(string key in new[]{"Portal","Vortex"})
+        foreach(string key in new[]{"Portal","Vortex","SpinPortal"})
         {
             var source=MeshDisc();Orient(key,source);var renderer=source.GetComponent<ParticleSystemRenderer>();
             var main=source.GetComponent<ParticleSystem>().main;
-            Check(renderer.renderMode==(key=="Portal"?ParticleSystemRenderMode.Billboard:ParticleSystemRenderMode.HorizontalBillboard)&&
-                renderer.alignment==(key=="Portal"?ParticleSystemRenderSpace.View:ParticleSystemRenderSpace.World)&&
+            Check(renderer.renderMode==(key!="Vortex"?ParticleSystemRenderMode.Billboard:ParticleSystemRenderMode.HorizontalBillboard)&&
+                renderer.alignment==(key!="Vortex"?ParticleSystemRenderSpace.View:ParticleSystemRenderSpace.World)&&
                 !main.startRotation3D&&main.startRotationX.constantMax==0&&main.startRotationY.constantMax==0&&
                 main.startRotationZ.constantMax==3,key+" disc has stable facing and retains authored Z spin");
             var frame=source.transform.localRotation;
             Check(MathF.Abs(frame.z)<.0001f&&MathF.Abs(frame.y)<.0001f&&
-                MathF.Abs(frame.x-(key=="Portal"?-MathF.Sqrt(.5f):0))<.0001f,
+                MathF.Abs(frame.x-(key!="Vortex"?-MathF.Sqrt(.5f):0))<.0001f,
                 key+" emitter plane removes the source's sideways Z frame");
             source=MeshDisc();source.GetComponent<ParticleSystemRenderer>().renderMode=ParticleSystemRenderMode.Billboard;
             Orient(key,source);main=source.GetComponent<ParticleSystem>().main;
@@ -66,7 +66,7 @@ static class Regression
                 key+" authored sparkle billboards are not rewritten as discs");
         }
         var sources=((string key,string path,float scale)[])typeof(EpicToonReplacementBuilder).GetField("Sources",BindingFlags.NonPublic|BindingFlags.Static).GetValue(null);
-        foreach(var entry in sources.Where(s=>s.key!="Portal"&&s.key!="Vortex"))
+        foreach(var entry in sources.Where(s=>s.key!="Portal"&&s.key!="Vortex"&&s.key!="SpinPortal"))
         {
             var source=MeshDisc();Orient(entry.key,source);
             Check(source.GetComponent<ParticleSystemRenderer>().renderMode==ParticleSystemRenderMode.Mesh&&
@@ -84,7 +84,7 @@ static class Regression
         {var child=new GameObject();child.transform.SetParent(entry.prefab.transform,false);child.Add<ParticleSystem>().main.maxParticles=18;}
         typeof(EpicToonReplacementBuilder).GetMethod("BuildAbilityLooks",BindingFlags.NonPublic|BindingFlags.Static)
             .Invoke(null,new object[]{entries});library.entries=entries.ToArray();
-        Check(entries.Count==152,"33 source families and 119 per-attack phase compositions are generated");
+        Check(entries.Count==170,"51 source families and 119 per-attack phase compositions are generated");
         EpicToonReplacementBuilder.Validate();checks++;
         foreach(var look in profiles)
         {
@@ -94,12 +94,12 @@ static class Regression
                 Check(library.Find(look.Key)!=null,look.Key+" owns a primary composition");
             if(look.Slot==3)Check(look.Emphasis>1,"ultimate has increased visual emphasis: "+look.Key);
         }
-        foreach(var entry in entries.Skip(33))
+        foreach(var entry in entries.Skip(51))
         {
             var systems=entry.prefab.GetComponentsInChildren<ParticleSystem>(true);
             Check(systems.Length>0&&systems.Sum(p=>p.main.maxParticles)<=96,entry.key+" full composition stays within 96 particles");
         }
-        Check(entries.Take(33).All(e=>e.prefab.GetComponentsInChildren<ParticleSystem>(true).All(p=>p.main.maxParticles==18)),
+        Check(entries.Take(51).All(e=>e.prefab.GetComponentsInChildren<ParticleSystem>(true).All(p=>p.main.maxParticles==18)),
             "signature capping never mutates shared source systems");
         library.Find(profiles[0].Key+"_Hit").prefab=null;
         Reject("Missing Epic ability concept","missing per-attack hit composition blocks client setup");
@@ -118,7 +118,7 @@ static class Regression
                 item.Item1+" distance-only source starts without travel and cannot emit twice with movement");
             Convert(item.Item1,ps);Check(ps.emission.burstCount==1,"reapplying conversion does not stack a birth burst");
         }
-        foreach(string key in new[]{"Portal","Vortex"})
+        foreach(string key in new[]{"Portal","Vortex","SpinPortal"})
         {
             var ps=new ParticleSystem();ps.emission.rateOverTime=2;Convert(key,ps);
             Check(ps.emission.burstCount==1&&ps.emission.bursts[0].time==0&&
@@ -127,7 +127,7 @@ static class Regression
             Check(ps.emission.burstCount==0,key+" fine sparks retain authored emission");
         }
         var sources=((string key,string path,float scale)[])typeof(EpicToonReplacementBuilder).GetField("Sources",BindingFlags.NonPublic|BindingFlags.Static).GetValue(null);
-        foreach(var source in sources.Where(s=>s.key!="Fire"&&s.key!="ShadowMissile"&&s.key!="Portal"&&s.key!="Vortex"))
+        foreach(var source in sources.Where(s=>s.key!="Fire"&&s.key!="ShadowMissile"&&s.key!="Portal"&&s.key!="Vortex"&&s.key!="SpinPortal"))
         {
             var ps=new ParticleSystem();ps.emission.rateOverTime=2;ps.emission.rateOverDistance=4;Convert(source.key,ps);
             Check(ps.emission.rateOverTime.constantMax==2&&ps.emission.rateOverDistance.constantMax==4&&
@@ -141,10 +141,20 @@ static class Regression
         Check(authored.emission.burstCount==1&&authored.emission.bursts[0].time==.1f&&authored.emission.bursts[0].minCount==3,
             "authored bursts are retained");
     }
+    static void TypographyCases()
+    {
+        foreach(var item in new[]{(name:"text_haha",hide:true),(name:"pow",hide:true),(name:"swoosh",hide:true),(name:"crack",hide:true),(name:"cracks_ground",hide:false),(name:"lightning1",hide:false)})
+        {
+            var go=new GameObject();var ps=go.Add<ParticleSystem>();var renderer=go.Add<ParticleSystemRenderer>();renderer.sharedMaterials=new[]{new Material{mainTexture=new Texture{name=item.name}}};
+            typeof(EpicToonReplacementBuilder).GetMethod("StripTypography",BindingFlags.NonPublic|BindingFlags.Static).Invoke(null,new object[]{go});
+            Check(renderer.enabled!=item.hide&&ps.emission.enabled!=item.hide,"remove written comic words, preserve physical textures: "+item.name);
+        }
+    }
     static void Main()
     {
+        TypographyCases();
         Setup();Accept("all converted primary materials");
-        foreach(string version in new[]{"2","3","4"})
+        foreach(string version in new[]{"2","3","4","5"})
         {var stale=Setup();stale.sourceVersion="Epic Toon FX user import; DF replacement "+version;
         Reject("Build the Epic Toon","version "+version+" must rebuild before visibility review");}
         var library=Setup();Smoke(library);Accept("Smoke's unused empty trail slot with trails disabled");

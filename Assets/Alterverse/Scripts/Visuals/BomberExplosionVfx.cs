@@ -6,6 +6,11 @@ namespace Alterverse.Visuals
     /// <summary>Shared bomb/meteor contact. Rendering is independent of damage and authority.</summary>
     public sealed class BomberExplosionVfx:MonoBehaviour
     {
+        public static void PlayBomber(Vector3 position,float radius)
+        {
+            HeroVfxPool.Emit(HeroFxShape.ShockDome,position,position,Vector3.one,Color.white,1.1f,
+                HeroFxMotion.Hold,epicKey:"BomberNuke",effectRadius:Mathf.Max(.1f,radius));
+        }
         public static void Play(Vector3 position,Color fire,float radius)
         {
             radius=Mathf.Max(.1f,radius);

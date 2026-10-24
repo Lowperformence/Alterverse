@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Alterverse.Visuals;
+using Alterverse.Characters;
+using Alterverse.Combat;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -68,12 +70,16 @@ namespace Alterverse.Editor
                     summary.AppendLine((result.passed?"PASS ":"FAIL ")+result.key+": particles="+result.peakParticles+", pixels="+result.visiblePixels+", shader="+result.shaderSupported);
                 }
                 sheet.Apply(false,false);File.WriteAllBytes(Path.Combine(directory,"contact-sheet.png"),sheet.EncodeToPNG());
+                RenderCrowded(library,directory);
                 var report=new Report{unityVersion=Application.unityVersion,graphicsDevice=SystemInfo.graphicsDeviceType.ToString(),
                     libraryVersion=library.sourceVersion,note="Native isolated prefab visibility only. Representative colours; actual ability/camera alignment, warning radius and Android performance still need acceptance. Nerok and Timmy retain their original visuals.",results=results.ToArray()};
                 File.WriteAllText(Path.Combine(directory,"report.json"),JsonUtility.ToJson(report,true));
                 var html=new System.Text.StringBuilder("<!doctype html><meta charset='utf-8'><title>Epic VFX review</title><style>body{background:#111;color:#eee;font:16px sans-serif}main{display:flex;flex-wrap:wrap;gap:12px}figure{margin:0;padding:10px;background:#222}img{width:160px;height:160px}small{display:block}</style><h1>Epic VFX native review</h1><p>Isolated source and attack compositions. Representative colours; combat/camera and Android still need review. Nerok and Timmy are excluded.</p><main>");
                 foreach(var result in results)html.Append("<figure><img src='").Append(result.image).Append("'><figcaption>").Append(result.key).Append(result.passed?" — PASS":" — FAIL").Append("</figcaption><small>Particles: ").Append(result.peakParticles).Append(" / pixels: ").Append(result.visiblePixels).Append("</small></figure>");
-                File.WriteAllText(Path.Combine(directory,"index.html"),html.Append("</main>").ToString());
+                html.Append("</main><h2>Gemeinsame Ansicht — 640 × 360</h2><p>Oben/unten je vier Helden: Veyr, Kaelon, Nyra, Elyra, Mira, Rook, Traveler, Void Knight. Native VFX-Kompositionen in echter Weltgroesse; keine Abnahme von Gameplay-Kamera, Animation, Sounds oder Android-Leistung. Nyras Q ist ein Runtime-Strahl und fehlt in dieser Prefab-Ansicht.</p>");
+                for(int action=-1;action<4;action++)foreach(int frame in new[]{0,1,2})
+                    html.Append("<figure><img style='width:640px;height:360px;max-width:100%;object-fit:contain' src='crowded_").Append(action+1).Append('_').Append(frame).Append(".png'><figcaption>").Append(action<0?"Standardangriffe":action==3?"Ultimates":"Fähigkeit "+(action+1)).Append(" / Phase ").Append(frame+1).Append("</figcaption></figure>");
+                File.WriteAllText(Path.Combine(directory,"index.html"),html.ToString());
                 Debug.Log("DF: native VFX visibility review "+(results.Count-failed)+"/"+results.Count+" passed. Report and PNG previews: "+directory+"\n"+summary);
                 if(failed>0)throw new InvalidOperationException(failed+" Epic families did not render visible supported pixels. See Library/DF_EpicVfxReview/report.json.");
             }
@@ -89,12 +95,12 @@ namespace Alterverse.Editor
             {
                 var root=Object.Instantiate(entry.prefab);preview.AddSingleGO(root);
                 root.transform.position=Vector3.zero;root.transform.rotation=Quaternion.identity;
-                root.transform.localScale=Vector3.one*(entry.scale*EpicVfxLibrary.VisualScaleMultiplier);root.SetActive(true);
+                root.transform.localScale=Vector3.one*(PreviewRadius(entry)/Mathf.Max(.01f,entry.boundsRadius));root.SetActive(true);
                 var camera=preview.camera;camera.clearFlags=CameraClearFlags.SolidColor;
                 camera.backgroundColor=new Color(0,0,0,1);camera.orthographic=true;camera.orthographicSize=8;
                 camera.nearClipPlane=.01f;camera.farClipPlane=100;camera.allowHDR=false;
                 camera.transform.position=new Vector3(0,5,-8);camera.transform.LookAt(Vector3.zero);
-                var tint=new MaterialPropertyBlock();tint.SetColor(Shader.PropertyToID("_Tint"),PreviewTint(entry.key));
+                var tint=PreviewBlock(entry,Vector3.zero,Vector3.forward);
                 foreach(var renderer in root.GetComponentsInChildren<Renderer>(true))
                 {
                     renderer.SetPropertyBlock(tint);
@@ -145,6 +151,64 @@ namespace Alterverse.Editor
             try{preview.Render(true,false);}
             finally{frame=preview.EndStaticPreview();}
             return frame;
+        }
+        private static float PreviewRadius(EpicVfxLibrary.Entry entry)
+        {
+            var look=EpicVfxLibrary.FindLookByKey(entry.key);
+            if(look==null)return entry.key.StartsWith("Weather")?5f:entry.key=="BomberNuke"?3.24f:1f;
+            if(entry.key.EndsWith("_Hit"))return look.Slot==3?.24f:.18f;
+            if(entry.key.EndsWith("_Cast"))return .48f;
+            var hero=(HeroId)Enum.Parse(typeof(HeroId),look.Hero);var spec=AimingSettings.Current.For(hero,look.Slot);
+            if(spec.aimType==AimType.Melee||spec.aimType==AimType.AreaCone)return spec.castRange*.82f;
+            if(spec.aimType==AimType.Area||spec.aimType==AimType.SelfArea)return spec.aoeRadius*.96f;
+            if(spec.aimType==AimType.Projectile||spec.aimType==AimType.Beam)return spec.projectileWidth*.85f;
+            if(spec.aimType==AimType.Dash&&(look.Source=="Portal"||look.Source=="SpinPortal"))return .85f*EpicVfxLibrary.PortalScaleMultiplier;
+            return .6f;
+        }
+        private static MaterialPropertyBlock PreviewBlock(EpicVfxLibrary.Entry entry,Vector3 center,Vector3 direction)
+        {
+            var block=new MaterialPropertyBlock();block.SetColor(Shader.PropertyToID("_Tint"),PreviewTint(entry.key));
+            block.SetFloat(Shader.PropertyToID("_NativePalette"),EpicVfxLibrary.FindLookByKey(entry.key)==null?1f:0f);
+            float radius=PreviewRadius(entry);block.SetVector(Shader.PropertyToID("_AttackClip"),new Vector4(center.x,center.z,radius,1));
+            return block;
+        }
+        private static void RenderCrowded(EpicVfxLibrary library,string directory)
+        {
+            string[] heroes={"Veyr","Kaelon","Nyra","Elyra","Mira","Rook","Traveler","VoidKnight"};
+            for(int action=-1;action<4;action++)
+            {
+                var preview=new PreviewRenderUtility();
+                try
+                {
+                    var camera=preview.camera;camera.orthographic=true;camera.orthographicSize=6.5f;
+                    camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.045f,.055f,.07f);
+                    camera.nearClipPlane=.01f;camera.farClipPlane=100;camera.allowHDR=false;
+                    camera.transform.position=new Vector3(0,12,-12);camera.transform.LookAt(Vector3.zero);
+                    var roots=new List<GameObject>();
+                    for(int i=0;i<heroes.Length;i++)
+                    {
+                        var look=EpicVfxLibrary.FindLook(heroes[i],action);var entry=library.Find(look.Key);if(entry?.prefab==null)continue;
+                        var root=Object.Instantiate(entry.prefab);preview.AddSingleGO(root);roots.Add(root);
+                        Vector3 point=new Vector3((i%4-1.5f)*2.25f,.25f,i<4?-1.2f:1.2f);
+                        Vector3 forward=i<4?Vector3.forward:Vector3.back;
+                        root.transform.SetPositionAndRotation(point,Quaternion.LookRotation(forward));
+                        root.transform.localScale=Vector3.one*(PreviewRadius(entry)/Mathf.Max(.01f,entry.boundsRadius));root.SetActive(true);
+                        var block=PreviewBlock(entry,point,forward);
+                        foreach(var renderer in root.GetComponentsInChildren<Renderer>(true))renderer.SetPropertyBlock(block);
+                    }
+                    float[] samples={.06f,.18f,.40f};
+                    for(int frame=0;frame<samples.Length;frame++)
+                    {
+                        foreach(var root in roots)foreach(var ps in root.GetComponentsInChildren<ParticleSystem>(true))
+                        {ps.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);ps.Play(false);ps.Simulate(samples[frame],false,true,false);ps.Pause(false);}
+                        preview.BeginStaticPreview(new Rect(0,0,640,360));Texture2D image=null;
+                        try{preview.Render(true,false);}finally{image=preview.EndStaticPreview();}
+                        try{File.WriteAllBytes(Path.Combine(directory,"crowded_"+(action+1)+"_"+frame+".png"),image.EncodeToPNG());}
+                        finally{if(image!=null)Object.DestroyImmediate(image);}
+                    }
+                }
+                finally{preview.Cleanup();}
+            }
         }
         private static Color PreviewTint(string key)
         {

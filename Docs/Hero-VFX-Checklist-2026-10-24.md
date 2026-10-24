@@ -1,6 +1,6 @@
 # Einzelcheckliste der Heldenaktionen
 
-40 Aktionen von acht Helden erhalten individuelle Epic-Toon-Konzepte. Neroks und Timmys je fünf Einträge sind vom Austausch ausgenommen; ihre ursprüngliche Darstellung einschließlich Klauenhieb, Düsen, Staubwolke beziehungsweise Anker, Kette und Ultimate ist wiederhergestellt. Die Schildkörper behalten den vom Nutzer bevorzugten alten Look. Ihre Cast-/Kontakt-Hinweise können neue Effekte verwenden.
+40 Aktionen von acht Helden erhalten individuelle Epic-Toon-Konzepte. Nerok bleibt unverändert. Timmy behält ursprüngliche Klauen und Staub; seine beiden Sprungaktionen verwenden auf den neuesten Wunsch je einen gekauften Flamethrower pro Düse. Die bevorzugten alten Schildkörper bleiben erhalten.
 
 `Code geprüft` bedeutet: Der C#-Harness hat die tatsächliche Basisangriffs-/Fähigkeitsausführung durchlaufen und beobachtet, dass zugehörige neue Effekte erzeugt werden, der alte kosmetische Renderer dabei ausgeschaltet bleibt und die Partikel explizit gestartet werden. Dies ist kein Nachweis für native Darstellung, Farbeindruck, Größe oder Bildrate in Unity. Die eigene Spalte für diesen Sichttest bleibt offen.
 
@@ -16,7 +16,7 @@ Die Funktion kommt aus dem echten Aiming-Katalog. `Dash` wird hier entsprechend 
 | Auren Kest | Basisangriff | Nahkampf | Gold | Kaelon_Basic_KestGauntlet, Kaelon_Basic_KestGauntlet_Hit | [x] | [ ] Offen |
 | Auren Kest | Anchor Strike | Fernkampf / Faustwelle | Violett | Kaelon_Q_AnchorShockFront, Kaelon_Q_AnchorShockFront_Cast, Kaelon_Q_AnchorShockFront_Hit, Rune | [x] | [ ] Offen |
 | Auren Kest | Lumen Wall | Selbstschutz | Gold | Kaelon_W_LumenRampart_Cast | [x] | [ ] Offen |
-| Auren Kest | Gravity Anchor | AOE am Zielpunkt | Blau | Kaelon_E_GravityEight, Kaelon_E_GravityEight_Cast, Kaelon_E_GravityEight_Hit, Nova, Rune | [x] | [ ] Offen |
+| Auren Kest | Gravity Anchor | AOE am Zielpunkt | Blau | Kaelon_E_GravityEight, Kaelon_E_GravityEight_Cast, Kaelon_E_GravityEight_Hit, Rune | [x] | [ ] Offen |
 | Auren Kest | Kest Citadel | AOE um den Helden | Gelb | Heal, Kaelon_R_CitadelSeal, Kaelon_R_CitadelSeal_Cast, Kaelon_R_CitadelSeal_Hit, Rune | [x] | [ ] Offen |
 | Sivra Quell | Basisangriff | Fernkampf / Geschoss | Cyan | Nyra_Basic_QuellNeedle, Nyra_Basic_QuellNeedle_Hit | [x] | [ ] Offen |
 | Sivra Quell | Prism Shot | Strahl | Blau | ExactBeam, Impact, Nyra_Q_PrismLine_Cast, Nyra_Q_PrismLine_Hit | [x] | [ ] Offen |
@@ -24,20 +24,20 @@ Die Funktion kommt aus dem echten Aiming-Katalog. `Dash` wird hier entsprechend 
 | Sivra Quell | Light Snare | Fernkampf / Geschoss | Weiß | Nyra_E_SnareFork, Nyra_E_SnareFork_Cast, Nyra_E_SnareFork_Hit | [x] | [ ] Offen |
 | Sivra Quell | Sightline Break | Fernkampf / Salve | Rot | Nyra_R_SightlineVolley, Nyra_R_SightlineVolley_Cast, Nyra_R_SightlineVolley_Hit | [x] | [ ] Offen |
 | Ione Vaska | Basisangriff | Fernkampf / Geschoss | Violett | Elyra_Basic_VaskaArcaneLance, Elyra_Basic_VaskaArcaneLance_Hit | [x] | [ ] Offen |
-| Ione Vaska | Orbit Fracture | AOE am Zielpunkt | Violett | Elyra_Q_OrbitFracturePair, Elyra_Q_OrbitFracturePair_Cast, Elyra_Q_OrbitFracturePair_Hit, Portal, Rune | [x] | [ ] Offen |
-| Ione Vaska | Invert Field | AOE am Zielpunkt | Violett | Elyra_W_InvertWell, Elyra_W_InvertWell_Cast, Elyra_W_InvertWell_Hit, Nova, Rune | [x] | [ ] Offen |
+| Ione Vaska | Orbit Fracture | AOE am Zielpunkt | Violett | Elyra_Q_OrbitFracturePair, Elyra_Q_OrbitFracturePair_Cast, Elyra_Q_OrbitFracturePair_Hit, MagicImpact | [x] | [ ] Offen |
+| Ione Vaska | Invert Field | AOE am Zielpunkt | Violett | Elyra_W_InvertWell, Elyra_W_InvertWell_Cast, Elyra_W_InvertWell_Hit, Nova | [x] | [ ] Offen |
 | Ione Vaska | Phase Fold | Sprung | Violett | Elyra_E_PhaseSplit, Elyra_E_PhaseSplit_Cast | [x] | [ ] Offen |
-| Ione Vaska | Impossible Center | AOE am Zielpunkt | Violett | Elyra_R_ImpossibleCollapse, Elyra_R_ImpossibleCollapse_Cast, Elyra_R_ImpossibleCollapse_Hit, Nova, Rune | [x] | [ ] Offen |
+| Ione Vaska | Impossible Center | AOE am Zielpunkt | Violett | Elyra_R_ImpossibleCollapse, Elyra_R_ImpossibleCollapse_Cast, Elyra_R_ImpossibleCollapse_Hit, Nova | [x] | [ ] Offen |
 | Tahla Venn | Basisangriff | Fernkampf / Geschoss | Gold | Mira_Basic_VennLeafDart, Mira_Basic_VennLeafDart_Hit | [x] | [ ] Offen |
 | Tahla Venn | Resonant Seed | Fernkampf / Geschoss | Gold | Mira_Q_ResonantThorns, Mira_Q_ResonantThorns_Cast, Mira_Q_ResonantThorns_Hit, Nova | [x] | [ ] Offen |
 | Tahla Venn | Growth Veil | Heilung | Grün | Mira_Basic_VennLeafDart, Mira_W_GrowthBloom, Mira_W_GrowthBloom_Cast | [x] | [ ] Offen |
 | Tahla Venn | Venn Shelter | Schild | Grün / Weiß | Mira_Basic_VennLeafDart, Mira_E_ShelterPetals_Cast | [x] | [ ] Offen |
-| Tahla Venn | Wildsurge | AOE um den Helden | Gold (Angriff), Grün (Heilung) | Heal, Mira_R_WildsurgeBloom, Mira_R_WildsurgeBloom_Cast, Mira_W_GrowthBloom | [x] | [ ] Offen |
+| Tahla Venn | Wildsurge | AOE um den Helden | Gold (Angriff), Grün (Heilung) | Mira_R_WildsurgeBloom, Mira_R_WildsurgeBloom_Cast, Mira_W_GrowthBloom | [x] | [ ] Offen |
 | Brakk Orun | Basisangriff | Nahkampf | Orange | Rook_Basic_OrunHammer, Rook_Basic_OrunHammer_Hit | [x] | [ ] Offen |
 | Brakk Orun | Wreck Swing | Nahkampf | Orange | FireNova, Rook_Q_WreckArc, Rook_Q_WreckArc_Cast, Rook_Q_WreckArc_Hit | [x] | [ ] Offen |
 | Brakk Orun | Armor Grip | Selbstschutz | Orange | Heal, Rook_W_ArmorRivet_Cast | [x] | [ ] Offen |
-| Brakk Orun | Wreckstorm | AOE um den Helden | Orange | FireImpact, Rook_E_WreckstormSpin, Rook_E_WreckstormSpin_Cast, Rook_E_WreckstormSpin_Hit | [x] | [ ] Offen |
-| Brakk Orun | Orun Overdrive | AOE um den Helden | Orange | FireImpact, Rook_R_OverdriveEruption, Rook_R_OverdriveEruption_Hit, Spark | [x] | [ ] Offen |
+| Brakk Orun | Wreckstorm | AOE um den Helden | Orange | Rook_E_WreckstormSpin, Rook_E_WreckstormSpin_Cast, Rook_E_WreckstormSpin_Hit | [x] | [ ] Offen |
+| Brakk Orun | Orun Overdrive | AOE um den Helden | Orange | Rook_R_OverdriveEruption, Rook_R_OverdriveEruption_Cast, Rook_R_OverdriveEruption_Hit | [x] | [ ] Offen |
 | THE TRAVELER | Basisangriff | Fernkampf / Geschoss | Violett | Traveler_Basic_ChronoDart, Traveler_Basic_ChronoDart_Hit | [x] | [ ] Offen |
 | THE TRAVELER | Temporal Beam | Fernkampf / Geschoss | Gold | Traveler_Q_TemporalCrescent, Traveler_Q_TemporalCrescent_Cast, Traveler_Q_TemporalCrescent_Hit | [x] | [ ] Offen |
 | THE TRAVELER | Rift Step | Sprung | Gold | Traveler_W_RiftStepClock, Traveler_W_RiftStepClock_Cast | [x] | [ ] Offen |
@@ -72,3 +72,16 @@ Vor dem Pull Play Mode beenden. Nach der Kompilierung wird eine veraltete Biblio
 ## Sound-Abnahme zurückgestellt
 
 Auf Nutzerwunsch werden zuerst die Visuals abgeschlossen. Die bisherigen Angriffssounds und ihre Auslösung werden in diesem VFX-Update nicht geändert. Der getrennte Sound-Timing-Audit bleibt zurückgestellt.
+
+## Zusätzliche Abnahme Version 6
+
+- [x] Gemessene Bounds, echte Reichweiten/Kegel, kompakte Geschosse, getrennte Flugschweife und kleine Kontakte im Runtime-Harness geprüft.
+- [x] Alle Ultimates sowie Gravity Anchor und Wreckstorm erzeugen ausdrücklich ihre Hauptkomposition; eine Cast-Variante allein genügt nicht.
+- [x] Zwei Flamethrower an Timmys Düsen; drei unveränderte Scratch-Klauen.
+- [x] Heil-Pod: Ruheeffekt bei Verfügbarkeit, genau ein Aufnahmeimpuls, kein Ruheeffekt während Respawn.
+- [x] Wetterprofil für alle 14 Planeten, maximal zwei Layer/84 Partikel, Abschaltung bei knappem Dekorationsbudget.
+- [x] Comic-Schrift-Layer entfernt, physische Riss-/Blitztexturen erhalten; sämtliche 51 Quellen existieren im gekauften Paket und verwenden keine 2D-Alternate-Pfade.
+- [ ] Native Shader-/Materialkompilierung und 170 Prefab-Einträge nach dem neuen Import.
+- [ ] Alle 15 gemeinsamen Ansichten in 640 × 360 auf Überlagerung und Erkennbarkeit ansehen.
+- [ ] Alle 40 Aktionen in der echten Spielkamera bei mehreren gleichzeitig kämpfenden Helden und auf dem Handy beurteilen.
+- [ ] Neue Standardangriff-Aufnahmen zusammen mit Hieb/Abschuss abhören; Android-Framezeit unter Last prüfen.

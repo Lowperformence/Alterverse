@@ -50,25 +50,25 @@ partial class Regression
   var left=new GameObject("DF_TimmyJetL").transform;left.SetParent(actor.transform,true);left.position=new Vector3(-.12f,.35f,-.20f);
   var right=new GameObject("DF_TimmyJetR").transform;right.SetParent(actor.transform,true);right.position=new Vector3(.12f,.35f,-.20f);
   HeroSkillVfx.TimmyEffect(actor,2,Vector3.zero,Vector3.forward*3.4f,0,TimmyBalance.JetDashSeconds);
-  var jets=VisibleFx(HeroFxShape.Streak);Check(jets.Length==4,"each backpack nozzle has its original two exhaust cores");
+  var jets=VisibleFx(HeroFxShape.Streak);Check(jets.Length==2,"each backpack nozzle has its one flamethrower");
   Near(motion.DashSeconds,.16f,"jet animation uses actual dash duration");
   Vector3 delta=new Vector3(2,0,1);left.position+=delta;right.position+=delta;
   left.rotation=right.rotation=Quaternion.Euler(0,90,0);Step(.08f);
   Check(jets.All(f=>Vector3.Distance(f.transform.position,left.position)<.01f||Vector3.Distance(f.transform.position,right.position)<.01f),"exhaust follows moving real nozzles");
   Check(jets.All(f=>Math.Abs((f.transform.rotation*Vector3.back).x)>.8f),"exhaust turns with backpack sockets");
-  Run(.13f);Check(VisibleFx(HeroFxShape.Streak).Length==4,"jet exhaust retains a short afterglow");
+  Run(.13f);Check(VisibleFx(HeroFxShape.Streak).Length==2,"jet exhaust retains a short afterglow");
   Run(.08f);Check(VisibleFx(HeroFxShape.Streak).Length==0,"jet exhaust ends after dash and afterglow");
 
   Reset();actor=Hero(HeroId.Timmy,0,Vector3.zero);
   HeroSkillVfx.TimmyEffect(actor,3,Vector3.zero,Vector3.right*5,0,TimmyBalance.ScratchLeapSeconds);
-  jets=VisibleFx(HeroFxShape.Streak);Check(jets.Length==4,"Scratch activates both original exhaust cores per nozzle");
+  jets=VisibleFx(HeroFxShape.Streak);Check(jets.Length==2,"Scratch activates one flamethrower per nozzle");
   var claws=VisibleFx(HeroFxShape.Claw);Check(claws.Length==3,"Scratch restores the original three claws");
   Check(claws.All(f=>f.transform.position.x>.4f),"Scratch claws begin ahead of Timmy");
   var clawStarts=claws.Select(f=>f.transform.position).ToArray();
   actor.transform.position+=new Vector3(2,0,1);Step(.2f);
   for(int i=0;i<claws.Length;i++)Check(Vector3.Distance(claws[i].transform.position,clawStarts[i]+new Vector3(2,0,1))<.01f,"Scratch claws follow the actor's actual curved leap");
   actor.transform.position+=Vector3.forward*3;Step(.1f);
-  Check(VisibleFx(HeroFxShape.Streak).Length==4,"Scratch jets stay active through the leap");
+  Check(VisibleFx(HeroFxShape.Streak).Length==2,"Scratch jets stay active through the leap");
   Check(jets.All(f=>f.transform.position.z>2.7f),"Scratch exhaust follows Timmy's actual leap");
   Check(claws.All(f=>Math.Abs(f.transform.position.z-4)<=.21f),"Scratch claws stay with Timmy when the leap changes direction");
   HeroVfxPool.Emit(HeroFxShape.Claw,Vector3.zero,Vector3.zero,Vector3.one,Color.white,.16f,HeroFxMotion.Sweep,owner:actor);
@@ -83,15 +83,15 @@ partial class Regression
   left=new GameObject("DF_TimmyJetL").transform;left.SetParent(actor.transform,true);left.position=new Vector3(-.2f,.5f,-.4f);
   right=new GameObject("DF_TimmyJetR").transform;right.SetParent(actor.transform,true);right.position=new Vector3(.2f,.5f,-.4f);
   HeroSkillVfx.TimmyEffect(actor,3,Vector3.zero,Vector3.forward*5,0,.4f);
-  jets=VisibleFx(HeroFxShape.Streak);Check(jets.Length==4,"Scratch recovers both late-imported nozzle sockets");
+  jets=VisibleFx(HeroFxShape.Streak);Check(jets.Length==2,"Scratch recovers both late-imported nozzle sockets");
   Check(jets.All(f=>Vector3.Distance(f.transform.position,left.position)<.01f||Vector3.Distance(f.transform.position,right.position)<.01f),"recovered exhaust begins at the actual backpack sockets");
-  Step(.39f);Check(VisibleFx(HeroFxShape.Streak).Length==4,"both Scratch nozzles remain active until landing");
-  Step(.02f);Check(VisibleFx(HeroFxShape.Claw).Length==0&&VisibleFx(HeroFxShape.Streak).Length==4,"Scratch claws end on landing while nozzle afterglow remains briefly");
+  Step(.39f);Check(VisibleFx(HeroFxShape.Streak).Length==2,"both Scratch nozzles remain active until landing");
+  Step(.02f);Check(VisibleFx(HeroFxShape.Claw).Length==0&&VisibleFx(HeroFxShape.Streak).Length==2,"Scratch claws end on landing while nozzle afterglow remains briefly");
   Step(.12f);Check(VisibleFx(HeroFxShape.Streak).Length==0,"Scratch exhaust does not continue into the two-second grip");
 
   Reset();actor=Hero(HeroId.Timmy,0,Vector3.zero);
   HeroSkillVfx.TimmyEffect(actor,3,Vector3.zero,Vector3.forward*5,0,.4f,false,.30f);
-  Check(VisibleFx(HeroFxShape.Streak).Length==4,"late Scratch cue still shows both jets for the remaining flight");
+  Check(VisibleFx(HeroFxShape.Streak).Length==2,"late Scratch cue still shows both jets for the remaining flight");
   Step(.23f);Check(VisibleFx(HeroFxShape.Streak).Length==0,"late Scratch jets respect the original landing and expiry");
 
   Reset();actor=Hero(HeroId.Timmy,0,Vector3.zero);

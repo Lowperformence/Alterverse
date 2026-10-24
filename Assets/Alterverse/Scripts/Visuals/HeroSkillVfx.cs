@@ -426,7 +426,7 @@ namespace Alterverse.Visuals
             if(Hero(victim)==HeroId.Nerok||Hero(victim)==HeroId.Timmy){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalPlayerHit(victim,source);return;}
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.PlayerHit,victim,target:source);
             if(victim==null||source==null)return;
-            Fx(HeroFxShape.Slash,Chest(victim),new Color(1,.50f,.28f),.43f,.10f,HeroFxMotion.Contract,Face(victim.transform.position,source.transform.position));
+            Fx(HeroFxShape.ContactStar,Chest(victim),new Color(1,.50f,.28f,.55f),.14f,.10f,HeroFxMotion.Contract,Face(victim.transform.position,source.transform.position),actor:source);
         }
         public static void Basic(GameObject actor,Vector3 impact,float travelTime=0,Transform target=null,bool animate=true)
         {

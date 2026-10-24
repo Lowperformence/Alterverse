@@ -1,48 +1,76 @@
-# Epic Toon FX – individuelle Angriffsgestaltung
+# Epic Toon FX: individuelle Angriffe und verbindliche Größen
 
-40 Aktionen von acht Helden verwenden eigene Angriffskonzepte. Die [Konzeptliste](Hero-VFX-Concepts-2026-10-24.md) beschreibt Form, Atmosphäre, Farbe und gekaufte Vorlagen; die [Einzelcheckliste](Hero-VFX-Checklist-2026-10-24.md) führt die tatsächlich beobachteten Runtime-Schlüssel. Auf ausdrücklichen Nutzerwunsch behalten Nerok und Andromeda Timmy vollständig ihre ursprünglichen Effekte. Timmys ursprünglicher dreifacher Klauenhieb, Scratch-Klauen, Düsen und Staubwolke sind wiederhergestellt. Neroks Anker, Kette und Wasser-Ultimate bleiben erhalten. Die bevorzugten alten Schildkörper bleiben ebenfalls erhalten.
+Bibliotheksversion **6** erzeugt 170 Vorlagen: 51 gekaufte Quellfamilien und 119 individuelle Haupt-, Vorbereitungs- und Treffervarianten für 40 Aktionen von acht Helden. Nyras exakter Q-Strahl bleibt Runtime-Geometrie. Neroks komplette Originalgestaltung und Timmys Klauen/Staub bleiben erhalten. Auf den neuesten Nutzerwunsch ersetzen zwei gekaufte Flamethrower Timmys frühere gestapelten Düsen-Layer. Die bevorzugten alten Schildkörper bleiben bestehen; Schildwerte werden bereits unter den Lebensbalken angezeigt.
 
-Die bisherige pauschale Familienzuordnung war zu klein und zu ähnlich. Die neue Gestaltung verwendet pro Basisangriff/Q/W/E/R einen eigenen Konzeptschlüssel. Vorbereitung, Hauptform und Treffer verwenden dazu passende Varianten. Schwertwellen, gekreuzte Hiebe, Gravitätsachten, spitze Nadeln/Dornen, rotierende Klingenringe, Runenkränze, Blätter-/Heilblüten und Kollapswirbel erzeugen unterschiedliche Silhouetten. Bestehende Strahlen behalten ihre genaue Funktion.
+## Größen und Treffer
 
-## Größe und Phasen
+Die frühere pauschale Vergrößerung ist für Angriffe aufgehoben. Der Editor misst die Bounds jeder konvertierten Gesamtkomposition einschließlich versetzter Kopien und Schweife. Zur Laufzeit wird diese Größe unabhängig von alten Mesh-Skalierungen auf den tatsächlichen Angriff begrenzt:
 
-- Neue kosmetische Effekte werden auf Nutzerwunsch **um 200 Prozent vergrößert: Faktor 3** gegenüber der bisherigen Bibliotheksskalierung.
-- Hauptkompositionen der Ultimates erhalten zusätzlich Faktor 1,4. Ihre Vorbereitungen verwenden vier Elemente, ihre Treffer drei gefächerte Elemente. Die unterschiedlichen vorhandenen Zeitpunkte bleiben unverändert.
-- Strahlen wachsen nur in der Breite. Ihre Länge, Ursprung und Endpunkt bleiben korrekt. Exakte Warnränder behalten den tatsächlichen Gameplay-Radius.
-- Der bisherige kosmetische Renderer wird ausgeschaltet, wenn die neue Komposition zeichnet. Mehrere native Schnitte, Runen oder Partikellagen gehören dabei zu einer gemeinsam verwalteten Komposition und erzeugen keine zusätzlichen Gameplay-Treffer.
-- Neroks und Timmys alte Effekte sowie die alten Schildkörper werden nicht durch den neuen Größenfaktor verändert.
+- Nahkampf liest echte Basisreichweite beziehungsweise AimSpec-Reichweite und Kegelwinkel. Der Shader begrenzt die sichtbaren Fragmente zusätzlich auf diesen Kegel. Der Hiebschweif kann nicht mehr über den Bildschirm reichen.
+- Geschosse verwenden die tatsächliche Geschossbreite. Schweife liegen entlang des bereits zurückgelegten Flugsegments und bleiben innerhalb der maximalen Reichweite.
+- Flächenfähigkeiten lesen ihren tatsächlichen Radius. Ultimates erhalten reichere Kompositionen und nutzen mehr ihrer vorhandenen Fläche, ohne den Radius zu erhöhen.
+- Portal-Sprungeffekte wachsen von 0,85 auf 1,275 Welteinheiten Radius (+50 Prozent). Andere Portale werden innerhalb ihrer vorhandenen Wirkungsfläche stärker ausgefüllt; der echte Radius bleibt die Obergrenze.
+- Treffer an einzelnen Gegnern sind höchstens 0,18 m Radius, bei Ultimates 0,24 m, mit reduzierter Deckkraft und höchstens 18 Partikeln. Mini-Schwertkontakte, leichte gerichtete Treffer und kleine Magie-/Blitzfunken ersetzen die großen Trefferausbrüche. Die zusätzliche alte PlayerHit-Sichel und der opake Comic-Stern werden bei umgestellten Heldenangriffen nicht darübergelegt. Nichthelden verwenden einen ruhigen Mini-Kontakt.
+- Keine `2D Alternate`-Vorlagen. Text-Texturen wie `text_*`, `pow`, `swoosh` und `crack` werden in konvertierten Kopien deaktiviert. Physische Bodenrisse bleiben erlaubt.
 
-## Gekaufte Werkzeuge und Emission
+Der native Renderer ersetzt den alten kosmetischen Renderer exklusiv. Bei leerer/ungeeigneter nativer Emission bleibt ein einzelnes Ersatz-Mesh. Warnränder, Start, Flugweg, Kontakte, Lebensdauer und Abbruch behalten ihre bestehenden Besitzer und Zeitpunkte. Es werden keine zusätzlichen Schadensereignisse oder Netzwerkpakete erzeugt.
 
-33 Quellfamilien bilden **119 individuelle Phasenvarianten**: 39 native Hauptformen, 40 Vorbereitungen und 40 Treffervarianten. Der einzige explizite Prismastrahl wird weiterhin als exakte Runtime-Geometrie gezeichnet. Insgesamt enthält die erzeugte Bibliothek 152 Einträge. Die Konzepte verwenden neben den vorhandenen Quellen nun auch SwordWave, SwordSpin, SharpMissile und die deutlich gerichtete ToonPunch-Vorlage. Farbpaletten werden weiterhin aus den tatsächlichen Helden-/Fähigkeitsfarben übernommen.
+## Konkrete Zuordnung
 
-Die Paketquellen enthalten Geschossteile, die ausschließlich über zurückgelegte Distanz emittieren. Beim manuell getakteten Pool fehlten damit Schweife auch bei Vorlagen, deren runder Kern bereits sichtbar war. Alle solchen Systeme werden in den erzeugten Kopien auf begrenzte Zeitemission mit Startpartikel umgestellt und verwenden Weltraum-Simulation: Bereits emittierte Schweifpartikel bleiben hinter dem fliegenden Kopf zurück. Die Distanzemission wird abgeschaltet, damit Bewegung nicht doppelt emittiert. Statische Schnitt-, Runen- und Flächensysteme behalten lokale Simulation.
+| Einsatz | Vorlage / Gestaltung |
+|---|---|
+| Bombenflugzeug | `NukeConeExplosionFire`: gelb-orange Feuerfontäne, brauner Rauch, ursprüngliche Palette. Ein Effekt am unveränderten 3,24-m-Radius; der frühere Zusatzring entfällt. Meteore behalten ihre eigene bestehende Darstellung. |
+| Traveler Standard / Q | `LightningMissileYellow`: kompakter einzelner Zeitblitz beziehungsweise parallele Blitzform mit Mündungsakzent. Flugmechanik bleibt erhalten. |
+| Traveler Sprung | `SpinPortalGold` an Absprung und tatsächlicher Landung. |
+| Traveler E / R | Zeitacht mit Lightning-Nova beziehungsweise Lightning-Nova-Kollaps mit Wirbelkern. |
+| Auren Ultimate | Magischer Explosionskranz mit Runensiegeln innerhalb Kest Citadel. |
+| Ione Ultimate | Implosionswirbel mit mystischem Explosionskern. |
+| Tahla Standard / Q | Fliegende Blattpartikel statt einer nur umgefärbten SharpMissile-Nadel. |
+| Tahla Heilzauber | `HealOnceBurst` im Heilblütenmotiv am tatsächlichen Ziel. |
+| Tahla Ultimate | Natureruption mit Blattakzent innerhalb Wildsurge. |
+| Brakk Standard / E / R | Schwerer Hammerbogen, eigener rotierender Klingenring, Feuer-Nova-Eruption. Die Flächenauflösung verwendet jetzt das eigentliche Konzept statt einer allgemeinen Familie. |
+| Heilplatte | Ruhiges `HealField`, begrenzt auf den vorhandenen Heilradius. |
+| Heil-Pod Mitte | `HealOnceLoop` nur solange verfügbar; `HealNova` beim Aufnehmen; sofortiges Ende des Ruheeffekts beim Verbrauch. |
+| Timmy Jetpack | Ein `FlamethrowerAdditiveBlue` je Düse, an den echten Sockeln befestigt, nach hinten gerichtet, mit unverändertem Sprung-/Nachglühzeitpunkt. Scratch behält seine drei Originalklauen. |
 
-Eine komplette Komposition bleibt auf höchstens 96 Partikel begrenzt; gekreuzte Hiebe und Runenkränze vervielfachen diese Obergrenze nicht. Der bestehende Cache ist auf 160 Instanzen begrenzt und recycelt freie Varianten. Erzeugte Vorlagen enthalten nur visuelle Komponenten, keine Demo-Scripts, Audioquellen, Lichter oder Collider. Original-Prefabs und gekaufte Texturen werden nicht überschrieben.
+Die [40 Konzepte](Hero-VFX-Concepts-2026-10-24.md) und die [Runtime-Checkliste](Hero-VFX-Checklist-2026-10-24.md) führen jede Aktion einzeln.
 
-## Einrichtung
+## Standardangriff-Sounds
 
-1. Den vollständigen gekauften Ordner unter `Assets/Epic Toon FX/` behalten. Der Commit enthält keine gekauften Binärassets.
-2. Play Mode beenden und den VFX-Branch pullen. Unity 6000.6.1f1 kompilieren lassen. Eine alte/unvollständige Bibliothek wird automatisch als **Version 5** neu aufgebaut. Manuell: `DIMENSIONS FRONT > VFX > Build Epic Toon replacement`.
-3. `DIMENSIONS FRONT > VFX > Validate Epic Toon replacement` prüft sämtliche Quell- und Konzeptvarianten. Ein leerer zweiter Materialplatz bei deaktivierten Trails ist zulässig; Hauptmaterialien und aktive Trails müssen konvertiert sein. Fehlende Angriffskonzepte blockieren Client-Builds. Der Linux-Dedicated-Server ist ausgenommen.
-4. Nach Import läuft einmal pro Bibliotheks-/Backend-Stand eine isolierte native Vorschauprüfung. Unter `Library/DF_EpicVfxReview/` entstehen `report.json`, Einzel-PNGs, `contact-sheet.png` und die beschriftete `index.html`. Der Report nennt auch Held, Konzept und Phase. Wiederholen: `DIMENSIONS FRONT > VFX > Render Epic Toon visibility review`.
-5. Die Vorschau verwendet einen festen weiteren Bildausschnitt für die vergrößerten Kompositionen und repräsentative Fähigkeitspaletten. Sie prüft Partikel, Shader und tatsächlich abweichende Pixel. Portal-/Vortex-Hauptformen benötigen mindestens 24 sichtbare Pixel. Das ist keine Echtspiel-Abnahme.
-6. Im echten Kampf alle 40 Aktionen aus der Spielkamera prüfen: eindeutige Silhouette, Größe relativ zum Helden, Lesbarkeit der Ultimate, Trefferzuordnung, Landung, Abbruch und Android-Bildrate. Die Checkliste lässt diese Sichtabnahmen ausdrücklich offen.
+Nur passende Standardangriff-Bänke werden ergänzt. Auren/Brakk erhalten unterschiedliche Metallkontakte; Nyra einen Pistolenschuss, Ione einen mystischen Abschuss, Tahla einen Magieabschuss und Traveler einen Lightning-Abschuss. Im Paket gibt es keine passenden Schwert-/Klauenschwünge: Veyr, Void Knight, Timmy und Nerok behalten ihre vorhandenen Aufnahmen. Fähigkeitssounds bleiben erhalten. Cue-Indizes, Netzwerkverteilung und die bestehenden Auslösezeitpunkte bleiben gleich.
 
-Erzeugte Dateien samt `.meta` unter `Assets/Alterverse/Resources/CombatVfx/EpicToon/` und die referenzierten gekauften Assets gehören in das private Projekt. Alte Console-Meldungen nach einem Update mit `Clear` entfernen.
+Die sechs ausgewählten WAV-Dateien wurden als PCM untersucht. Ihr hörbarer Signaleinsatz liegt bei 0–2,8 ms ab Dateianfang; kein zusätzlicher Startversatz ist erforderlich. Der Editor kopiert die Originalaufnahmen nach `Resources/Audio/EpicBasics`; falls eine Aufnahme fehlt, lädt die Laufzeit weiterhin den bisherigen Sound. Die Abhörprobe zusammen mit Animation und Gerät bleibt offen.
 
-## Lebensdauer und Netzwerk
+## Planetenwetter
 
-Die bestehenden Slots bestimmen Start, Verzögerung, Bewegung, Zielverfolgung, Ablauf und Abbruch. Die nativen Partikel werden vor manueller Simulation explizit gestartet und anschließend pausiert. Beim Verbergen werden sie geleert. Die Zuordnung zu Held/Aktionsslot/Phase ist lokaler, verschachtelbar wiederhergestellter Präsentationskontext. Sie erzeugt keine weiteren Netzwerkereignisse und ändert kein Paketformat.
+| Planet | Dezente Umgebungslayer |
+|---|---|
+| Kryon | Leichter Schnee, kalter Randnebel |
+| Erde | Leichter Regen, Windlinien |
+| Green Planet / Trappist-1e | Leichter Regen, Randnebel |
+| Mars | Trockener Wind, kein Regen |
+| Noxara / Dark 00 | Dünner Randnebel |
+| Pyraxis / WASP-76b | Warmer Wind und Dunst |
+| Neptune | Bläulicher Wind und Dunst |
+| Diamond Core | Windlinien |
+| GJ504b / TOI-715b | Wind und dünner Dunst |
+| Mond | Kein Niederschlag |
 
-Ein nicht unterstützter alter HeroEnergy-Shader blockiert einen unterstützten Epic-Backend-Start nicht. Fehlen vorübergehend native Partikel oder ein unterstütztes Material, zeichnet genau ein Ersatz-Mesh, während die nativen Renderer ausgeschaltet sind. Die Uhr läuft weiter. Bei Erholung übernimmt ausschließlich der neue Effekt ohne Neustart. Eine einmalige Warnung nennt die betroffene Vorlage.
+Höchstens zwei kamera-nahe Layer mit zusammen höchstens 84 Partikeln. Nebel sitzt am Rand des zentralen Kampfblicks. Wetter verwendet keine reservierten Angriffsslots, erzeugt keine Collider oder Lichter und wird bei reduziertem Dekorationsbudget entfernt. Die bisherigen Map-Dekorationen und Gameplay-Varianten bleiben erhalten.
 
-## Prüfung und Grenzen
+## Einrichtung und native Prüfung
 
-- **9.679 Runtime-/Netzwerk-/VFX-Prüfungen bestanden:** echte Ausführung aller 40 umgestellten Aktionen mit eigenen Konzeptschlüsseln, exklusive Renderer, Original-Timmy/Original-Nerok, Ablauf/Abbruch, Gameplay-Parität bei 30/60/120 FPS, dreifache Skalierung, genaue Strahlenden und kein zusätzliches Netzwerkereignis durch den Gestaltungskontext.
-- **321 Editor-Prüfungen bestanden:** tatsächlicher Produktionscode für Materialvalidierung, Emissionsanpassung, Portal-Ausrichtung und Erzeugung aller 152 Einträge mit kontrollierten Prefab-/Transformadaptern; maximal 96 Partikel pro kompletter Signatur, keine Veränderung gemeinsam genutzter Quellen, fehlende Phasenvarianten werden erkannt.
-- **1.332 Aiming-/Skill-Entry-Prüfungen bestanden:** einschließlich der wiederhergestellten beiden Timmy-Staubschichten, je zwei ursprünglichen Ausstoßkernen pro Düse und drei Scratch-Klauen. C#-Syntaxprüfung ohne Fehler.
+1. Vollständiges gekauftes Paket unter `Assets/Epic Toon FX/` behalten; der Commit enthält keine gekauften Binärassets.
+2. Play Mode beenden, den Branch pullen und Unity kompilieren lassen. Eine veraltete Bibliothek baut automatisch als Version 6 neu auf. Manuell: `DIMENSIONS FRONT > VFX > Build Epic Toon replacement`.
+3. Die Validierung prüft sämtliche Quellen/Phasen, Materialien und gemessenen Bounds. Linux-Dedicated-Server-Builds benötigen keine kosmetische Bibliothek.
+4. Die native Vorschau erzeugt unter `Library/DF_EpicVfxReview/` Einzelbilder, `report.json`, `contact-sheet.png`, `index.html` und 15 gemeinsame Ansichten in **640 × 360**: acht Heldensignaturen gleichzeitig, Standard/Q/W/E/R, jeweils drei Zeitpunkte. Nyras Q ist Runtime-Geometrie und fehlt in der reinen Prefab-Ansicht.
+5. Diese gemeinsamen Bilder prüfen native Kompositionen, ersetzen aber keinen Kampf aus der tatsächlichen Spielkamera. Erkennbarkeit, Überdeckung, Soundabgleich und Android-Bildrate bleiben in der Einzelcheckliste offen.
 
-Hier läuft kein nativer Unity-Editor. Diese Prüfungen bestätigen weder den ästhetischen Gesamteindruck noch Android-Leistung. Der erste native Nutzerbericht für Version 2 bestand 25/29 Quellfamilien; Version 3 bestand 28/29. Daraufhin wurden Portal und Vortex als kameraorientierte beziehungsweise horizontale Flächen korrigiert. Die anschließende Nutzerrückmeldung lautete, dass die Effekte erscheinen, aber zu klein und zu gleichförmig sind. Diese Rückmeldung ist der Anlass für die neue Gestaltung; die alten Vorschautests sind keine Abnahme von Version 5.
+Hier ist kein nativer Unity-Editor verfügbar. Lokale C#-/Adapter-Prüfungen bestätigen Ablauf, Grenzen und Gameplay-Parität; sie sind keine ästhetische oder mobile Abnahme. Schadenswerte, Heilwerte, Reichweiten, Cooldowns, Bewegung, Kollisionslogik und Netzwerkformate werden nicht verändert.
 
-Schadens-, Bewegungs-, Kollisions-, Reichweiten-, Cooldown- und Audio-Produktionsdateien wurden nicht geändert. Die Sound-/Timingarbeit bleibt auf Nutzerwunsch zurückgestellt.
+## Lokale Verifikation
+
+- Runtime-/Netzwerk-/VFX-Suite: 9.767 Prüfungen bestanden, einschließlich des Größenschutzes für nicht an einen Helden gebundene Vorlagen.
+- Editor-Konvertierung: 367 Prüfungen mit kontrollierten Unity-Adaptern, einschließlich aller 170 Einträge, Text-Layer-Entfernung und alter Bibliotheksversionen.
+- Aiming-/Skill-Entry: 1.332 Prüfungen, einschließlich Timmys neuer Düsenanzahl und unveränderter Bewegung/Schadensauflösung.
+- C#-Syntaxprüfung sämtlicher lokal geladener Produktionsdateien: keine Fehler.

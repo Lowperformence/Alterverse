@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Alterverse.Characters;
+using Alterverse.Combat;
 using UnityEngine;
 
 namespace Alterverse.Visuals
@@ -28,6 +29,79 @@ namespace Alterverse.Visuals
             public MaterialPropertyBlock Tint = new();
             public float NativeSeconds, Scale, LastAge;
             public bool Started, Sustained;
+            public float BoundsRadius,FootprintRadius,RenderRadius,Reach,ConeCos;
+            public Vector3 Origin,Forward;
+            public bool Bounded,ClipReach,ClipCone,ClipTrail,AnchorToCaster,NativePalette;
+        }
+        private static readonly int AttackClip=Shader.PropertyToID("_AttackClip"),AttackRange=Shader.PropertyToID("_AttackRange"),
+            AttackCone=Shader.PropertyToID("_AttackCone"),AttackTrail=Shader.PropertyToID("_AttackTrail"),NativePalette=Shader.PropertyToID("_NativePalette");
+
+        private static bool IsPortalKey(string key)
+        {
+            var look=EpicVfxLibrary.FindLookByKey(key);
+            string source=look==null?key:key.EndsWith("_Cast")?look.CastSource:key.EndsWith("_Hit")?look.HitSource:look.Source;
+            return source=="Portal"||source=="Vortex"||source=="SpinPortal";
+        }
+        private static void ConfigureFootprint(Slot slot,EpicVisual visual)
+        {
+            visual.Bounded=false;visual.ClipReach=visual.ClipCone=visual.ClipTrail=visual.AnchorToCaster=false;
+            visual.NativePalette=slot.ExplicitEpicKey=="BomberNuke"||slot.ExplicitEpicKey=="TimmyJet"||slot.ExplicitEpicKey!=null&&slot.ExplicitEpicKey.StartsWith("Heal");
+            if(slot.ExplicitRadius>0)
+            {
+                visual.Bounded=true;visual.FootprintRadius=visual.RenderRadius=slot.ExplicitRadius;return;
+            }
+            if(slot.Owner==null||!slot.Owner.TryGetComponent(out HeroIdentity identity))
+            {
+                // Non-hero callers already provide their visual dimensions. Never apply
+                // the former blanket multiplier to their projectile/contact templates.
+                float size=slot.Sprite!=HeroFxSprite.None?Mathf.Max(slot.AuthoredSize.x,slot.AuthoredSize.y)*.5f:
+                    Mathf.Max(slot.AuthoredSize.x,slot.AuthoredSize.z);
+                visual.Bounded=true;visual.FootprintRadius=visual.RenderRadius=Mathf.Max(.01f,size);return;
+            }
+            int action=slot.Owner==HeroVfxEvents.AbilityActor?HeroVfxEvents.AbilitySlot:-1;
+            var spec=AimingSettings.Current.For(identity.Hero,action,slot.Owner.GetComponent<HeroCombatProfile>()?.AttackRange);
+            var cue=HeroVfxEvents.AbilityCue;
+            bool context=slot.Owner==HeroVfxEvents.AbilityActor;
+            bool preparation=context&&(cue==HeroVfxCue.Cast||cue==HeroVfxCue.BasicWindup||cue==HeroVfxCue.Area&&HeroVfxEvents.AbilityFlag);
+            bool impact=context&&(cue==HeroVfxCue.Impact||cue==HeroVfxCue.ShieldContact);
+            var delivery=slot.Owner.GetComponent<HeroAttackDelivery>();
+            visual.Origin=delivery?.VisualOrigin??(context?HeroVfxEvents.AbilityOrigin:HeroVfxEvents.ReplayOrigin??slot.Owner.transform.position);
+            Vector3 forward=delivery?.VisualDirection??(context?HeroVfxEvents.AbilityPoint-visual.Origin:slot.To-visual.Origin);
+            forward.y=0;if(forward.sqrMagnitude<.0001f)forward=slot.Owner.transform.forward;
+            forward.y=0;visual.Forward=forward.normalized;visual.Reach=spec.castRange;
+            bool melee=spec.aimType==AimType.Melee||spec.aimType==AimType.AreaCone;
+            bool area=spec.aimType==AimType.Area||spec.aimType==AimType.SelfArea;
+            float areaRadius=context&&HeroVfxEvents.AbilityRadius>0?HeroVfxEvents.AbilityRadius:spec.aoeRadius;
+            float radius;
+            if(impact)radius=action==3?.24f:.18f;
+            else if(preparation)radius=.48f;
+            else if(IsProjectile(slot)){radius=spec.projectileWidth;visual.ClipTrail=true;}
+            else if(melee)
+            {
+                radius=spec.castRange;
+                visual.ClipCone=true;visual.ClipReach=true;visual.ConeCos=Mathf.Cos(spec.coneAngle*.5f*Mathf.Deg2Rad);
+                visual.AnchorToCaster=!impact;
+            }
+            else if(area&&areaRadius>0)radius=areaRadius;
+            else if(spec.aimType==AimType.Dash)radius=IsPortalKey(visual.Key)?Mathf.Min(spec.castRange,.85f*EpicVfxLibrary.PortalScaleMultiplier):Mathf.Min(.65f,slot.Size.magnitude*.5f);
+            else radius=impact?.32f:Mathf.Min(.65f,slot.Size.magnitude*.5f);
+            visual.Bounded=true;visual.FootprintRadius=Mathf.Max(.01f,radius);
+            // Author size is normalized first. Legacy slot size, +200%, ultimate emphasis
+            // and layout copies cannot multiply actual reach or projectile width.
+            float coverage=IsProjectile(slot)?.85f:preparation?.85f:impact?.80f:action==3?.96f:.82f;
+            if(IsPortalKey(visual.Key))coverage=spec.aimType==AimType.Dash?1f:Mathf.Min(1f,coverage*EpicVfxLibrary.PortalScaleMultiplier);
+            visual.RenderRadius=visual.FootprintRadius*coverage;
+            if(impact&&melee){visual.ClipCone=true;visual.ClipReach=true;visual.ConeCos=Mathf.Cos(spec.coneAngle*.5f*Mathf.Deg2Rad);}
+            if(IsProjectile(slot)&&spec.castRange>0){visual.ClipReach=true;}
+        }
+        private static void FitFootprint(Slot slot,EpicVisual visual)
+        {
+            if(!visual.Bounded)return;
+            float fit=visual.RenderRadius/Mathf.Max(.01f,visual.BoundsRadius);
+            Vector3 parent=slot.Transform.lossyScale;
+            visual.Root.transform.localScale=new Vector3(fit/Mathf.Max(.0001f,Mathf.Abs(parent.x)),
+                fit/Mathf.Max(.0001f,Mathf.Abs(parent.y)),fit/Mathf.Max(.0001f,Mathf.Abs(parent.z)));
+            if(visual.AnchorToCaster)visual.Root.transform.position=new Vector3(visual.Origin.x,slot.Transform.position.y,visual.Origin.z);
         }
         private bool TryRecoverEpicSurface()
         {
@@ -84,9 +158,10 @@ namespace Alterverse.Visuals
         {
             slot.Epic=null;slot.EpicBeam=false;
             // Solid weapon/monster models and exact telegraphs retain their geometry.
-            if(nerokOriginalDepth>0||slot.Warning||PhysicalShape(shape)||shape==HeroFxShape.Shield)return false;
+            bool explicitVisual=slot.ExplicitEpicKey!=null;
+            if(!explicitVisual&&(nerokOriginalDepth>0||slot.Warning||PhysicalShape(shape)||shape==HeroFxShape.Shield))return false;
             // Nerok and Timmy are excluded: their complete original presentation stays.
-            if(slot.Owner!=null&&slot.Owner.TryGetComponent(out HeroIdentity identity)&&(identity.Hero==HeroId.Nerok||identity.Hero==HeroId.Timmy))return false;
+            if(!explicitVisual&&slot.Owner!=null&&slot.Owner.TryGetComponent(out HeroIdentity identity)&&(identity.Hero==HeroId.Nerok||identity.Hero==HeroId.Timmy))return false;
             if(epicLibrary==null)return false;
             if(shape==HeroFxShape.Laser||shape==HeroFxShape.MonsterBeam||
                 (shape==HeroFxShape.Bolt&&slot.Motion==HeroFxMotion.Hold))
@@ -97,15 +172,16 @@ namespace Alterverse.Visuals
                 slot.Renderer.sharedMaterial=epicLibrary.beamMaterial;
                 return true;
             }
-            string key=EpicKey(shape,slot.Sprite,slot.Owner,slot.Motion);
-            if(slot.Owner!=null&&slot.Owner==HeroVfxEvents.AbilityActor&&
+            string key=slot.ExplicitEpicKey??EpicKey(shape,slot.Sprite,slot.Owner,slot.Motion);
+            if(!explicitVisual&&slot.Owner!=null&&slot.Owner==HeroVfxEvents.AbilityActor&&
                 slot.Owner.TryGetComponent(out HeroIdentity caster))
             {
                 var look=EpicVfxLibrary.FindLook(caster.Hero.ToString(),HeroVfxEvents.AbilitySlot);
                 if(look!=null)
                 {
-                    string candidate=HeroVfxEvents.AbilityCue==HeroVfxCue.Cast?look.Key+"_Cast":
-                        HeroVfxEvents.AbilityCue==HeroVfxCue.Impact?look.Key+"_Hit":look.Trigger==key?look.Key:null;
+                    string candidate=HeroVfxEvents.AbilityCue==HeroVfxCue.Cast||HeroVfxEvents.AbilityCue==HeroVfxCue.Area&&HeroVfxEvents.AbilityFlag?look.Key+"_Cast":
+                        HeroVfxEvents.AbilityCue==HeroVfxCue.Impact?look.Key+"_Hit":
+                        HeroVfxEvents.AbilityCue==HeroVfxCue.Area?(caster.Hero==HeroId.Elyra&&HeroVfxEvents.AbilitySlot==0?"MagicImpact":look.Key):look.Trigger==key?look.Key:null;
                     if(candidate!=null&&epicLibrary.Find(candidate)?.prefab!=null)key=candidate;
                 }
             }
@@ -125,7 +201,7 @@ namespace Alterverse.Visuals
                 if(epicInstances>=EpicInstanceLimit)return false;
                 var root=Instantiate(entry.prefab,slot.Transform,false);root.SetActive(false);
                 visual=new EpicVisual{Key=key,Root=root,Systems=root.GetComponentsInChildren<ParticleSystem>(true),
-                    Renderers=root.GetComponentsInChildren<Renderer>(true),NativeSeconds=entry.nativeSeconds,Scale=entry.scale};
+                    Renderers=root.GetComponentsInChildren<Renderer>(true),NativeSeconds=entry.nativeSeconds,Scale=entry.scale,BoundsRadius=entry.boundsRadius};
                 visual.RendererEnabled=new bool[visual.Renderers.Length];
                 for(int i=0;i<visual.Renderers.Length;i++)
                 {
@@ -139,7 +215,8 @@ namespace Alterverse.Visuals
             visual.Root.transform.SetParent(slot.Transform,false);
             visual.Root.transform.localPosition=Vector3.zero;
             visual.Root.transform.localRotation=Quaternion.identity;
-            visual.Root.transform.localScale=Vector3.one*(visual.Scale*EpicVfxLibrary.VisualScaleMultiplier);
+            visual.Root.transform.localScale=Vector3.one;
+            ConfigureFootprint(slot,visual);
             visual.Started=false;visual.LastAge=0;
             visual.Sustained=IsProjectile(slot)||slot.Motion==HeroFxMotion.Sustained||slot.Motion==HeroFxMotion.AttachedJet||slot.ShieldBound;
             foreach(var system in visual.Systems)
@@ -156,6 +233,7 @@ namespace Alterverse.Visuals
             var visual=slot.Epic;if(visual==null)return false;
             if(Time.time<slot.Start){visual.Root.SetActive(false);return false;}
             visual.Root.SetActive(true);
+            FitFootprint(slot,visual);
             // Native clocks are driven by the SAME normalized timeline as the old visual scheduler.
             // Pauses, delayed packets and short-range shots cannot create a late second impact.
             float sample=visual.Sustained?age:age/slot.Duration*visual.NativeSeconds;
@@ -173,7 +251,14 @@ namespace Alterverse.Visuals
             }
             visual.Started=true;visual.LastAge=sample;
             Color tint=slot.Color;tint.a*=fade;
+            if(visual.Key.EndsWith("_Hit"))tint.a*=.6f;
             visual.Tint.SetColor(Tint,tint);
+            Vector3 center=visual.AnchorToCaster?visual.Origin:slot.Transform.position;
+            visual.Tint.SetVector(AttackClip,new Vector4(center.x,center.z,visual.FootprintRadius,visual.ClipTrail?2f:visual.Bounded?1f:0f));
+            visual.Tint.SetVector(AttackTrail,new Vector4(slot.From.x,slot.From.z,center.x-slot.From.x,center.z-slot.From.z));
+            visual.Tint.SetVector(AttackRange,new Vector4(visual.Origin.x,visual.Origin.z,visual.Reach,visual.ClipReach?1f:0f));
+            visual.Tint.SetVector(AttackCone,new Vector4(visual.Forward.x,visual.Forward.z,visual.ConeCos,visual.ClipCone?1f:0f));
+            visual.Tint.SetFloat(NativePalette,visual.NativePalette?1f:0f);
             bool visible=particles&&visual.CanRender;
             for(int i=0;i<visual.Renderers.Length;i++)
             {
@@ -202,8 +287,8 @@ namespace Alterverse.Visuals
             for(int plane=0;plane<2;plane++)
             {
                 Vector3 side=plane==0?Vector3.right:Vector3.up;int n=vertices.Count;
-                vertices.Add(side*(-.24f*EpicVfxLibrary.VisualScaleMultiplier)+Vector3.forward*start);vertices.Add(side*(.24f*EpicVfxLibrary.VisualScaleMultiplier)+Vector3.forward*start);
-                vertices.Add(side*(.24f*EpicVfxLibrary.VisualScaleMultiplier)+Vector3.forward*end);vertices.Add(side*(-.24f*EpicVfxLibrary.VisualScaleMultiplier)+Vector3.forward*end);
+                vertices.Add(side*(-.24f)+Vector3.forward*start);vertices.Add(side*(.24f)+Vector3.forward*start);
+                vertices.Add(side*(.24f)+Vector3.forward*end);vertices.Add(side*(-.24f)+Vector3.forward*end);
                 uv.Add(new Vector2(0,0));uv.Add(new Vector2(1,0));uv.Add(new Vector2(1,1));uv.Add(new Vector2(0,1));
                 for(int i=0;i<4;i++)colors.Add(Color.white);
                 indices.AddRange(new[]{n,n+1,n+2,n,n+2,n+3});

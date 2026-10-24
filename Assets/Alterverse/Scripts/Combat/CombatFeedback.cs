@@ -38,7 +38,10 @@ namespace Alterverse.Combat
             if(view==null)view=Camera.main;if(view==null)return;
             Vector3 point=transform.position+Vector3.up*1.1f,p=view.WorldToViewportPoint(point);
             if(p.z<=0||p.x<-.05f||p.x>1.05f||p.y<-.05f||p.y>1.05f)return;
-            if(GetComponent<HeroRespawn>()!=null)HeroSkillVfx.PlayerHit(gameObject,source);
+            HeroIdentity attacker=source!=null?source.GetComponentInParent<HeroIdentity>():null;
+            // A hero delivery already emits its individual contact. Do not add the former
+            // PlayerHit slash and opaque ink star on top of that purchased hit effect.
+            if(GetComponent<HeroRespawn>()!=null&&(attacker==null||attacker.Hero==HeroId.Nerok||attacker.Hero==HeroId.Timmy))HeroSkillVfx.PlayerHit(gameObject,source);
             bool shieldOnly=damage<=.01f;
             if(absorbed>.01f)HeroSkillVfx.ShieldContact(gameObject,source);
             Color tint=shieldOnly?new Color(.45f,.87f,1f):Color.Lerp(SourceColor(source),Color.white,.65f);
@@ -55,7 +58,7 @@ namespace Alterverse.Combat
                 r.GetPropertyBlock(bright);bright.SetColor(BaseColor,tint);bright.SetColor(ColorId,tint);r.SetPropertyBlock(bright);
             }
             flashing=true;flashUntil=Time.time+.065f;
-            if(!shieldOnly)CombatImpactPool.Emit(point,tint,(damage+absorbed)/Mathf.Max(1,health.Max*.2f));
+            if(!shieldOnly&&attacker==null)CombatImpactPool.Emit(point,tint,(damage+absorbed)/Mathf.Max(1,health.Max*.2f));
             bool heavy=damage>=Mathf.Max(45f,health.Max*.16f);AudioMixState.MarkCombat();
             if((source==null||(source.GetComponentInParent<HeroIdentity>()==null&&source.GetComponentInParent<LaneTower>()==null&&source.GetComponentInParent<DefenseBunker>()==null))&&AudioCuePolicy.Allow(heavy?"heavy-hit":"hit",heavy?AudioCuePriority.Critical:AudioCuePriority.Combat))
                 DimensionAudio.PlayAt(heavy?DimensionSound.HitHeavy:DimensionSound.HitLight,transform.position,shieldOnly?.28f:heavy?.72f:.48f);

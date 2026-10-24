@@ -19,13 +19,14 @@ namespace Alterverse.Visuals
             public EpicVisual Epic;public bool EpicBeam;public HeroFxShape Shape;
             public Transform Transform;public MeshRenderer Renderer;public MeshFilter Filter;
             public MaterialPropertyBlock Block;
-            public Vector3 From,To,Size,Offset;public Quaternion Rotation;
+            public Vector3 From,To,Size,AuthoredSize,Offset;public Quaternion Rotation;
             public Color Color;public float Start,Duration,SurfaceStyle,MaxRange;public bool Active,Warning,Decorative,CancelOnOwnerDeath;
             public int DeliveryId;public HeroFxMotion Motion;public Transform Follow,EndFollow;public bool Follows,TracksEnd;
             public Vector3 EndOffset;public Health EndHealth;
             public HeroVisualMotion FollowMotion,EndMotion;
             public GameObject Owner;public Health OwnerHealth,Shield;public bool ShieldBound;public float ShieldGraceUntil;
             public HeroFxSprite Sprite;public bool Billboard;public float Roll;
+            public string ExplicitEpicKey;public float ExplicitRadius;
         }
         private static HeroVfxPool instance;
         private static int nextDeliveryId, deliveryScope;
@@ -119,7 +120,7 @@ namespace Alterverse.Visuals
             HeroFxMotion motion=HeroFxMotion.Expand,Quaternion rotation=default,GameObject owner=null,
             bool warning=false,Transform follow=null,Health shield=null,float delay=0,Transform endFollow=null,bool decorative=false,
             float elapsed=0,bool cancelOnOwnerDeath=false,float maxRange=0,
-            HeroFxSprite sprite=HeroFxSprite.None,bool billboard=false,float roll=0)
+            HeroFxSprite sprite=HeroFxSprite.None,bool billboard=false,float roll=0,string epicKey=null,float effectRadius=0)
         {
             // Warnings are never decorative; flourishes cannot consume the last core slots.
             if(warning)decorative=false;
@@ -128,11 +129,11 @@ namespace Alterverse.Visuals
             Warm();if(instance==null||instance.material==null)return;
             // An unavailable atlas only omits its extra layer; never show an opaque fallback quad.
             if(sprite!=HeroFxSprite.None&&(warning||instance.attackAtlas==null&&instance.epicLibrary==null))return;
-            instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay,endFollow,decorative,elapsed,cancelOnOwnerDeath,maxRange,sprite,billboard,roll);
+            instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay,endFollow,decorative,elapsed,cancelOnOwnerDeath,maxRange,sprite,billboard,roll,epicKey,effectRadius);
         }
         private void Show(HeroFxShape shape,Vector3 from,Vector3 to,Vector3 size,Color color,float duration,
             HeroFxMotion motion,Quaternion rotation,GameObject owner,bool warning,Transform follow,Health shield,float delay,Transform endFollow,bool decorative,
-            float elapsed,bool cancelOnOwnerDeath,float maxRange,HeroFxSprite sprite,bool billboard,float roll)
+            float elapsed,bool cancelOnOwnerDeath,float maxRange,HeroFxSprite sprite,bool billboard,float roll,string epicKey,float effectRadius)
         {
             if(elapsed>=Mathf.Max(0,delay)+Mathf.Max(.04f,duration))return;
             int begin=warning?Capacity-WarningReserve:0;
@@ -158,6 +159,8 @@ namespace Alterverse.Visuals
             // Never steal a visible warning; optional flourishes are dropped at saturation.
             if(slot==null)return;
             slot.Shape=shape;
+            slot.ExplicitEpicKey=epicKey;slot.ExplicitRadius=Mathf.Max(0,effectRadius);
+            slot.AuthoredSize=size;
             slot.DeliveryId=deliveryScope;slot.Active=true;slot.Warning=warning;slot.Decorative=decorative;slot.CancelOnOwnerDeath=cancelOnOwnerDeath||owner!=null&&owner.GetComponent<HeroIdentity>()?.Hero==HeroId.Nerok;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
             slot.Sprite=sprite;slot.Billboard=billboard;slot.Roll=roll;
             slot.Follow=follow;slot.Follows=follow!=null;slot.FollowMotion=follow!=null?follow.GetComponent<HeroVisualMotion>():null;slot.Offset=slot.Follows?from-follow.position:Vector3.zero;
