@@ -92,7 +92,7 @@ static class Regression
         var flying=GameObject.All.Skip(first).Single(g=>g.name=="DF_Sivra_NovaSmall_Projectile");
         Check(Math.Abs(flying.transform.position.x-2)<.001f,"small nova visibly travels rather than becoming a full-length laser");
         var clip=flying.GetComponentsInChildren<Renderer>(true).Single().Block.Vectors["_AttackClip"];
-        Check(clip.w==2&&clip.z==.625f,"Nova Small projectile/trail is 150 percent larger and constrained to the shot segment");
+        Check(clip.w==2&&clip.z==1.25f,"Nova Small projectile/trail doubles again and remains constrained to the shot segment");
         Tick(snareShot,.17f);Check(Parts(first,"NovaSmall_Impact")==1&&sounds==1,"one native hit and one audio callback at arrival");
         Tick(snareShot,.18f);Check(Parts(first,"NovaSmall_Impact")==1&&sounds==1,"finished delivery cannot repeat its impact/audio");
         Time.time=1;int missFirst=GameObject.All.Count;SivraNovaVfx.Launch(actor,2,new(),new(4,0,0),.16f,deliveryId:202);

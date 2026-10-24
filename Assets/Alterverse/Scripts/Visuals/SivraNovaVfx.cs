@@ -9,7 +9,7 @@ namespace Alterverse.Visuals
     public sealed class SivraNovaVfx:MonoBehaviour
     {
         public const string ResourcePath="CombatVfx/SivraNova/Library";
-        private const float SizeMultiplier=2.5f;
+        private const float SizeMultiplier=5f;
         [Serializable] public sealed class Effect
         {
             public GameObject prefab;
@@ -78,7 +78,8 @@ namespace Alterverse.Visuals
             var look=Look(skill,true);if(actor==null||look==null)return false;
             if(skill==2&&!reportedSmall||skill==3&&!reportedNova)
             {
-                Debug.Log("DIMENSIONS FRONT VFX: blue "+(skill==2?"Nova Small":"Nova")+" ACTIVE; "+look.sources);
+                Debug.Log("DIMENSIONS FRONT VFX: blue "+(skill==2?"Nova Small":"Nova")+" ACTIVE; visualScale="+SizeMultiplier+
+                    "; nativeProjectileRadius="+look.projectile.radius+"; "+look.sources);
                 if(skill==2)reportedSmall=true;else reportedNova=true;
             }
             var root=new GameObject(skill==2?"DF_Sivra_NovaSmall_Shot":"DF_Sivra_Nova_Shot");
