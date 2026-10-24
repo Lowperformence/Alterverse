@@ -125,10 +125,14 @@ namespace Alterverse.Editor
                 }
 
                 float horizontalRadius = Measure(root, systems, autoPlay);
+                float emissionWindow = 0f;
+                foreach (var system in systems)
+                    if (system.main.playOnAwake) emissionWindow = Mathf.Max(emissionWindow, LastEmissionSeconds(system));
                 root.SetActive(false);
                 foreach (var system in systems) system.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
                 var definition = root.AddComponent<BomberNukeVfx>();
                 definition.nativeRadius = horizontalRadius;
+                definition.emissionStopAfter = Mathf.Max(.1f, emissionWindow + .05f);
                 definition.sourceSignature = signature;
                 if (PrefabUtility.SaveAsPrefabAsset(root, PrefabPath) == null)
                     throw new IOException("Could not save the prepared bomber Nuke prefab.");
@@ -169,11 +173,39 @@ namespace Alterverse.Editor
             return converted;
         }
 
-        internal static float Measure(GameObject root, ParticleSystem[] systems, bool[] autoPlay)
+        private static float FiniteTime(float value,float fallback)
+        {return value>=0f&&!float.IsInfinity(value)?value:fallback;}
+
+        // A burst-only system may have a huge duration and report IsAlive long after
+        // its final visible particle. Its duration is not its final emission time.
+        internal static float LastEmissionSeconds(ParticleSystem system)
+        {
+            var main=system.main;var emission=system.emission;
+            if(!emission.enabled)return 0f;
+            float duration=FiniteTime(main.duration,12f),last=0f;
+            if(emission.rateOverTime.constantMax>0f||emission.rateOverDistance.constantMax>0f)last=duration;
+            var bursts=new ParticleSystem.Burst[emission.burstCount];
+            int count=emission.GetBursts(bursts);
+            for(int i=0;i<count;i++)
+            {
+                var burst=bursts[i];
+                float end=burst.cycleCount==0?duration:FiniteTime(burst.time,0f)+
+                    Math.Max(0,burst.cycleCount-1)*FiniteTime(burst.repeatInterval,0f);
+                last=Mathf.Max(last,Mathf.Min(duration,end));
+            }
+            float speed=main.simulationSpeed>0f&&!float.IsInfinity(main.simulationSpeed)?main.simulationSpeed:1f;
+            return (FiniteTime(main.startDelay.constantMax,0f)+last)/speed;
+        }
+
+        internal static float Measure(GameObject root, ParticleSystem[] systems, bool[] autoPlay,string label="VFX")
         {
             var roots = new List<ParticleSystem>();
+            float horizon=12f;
             for (int i = 0; i < systems.Length; i++)
             {
+                var main=systems[i].main;
+                float speed=main.simulationSpeed>0f&&!float.IsInfinity(main.simulationSpeed)?main.simulationSpeed:1f;
+                horizon=Mathf.Max(horizon,LastEmissionSeconds(systems[i])+FiniteTime(main.startLifetime.constantMax,20f)/speed+1f);
                 if (autoPlay[i]) systems[i].Play(false);
                 bool nested = false;
                 for (var parent = systems[i].transform.parent; parent != null && parent != root.transform; parent = parent.parent)
@@ -182,9 +214,13 @@ namespace Alterverse.Editor
             }
             float radius = 0f;
             var renderers = root.GetComponentsInChildren<Renderer>(true);
-            for (int frame = 0; frame < 3600; frame++)
+            // This is a visibility measurement, not an attempt to wait for the native
+            // scheduler's IsAlive flag to finish. Bound the editor work and keep every
+            // valid visible sample, including effects with very long native durations.
+            int samples=(int)Math.Ceiling(Mathf.Min(horizon,30f)*120f);
+            for (int frame = 0; frame < samples; frame++)
             {
-                foreach (var system in roots) system.Simulate(1f / 60f, true, false, false);
+                foreach (var system in roots) system.Simulate(1f / 120f, true, false, false);
                 foreach (var renderer in renderers)
                 {
                     if (!renderer.enabled || !renderer.gameObject.activeInHierarchy) continue;
@@ -195,15 +231,9 @@ namespace Alterverse.Editor
                     radius = Mathf.Max(radius, Mathf.Abs(bounds.center.x - root.transform.position.x) + bounds.extents.x,
                         Mathf.Abs(bounds.center.z - root.transform.position.z) + bounds.extents.z);
                 }
-                bool alive = false;
-                foreach (var system in systems) if (system.gameObject.activeInHierarchy && system.IsAlive(true)) { alive = true; break; }
-                if (!alive)
-                {
-                    if (!(radius > .01f) || float.IsInfinity(radius)) throw new InvalidOperationException("Nuke Cone has no visible measured footprint.");
-                    return radius;
-                }
             }
-            throw new InvalidOperationException("Nuke Cone did not finish within 60 seconds; check the imported prefab.");
+            if (!(radius > .01f) || float.IsInfinity(radius)) throw new InvalidOperationException(label+" has no visible measured footprint.");
+            return radius;
         }
     }
 }

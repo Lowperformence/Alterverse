@@ -19,7 +19,7 @@ namespace Alterverse.Editor
     {
         private const string Source="Assets/Epic Toon FX";
         private const string Output="Assets/Alterverse/Resources/CombatVfx/SmallBullet";
-        private const string Version="Small Bullet chain 2";
+        private const string Version="Small Bullet chain 3";
         private static bool building;
         public int callbackOrder=>-490;
         static SmallBulletBuilder()
@@ -38,16 +38,19 @@ namespace Alterverse.Editor
         public static void Build()
         {
             if(building)return;if(EditorApplication.isPlaying)throw new InvalidOperationException("Exit Play Mode first.");
-            var paths=AssetDatabase.FindAssets("t:Prefab",new[]{Source}).Select(AssetDatabase.GUIDToAssetPath)
-                .Where(p=>!Normal(p).Contains("2dalternate")&&!p.Contains("/Demo")&&
-                    (Normal(p).Contains("smallbullet")||Normal(p).Contains("bulletsmall")||Normal(p).Contains("smalbullet"))).OrderBy(p=>p,StringComparer.Ordinal).ToArray();
+            var allPaths=AssetDatabase.FindAssets("t:Prefab",new[]{Source}).Select(AssetDatabase.GUIDToAssetPath)
+                .Where(p=>!Normal(p).Contains("2dalternate")&&!p.Contains("/Demo")).OrderBy(p=>p,StringComparer.Ordinal).ToArray();
+            var paths=allPaths.Where(p=>Normal(p).Contains("smallbullet")||Normal(p).Contains("bulletsmall")||Normal(p).Contains("smalbullet")).ToArray();
             if(paths.Length==0)throw new FileNotFoundException("No 3D Small Bullet prefabs found in the imported Epic Toon FX package.");
             var projectile=Choose(paths,0);
             string projectilePath=projectile!=null?AssetDatabase.GetAssetPath(projectile):null;
-            var muzzle=Referenced(projectile,new[]{"muzzle","flash"})??Choose(paths,1,projectilePath);
-            var impact=Referenced(projectile,new[]{"impact","hit","explosion"})??Choose(paths,2,projectilePath);
+            // Native BulletSmall shots and their shared Bullet muzzle/hit prefabs live
+            // in separate package categories. Do not require every name to say Small.
+            var bulletParts=allPaths.Where(p=>Normal(p).Contains("bullet")).ToArray();
+            var muzzle=Referenced(projectile,new[]{"muzzle","flash"})??Choose(bulletParts,1,projectilePath);
+            var impact=Referenced(projectile,new[]{"impact","hit","explosion"})??Choose(bulletParts,2,projectilePath);
             if(projectile==null||muzzle==null||impact==null)
-                throw new InvalidOperationException("The complete 3D Small Bullet projectile/muzzle/impact chain could not be resolved. Found: "+string.Join(", ",paths));
+                throw new InvalidOperationException("Missing Small Bullet parts: "+(projectile==null?"projectile ":"")+(muzzle==null?"muzzle ":"")+(impact==null?"impact ":"")+". Bullet candidates: "+string.Join(", ",bulletParts));
             var shader=Shader.Find("DimensionsFront/SmallBulletParticles");if(shader==null)throw new InvalidOperationException("Small Bullet shader missing.");
             string signature=Version+":"+string.Join(":",new[]{projectile,muzzle,impact}.Select(p=>AssetDatabase.GetAssetPath(p)+":"+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(p))))+
                 ":"+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(shader));
@@ -77,6 +80,9 @@ namespace Alterverse.Editor
             string name=Normal(Path.GetFileNameWithoutExtension(path)).Replace("white","");
             if(name.Contains("muzzle")||name.Contains("flash"))return 1;
             if(name.Contains("impact")||name.Contains("hit")||name.Contains("explosion"))return 2;
+            string category=Normal(Path.GetDirectoryName(path)??"").Replace("white","");
+            if(category.Contains("muzzle"))return 1;
+            if(category.Contains("impact")||category.Contains("hit")||category.Contains("explosion"))return 2;
             return 0;
         }
         private static string Palette(string path)
@@ -93,6 +99,7 @@ namespace Alterverse.Editor
             string palette=Palette(projectilePath);
             // Prefer the neutral version, then the warm rifle palette. Keep the family intact.
             string chosen=candidates.OrderBy(p=>palette!=null&&Palette(p)==palette?-1:Normal(p).Contains("white")?0:Normal(p).Contains("red")?1:Normal(p).Contains("fire")?2:3)
+                .ThenBy(p=>Normal(p).Contains("smallbullet")||Normal(p).Contains("bulletsmall")?0:1)
                 .ThenBy(p=>p,StringComparer.Ordinal).FirstOrDefault();
             return chosen==null?null:AssetDatabase.LoadAssetAtPath<GameObject>(chosen);
         }
@@ -106,7 +113,7 @@ namespace Alterverse.Editor
                 while(iterator.NextVisible(true))
                     if(iterator.propertyType==SerializedPropertyType.ObjectReference&&roles.Any(r=>Normal(iterator.name).Contains(r)))
                     {
-                        var value=iterator.objectReferenceValue as GameObject;
+                        var value=iterator.objectReferenceValue as GameObject??(iterator.objectReferenceValue as Component)?.gameObject;
                         string path=value!=null?AssetDatabase.GetAssetPath(value):null;
                         if(value!=null&&!string.IsNullOrEmpty(path)&&path.StartsWith(Source+"/",StringComparison.OrdinalIgnoreCase)&&
                             !Normal(path).Contains("2dalternate")&&!Normal(path).Contains("demo")&&

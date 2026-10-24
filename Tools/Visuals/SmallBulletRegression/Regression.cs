@@ -98,6 +98,18 @@ static class Regression
         var preparedSystems=rebuilt.projectile.GetComponentsInChildren<ParticleSystem>(true);
         Check(!preparedSystems.Single(ps=>ps.gameObject.name=="NativeOneShotSubEmitter").main.loop,"native one-shot sub-emitter does not become an endless loop");
         Check(preparedSystems.Single(ps=>ps.gameObject.name=="NativeBullet").main.loop,"native looping projectile emitter is retained");
+        // Native screenshot layout: only BulletSmall colour variants live in Missiles/Bullet.
+        foreach(string key in AssetDatabase.Assets.Keys.Where(p=>p.StartsWith(folder)||p.Contains("2D Alternate")).ToArray())AssetDatabase.Assets.Remove(key);
+        controller.References.Clear();
+        const string nativeFolder="Assets/Epic Toon FX/Prefabs/Combat/Missiles/Bullet/";
+        foreach(string colour in new[]{"Blue","Fire","Green","Pink"})AssetDatabase.Assets[nativeFolder+"BulletSmall"+colour+".prefab"]=Native("Native"+colour,solid);
+        AssetDatabase.Assets["Assets/Epic Toon FX/Prefabs/Combat/Muzzleflash/Bullet/BulletFire.prefab"]=Native("SharedBulletMuzzleFire",solid);
+        AssetDatabase.Assets["Assets/Epic Toon FX/Prefabs/Combat/Explosions/Bullet/BulletHitFire.prefab"]=Native("SharedBulletHitFire",solid);
+        AssetDatabase.Dependency="native-separated-bullet-folders";SmallBulletBuilder.Build();
+        var separated=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Alterverse/Resources/CombatVfx/SmallBullet/Library.prefab").GetComponent<SmallBulletVfx>();
+        Check(separated.sourceSignature.Contains("BulletSmallFire.prefab"),"native BulletSmallFire projectile selected from the actual reported family");
+        Check(separated.muzzle.GetComponentsInChildren<Transform>(true).Any(t=>t.gameObject.name=="SharedBulletMuzzleFire"),"shared Bullet muzzle category resolves without Small in its name");
+        Check(separated.impact.GetComponentsInChildren<Transform>(true).Any(t=>t.gameObject.name=="SharedBulletHitFire"),"shared Bullet impact category resolves without Small in its name");
         Console.WriteLine($"PASS {checks} Small Bullet source-chain/flight/confirmed-hit/cancellation/guard/audio contracts. Controlled fixtures; licensed prefab rendering and native Unity remain unverified.");
     }
 }

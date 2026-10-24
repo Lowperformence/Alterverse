@@ -71,7 +71,7 @@ namespace UnityEngine
     public struct Color {public float r,g,b,a;public Color(float r,float g,float b,float a=1){this.r=r;this.g=g;this.b=b;this.a=a;}public static Color white=>new(1,1,1);}
     public struct Bounds {public Vector3 center,extents;}
     public static class Time {public static float time;}
-    public static class Mathf {public static float Max(params float[] v)=>v.Max();public static float Abs(float v)=>Math.Abs(v);public static float Clamp01(float value)=>Math.Clamp(value,0,1);}
+    public static class Mathf {public static float Max(params float[] v)=>v.Max();public static float Min(float a,float b)=>Math.Min(a,b);public static float Abs(float v)=>Math.Abs(v);public static float Clamp01(float value)=>Math.Clamp(value,0,1);}
     public class HideInInspector:Attribute {}public class RuntimeInitializeOnLoadMethodAttribute:Attribute {public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType t){}}
     public enum RuntimeInitializeLoadType {SubsystemRegistration}
     public static class Debug {public static int Warnings;public static void Log(object value){}public static void LogWarning(object value){Warnings++;}public static void LogError(object value){throw new Exception(value.ToString());}}
@@ -92,23 +92,23 @@ namespace UnityEngine
     public enum ParticleSystemCullingMode {AlwaysSimulate}
     public sealed class ParticleSystem:Component
     {
-        public struct MinMaxCurve {public float constantMax;}
-        public struct Burst {public Burst(float time,short count){}}
-        public sealed class EmissionModule {public MinMaxCurve rateOverDistance;public int burstCount;public void SetBursts(Burst[] bursts){burstCount=bursts.Length;}}
+        public struct MinMaxCurve {public float constantMax;public static implicit operator MinMaxCurve(float value)=>new(){constantMax=value};public static implicit operator float(MinMaxCurve value)=>value.constantMax;}
+        public struct Burst {public float time,repeatInterval;public int cycleCount;public Burst(float time,short count){this.time=time;repeatInterval=0;cycleCount=1;}}
+        public sealed class EmissionModule {public bool enabled=true;public MinMaxCurve rateOverTime,rateOverDistance;public int burstCount;private Burst[] bursts=Array.Empty<Burst>();public void SetBursts(Burst[] value){bursts=value;burstCount=value.Length;}public int GetBursts(Burst[] value){Array.Copy(bursts,value,burstCount);return burstCount;}}
         public EmissionModule emission=new();
         public sealed class Module {public bool enabled=true;}
         public sealed class MainModule
         {
-            public bool loop=true,playOnAwake=true,useUnscaledTime;public int maxParticles=321;public float startLifetime=7,startSpeed=8;
+            public bool loop=true,playOnAwake=true,useUnscaledTime;public int maxParticles=321;public float duration=5,simulationSpeed=1,startSpeed=8;public MinMaxCurve startLifetime=7,startDelay=0;
             public ParticleSystemStopAction stopAction=ParticleSystemStopAction.Destroy;public ParticleSystemScalingMode scalingMode=ParticleSystemScalingMode.Local;
             public ParticleSystemSimulationSpace simulationSpace=ParticleSystemSimulationSpace.World;public ParticleSystemCullingMode cullingMode;
             public MainModule Copy()=>(MainModule)MemberwiseClone();
         }
         public MainModule main=new();public Module collision=new(),trigger=new(),lights=new(),subEmitters=new();
-        public bool useAutoRandomSeed=true,Playing;public uint randomSeed;public float Age;
-        public int particleCount=>IsAlive(false)?1:0;public bool isPlaying=>Playing;
-        public bool IsAlive(bool children)=>Playing&&Age<.3f;
-        public void Stop(bool children,ParticleSystemStopBehavior behavior){Playing=false;Age=0;}
+        public bool useAutoRandomSeed=true,Playing,LongFuture,StoppedEmission;public uint randomSeed;public float Age;
+        public int particleCount=>Playing&&Age<.3f?1:0;public bool isPlaying=>Playing;
+        public bool IsAlive(bool children)=>Playing&&(Age<.3f||LongFuture&&!StoppedEmission&&Age<main.duration);
+        public void Stop(bool children,ParticleSystemStopBehavior behavior){if(behavior==ParticleSystemStopBehavior.StopEmitting){StoppedEmission=true;}else{Playing=false;Age=0;StoppedEmission=false;}}
         public void Play(bool children){Playing=true;Age=0;}
         public void Simulate(float delta,bool children,bool restart,bool fixedTimeStep)
         {Age+=delta;if(children)foreach(var c in transform.Children)foreach(var ps in c.gameObject.GetComponentsInChildren<ParticleSystem>(true))ps.Age+=delta;}

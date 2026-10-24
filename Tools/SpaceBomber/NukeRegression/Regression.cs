@@ -82,6 +82,24 @@ static class Regression
         Check(fixedMaterial.GetColor("_Tint").g==.6f&&fixedMaterial.GetColor("_Tint").a==.8f,"solid_AB native colour and opacity survive");
         Check(!solid.HasProperty("_MainTex"),"colour-only source material remains untouched");
         Check(fixedPrefab.GetComponentsInChildren<ParticleSystem>(true).Single().gameObject.activeSelf,"inactive purchased root is enabled inside the prepared composition");
+        // Real-world failure: an empty, long-duration burst-only emitter can keep
+        // IsAlive true for minutes even though its visible burst completed promptly.
+        original.SetActive(true);ps.main.duration=100000f;ps.LongFuture=true;
+        ps.emission.SetBursts(new[]{new ParticleSystem.Burst(0f,1)});
+        Check(BomberNukeBuilder.LastEmissionSeconds(ps)==0f,"burst-only horizon ignores a huge unused scheduler duration");
+        AssetDatabase.Dependency="long-burst";BomberNukeBuilder.Build();
+        var longPrefab=AssetDatabase.LoadAssetAtPath<GameObject>(generated);
+        Check(longPrefab.GetComponent<BomberNukeVfx>().nativeRadius==6,"valid visible samples survive an indefinitely alive scheduler");
+        Check(longPrefab.GetComponent<BomberNukeVfx>().emissionStopAfter<1f,"last actual burst, not unused duration, defines stop-emitting time");
+        var repeated=new ParticleSystem.Burst(2f,1){cycleCount=3,repeatInterval=1.5f};ps.emission.SetBursts(new[]{repeated});
+        Check(BomberNukeBuilder.LastEmissionSeconds(ps)==5f,"future repeated bursts remain scheduled before cleanup");
+        ps.emission.rateOverTime=1f;Check(BomberNukeBuilder.LastEmissionSeconds(ps)==100000f,"continuous source emission duration is preserved");ps.emission.rateOverTime=0f;
+        Resources.Prefab=longPrefab;Reset();int first=GameObject.All.Count;Time.time=500f;BomberNukeVfx.TryPlay(new(),3.24f);
+        var runtime=GameObject.All.Skip(first).Single(g=>g.name=="DF_Bomber_NukeConeExplosion");
+        var runtimePs=runtime.GetComponentsInChildren<ParticleSystem>(true).Single();var runtimeLife=runtime.GetComponent<BomberNukeVfx>();
+        Time.time=501f;GameObject.Invoke(runtimeLife,"LateUpdate");
+        Check(runtimePs.StoppedEmission&&!runtime.Destroyed,"stopping future emission does not clear a living smoke particle");
+        runtimePs.Age=10f;GameObject.Invoke(runtimeLife,"LateUpdate");Check(runtime.Destroyed,"empty long-duration scheduler no longer leaks runtime explosions");
         Console.WriteLine($"PASS {checks} bomber Nuke import/playback/audio/footprint contracts across all {maps.Length} production arena variants. Controlled engine/editor fixtures; native Unity/GPU/phone review remains separate.");
     }
 }

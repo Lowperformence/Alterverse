@@ -6,14 +6,16 @@ namespace Alterverse.Visuals
     public sealed class BomberNukeVfx : MonoBehaviour
     {
         public const string ResourcePath = "CombatVfx/BomberNuke/Explosion";
-        public const string ImportVersion = "Bomber Nuke Cone 3";
+        public const string ImportVersion = "Bomber Nuke Cone 4";
         [HideInInspector] public float nativeRadius = 1f;
         [HideInInspector] public string sourceSignature;
+        [HideInInspector] public float emissionStopAfter = .1f;
         private static GameObject prefab;
         private static bool warned;
         private static bool reported;
         private ParticleSystem[] systems;
         private float started;
+        private bool stoppedEmission;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatic() { prefab = null; warned = false; reported = false; }
@@ -61,6 +63,14 @@ namespace Alterverse.Visuals
         private void LateUpdate()
         {
             if (Time.time - started < .1f) return;
+            if(!stoppedEmission&&Time.time-started>=emissionStopAfter)
+            {
+                // Stop only the scheduled emitters. A sub-emitter that is triggered by
+                // a parent particle's later death must remain available for that event.
+                foreach(var system in systems)
+                    if(system!=null&&system.main.playOnAwake)system.Stop(false,ParticleSystemStopBehavior.StopEmitting);
+                stoppedEmission=true;
+            }
             // Do not cut off delayed layers, sub-emitters or smoke tails with a slot timer.
             foreach (var system in systems)
                 if (system != null && system.gameObject.activeInHierarchy && system.IsAlive(true)) return;
