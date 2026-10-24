@@ -10,11 +10,13 @@ using UnityEngine;
 
 static partial class VfxRegression
 {
-    static readonly string[] EpicKeys={"Slash","HeavySlash","Claw","SwordImpact","Orb","Missile","Rune","Shield","Heal","Portal","Vortex","Water","Smoke","Nova","Punch","Impact","FireImpact","Spark","Fire","Muzzle","Jet","HeavyImpact","NatureMissile","NatureImpact","NatureNova","ArcaneMissile","MagicImpact","ShadowMissile","FireNova"};
+    static readonly string[] EpicKeys={"Slash","HeavySlash","Claw","SwordImpact","Orb","Missile","Rune","Shield","Heal","Portal","Vortex","Water","Smoke","Nova","Punch","Impact","FireImpact","Spark","Fire","Muzzle","Jet","HeavyImpact","NatureMissile","NatureImpact","NatureNova","ArcaneMissile","MagicImpact","ShadowMissile","FireNova","BladeWave","SharpBolt","LeafDart","SpinStrike"};
     static EpicVfxLibrary TestLibrary()
     {
         var library=ScriptableObject.CreateInstance<EpicVfxLibrary>();
-        library.entries=EpicKeys.Select(key=>new EpicVfxLibrary.Entry{key=key,prefab=new GameObject("fixture_"+key),scale=.5f,nativeSeconds=1}).ToArray();
+        library.entries=EpicKeys.Concat(EpicVfxLibrary.AbilityLooks.Where(l=>l.Source!="ExactBeam").Select(l=>l.Key))
+            .Concat(EpicVfxLibrary.AbilityLooks.SelectMany(l=>new[]{l.Key+"_Cast",l.Key+"_Hit"}))
+            .Select(key=>new EpicVfxLibrary.Entry{key=key,prefab=new GameObject("fixture_"+key),scale=.5f,nativeSeconds=1}).ToArray();
         library.beamMaterial=new Material(new Shader{name="DimensionsFront/EpicParticles"});return library;
     }
     static object Field(object value,string field)=>value.GetType().GetField(field,BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance).GetValue(value);
@@ -28,7 +30,7 @@ static partial class VfxRegression
     {
         foreach(HeroId id in Enum.GetValues(typeof(HeroId)))foreach(int action in new[]{-1,0,1,2,3})
         {
-            if(id==HeroId.Nerok)continue; // Explicit user exception: all original Nerok visuals stay.
+            if(id==HeroId.Nerok||id==HeroId.Timmy)continue; // Explicit original-look exceptions.
             EpicReset();var actor=Hero(id,0);var target=Hero(HeroId.Kaelon,1);target.transform.position=Vector3.forward*3;
             float hp=target.GetComponent<Health>().Current;
             if(action<0)HeroSkillVfx.Basic(actor,target.transform.position,.4f,target.transform);
@@ -89,9 +91,9 @@ static partial class VfxRegression
         Resources.EpicLibrary=TestLibrary();
         foreach(HeroId id in Enum.GetValues(typeof(HeroId)))for(int action=-1;action<4;action++)
         {
-            if(id==HeroId.Nerok)
+            if(id==HeroId.Nerok||id==HeroId.Timmy)
             {
-                Console.WriteLine("CHECKLIST|"+HeroIdentity.NameFor(id)+"|"+(action<0?"Basisangriff":HeroAbilityKit.LoadoutFor(id).Spec(action).Name)+"|"+AimingSettings.Current.For(id,action).aimType+"|Original unveraendert|Nerok-Ausnahme");
+                Console.WriteLine("CHECKLIST|"+HeroIdentity.NameFor(id)+"|"+(action<0?"Basisangriff":HeroAbilityKit.LoadoutFor(id).Spec(action).Name)+"|"+AimingSettings.Current.For(id,action).aimType+"|Original unveraendert|Original-Ausnahme");
                 continue;
             }
             var keys=new HashSet<string>();int samples=0;
@@ -120,6 +122,9 @@ static partial class VfxRegression
             try{Scenario(id,action,false,60,true);}
             finally{ObserveFrame=null;}
             Check(samples>0&&keys.Count>0,"Every real basic/Q/W/E/ultimate has a new effect "+id+action);
+            var look=EpicVfxLibrary.FindLook(id.ToString(),action);
+            Check(look!=null&&(keys.Contains(look.Source=="ExactBeam"?"ExactBeam":look.Key)||keys.Any(k=>k.StartsWith(look.Key+"_"))),
+                "Actual action uses its own visual concept "+id+action+" expected="+look?.Key+" observed="+string.Join(",",keys));
             Console.WriteLine("CHECKLIST|"+HeroIdentity.NameFor(id)+"|"+(action<0?"Basisangriff":HeroAbilityKit.LoadoutFor(id).Spec(action).Name)+"|"+AimingSettings.Current.For(id,action).aimType+"|"+string.Join(", ",keys.OrderBy(k=>k))+"|Code geprueft; Unity-Sichttest offen");
         }
     }
@@ -170,9 +175,50 @@ static partial class VfxRegression
     }
     static void EpicToonChecks()
     {
-        ExclusiveReplacement();ParticleLifecycle();RenderingParity();RealActionChecklist();NerokPreservation();BackendAvailability();
+        ExclusiveReplacement();ParticleLifecycle();RenderingParity();RealActionChecklist();NerokPreservation();TimmyPreservation();BackendAvailability();PresentationScaleAndContext();
         EpicReset();var actor=Hero(HeroId.Veyr,0);
         Check(!actor.AddComponent<HeroAbilityReadabilityBoost>().enabled&&!actor.AddComponent<HeroAttackReadabilityPresentation>().enabled,"Legacy cooldown observers cannot add duplicate attacks");
         Resources.EpicLibrary=null;
+    }
+    static void TimmyPreservation()
+    {
+        EpicReset();var actor=Hero(HeroId.Timmy,0);HeroSkillVfx.Basic(actor,Vector3.forward);
+        var slots=LiveSlots();
+        Check(slots.Count(s=>(HeroFxShape)Field(s,"Shape")==HeroFxShape.Claw&&
+            (HeroFxMotion)Field(s,"Motion")==HeroFxMotion.Sweep)==3&&slots.All(s=>Field(s,"Epic")==null),
+            "Timmy's exact original three sweeping claw cuts are restored");
+        Check(actor.AddComponent<HeroAbilityReadabilityBoost>().enabled&&actor.AddComponent<HeroAttackReadabilityPresentation>().enabled,
+            "Timmy retains his original presentation observers");
+        EpicReset();actor=Hero(HeroId.Timmy,0);
+        HeroSkillVfx.TimmyEffect(actor,3,Vector3.zero,Vector3.forward*3,0,.4f,relay:false);
+        slots=LiveSlots();Check(slots.All(s=>Field(s,"Epic")==null&&!(bool)Field(s,"EpicBeam")),
+            "Direct/replayed Timmy jump uses only original visual layers");
+        Check(slots.Count(s=>(HeroFxShape)Field(s,"Shape")==HeroFxShape.Claw)==3,
+            "Original Scratch retains all three attached claws");
+    }
+    static void PresentationScaleAndContext()
+    {
+        EpicReset();var actor=Hero(HeroId.Veyr,0);
+        HeroSkillVfx.Basic(actor,Vector3.forward);var visual=Field(LiveSlots().Single(),"Epic");
+        Check(Mathf.Abs(((GameObject)Field(visual,"Root")).transform.localScale.x-1.5f)<.001f,
+            "new particles are three times their previous library scale");
+        EpicReset();actor=Hero(HeroId.Nyra,0);
+        HeroVfxPool.Emit(HeroFxShape.Laser,Vector3.zero,Vector3.forward*4,new Vector3(.2f,.2f,1),Color.white,.4f,HeroFxMotion.LaserBeam,owner:actor);
+        var beam=LiveSlots().Single();var mesh=((MeshFilter)Field(beam,"Filter")).sharedMesh;
+        Check(Mathf.Abs(mesh.Vertices.Max(v=>Mathf.Abs(v.x))-.72f)<.001f&&mesh.Vertices.Min(v=>v.z)==0&&mesh.Vertices.Max(v=>v.z)==1,
+            "beam width grows by 200 percent while authored endpoints remain exact");
+        int published=0;Action<HeroVfxEvent> onCue=_=>published++;HeroVfxEvents.Emitted+=onCue;
+        try
+        {
+            using(var outer=HeroVfxEvents.Begin(HeroVfxCue.Basic,actor))
+            {
+                using(var inner=HeroVfxEvents.UseAbility(actor,3,HeroVfxCue.Spell))
+                    Check(HeroVfxEvents.AbilitySlot==3,"local signature context selects its ability");
+                Check(HeroVfxEvents.AbilitySlot==-1&&HeroVfxEvents.AbilityCue==HeroVfxCue.Basic,
+                    "nested local signature restores the outer action context");
+            }
+            Check(published==1&&HeroVfxEvents.AbilityActor==null,"local signature selection never emits an extra network cue");
+        }
+        finally{HeroVfxEvents.Emitted-=onCue;}
     }
 }

@@ -11,6 +11,7 @@ namespace Alterverse.Visuals
         public static void VoidKnightField(GameObject actor,Vector3 direction,float range,float seconds,bool warning,bool thrust=false,bool relay=true,float elapsed=0,Vector3? fixedOrigin=null)
         {
             if(actor==null||actor.GetComponent<Alterverse.Characters.HeroIdentity>()?.Hero!=Alterverse.Characters.HeroId.VoidKnight)return;
+            using var style=HeroVfxEvents.UseAbility(actor,thrust?2:warning?0:3,HeroVfxCue.Spell);
             Color color=StylizedArtDirection.HeroAccent(Alterverse.Characters.HeroId.VoidKnight);Vector3 origin=Ground(fixedOrigin??actor.transform.position);
             direction=Alterverse.Combat.AimGeometry.Direction(direction);
             if(relay)Alterverse.Multiplayer.CoopHeroStateSync.BroadcastVoidKnightEffect(actor,thrust?2:warning?0:1,origin,origin+direction,range,seconds);

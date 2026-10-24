@@ -35,21 +35,36 @@ namespace Alterverse.Visuals
         internal static bool InsideSemanticEffect=>depth>0;
         internal static float ReplayElapsed=>replaying>0?replayElapsed:0f;
         internal static Vector3? ReplayOrigin=>replaying>0?replayOrigin:null;
+        internal static GameObject AbilityActor {get;private set;}
+        internal static int AbilitySlot {get;private set;}=-1;
+        internal static HeroVfxCue AbilityCue {get;private set;}
+        internal readonly struct AbilityScope:IDisposable
+        {
+            private readonly GameObject previousActor;private readonly int previousSlot;private readonly HeroVfxCue previousCue;
+            internal AbilityScope(GameObject actor,int slot,HeroVfxCue cue){previousActor=actor;previousSlot=slot;previousCue=cue;}
+            public void Dispose(){AbilityActor=previousActor;AbilitySlot=previousSlot;AbilityCue=previousCue;}
+        }
+        // Local presentation context only; does not publish or alter network events.
+        internal static AbilityScope UseAbility(GameObject actor,int slot,HeroVfxCue? cue=null)
+        {var scope=new AbilityScope(AbilityActor,AbilitySlot,AbilityCue);AbilityActor=actor;AbilitySlot=slot;AbilityCue=cue??AbilityCue;return scope;}
 
         internal readonly struct Scope:IDisposable
         {
-            public void Dispose(){depth=Math.Max(0,depth-1);}
+            private readonly AbilityScope ability;
+            internal Scope(AbilityScope value){ability=value;}
+            public void Dispose(){depth=Math.Max(0,depth-1);ability.Dispose();}
         }
         internal static Scope Begin(HeroVfxCue cue,GameObject actor,Vector3 point=default,int slot=-1,
             float duration=0,float radius=0,GameObject target=null,bool flag=false,bool secondary=false,Vector3? origin=null)
         {
             depth++;
+            var scope=new Scope(UseAbility(actor,slot,cue));
             if(depth==1&&replaying==0&&actor!=null)
             {
                 try {Emitted?.Invoke(new HeroVfxEvent(cue,actor,point,slot,duration,radius,target,flag,secondary,origin));}
                 catch(Exception ex){Debug.LogWarning("DIMENSIONS FRONT VFX: event publication failed: "+ex.Message);}
             }
-            return new Scope();
+            return scope;
         }
         internal readonly struct ReplayScope:IDisposable
         {
@@ -66,4 +81,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

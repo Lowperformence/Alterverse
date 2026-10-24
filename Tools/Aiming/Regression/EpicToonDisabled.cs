@@ -6,6 +6,8 @@ namespace Alterverse.Visuals
 {
     public sealed partial class HeroVfxPool
     {
+        internal readonly struct OriginalScope:System.IDisposable {public void Dispose(){}}
+        internal static OriginalScope PreserveNerokOriginal()=>new();
         private sealed class EpicVisual {}
         private object epicLibrary;
         private Mesh epicBeam,epicTrace;

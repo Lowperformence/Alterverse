@@ -13,7 +13,8 @@ static class Regression
     static EpicVfxLibrary Setup()
     {
         var sources=((string key,string path,float scale)[])typeof(EpicToonReplacementBuilder).GetField("Sources",BindingFlags.NonPublic|BindingFlags.Static).GetValue(null);
-        var library=new EpicVfxLibrary{sourceVersion=EpicVfxLibrary.CurrentVersion,beamMaterial=Valid(),entries=sources.Select(s=>new EpicVfxLibrary.Entry{key=s.key,prefab=new GameObject()}).ToArray()};
+        var keys=sources.Select(s=>s.key).Concat(EpicVfxLibrary.AbilityLooks.Where(l=>l.Source!="ExactBeam").Select(l=>l.Key)).Concat(EpicVfxLibrary.AbilityLooks.SelectMany(l=>new[]{l.Key+"_Cast",l.Key+"_Hit"}));
+        var library=new EpicVfxLibrary{sourceVersion=EpicVfxLibrary.CurrentVersion,beamMaterial=Valid(),entries=keys.Select(key=>new EpicVfxLibrary.Entry{key=key,prefab=new GameObject()}).ToArray()};
         foreach(var entry in library.entries)entry.prefab.Add<MeshRenderer>().sharedMaterials=new[]{Valid()};
         AssetDatabase.Assets["Assets/Alterverse/Resources/CombatVfx/EpicToon/Library.asset"]=library;
         return library;
@@ -73,15 +74,46 @@ static class Regression
                 entry.key+" authored geometry and orientation unchanged");
         }
     }
+    static void AbilityBuildCases()
+    {
+        var library=Setup();var profiles=EpicVfxLibrary.AbilityLooks;
+        Check(profiles.Length==40&&profiles.Select(p=>p.Key).Distinct().Count()==40,"40 unique attack concepts");
+        Check(profiles.All(p=>p.Hero!="Timmy"&&p.Hero!="Nerok"),"original heroes are excluded from generated concepts");
+        var entries=library.entries.Where(e=>!profiles.Any(p=>e.key.StartsWith(p.Key))).ToList();
+        foreach(var entry in entries)for(int i=0;i<5;i++)
+        {var child=new GameObject();child.transform.SetParent(entry.prefab.transform,false);child.Add<ParticleSystem>().main.maxParticles=18;}
+        typeof(EpicToonReplacementBuilder).GetMethod("BuildAbilityLooks",BindingFlags.NonPublic|BindingFlags.Static)
+            .Invoke(null,new object[]{entries});library.entries=entries.ToArray();
+        Check(entries.Count==152,"33 source families and 119 per-attack phase compositions are generated");
+        EpicToonReplacementBuilder.Validate();checks++;
+        foreach(var look in profiles)
+        {
+            Check(library.Find(look.Key+"_Cast")!=null&&library.Find(look.Key+"_Hit")!=null,
+                look.Key+" owns preparation and hit variants");
+            if(look.Source!="ExactBeam")
+                Check(library.Find(look.Key)!=null,look.Key+" owns a primary composition");
+            if(look.Slot==3)Check(look.Emphasis>1,"ultimate has increased visual emphasis: "+look.Key);
+        }
+        foreach(var entry in entries.Skip(33))
+        {
+            var systems=entry.prefab.GetComponentsInChildren<ParticleSystem>(true);
+            Check(systems.Length>0&&systems.Sum(p=>p.main.maxParticles)<=96,entry.key+" full composition stays within 96 particles");
+        }
+        Check(entries.Take(33).All(e=>e.prefab.GetComponentsInChildren<ParticleSystem>(true).All(p=>p.main.maxParticles==18)),
+            "signature capping never mutates shared source systems");
+        library.Find(profiles[0].Key+"_Hit").prefab=null;
+        Reject("Missing Epic ability concept","missing per-attack hit composition blocks client setup");
+    }
     static void EmissionCases()
     {
         // Exact distance-only rates of all eight systems in the two uploaded sources.
         foreach(var item in new[]{("Fire",2f),("Fire",2f),("Fire",6f),("Fire",4f),
-            ("ShadowMissile",2f),("ShadowMissile",4f),("ShadowMissile",3f),("ShadowMissile",7f)})
+            ("ShadowMissile",2f),("ShadowMissile",4f),("ShadowMissile",3f),("ShadowMissile",7f),
+            ("Missile",4f),("NatureMissile",4f),("ArcaneMissile",4f),("SharpBolt",4f)})
         {
             var ps=new ParticleSystem();ps.emission.rateOverDistance=item.Item2;Convert(item.Item1,ps);
             Check(ps.emission.rateOverTime.constantMax>0&&ps.emission.rateOverTime.constantMax<=48&&
-                ps.emission.rateOverDistance.constantMax==0&&ps.emission.burstCount==1&&
+                ps.emission.rateOverDistance.constantMax==0&&ps.main.simulationSpace==ParticleSystemSimulationSpace.World&&ps.emission.burstCount==1&&
                 ps.emission.bursts[0].time==0&&ps.emission.bursts[0].minCount==1,
                 item.Item1+" distance-only source starts without travel and cannot emit twice with movement");
             Convert(item.Item1,ps);Check(ps.emission.burstCount==1,"reapplying conversion does not stack a birth burst");
@@ -112,7 +144,7 @@ static class Regression
     static void Main()
     {
         Setup();Accept("all converted primary materials");
-        foreach(string version in new[]{"2","3"})
+        foreach(string version in new[]{"2","3","4"})
         {var stale=Setup();stale.sourceVersion="Epic Toon FX user import; DF replacement "+version;
         Reject("Build the Epic Toon","version "+version+" must rebuild before visibility review");}
         var library=Setup();Smoke(library);Accept("Smoke's unused empty trail slot with trails disabled");
@@ -126,6 +158,7 @@ static class Regression
         library=Setup();library.Find("Smoke").prefab=null;Reject("Missing Epic VFX","missing effect remains blocked");
         EmissionCases();
         OrientationCases();
+        AbilityBuildCases();
         Console.WriteLine("PASS "+checks+" production editor checks (controlled Unity adapters; no native prefab import)");
     }
 }

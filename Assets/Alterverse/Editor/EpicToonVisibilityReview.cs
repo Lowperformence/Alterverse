@@ -19,7 +19,7 @@ namespace Alterverse.Editor
         private static bool queued;
         [Serializable] private sealed class Result
         {
-            public string key,image;public int peakParticles,visiblePixels;public bool shaderSupported,passed;
+            public string key,image,hero,action,phase;public int peakParticles,visiblePixels;public bool shaderSupported,passed;
         }
         [Serializable] private sealed class Report
         {
@@ -69,9 +69,9 @@ namespace Alterverse.Editor
                 }
                 sheet.Apply(false,false);File.WriteAllBytes(Path.Combine(directory,"contact-sheet.png"),sheet.EncodeToPNG());
                 var report=new Report{unityVersion=Application.unityVersion,graphicsDevice=SystemInfo.graphicsDeviceType.ToString(),
-                    libraryVersion=library.sourceVersion,note="Native isolated prefab visibility only. Representative colours; actual ability/camera alignment, warning radius and Android performance still need acceptance. Nerok remains unchanged.",results=results.ToArray()};
+                    libraryVersion=library.sourceVersion,note="Native isolated prefab visibility only. Representative colours; actual ability/camera alignment, warning radius and Android performance still need acceptance. Nerok and Timmy retain their original visuals.",results=results.ToArray()};
                 File.WriteAllText(Path.Combine(directory,"report.json"),JsonUtility.ToJson(report,true));
-                var html=new System.Text.StringBuilder("<!doctype html><meta charset='utf-8'><title>Epic VFX review</title><style>body{background:#111;color:#eee;font:16px sans-serif}main{display:flex;flex-wrap:wrap;gap:12px}figure{margin:0;padding:10px;background:#222}img{width:160px;height:160px}small{display:block}</style><h1>Epic VFX native review</h1><p>Isolated source prefabs. Representative colours; real attacks and Android still need review. Nerok is excluded.</p><main>");
+                var html=new System.Text.StringBuilder("<!doctype html><meta charset='utf-8'><title>Epic VFX review</title><style>body{background:#111;color:#eee;font:16px sans-serif}main{display:flex;flex-wrap:wrap;gap:12px}figure{margin:0;padding:10px;background:#222}img{width:160px;height:160px}small{display:block}</style><h1>Epic VFX native review</h1><p>Isolated source and attack compositions. Representative colours; combat/camera and Android still need review. Nerok and Timmy are excluded.</p><main>");
                 foreach(var result in results)html.Append("<figure><img src='").Append(result.image).Append("'><figcaption>").Append(result.key).Append(result.passed?" — PASS":" — FAIL").Append("</figcaption><small>Particles: ").Append(result.peakParticles).Append(" / pixels: ").Append(result.visiblePixels).Append("</small></figure>");
                 File.WriteAllText(Path.Combine(directory,"index.html"),html.Append("</main>").ToString());
                 Debug.Log("DF: native VFX visibility review "+(results.Count-failed)+"/"+results.Count+" passed. Report and PNG previews: "+directory+"\n"+summary);
@@ -83,13 +83,15 @@ namespace Alterverse.Editor
         {
             var preview=new PreviewRenderUtility();Texture2D best=null;
             var result=new Result{key=entry.key,image=entry.key+".png",shaderSupported=true};
+            var look=EpicVfxLibrary.FindLookByKey(entry.key);
+            if(look!=null){result.hero=look.Hero;result.action=look.Name;result.phase=entry.key.EndsWith("_Cast")?"preparation":entry.key.EndsWith("_Hit")?"hit":"main";}
             try
             {
                 var root=Object.Instantiate(entry.prefab);preview.AddSingleGO(root);
                 root.transform.position=Vector3.zero;root.transform.rotation=Quaternion.identity;
-                root.transform.localScale=Vector3.one*entry.scale;root.SetActive(true);
+                root.transform.localScale=Vector3.one*(entry.scale*EpicVfxLibrary.VisualScaleMultiplier);root.SetActive(true);
                 var camera=preview.camera;camera.clearFlags=CameraClearFlags.SolidColor;
-                camera.backgroundColor=new Color(0,0,0,1);camera.orthographic=true;camera.orthographicSize=4;
+                camera.backgroundColor=new Color(0,0,0,1);camera.orthographic=true;camera.orthographicSize=8;
                 camera.nearClipPlane=.01f;camera.farClipPlane=100;camera.allowHDR=false;
                 camera.transform.position=new Vector3(0,5,-8);camera.transform.LookAt(Vector3.zero);
                 var tint=new MaterialPropertyBlock();tint.SetColor(Shader.PropertyToID("_Tint"),PreviewTint(entry.key));
@@ -124,7 +126,8 @@ namespace Alterverse.Editor
                     else Object.DestroyImmediate(frame);
                 }
                 // A few sparkle pixels must not hide an edge-on, unreadable portal disc.
-                int minimumPixels=entry.key=="Portal"||entry.key=="Vortex"?24:3;
+                string source=look?.Source??entry.key;
+                int minimumPixels=source=="Portal"||source=="Vortex"?24:3;
                 result.passed=result.shaderSupported&&result.peakParticles>0&&result.visiblePixels>=minimumPixels;
                 if(best!=null)
                 {
@@ -143,15 +146,28 @@ namespace Alterverse.Editor
             finally{frame=preview.EndStaticPreview();}
             return frame;
         }
-        private static Color PreviewTint(string key)=>key switch
+        private static Color PreviewTint(string key)
         {
+            var look=EpicVfxLibrary.FindLookByKey(key);
+            if(look!=null)return look.Hero switch
+            {
+                "Kaelon"=>look.Slot==0?new Color(.68f,.20f,1f):look.Slot==2?new Color(.08f,.46f,1f):new Color(1f,.84f,.06f),
+                "Nyra"=>look.Slot==0?new Color(.06f,.38f,1f):look.Slot==2?Color.white:look.Slot==3?new Color(1f,.045f,.025f):new Color(.30f,.85f,1f),
+                "Mira"=>look.Slot==1||look.Slot==2?new Color(.22f,1f,.52f):new Color(1f,.72f,.28f),
+                "Rook"=>new Color(1f,.38f,.09f),
+                "Traveler"=>look.Slot==3?Color.white:look.Slot==0||look.Slot==1?new Color(1f,.82f,.08f):new Color(.64f,.24f,1f),
+                _=>new Color(.76f,.24f,1f)
+            };
+            return key switch
+            {
             "Heal"=>new Color(.22f,1f,.52f),
             "NatureMissile" or "NatureImpact" or "NatureNova" or "Nova" or "Orb" or "HeavyImpact"=>new Color(1f,.72f,.28f),
             "Fire" or "FireImpact" or "FireNova" or "Punch"=>new Color(1f,.38f,.09f),
             "Claw" or "Jet" or "Smoke" or "Water" or "Vortex" or "Shield"=>new Color(.30f,.85f,1f),
             "Missile" or "Muzzle"=>new Color(.06f,.38f,1f),
-            _=>new Color(.76f,.24f,1f)
-        };
+                _=>new Color(.76f,.24f,1f)
+            };
+        }
     }
 }
 #endif

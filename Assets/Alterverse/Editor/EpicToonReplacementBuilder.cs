@@ -33,7 +33,7 @@ namespace Alterverse.Editor
             ("Water","Environment/Water/Flowing/Soft/WaterSplashTinySoft.prefab",.55f),
             ("Smoke","Environment/Smoke/White/SmokeBurstWhiteSoft.prefab",.45f),
             ("Nova","Combat/Magic/Nova/MagicNovaBlue.prefab",.5f),
-            ("Punch","Combat/Brawling/Soft/Directional/SoftPunchHeavy.prefab",.4f),
+            ("Punch","Combat/Brawling/Toon/Directional/ToonPunchHeavy.prefab",.4f),
             ("HeavyImpact","Combat/Brawling/RoundHit/RoundHitYellow.prefab",.4f),
             ("NatureMissile","Combat/Missiles/MagicSoft/MagicMissileSoftGreen.prefab",.4f),
             ("NatureImpact","Environment/Weather/Wind & Leaves/LeafExplosion.prefab",.4f),
@@ -47,7 +47,11 @@ namespace Alterverse.Editor
             ("Spark","Combat/Explosions (Misc)/SparkExplosion.prefab",.3f),
             ("Fire","Combat/Missiles/Fireball/FireballMissileFire.prefab",.4f),
             ("Muzzle","Combat/Muzzleflash/MagicMuzzle/MagicMuzzleBlue.prefab",.3f),
-            ("Jet","Combat/Flamethrower/Soft/Additive/FlamethrowerAdditiveBlue.prefab",.25f)
+            ("Jet","Combat/Flamethrower/Soft/Additive/FlamethrowerAdditiveBlue.prefab",.25f),
+            ("BladeWave","Combat/Sword/Wave/SwordWaveWhite.prefab",.45f),
+            ("SharpBolt","Combat/Missiles/Sharp/SharpMissileBlue.prefab",.4f),
+            ("LeafDart","Combat/Missiles/Sharp/SharpMissileGreen.prefab",.4f),
+            ("SpinStrike","Combat/Sword/Spin/SwordSpinWhite.prefab",.45f)
         };
         [InitializeOnLoadMethod]
         private static void RegisterInitialBuild() { EditorApplication.delayCall+=BuildIfMissing; }
@@ -109,7 +113,7 @@ namespace Alterverse.Editor
                             Object.DestroyImmediate(component);
                     float nativeSeconds=.1f;
                     var systems=go.GetComponentsInChildren<ParticleSystem>(true);
-                    int perSystem=Mathf.Max(8,96/Mathf.Max(1,systems.Length));
+                    int perSystem=Mathf.Max(1,96/Mathf.Max(1,systems.Length));
                     foreach(var ps in systems)
                     {
                         ps.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -166,6 +170,7 @@ namespace Alterverse.Editor
                 }
                 finally{Object.DestroyImmediate(wrapper);}
             }
+            BuildAbilityLooks(entries);
             var beam=AssetDatabase.LoadAssetAtPath<Material>(Output+"/Materials/ExactBeam.mat");
             bool newBeam=beam==null;if(newBeam)beam=new Material(shader);else beam.shader=shader;
             beam.name="DF_EpicExactBeam";beam.SetTexture("_MainTex",AssetDatabase.LoadAssetAtPath<Texture2D>(Source+"Textures/gradient_horizontal.png"));
@@ -176,7 +181,68 @@ namespace Alterverse.Editor
             library.entries=entries.ToArray();library.beamMaterial=beam;library.sourceVersion=EpicVfxLibrary.CurrentVersion;
             if(createLibrary)AssetDatabase.CreateAsset(library,Output+"/Library.asset");else EditorUtility.SetDirty(library);
             AssetDatabase.SaveAssets();AssetDatabase.Refresh();Validate();EpicToonVisibilityReview.Schedule();
-            Debug.Log("DF: Epic Toon replacement built. "+Sources.Length+" effect families; Nerok is excluded. Run Test Epic Toon emission, then review the hero checklist in Play Mode.");
+            Debug.Log("DF: Epic Toon replacement built. "+entries.Count+" templates for 40 individual attack concepts; Nerok and Timmy retain their original visuals. Review the hero checklist in Play Mode.");
+        }
+        private static void BuildAbilityLooks(List<EpicVfxLibrary.Entry> entries)
+        {
+            var families=new Dictionary<string,EpicVfxLibrary.Entry>();
+            foreach(var entry in entries)families.Add(entry.key,entry);
+            foreach(var look in EpicVfxLibrary.AbilityLooks)
+            {
+                foreach(var variant in new[]{
+                    (key:look.Key,source:look.Source,layout:look.Layout,accent:look.Accent,scale:1f),
+                    (key:look.Key+"_Cast",source:look.CastSource,layout:look.Slot==3?EpicVfxLibrary.Formation.Crown:look.Layout,accent:(string)null,scale:.55f),
+                    (key:look.Key+"_Hit",source:look.HitSource,layout:look.Slot==3?EpicVfxLibrary.Formation.Fan:EpicVfxLibrary.Formation.Single,accent:(string)null,scale:.70f)})
+                {
+                    if(variant.source=="ExactBeam")continue;
+                    var source=families[variant.source];var wrapper=new GameObject("DF_"+variant.key);
+                    try
+                    {
+                        int count=variant.layout==EpicVfxLibrary.Formation.Single?1:
+                            variant.layout==EpicVfxLibrary.Formation.Crown?4:
+                            variant.layout==EpicVfxLibrary.Formation.Fan||variant.layout==EpicVfxLibrary.Formation.Orbit?3:2;
+                        for(int i=0;i<count;i++)
+                        {
+                            var part=Object.Instantiate(source.prefab,wrapper.transform,false);
+                            part.name=look.Name+"_"+i;float centered=i-(count-1)*.5f;
+                            switch(variant.layout)
+                            {
+                                case EpicVfxLibrary.Formation.Cross:
+                                    part.transform.localRotation=Quaternion.Euler(0,centered*64f,0);
+                                    part.transform.localPosition=variant.source=="Portal"?Vector3.right*(centered*.8f):Vector3.up*(i*.025f);break;
+                                case EpicVfxLibrary.Formation.Parallel:
+                                    part.transform.localPosition=Vector3.right*(centered*.55f);break;
+                                case EpicVfxLibrary.Formation.Fan:
+                                    part.transform.localPosition=Vector3.right*(centered*.18f);
+                                    part.transform.localRotation=Quaternion.Euler(0,centered*22f,0);break;
+                                case EpicVfxLibrary.Formation.Eight:
+                                    part.transform.localPosition=Vector3.forward*(centered*2f);break;
+                                case EpicVfxLibrary.Formation.Crown:
+                                case EpicVfxLibrary.Formation.Orbit:
+                                    float angle=i*Mathf.PI*2/count;
+                                    part.transform.localPosition=new Vector3(Mathf.Cos(angle)*.7f,0,Mathf.Sin(angle)*.7f);
+                                    part.transform.localRotation=Quaternion.Euler(0,i*360f/count,0);break;
+                            }
+                        }
+                        float seconds=source.nativeSeconds;
+                        if(variant.accent!=null)
+                        {
+                            var accent=families[variant.accent];
+                            var part=Object.Instantiate(accent.prefab,wrapper.transform,false);part.name=look.Name+"_accent";
+                            part.transform.localScale=Vector3.one*(.48f*accent.scale/source.scale);
+                            part.transform.localPosition=Vector3.up*.03f;seconds=Mathf.Max(seconds,accent.nativeSeconds);
+                        }
+                        // A complete signature is ONE pooled composition, including all its
+                        // native layers. More cuts/runes never multiply the 96-particle budget.
+                        var systems=wrapper.GetComponentsInChildren<ParticleSystem>(true);
+                        int cap=Mathf.Max(1,96/Mathf.Max(1,systems.Length));
+                        foreach(var system in systems){var main=system.main;main.maxParticles=Mathf.Min(main.maxParticles,cap);}
+                        var prefab=PrefabUtility.SaveAsPrefabAsset(wrapper,Output+"/Prefabs/"+variant.key+".prefab");
+                        entries.Add(new EpicVfxLibrary.Entry{key=variant.key,prefab=prefab,scale=source.scale*look.Emphasis*variant.scale,nativeSeconds=seconds});
+                    }
+                    finally{Object.DestroyImmediate(wrapper);}
+                }
+            }
         }
         private static void PreparePortalGeometry(string key,GameObject source)
         {
@@ -201,15 +267,17 @@ namespace Alterverse.Editor
         {
             var emission=system.emission;if(!emission.enabled)return;
             bool seed=false;
-            if((key=="ShadowMissile"||key=="Fire")&&
-                emission.rateOverTime.constantMax<=0f&&emission.rateOverDistance.constantMax>0f)
+            if(emission.rateOverTime.constantMax<=0f&&emission.rateOverDistance.constantMax>0f)
             {
-                // These purchased trails emit ONLY when their transform moves. The combat
+                // Purchased missile tails emit ONLY when their transform moves. The combat
                 // pool advances local particles with a manual clock, including stationary
                 // first frames and held rifts. Use bounded time emission on the cloned asset
                 // and remove distance emission so movement cannot double the particle rate.
                 emission.rateOverTime=Mathf.Clamp(emission.rateOverDistance.constantMax*8f,8f,48f);
                 emission.rateOverDistance=0f;seed=true;
+                // A trail must remain behind the moving projectile. Local space would
+                // drag every emitted particle along with its head and collapse it to a ball.
+                var main=system.main;main.simulationSpace=ParticleSystemSimulationSpace.World;
             }
             if((key=="Portal"||key=="Vortex")&&
                 emission.rateOverTime.constantMax>0f&&emission.rateOverTime.constantMax<=2f)
@@ -231,14 +299,22 @@ namespace Alterverse.Editor
             {
                 var entry=library.Find(source.key);
                 if(entry==null||entry.prefab==null)throw new BuildFailedException("Missing Epic VFX: "+source.key);
+            }
+            foreach(var look in EpicVfxLibrary.AbilityLooks)
+                foreach(var key in new[]{look.Source=="ExactBeam"?null:look.Key,look.Key+"_Cast",look.Key+"_Hit"})
+                    if(key!=null&&(library.Find(key)==null||library.Find(key).prefab==null))
+                        throw new BuildFailedException("Missing Epic ability concept: "+key);
+            foreach(var entry in library.entries)
+            {
+                if(entry==null||entry.prefab==null)throw new BuildFailedException("Empty Epic VFX entry");
                 foreach(var component in entry.prefab.GetComponentsInChildren<Component>(true))
                     if(component==null||!(component is Transform||component is ParticleSystem||component is Renderer||component is MeshFilter))
-                        throw new BuildFailedException("Non-visual component in Epic VFX: "+source.key);
+                        throw new BuildFailedException("Non-visual component in Epic VFX: "+entry.key);
                 foreach(var renderer in entry.prefab.GetComponentsInChildren<Renderer>(true))
                 {
                     var rendererMaterials=renderer.sharedMaterials;
                     if(rendererMaterials.Length==0||rendererMaterials[0]==null)
-                        throw new BuildFailedException("Missing primary Epic VFX material: "+source.key+" / "+renderer.name);
+                        throw new BuildFailedException("Missing primary Epic VFX material: "+entry.key+" / "+renderer.name);
                     var system=renderer is ParticleSystemRenderer?renderer.GetComponent<ParticleSystem>():null;
                     for(int i=0;i<rendererMaterials.Length;i++)
                     {
@@ -248,7 +324,7 @@ namespace Alterverse.Editor
                         // Only this unused slot may be empty; visible particles/trails must validate.
                         if(material==null&&i==1&&system!=null&&!system.trails.enabled)continue;
                         if(material==null||material.shader==null||material.shader.name!="DimensionsFront/EpicParticles")
-                            throw new BuildFailedException("Unconverted Epic VFX material: "+source.key+" / "+renderer.name+" ["+i+"]");
+                            throw new BuildFailedException("Unconverted Epic VFX material: "+entry.key+" / "+renderer.name+" ["+i+"]");
                     }
                 }
             }

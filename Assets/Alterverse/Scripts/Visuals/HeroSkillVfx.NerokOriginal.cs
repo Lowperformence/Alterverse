@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Alterverse.Visuals
 {
     // Frozen presentation snapshot from dev/vertical-slice before the Epic replacement.
-    // Routed ONLY for Nerok, per the user's explicit exception. Generic branches in this
+    // Routed ONLY for Nerok and Timmy, per the user's explicit exceptions. Branches in this
     // snapshot remain isolated so his colours, mesh layers, anchor, chain and ultimate
     // retain their original recipes. Damage/movement/network production code is untouched.
     public sealed partial class HeroSkillVfx

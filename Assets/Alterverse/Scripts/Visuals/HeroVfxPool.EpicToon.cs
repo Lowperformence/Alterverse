@@ -85,8 +85,8 @@ namespace Alterverse.Visuals
             slot.Epic=null;slot.EpicBeam=false;
             // Solid weapon/monster models and exact telegraphs retain their geometry.
             if(nerokOriginalDepth>0||slot.Warning||PhysicalShape(shape)||shape==HeroFxShape.Shield)return false;
-            // Nerok is explicitly excluded from this migration: his complete old presentation stays.
-            if(slot.Owner!=null&&slot.Owner.TryGetComponent(out HeroIdentity identity)&&identity.Hero==HeroId.Nerok)return false;
+            // Nerok and Timmy are excluded: their complete original presentation stays.
+            if(slot.Owner!=null&&slot.Owner.TryGetComponent(out HeroIdentity identity)&&(identity.Hero==HeroId.Nerok||identity.Hero==HeroId.Timmy))return false;
             if(epicLibrary==null)return false;
             if(shape==HeroFxShape.Laser||shape==HeroFxShape.MonsterBeam||
                 (shape==HeroFxShape.Bolt&&slot.Motion==HeroFxMotion.Hold))
@@ -98,6 +98,17 @@ namespace Alterverse.Visuals
                 return true;
             }
             string key=EpicKey(shape,slot.Sprite,slot.Owner,slot.Motion);
+            if(slot.Owner!=null&&slot.Owner==HeroVfxEvents.AbilityActor&&
+                slot.Owner.TryGetComponent(out HeroIdentity caster))
+            {
+                var look=EpicVfxLibrary.FindLook(caster.Hero.ToString(),HeroVfxEvents.AbilitySlot);
+                if(look!=null)
+                {
+                    string candidate=HeroVfxEvents.AbilityCue==HeroVfxCue.Cast?look.Key+"_Cast":
+                        HeroVfxEvents.AbilityCue==HeroVfxCue.Impact?look.Key+"_Hit":look.Trigger==key?look.Key:null;
+                    if(candidate!=null&&epicLibrary.Find(candidate)?.prefab!=null)key=candidate;
+                }
+            }
             var entry=epicLibrary.Find(key);
             if(entry==null||entry.prefab==null)return false;
             if(!epicFree.TryGetValue(key,out var free))epicFree.Add(key,free=new Stack<EpicVisual>());
@@ -128,7 +139,7 @@ namespace Alterverse.Visuals
             visual.Root.transform.SetParent(slot.Transform,false);
             visual.Root.transform.localPosition=Vector3.zero;
             visual.Root.transform.localRotation=Quaternion.identity;
-            visual.Root.transform.localScale=Vector3.one*visual.Scale;
+            visual.Root.transform.localScale=Vector3.one*(visual.Scale*EpicVfxLibrary.VisualScaleMultiplier);
             visual.Started=false;visual.LastAge=0;
             visual.Sustained=IsProjectile(slot)||slot.Motion==HeroFxMotion.Sustained||slot.Motion==HeroFxMotion.AttachedJet||slot.ShieldBound;
             foreach(var system in visual.Systems)
@@ -191,8 +202,8 @@ namespace Alterverse.Visuals
             for(int plane=0;plane<2;plane++)
             {
                 Vector3 side=plane==0?Vector3.right:Vector3.up;int n=vertices.Count;
-                vertices.Add(side*-.24f+Vector3.forward*start);vertices.Add(side*.24f+Vector3.forward*start);
-                vertices.Add(side*.24f+Vector3.forward*end);vertices.Add(side*-.24f+Vector3.forward*end);
+                vertices.Add(side*(-.24f*EpicVfxLibrary.VisualScaleMultiplier)+Vector3.forward*start);vertices.Add(side*(.24f*EpicVfxLibrary.VisualScaleMultiplier)+Vector3.forward*start);
+                vertices.Add(side*(.24f*EpicVfxLibrary.VisualScaleMultiplier)+Vector3.forward*end);vertices.Add(side*(-.24f*EpicVfxLibrary.VisualScaleMultiplier)+Vector3.forward*end);
                 uv.Add(new Vector2(0,0));uv.Add(new Vector2(1,0));uv.Add(new Vector2(1,1));uv.Add(new Vector2(0,1));
                 for(int i=0;i<4;i++)colors.Add(Color.white);
                 indices.AddRange(new[]{n,n+1,n+2,n,n+2,n+3});

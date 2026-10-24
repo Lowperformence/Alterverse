@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Exercise production material validation and emission conversion with Unity adapters.
-Does not execute prefab conversion, native rendering or shader compilation.
+"""Exercise production validation, emission conversion and ability composition with adapters.
+Does not execute native Unity import, particle simulation, rendering or shader compilation.
 """
 import argparse
 import json
@@ -30,10 +30,11 @@ def main():
         return source[start:end]
     # Compile the exact production method and its registry; only editor/engine dependencies
     # are replaced. No test-side copy of the validation policy.
-    validator = ('using Alterverse.Visuals;using UnityEngine;using UnityEditor;using UnityEditor.Build;'
+    validator = ('using System.Collections.Generic;using Alterverse.Visuals;using UnityEngine;using UnityEditor;using UnityEditor.Build;'
                  'namespace Alterverse.Editor {public sealed class EpicToonReplacementBuilder {'
                  + output + sources + method('public static void Validate()')
                  + method('private static void PreparePortalGeometry(')
+                 + method('private static void BuildAbilityLooks(')
                  + method('private static void PrepareManualEmission(') + '}}')
     dotnet = args.dotnet_root.resolve()
     refs = sorted((dotnet / 'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'))[-1]
