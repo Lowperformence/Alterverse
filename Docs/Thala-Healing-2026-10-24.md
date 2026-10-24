@@ -1,0 +1,13 @@
+# Thala Venn selected healing visuals
+
+Growth Veil (HeroId.Mira, slot 1) now uses the native small `Interactive/Healing/HealOnceBurst.prefab` on the actual healed recipient. Wildsurge (slot 3) uses the large `Interactive/Healing/HealNova.prefab` at its existing resolution center and live AoE radius. Individual recipients of Wildsurge also receive the small confirmation burst. There is one large central nova per area event, not one per ally.
+
+Both compositions use a 3.5 linear size multiplier: **250% larger**, not 250% total size. The single-target baseline horizontal radius is 0.45 m, giving a 1.575 m decorative footprint after enlargement. The large nova's geometry is enlarged by the same factor, with its fragment footprint still clipped at the authoritative ability radius (normally 5 m). This preserves the actual area even when native outer rings expand further.
+
+The selected native composition replaces previous healing layers before `PolishSupport` / `PolishArea`. Existing cast/link phases, the true-radius warning, shield effects, shield bar and original sounds remain. AudioSources, collision, particle lights and demo scripts are stripped from the prepared visual copies; original imported assets and game audio are not edited. Damage, healing, shields, cooldowns and targeting logic are unchanged.
+
+The Editor prepares the two purchased prefabs into `Resources/CombatVfx/ThalaHealing` after compilation, before Play and before builds. Manual command: `DIMENSIONS FRONT > VFX > Prepare Thala native healing only`. Source paths must exist under `Assets/Epic Toon FX`; errors report the actual missing path. Missing prepared resources keep the previous visible heal. Source selection never searches `2D Alternate` variants.
+
+Target presentation follows its healed recipient using cached renderers and a reusable property block. Particle cleanup stops future emission without clearing live particles or stopping non-autoplay sub-emitters. Late semantic/network playback seeks the native composition using the existing replay elapsed time. No gameplay or transport format is added.
+
+Validation: focused helper/import tests compile production code with controlled Unity/Editor substitutes; the production common-facade/network regression tests cover the selected routing, replacement, warnings, live radius and fallback. These checks do not render paid assets. Actual native import, camera appearance and simultaneous-heal performance on Android still require local Unity/device acceptance. The shared URP particle adapter retains source textures, colours and blend factors, but cannot prove every source-specific shader feature is identical to the package preview.

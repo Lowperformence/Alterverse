@@ -488,6 +488,8 @@ namespace Alterverse.Visuals
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Area,actor,center,slot,duration,radius,flag:warning,secondary:beneficial);
             if(actor==null)return;
             HeroId hero=Hero(actor);
+            if(!warning&&beneficial&&slot==3&&hero==HeroId.Mira&&
+                ThalaHealingVfx.TryArea(Ground(center),radius,HeroVfxEvents.ReplayElapsed))return;
             if(!warning&&slot==3&&(hero==HeroId.Elyra||hero==HeroId.Traveler)&&
                 UltimateLightningVfx.TryPlay(hero==HeroId.Elyra?UltimateLightningVfx.Ione:UltimateLightningVfx.Traveler,
                     Ground(center),radius,HeroVfxEvents.ReplayElapsed))return;
@@ -902,6 +904,8 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Support,actor,duration:duration,target:target!=null?target.gameObject:null,flag:shield);
             if(actor==null||target==null)return;
+            if(!shield&&Hero(actor)==HeroId.Mira&&
+                ThalaHealingVfx.TryTarget(target.transform,HeroVfxEvents.ReplayElapsed))return;
             PolishSupport(actor,target,shield);
             HeroId hero=Hero(actor);
             Color c=hero==HeroId.Mira?new Color(.22f,1f,.52f):Accent(actor);

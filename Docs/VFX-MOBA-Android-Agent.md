@@ -23,3 +23,5 @@ Fixture tests do not establish native import or rendered appearance. Never repor
 Current assignments: bomber `NukeConeExplosionFire` on all maps; complete Small Bullet chain for Sivra/Nyra basic and base guardian shots. The next selected changes are blue Nova Small for Light Snare and blue Nova for Sightline Break, with purchased-package audio for these two skills. Leave the other restored attacks alone until the user selects the next one.
 
 Selected visual-only detonation work: Impossible Center (Ione/Elyra) uses Lightning Nova, Traveler ultimate uses Lightning Explosion, each fitted to its actual Area radius. Existing sounds and the other attack phases remain unchanged.
+
+Selected Thala Venn healing work: Growth Veil uses native HealOnceBurst on its single recipient; Wildsurge uses large native HealNova at the actual AoE center, with recipient healing confirmations. Both receive +250% (3.5x) geometry; the area footprint remains limited to the real healing radius. Keep existing sounds and all shield presentation.

@@ -431,6 +431,36 @@ static partial class VfxRegression
         var attributes=typeof(HeroVfxPool).GetCustomAttributes(typeof(DefaultExecutionOrder),false);
         Check(attributes.Length==1,"Effect renderer declares its ordering after the hero presentation phase");
     }
+    static void ThalaHealingRoutes()
+    {
+        Reset();ThalaHealingVfx.Available=true;ThalaHealingVfx.Targets=ThalaHealingVfx.Areas=0;
+        var actor=Hero(HeroId.Mira,0);var target=Hero(HeroId.Kaelon,2);target.transform.position=new Vector3(3,0,4);
+        var health=target.GetComponent<Health>();float hp=health.Current,shield=health.Shield;
+        int old=Visible().Length;
+        using(HeroVfxEvents.Replay(.17f,Vector3.zero))HeroSkillVfx.Support(actor,health,false,4);
+        Check(ThalaHealingVfx.Targets==1&&ThalaHealingVfx.Target==target.transform,"Growth Veil routes native small healing to the actual single target");
+        Check(Mathf.Abs(ThalaHealingVfx.Elapsed-.17f)<.0001f,"Target healing preserves delayed network playback time");
+        Check(Visible().Length==old,"Prepared target healing replaces old layers rather than stacking them");
+        HeroSkillVfx.Support(actor,health,true,4);
+        Check(ThalaHealingVfx.Targets==1&&Visible().Length>old,"Venn Shelter and shield visuals retain their original rendering");
+        int areas=ThalaHealingVfx.Areas;var center=new Vector3(7,0,-3);
+        HeroSkillVfx.Area(actor,center,5,.4f,true,true,3);
+        Check(ThalaHealingVfx.Areas==areas,"Wildsurge warning retains its original true-radius presentation");
+        old=Visible().Length;
+        using(HeroVfxEvents.Replay(.12f,Vector3.zero))HeroSkillVfx.Area(actor,center,5,.3f,false,true,3);
+        Check(ThalaHealingVfx.Areas==areas+1&&ThalaHealingVfx.Radius==5&&ThalaHealingVfx.Center.x==7&&ThalaHealingVfx.Center.z==-3,"Wildsurge uses the large heal at its real center and live AoE radius");
+        Check(Mathf.Abs(ThalaHealingVfx.Elapsed-.12f)<.0001f,"Area healing preserves delayed network playback time");
+        Check(Visible().Length==old,"Native Wildsurge replaces old area polish and motifs");
+        HeroSkillVfx.Area(actor,center,5,.3f,false,true,0);
+        HeroSkillVfx.Area(Hero(HeroId.Kaelon,4),center,5,.3f,false,true,3);
+        Check(ThalaHealingVfx.Areas==areas+1,"Only Thala Wildsurge uses the new large healing effect");
+        int targets=ThalaHealingVfx.Targets;HeroSkillVfx.Support(Hero(HeroId.Rook,6),health,false,.45f);
+        Check(ThalaHealingVfx.Targets==targets,"Other heroes keep their previous heal presentation");
+        Check(health.Current==hp&&health.Shield==shield,"Visual helpers never apply healing or shields themselves");
+        ThalaHealingVfx.Available=false;old=Visible().Length;
+        HeroSkillVfx.Support(actor,health,false,4);
+        Check(Visible().Length>old,"Unprepared healing keeps its visible original fallback");
+    }
     static void Main()
     {
         var manager=new NetworkManager{IsServer=true,IsListening=true,IsConnectedClient=true};
@@ -449,7 +479,7 @@ static partial class VfxRegression
         Check(manager.CustomMessagingManager.Packets.Count==1,"Client replay cannot echo an event");
         before=Visible().Length;relay.Receive(9,packet);Check(Visible().Length==before,"A non-server cannot inject visual events");
         relay.Unbind();NetworkPresentationFollowers();AllCues();CommandDamage();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();ConfirmedBasicWindups();PendingCooldowns();OfflineOnlineParity();
-        AttackAtlasChecks();
+        AttackAtlasChecks();ThalaHealingRoutes();
         Console.WriteLine("PASS "+checks+" production online VFX and combat/shader checks (controlled Unity/GPU/network fixtures)");
     }
 }
