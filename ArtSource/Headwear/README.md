@@ -20,6 +20,8 @@ Only visible, indexed head geometry contributes to fitting. Removed hair/flower 
 
 The opening surrounds the measured upper crown instead of placing its empty center at the absolute apex. Each hat uses its own inner-cavity profile; a bounded fit finds the smallest enclosing size for the visible crown, with half-percent shell clearance. The resulting mesh uses the real head bone's bind frame and follows head motion. Equipping after an animation has started does not bake an inverse head pose into the hat. Hats add no collider, combat power or progression bonus.
 
+The UFO uses one third of that automatic fit on all three axes, in both previews and equipped gameplay. Its insertion depth is also reduced to one third about the head apex, keeping the smaller hat at the crown. The other four hats retain their existing dimensions. The isolated regression checks the resulting dimensions of all five meshes; real-hero clipping still needs the Unity visual check below.
+
 ## Multiplayer compatibility
 
 V2 headwear-only messages carry all five cosmetic IDs. Updated hosts downgrade newer hats to Original for V1 peers, preserving their existing BETA/UFO rendering and packet compatibility. An updated client probes V2 at most three times on legacy hosts, then keeps the V1 behavior. Validated modern state cannot be erased by a delayed legacy fallback.

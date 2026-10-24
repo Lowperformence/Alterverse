@@ -40,7 +40,10 @@ namespace Alterverse.EditorChecks
                         Require(mesh.subMeshCount==(resource=="BetaCap"?3:6),"Unexpected headwear material count.");
                         var root=actor.transform.Find("DF_VisualRoot");
                         Vector3 contact=root.InverseTransformPoint(view.Head.TransformPoint(view.SeatInHeadSpace));
-                        Require(Mathf.Abs(contact.y-view.CrownSection.center.y)<.0001f&&
+                        float expectedContact=view.CrownSection.center.y;
+                        if(item==UniversalHeroCosmetic.UfoTestHat)
+                            expectedContact=view.HeadBounds.max.y-(view.HeadBounds.max.y-expectedContact)/3f;
+                        Require(Mathf.Abs(contact.y-expectedContact)<.0001f&&
                             contact.y<view.HeadBounds.max.y&&contact.y>=view.HeadBounds.center.y,
                             "Head does not enter the hat opening around the upper crown.");
                         Require(cap.GetComponentsInChildren<Collider>(true).Length==0,"Cosmetic introduced a collider.");

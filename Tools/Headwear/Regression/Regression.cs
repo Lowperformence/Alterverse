@@ -221,7 +221,7 @@ static class Regression
                 if(a.z>.7f&&b.z>.7f&&c.z>.7f&&a.y>.2f&&b.y>.2f&&c.y>.2f)
                     Check(z>0,"Front panel or BETA embroidery faces inward.");
             }
-        AttachmentChecks();NetworkChecks();UfoChecks();FreeHatChecks();HatVisibilityChecks();HatIconChecks();ModernNetworkChecks();
+        AttachmentChecks();NetworkChecks();UfoChecks();FreeHatChecks();HatVisibilityChecks();HatSizeChecks();HatIconChecks();ModernNetworkChecks();
         Console.WriteLine("PASS "+checks+" headwear, battle-pass, persistence, mesh and message checks; Unity fit/device/live multiplayer validation remains required.");
     }
     static void UfoChecks()
@@ -277,6 +277,38 @@ static class Regression
         mesh.SetVertices(points);
         mesh.SetTriangles(new List<int>{0,1,3,0,3,2,4,6,7,4,7,5,0,4,5,0,5,1,2,3,7,2,7,6,0,2,6,0,6,4,1,5,7,1,7,3},0);
         mesh.RecalculateBounds();return mesh;
+    }
+    static void HatSizeChecks()
+    {
+        // Recorded on the same synthetic head before the UFO size correction. Check
+        // the produced mesh dimensions, including its rim, antennae and visor, so an
+        // automatic fit cannot silently undo the requested one-third reduction.
+        var originalSizes=new Dictionary<UniversalHeroCosmetic,Vector3>
+        {
+            {UniversalHeroCosmetic.BetaCap,new Vector3(.6413307f,.25305986f,.9218707f)},
+            {UniversalHeroCosmetic.UfoTestHat,new Vector3(.97954357f,.3726163f,.97954357f)},
+            {UniversalHeroCosmetic.WizardHat,new Vector3(1.2146885f,.6547725f,1.2146884f)},
+            {UniversalHeroCosmetic.PropellerCap,new Vector3(.75265193f,.34898663f,.9395902f)},
+            {UniversalHeroCosmetic.MushroomHat,new Vector3(.7415408f,.19938469f,.7415408f)}
+        };
+        foreach(bool authored in new[]{false,true})
+        foreach(var entry in originalSizes)
+        {
+            var view=Actor(authored).GetComponent<HeadwearPresentation>();
+            Check(view.Apply(entry.Key),"Hat size check failed to attach: "+view.LastFitError);
+            var model=view.Head.Find("DF_Headwear_"+HeadwearSelection.ResourceFor(entry.Key));
+            Bounds actual=model.GetComponent<MeshFilter>().sharedMesh.bounds;
+            bool ufo=entry.Key==UniversalHeroCosmetic.UfoTestHat;
+            Vector3 expected=entry.Value*(ufo?1f/3f:1f);
+            Check(Math.Abs(actual.size.x-expected.x)<.00001f&&
+                Math.Abs(actual.size.y-expected.y)<.00001f&&Math.Abs(actual.size.z-expected.z)<.00001f,
+                ufo?"UFO is not one third of its previous size on every axis.":"UFO correction changed another hat's size.");
+            float expectedSeat=ufo?1.2166667f:1.15f;
+            Check(Math.Abs(view.SeatInHeadSpace.y-expectedSeat)<.00001f,
+                "Hat size correction lost the crown contact position.");
+            Check(actual.min.y<view.HeadBounds.max.y&&actual.max.y>view.HeadBounds.max.y,
+                "Resized hat sits entirely above or below the crown.");
+        }
     }
     static void HatVisibilityChecks()
     {

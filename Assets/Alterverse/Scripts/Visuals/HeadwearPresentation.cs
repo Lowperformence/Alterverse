@@ -69,8 +69,18 @@ namespace Alterverse.Visuals
             bool asset=selected!=UniversalHeroCosmetic.BetaCap;
             if(!FitOpening(selected,bounds,crown,surface,out Vector3 scale))
             {LastFitError="Head shape needs a manual headwear fit.";return false;}
+            Vector3 seat=crown.center;
+            if(selected==UniversalHeroCosmetic.UfoTestHat)
+            {
+                // The UFO is a small novelty hat: one third of the automatic fit.
+                // Shrink its insertion depth too, keeping it at the crown rather than
+                // sinking the smaller model into the old, deeper opening position.
+                const float size=1f/3f;
+                scale*=size;
+                seat.y=bounds.max.y+(seat.y-bounds.max.y)*size;
+            }
             if(referenceHead==null)TryReferenceFrame(visualRoot,out referenceHead,out referenceToHead);
-            Matrix4x4 fit=referenceToHead*Matrix4x4.TRS(crown.center,Quaternion.identity,scale);
+            Matrix4x4 fit=referenceToHead*Matrix4x4.TRS(seat,Quaternion.identity,scale);
             SeatInHeadSpace=fit.MultiplyPoint3x4(Vector3.zero);
             if(asset)
             {
