@@ -80,11 +80,15 @@ def main():
     engine = engine.replace('public void WriteValueSafe(int i)=>', 'public void WriteValueSafe(double d)=>writer.Write(d);public void WriteValueSafe(int i)=>')
     engine = engine.replace('public void ReadValueSafe(out int i)=>', 'public void ReadValueSafe(out double d)=>d=reader.ReadDouble();public void ReadValueSafe(out int i)=>')
     # Minimal particle APIs for testing the real replacement scheduler; native rendering is separate.
+    engine = engine.replace('public class Texture2D:Object {', 'public class Texture2D:Object {public static Texture2D whiteTexture=new(1,1,TextureFormat.RGBA32,false,false);')
+    engine = engine.replace('public class Material:Object {', 'public class Material:Object {public void SetTexture(string name,Texture2D value){mainTexture=value;}')
+    engine = engine.replace('public class MeshRenderer:Component {', 'public class MeshRenderer:Component {public Material[] sharedMaterials=>sharedMaterial==null?System.Array.Empty<Material>():new[]{sharedMaterial};')
+
     engine = engine.replace('public class MeshRenderer:Component {', 'public class MeshRenderer:Renderer {} public class Renderer:Component {')
     engine = engine.replace('public class Transform:Component {', 'public class Transform:Component {public Transform Find(string n)=>GameObject.All.Where(g=>g.transform.parent==this&&g.name==n).Select(g=>g.transform).FirstOrDefault();public Vector3 localPosition;public Quaternion localRotation;')
     engine = engine.replace('public static class Resources {', 'public static class Resources {public static object EpicLibrary;')
     engine = engine.replace('where T:class{if(s=="CombatVfx/AttackAtlas"', 'where T:class{if(s=="CombatVfx/EpicToon/Library")return EpicLibrary as T;if(s=="CombatVfx/AttackAtlas"')
-    engine = engine.replace('public class Object {', 'public class Object {public static GameObject Instantiate(GameObject source,Transform parent,bool world){var clone=new GameObject(source.name);clone.transform.SetParent(parent,world);clone.AddComponent<ParticleSystem>();clone.AddComponent<ParticleSystemRenderer>();return clone;}')
+    engine = engine.replace('public class Object {', 'public class Object {public static GameObject Instantiate(GameObject source,Transform parent,bool world){var clone=new GameObject(source.name);clone.transform.SetParent(parent,world);clone.AddComponent<ParticleSystem>();clone.AddComponent<ParticleSystemRenderer>().sharedMaterial=new Material(new Shader{name="DimensionsFront/EpicParticles"});return clone;}')
     with tempfile.TemporaryDirectory(prefix='df-vfx-') as directory:
         directory = Path(directory)
         fixtures = directory / 'Engine.cs'

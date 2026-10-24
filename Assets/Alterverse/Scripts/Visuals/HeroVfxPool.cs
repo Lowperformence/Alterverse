@@ -83,12 +83,20 @@ namespace Alterverse.Visuals
                 Shader shader=Resources.Load<Shader>("CombatVfx/HeroEnergy");
                 if(shader==null||!shader.isSupported)
                 {
-                    material=null;enabled=false;
-                    Debug.LogError("DF: HeroEnergy shader unavailable on this graphics device. Rebuild with the Android runtime shader check.");
-                    return;
+                    // Purchased particles have their own supported shader. A broken legacy shader
+                    // must not prevent the entire NEW backend from starting or erase telegraphs.
+                    if(!TryRecoverEpicSurface())
+                    {
+                        material=null;enabled=false;
+                        Debug.LogError("DF: HeroEnergy shader unavailable on this graphics device. Rebuild with the Android runtime shader check.");
+                        return;
+                    }
                 }
-                material=new Material(shader){name="DF_HeroEnergyRecovered"};ownsMaterial=true;
-                Debug.LogWarning("DF: recovered HeroEnergy material from its Resources shader.");
+                else
+                {
+                    material=new Material(shader){name="DF_HeroEnergyRecovered"};ownsMaterial=true;
+                    Debug.LogWarning("DF: recovered HeroEnergy material from its Resources shader.");
+                }
             }
             LoadAttackAtlas();
             LoadEpicLibrary();
@@ -341,10 +349,12 @@ namespace Alterverse.Visuals
             Color color=s.Color;
             if(!s.Warning){color.r*=1.28f;color.g*=1.28f;color.b*=1.28f;}
             color.a*=fade;
-            if(s.Epic!=null)
+            if(s.Epic!=null&&DrawEpic(s,Mathf.Max(0,Time.time-s.Start),fade))
             {
-                s.Renderer.enabled=false;DrawEpic(s,Mathf.Max(0,Time.time-s.Start),fade);return;
+                s.Renderer.enabled=false;return;
             }
+            // The new renderers are disabled whenever their emitter has no particles or
+            // supported material. Only this one mesh then supplies temporary feedback.
             s.Block.SetFloat(Life,t);s.Block.SetFloat(SurfaceStyle,s.SurfaceStyle);
             if(s.Sprite!=HeroFxSprite.None)s.Block.SetFloat(AtlasCell,AtlasFrame(s.Sprite,t));
             s.Block.SetFloat(DetailQuality,s.Warning?0f:AdaptiveVfxBudget.SurfaceDetail);

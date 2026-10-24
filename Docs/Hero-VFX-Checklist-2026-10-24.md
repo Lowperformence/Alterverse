@@ -59,9 +59,13 @@ Die Funktion kommt aus dem echten Aiming-Katalog. `Dash` wird hier entsprechend 
 | Void Knight | Rift Lunge | Sprung | Violett | Impact, Smoke, SwordImpact | [x] | [ ] Offen |
 | Void Knight | Eventide Cleave | Kegel-AOE | Violett | HeavySlash, Impact, SwordImpact | [x] | [ ] Offen |
 
+## Ausfallschutz
+
+Ein nicht unterstützter alter Shader blockiert den neuen Pool nicht mehr, sofern der Epic-Shader unterstützt wird. Erzeugt ein Partikel-Prefab noch nichts Darstellbares, bleibt ein einzelner Ersatz-Renderer aktiv; gleichzeitig sind die nativen Renderer aus. Mit einsetzender Emission übernimmt der neue Effekt ohne Neustart und ohne Überlagerung. Eine Warnung nennt die betroffene Familie. Die Codeprüfung enthält diese Fehlerfälle; die Darstellung in Unity bleibt gesondert zu prüfen.
+
 ## Nächste native Prüfung
 
-Nach Pull und Unity-Kompilierung wird die Bibliothek auf Version 2 regeneriert. `DIMENSIONS FRONT > VFX > Test Epic Toon emission` instanziiert jede gekaufte Effektfamilie in einer isolierten Editor-Vorschauszene, startet ihre Systeme und prüft erzeugte Partikel sowie Shader-Unterstützung. Das verändert keine Spielszene. Der Test prüft keine Pixel, keinen Farbeindruck und keine Android-Leistung; danach bleiben die 45 Sichtprüfungen im Spiel erforderlich.
+Vor dem Pull Play Mode beenden. Nach der Kompilierung wird eine veraltete Bibliothek regeneriert. Danach läuft automatisch eine isolierte native Vorschauprüfung für alle 29 Vorlagen: Partikelstart, Shader-Kompilierung und Bildpixel gegenüber einem leeren Frame. Unter `Library/DF_EpicVfxReview/` entstehen Report, Einzelbilder, Kontaktbogen und eine beschriftete HTML-Übersicht. Der Menüpunkt `DIMENSIONS FRONT > VFX > Render Epic Toon visibility review` wiederholt die Prüfung. Dies verändert keine Spielszene und spielt keine Sounds. Repräsentative Farbbilder ersetzen keine Abnahme der tatsächlichen Animation, Orientierung, Größenwirkung, Trefferzuordnung oder Android-Leistung. Die 45 Echtspiel-Sichtprüfungen bleiben deshalb offen, bis echte Unity-Ergebnisse vorliegen.
 
 ## Sound-Abnahme zurückgestellt
 

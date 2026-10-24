@@ -61,7 +61,7 @@ namespace Alterverse.Editor
             // Validate it before skipping setup; repair incomplete output after the next reload.
             if(AssetDatabase.LoadAssetAtPath<EpicVfxLibrary>(Output+"/Library.asset")!=null)
             {
-                try { Validate();return; }
+                try { Validate();EpicToonVisibilityReview.Schedule();return; }
                 catch(BuildFailedException) { }
             }
             try { Build(); }
@@ -173,7 +173,7 @@ namespace Alterverse.Editor
             bool createLibrary=library==null;if(createLibrary)library=ScriptableObject.CreateInstance<EpicVfxLibrary>();
             library.entries=entries.ToArray();library.beamMaterial=beam;library.sourceVersion=EpicVfxLibrary.CurrentVersion;
             if(createLibrary)AssetDatabase.CreateAsset(library,Output+"/Library.asset");else EditorUtility.SetDirty(library);
-            AssetDatabase.SaveAssets();AssetDatabase.Refresh();Validate();
+            AssetDatabase.SaveAssets();AssetDatabase.Refresh();Validate();EpicToonVisibilityReview.Schedule();
             Debug.Log("DF: Epic Toon replacement built. "+Sources.Length+" effect families; Nerok is excluded. Run Test Epic Toon emission, then review the hero checklist in Play Mode.");
         }
         [MenuItem("DIMENSIONS FRONT/VFX/Validate Epic Toon replacement")]

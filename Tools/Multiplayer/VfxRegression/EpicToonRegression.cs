@@ -22,7 +22,7 @@ static partial class VfxRegression
     static object[] LiveSlots()=>Pool()==null?Array.Empty<object>():((Array)Field(Pool(),"slots")).Cast<object>().Where(s=>s!=null&&(bool)Field(s,"Active")).ToArray();
     static void EpicReset()
     {
-        Reset();Resources.EpicLibrary=TestLibrary();CoopAuthority.Active=false;
+        Reset();ParticleSystem.ForceNoParticles=false;Resources.EpicLibrary=TestLibrary();CoopAuthority.Active=false;
     }
     static void ExclusiveReplacement()
     {
@@ -146,9 +146,31 @@ static partial class VfxRegression
         EpicReset();var nerok=Hero(HeroId.Nerok,0);
         Check(nerok.AddComponent<HeroAbilityReadabilityBoost>().enabled&&nerok.AddComponent<HeroAttackReadabilityPresentation>().enabled,"Nerok retains his two original presentation observers");
     }
+    static void BackendAvailability()
+    {
+        EpicReset();Resources.HeroShaderSupported=false;
+        var actor=Hero(HeroId.Nyra,0);var target=Hero(HeroId.Kaelon,1);target.transform.position=Vector3.forward*3;
+        HeroSkillVfx.Basic(actor,target.transform.position,.4f,target.transform);
+        var slot=LiveSlots().Single();var visual=Field(slot,"Epic");
+        Check(visual!=null&&((HeroVfxPool)Pool()).enabled,"A failed legacy shader cannot disable the supported new backend");
+        Check(((Material)Field(Pool(),"material")).name=="DF_EpicWarningSurface","Supported particle shader provides an independent white warning surface");
+        Check(!((MeshRenderer)Field(slot,"Renderer")).enabled,"New backend draws exclusively even when old shader is unsupported");
+        Check(Debug.ErrorCount==0,"Recoverable old-shader failure does not report a total renderer failure");
+        HeroVfxPool.Emit(HeroFxShape.Ring,Vector3.zero,Vector3.zero,Vector3.one*2,Color.white,.4f,
+            HeroFxMotion.Hold,owner:actor,warning:true);
+        var warning=LiveSlots().Single(s=>(bool)Field(s,"Warning"));
+        Check(((MeshRenderer)Field(warning,"Renderer")).enabled&&((MeshRenderer)Field(warning,"Renderer")).sharedMaterial.shader.isSupported,"Warning geometry remains renderable during legacy shader recovery");
+        Check(Mathf.Abs(((Transform)Field(warning,"Transform")).localScale.x-2)<.001f,"Recovered warning retains exact gameplay radius");
+        ParticleSystem.ForceNoParticles=true;Step(.1f);
+        Check(((MeshRenderer)Field(slot,"Renderer")).enabled,"Empty native emission cannot leave a shot without its single fallback");
+        Check(((Renderer[])Field(visual,"Renderers")).All(r=>!r.enabled),"Fallback never overlaps native renderers");
+        ParticleSystem.ForceNoParticles=false;Step(.02f);
+        Check(!((MeshRenderer)Field(slot,"Renderer")).enabled&&((Renderer[])Field(visual,"Renderers")).Any(r=>r.enabled),"Native effect resumes exclusive rendering as soon as emission is ready");
+        Check(((ParticleSystem[])Field(visual,"Systems")).Single().Restarts==1,"Fallback recovery continues the original clock without restarting the shot");
+    }
     static void EpicToonChecks()
     {
-        ExclusiveReplacement();ParticleLifecycle();RenderingParity();RealActionChecklist();NerokPreservation();
+        ExclusiveReplacement();ParticleLifecycle();RenderingParity();RealActionChecklist();NerokPreservation();BackendAvailability();
         EpicReset();var actor=Hero(HeroId.Veyr,0);
         Check(!actor.AddComponent<HeroAbilityReadabilityBoost>().enabled&&!actor.AddComponent<HeroAttackReadabilityPresentation>().enabled,"Legacy cooldown observers cannot add duplicate attacks");
         Resources.EpicLibrary=null;

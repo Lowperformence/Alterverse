@@ -10,8 +10,9 @@ namespace Alterverse.Visuals
         private object epicLibrary;
         private Mesh epicBeam,epicTrace;
         private void LoadEpicLibrary() {}
+        private bool TryRecoverEpicSurface()=>false;
         private bool AttachEpic(Slot slot,HeroFxShape shape)=>false;
-        private void DrawEpic(Slot slot,float age,float fade) {}
+        private bool DrawEpic(Slot slot,float age,float fade)=>false;
         private void ReleaseEpic(Slot slot) {}
     }
 }

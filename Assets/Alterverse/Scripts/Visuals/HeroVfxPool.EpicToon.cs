@@ -15,6 +15,7 @@ namespace Alterverse.Visuals
         internal static NerokOriginalScope PreserveNerokOriginal(){nerokOriginalDepth++;return new NerokOriginalScope();}
         private readonly Dictionary<string,Stack<EpicVisual>> epicFree = new();
         private int epicInstances;
+        private readonly HashSet<string> epicEmptyWarnings=new();
         private const int EpicInstanceLimit = Capacity - WarningReserve;
         private sealed class EpicVisual
         {
@@ -22,9 +23,22 @@ namespace Alterverse.Visuals
             public GameObject Root;
             public ParticleSystem[] Systems;
             public Renderer[] Renderers;
+            public bool[] RendererEnabled;
+            public bool CanRender;
             public MaterialPropertyBlock Tint = new();
             public float NativeSeconds, Scale, LastAge;
             public bool Started, Sustained;
+        }
+        private bool TryRecoverEpicSurface()
+        {
+            epicLibrary=Resources.Load<EpicVfxLibrary>(EpicVfxLibrary.ResourcePath);
+            Shader shader=epicLibrary!=null&&epicLibrary.beamMaterial!=null?epicLibrary.beamMaterial.shader:null;
+            if(shader==null||!shader.isSupported||shader.name!="DimensionsFront/EpicParticles")return false;
+            material=new Material(shader){name="DF_EpicWarningSurface"};ownsMaterial=true;
+            material.SetTexture("_MainTex",Texture2D.whiteTexture);
+            material.SetColor(Tint,Color.white);material.SetFloat(Shader.PropertyToID("_DstBlend"),1f);
+            Debug.LogWarning("DF: legacy HeroEnergy unavailable; Epic VFX remain active and warning geometry uses a compatible surface.");
+            return true;
         }
         private void LoadEpicLibrary()
         {
@@ -77,6 +91,7 @@ namespace Alterverse.Visuals
             if(shape==HeroFxShape.Laser||shape==HeroFxShape.MonsterBeam||
                 (shape==HeroFxShape.Bolt&&slot.Motion==HeroFxMotion.Hold))
             {
+                if(epicLibrary.beamMaterial==null||epicLibrary.beamMaterial.shader==null||!epicLibrary.beamMaterial.shader.isSupported)return false;
                 slot.EpicBeam=true;
                 slot.Filter.sharedMesh=EpicBeamMesh(shape==HeroFxShape.Bolt);
                 slot.Renderer.sharedMaterial=epicLibrary.beamMaterial;
@@ -100,6 +115,14 @@ namespace Alterverse.Visuals
                 var root=Instantiate(entry.prefab,slot.Transform,false);root.SetActive(false);
                 visual=new EpicVisual{Key=key,Root=root,Systems=root.GetComponentsInChildren<ParticleSystem>(true),
                     Renderers=root.GetComponentsInChildren<Renderer>(true),NativeSeconds=entry.nativeSeconds,Scale=entry.scale};
+                visual.RendererEnabled=new bool[visual.Renderers.Length];
+                for(int i=0;i<visual.Renderers.Length;i++)
+                {
+                    var renderer=visual.Renderers[i];visual.RendererEnabled[i]=renderer.enabled;
+                    var materials=renderer.sharedMaterials;
+                    if(renderer.enabled&&materials.Length>0&&materials[0]!=null&&materials[0].shader!=null&&materials[0].shader.isSupported)
+                        visual.CanRender=true;
+                }
                 epicInstances++;
             }
             visual.Root.transform.SetParent(slot.Transform,false);
@@ -117,15 +140,16 @@ namespace Alterverse.Visuals
             slot.Epic=visual;
             return true;
         }
-        private void DrawEpic(Slot slot,float age,float fade)
+        private bool DrawEpic(Slot slot,float age,float fade)
         {
-            var visual=slot.Epic;if(visual==null)return;
-            if(Time.time<slot.Start){visual.Root.SetActive(false);return;}
+            var visual=slot.Epic;if(visual==null)return false;
+            if(Time.time<slot.Start){visual.Root.SetActive(false);return false;}
             visual.Root.SetActive(true);
             // Native clocks are driven by the SAME normalized timeline as the old visual scheduler.
             // Pauses, delayed packets and short-range shots cannot create a late second impact.
             float sample=visual.Sustained?age:age/slot.Duration*visual.NativeSeconds;
             float delta=Mathf.Max(0,sample-visual.LastAge);
+            bool particles=false;
             foreach(var system in visual.Systems)
             {
                 // Stop/clear and playOnAwake=false leave native emission stopped. Resume it
@@ -134,11 +158,22 @@ namespace Alterverse.Visuals
                 if(!visual.Started)system.Simulate(Mathf.Max(.001f,sample),false,true,false);
                 else if(delta>0)system.Simulate(delta,false,false,false);
                 system.Pause(false);
+                particles|=system.particleCount>0;
             }
             visual.Started=true;visual.LastAge=sample;
             Color tint=slot.Color;tint.a*=fade;
             visual.Tint.SetColor(Tint,tint);
-            foreach(var renderer in visual.Renderers)renderer.SetPropertyBlock(visual.Tint);
+            bool visible=particles&&visual.CanRender;
+            for(int i=0;i<visual.Renderers.Length;i++)
+            {
+                var renderer=visual.Renderers[i];renderer.SetPropertyBlock(visual.Tint);
+                renderer.enabled=visible&&visual.RendererEnabled[i];
+            }
+            // Keep simulating a delayed emitter while only the fallback draws. Never render
+            // the fallback and native particles together, and never drop an attack silently.
+            if(!visible&&age>=.08f&&epicEmptyWarnings.Add(visual.Key))
+                Debug.LogWarning("DF: Epic "+visual.Key+" has no renderable particles; single fallback active. Run DIMENSIONS FRONT > VFX > Test Epic Toon emission.");
+            return visible;
         }
         private void ReleaseEpic(Slot slot)
         {
