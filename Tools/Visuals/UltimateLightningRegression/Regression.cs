@@ -68,7 +68,7 @@ static class Regression
                 var instances=GameObject.All.Skip(before).Where(g=>g.name==name).ToArray();
                 Check(instances.Length==1,"one Area cue creates one central detonation");var instance=instances.Single();
                 Check(instance.transform.position.x==center.x&&instance.transform.position.y==.2f&&instance.transform.position.z==center.z,"supplied ground center is preserved without a new height offset");
-                Check(Math.Abs(instance.transform.localScale.x-radius/6f)<.0001f,"actual area radius is used once with no diameter or legacy multipliers");
+                Check(Math.Abs(instance.transform.localScale.x-radius*2f/6f)<.0001f,"requested doubled visual composition uses the actual area radius as its basis");
                 var clip=instance.GetComponentsInChildren<Renderer>(true).Single().Block.Vectors["_AttackClip"];
                 Check(clip.x==center.x&&clip.y==center.z&&clip.z==radius&&clip.w==1f,"shader footprint matches the actual circular area");
                 Check(instance.GetComponentsInChildren<AudioSource>(true).Length==0&&Alterverse.Audio.DimensionAudio.Calls==sounds,"detonation neither duplicates nor replaces current sounds");

@@ -16,3 +16,5 @@ Preparation is isolated to `Resources/CombatVfx/UltimateLightning`. It reuses th
 Damage, targeting, range, slow, cast/detonation timing, warning radius, audio routing and original audio assets are unchanged. Other attacks, accepted effect sizes, menu/shop and shield HUD are outside this edit scope.
 
 Validation: 119 focused checks pass with controlled engine/editor fixtures for source selection, colour separation, source-audio exclusion, exact supplied radius, fragment clipping, one native composition per cue, late playback and cleanup. Existing combat/VFX and skill-entry checks also cover the unimported fallback. These checks do not render the actual licensed prefabs or establish Android appearance/performance; the native import and the two resolved blasts still require review in Unity.
+
+Requested visual size adjustment: both native lightning compositions are now scaled to twice their previous size. Fragment clipping retains the actual AoE radius, so the brighter central geometry fills more of the allowed footprint without advertising a larger damage area. Sound and gameplay remain unchanged.

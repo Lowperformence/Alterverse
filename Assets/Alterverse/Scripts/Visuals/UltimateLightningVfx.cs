@@ -8,6 +8,7 @@ namespace Alterverse.Visuals
     {
         public const int Ione=0,Traveler=1;
         public const string ResourcePath="CombatVfx/UltimateLightning/Library";
+        private const float VisualSizeMultiplier=2f;
         [Serializable] public sealed class Entry
         {
             public GameObject prefab;
@@ -37,11 +38,11 @@ namespace Alterverse.Visuals
                 if(kind==Ione)warnedIone=true;else warnedTraveler=true;
                 return false;
             }
-            // Native radius and supplied ability radius are radii. Never multiply by diameter
-            // or reuse the separately accepted multipliers from Small Bullet/Sivra/Nuke.
+            // Enlarge the authored composition; the fragment clip below still uses the
+            // actual ability radius, independently of this visual size adjustment.
             var instance=Instantiate(entry.prefab,center,Quaternion.identity);
             instance.name=kind==Ione?"DF_Ione_LightningNova":"DF_Traveler_LightningExplosion";
-            instance.transform.localScale=Vector3.one*(radius/entry.nativeRadius);
+            instance.transform.localScale=Vector3.one*(radius*VisualSizeMultiplier/entry.nativeRadius);
             var block=new MaterialPropertyBlock();
             foreach(var renderer in instance.GetComponentsInChildren<Renderer>(true))
             {
