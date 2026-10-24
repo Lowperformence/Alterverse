@@ -7,6 +7,11 @@ namespace Alterverse.Audio
     {
         static bool UsesNovaAudio(int hero,int action)=>hero==(int)HeroId.Nyra&&(action==3||action==4)&&
             Alterverse.Visuals.SivraNovaVfx.AudioFor(action-1,0)!=null;
+        static bool UsesLightningAudio(int hero,int action)=>hero==(int)HeroId.Traveler&&(action==1||action==3)&&
+            Alterverse.Visuals.TravelerLightningVfx.AudioFor(action-1,0)!=null;
+        static bool UsesImportedAudio(int hero,int action)=>UsesNovaAudio(hero,action)||UsesLightningAudio(hero,action);
+        static AudioClip ImportedAudio(int hero,int action,int phase)=>UsesLightningAudio(hero,action)?
+            Alterverse.Visuals.TravelerLightningVfx.AudioFor(action-1,phase):Alterverse.Visuals.SivraNovaVfx.AudioFor(action-1,phase);
         // Preserve original cast/impact cue indices; preparation occupies the appended bank.
         public const int ScratchHoldCue=HeroIdentity.HeroCount*15;
         public const int CueCount=ScratchHoldCue+1;
@@ -30,12 +35,12 @@ namespace Alterverse.Audio
             8=>action==1||action==2||action==4,
             _=>false
         };
-        public static bool HasImpact(int hero,int action)=>UsesNovaAudio(hero,action)?Alterverse.Visuals.SivraNovaVfx.AudioFor(action-1,1)!=null:hero==(int)HeroId.VoidKnight||!UsesSelectedRecording(hero,action)&&(action==0||(RecordingHero(hero,action) switch
+        public static bool HasImpact(int hero,int action)=>UsesImportedAudio(hero,action)?ImportedAudio(hero,action,1)!=null:hero==(int)HeroId.VoidKnight||!UsesSelectedRecording(hero,action)&&(action==0||(RecordingHero(hero,action) switch
         {
             0=>action!=3,1=>action!=2,2=>action!=2,3=>action!=3,4=>action==1||action==4,5=>action!=2,6=>action!=2,7=>action!=2,_=>false
         }));
-        public static bool HasWindup(int hero,int action)=>UsesNovaAudio(hero,action)?Alterverse.Visuals.SivraNovaVfx.AudioFor(action-1,2)!=null:hero==(int)HeroId.VoidKnight?action!=2:!UsesSelectedRecording(hero,action)&&(action==0||HasImpact(hero,action));
-        public static int VariantCount(int hero,int action,int phase)=>UsesNovaAudio(hero,action)?1:hero==(int)HeroId.VoidKnight?(action==0&&phase==0?3:1):hero==7?1:phase!=2&&(action==0||phase==1&&hero==2&&action==4)?3:1;
+        public static bool HasWindup(int hero,int action)=>UsesImportedAudio(hero,action)?ImportedAudio(hero,action,2)!=null:hero==(int)HeroId.VoidKnight?action!=2:!UsesSelectedRecording(hero,action)&&(action==0||HasImpact(hero,action));
+        public static int VariantCount(int hero,int action,int phase)=>UsesImportedAudio(hero,action)?1:hero==(int)HeroId.VoidKnight?(action==0&&phase==0?3:1):hero==7?1:phase!=2&&(action==0||phase==1&&hero==2&&action==4)?3:1;
         public static int Cue(int hero,int action,int phase)
         {hero=RecordingHero(hero,action);return hero==(int)HeroId.VoidKnight?135+action*3+phase:hero==(int)HeroId.Timmy?120+action*3+phase:hero==7?105+action*3+phase:phase==2?70+hero*5+action:hero*10+action*2+phase;}
         public static AudioClip[][] Load()
@@ -52,7 +57,7 @@ namespace Alterverse.Audio
                 {
                     string path="Audio/Heroes/"+Heroes[h]+"/"+Actions[a]+(phase==0?"_Cast":phase==1?"_Impact":"_Windup")+(v==0?"":"_v"+(v+1));
                     if(a==4&&phase==0)path="Audio/Heroes/"+Heroes[h]+"/Ultimate_Selected";
-                    clips[cue][v]=UsesNovaAudio(h,a)?Alterverse.Visuals.SivraNovaVfx.AudioFor(a-1,phase):Resources.Load<AudioClip>(path);
+                    clips[cue][v]=UsesImportedAudio(h,a)?ImportedAudio(h,a,phase):Resources.Load<AudioClip>(path);
                     if(clips[cue][v]==null)Debug.LogWarning("DIMENSIONS FRONT: missing combat audio: "+path);
                 }
             }
@@ -89,11 +94,21 @@ namespace Alterverse.Audio
             return slot!=null?slot.IsLocalHuman:actor.GetComponent<Alterverse.Combat.BasicAttack>()!=null;
         }
         public static void Play(GameObject actor,int action,bool impact,Vector3 position)=>PlayPhase(actor,action,impact?1:0,position);
-        static void PlayPhase(GameObject actor,int action,int phase,Vector3 position,bool relay=true)
+        public static void PlayLightningGroundImpact(GameObject actor,Vector3 position)=>PlayPhase(actor,3,1,position,false,true);
+        static void PlayPhase(GameObject actor,int action,int phase,Vector3 position,bool relay=true,bool groundImpact=false)
         {
             if(actor==null||action<0||action>4)return;
             var identity=actor.GetComponent<HeroIdentity>();if(identity==null)return;
             int hero=RecordingHero((int)identity.Hero,action);
+            bool lightningAudio=UsesLightningAudio(hero,action);
+            if(lightningAudio&&action==3)
+            {
+                // Chrono's existing warning cue launches its visual projectile. Move only
+                // the selected shot sound to that launch; ResolveArea's later Cast is not a second shot.
+                if(phase==0&&relay)return;
+                if(phase==1&&!groundImpact)return;
+                if(phase==2)phase=0;
+            }
             if(hero==(int)HeroId.Nerok&&action==0&&phase!=1)return;
             if(hero<0||hero>=HeroIdentity.HeroCount||phase==1&&!HasImpact(hero,action)||phase==2&&!HasWindup(hero,action))return;
             if(relay)CoopHeroStateSync.BroadcastCombatSound(actor,action,phase,position);
@@ -124,6 +139,8 @@ namespace Alterverse.Audio
             float cooldown=novaAudio&&ultimate&&phase==0?.06f:ultimate&&phase==0?1f:phase==2?.045f:ultimate&&hero==2?.06f:phase==1?.065f:.08f;
             int cue=Cue(hero,action,phase);
             if(novaAudio&&phase==1&&Alterverse.Visuals.SivraNovaVfx.ScheduleImpactAudio(actor,action-1,position,
+                ()=>DimensionAudio.PlayHero(cue,gain*attenuation,local?2:ultimate?1:0,cooldown,pan,1f,actor.GetEntityId().GetHashCode())))return;
+            if(lightningAudio&&phase==1&&Alterverse.Visuals.TravelerLightningVfx.ScheduleImpactAudio(actor,action-1,position,
                 ()=>DimensionAudio.PlayHero(cue,gain*attenuation,local?2:ultimate?1:0,cooldown,pan,1f,actor.GetEntityId().GetHashCode())))return;
             DimensionAudio.PlayHero(cue,gain*attenuation,local?2:ultimate?1:0,cooldown,pan,1f,actor.GetEntityId().GetHashCode());
         }

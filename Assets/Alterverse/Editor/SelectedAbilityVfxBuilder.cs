@@ -17,7 +17,7 @@ namespace Alterverse.Editor
     [InitializeOnLoad]
     public sealed class SelectedAbilityVfxBuilder:IPreprocessBuildWithReport
     {
-        private const string Source="Assets/Epic Toon FX",Output="Assets/Alterverse/Resources/CombatVfx/SelectedAbilities",Version="Selected ability native compositions 1";
+        private const string Source="Assets/Epic Toon FX",Output="Assets/Alterverse/Resources/CombatVfx/SelectedAbilities",Version="Selected ability native compositions 2";
         public const string SmokeSource=Source+"/Prefabs/Environment/Smoke/White/SmokeBurstWhiteSoft.prefab";
         public const string FireSource=Source+"/Prefabs/Combat/Explosions/NovaExplosion/ExplosionNovaFire.prefab";
         private static bool building;public int callbackOrder=>-450;
@@ -29,8 +29,8 @@ namespace Alterverse.Editor
         private static bool Allowed(string p)=>p.StartsWith(Source+"/",StringComparison.OrdinalIgnoreCase)&&!Normal(p).Contains("2dalternate")&&!Normal(p).Contains("demo");
         private static string Pick(string[] paths,Func<string,bool> family,string preferred,string label)
         {
-            var candidates=paths.Where(p=>family(Normal(Path.GetFileNameWithoutExtension(p)))).ToArray();
-            var selected=candidates.OrderBy(p=>Normal(p).Contains(preferred)?0:1).ThenBy(p=>p,StringComparer.Ordinal).FirstOrDefault();
+            var candidates=paths.Where(p=>family(Normal(p))).ToArray();
+            var selected=candidates.OrderBy(p=>family(Normal(Path.GetFileNameWithoutExtension(p)))?0:1).ThenBy(p=>Normal(p).Contains(preferred)?0:1).ThenBy(p=>p,StringComparer.Ordinal).FirstOrDefault();
             if(selected==null)throw new FileNotFoundException(label+" native prefab not found. Matching imported candidates: "+string.Join(", ",paths.Where(p=>Normal(p).Contains(label.Split(' ')[0].ToLowerInvariant()))));
             return selected;
         }
@@ -73,7 +73,7 @@ namespace Alterverse.Editor
             }
             foreach(var audio in source.GetComponentsInChildren<AudioSource>(true))if(audio.clip!=null&&Allowed(AssetDatabase.GetAssetPath(audio.clip)))return audio.clip;
             var path=AssetDatabase.FindAssets("t:AudioClip",new[]{Source}).Select(AssetDatabase.GUIDToAssetPath).Where(Allowed)
-                .Where(p=>Normal(p).Contains("stun")||Normal(p).Contains("circlingstars")).OrderBy(p=>p,StringComparer.Ordinal).FirstOrDefault();
+                .Where(p=>new[]{"stun","dizzy","confus","circlingstars","twinkl","sparkle"}.Any(w=>Normal(p).Contains(w))).OrderBy(p=>p,StringComparer.Ordinal).FirstOrDefault();
             return path==null?null:AssetDatabase.LoadAssetAtPath<AudioClip>(path);
         }
         private static SelectedAbilityVfx.Entry Prepare(GameObject source,int kind,string path,Shader shader,Dictionary<Material,Material> cache)

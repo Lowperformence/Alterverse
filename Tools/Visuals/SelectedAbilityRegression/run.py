@@ -13,7 +13,7 @@ assert 'clip(along); clip(1.0 - along)' in shader
 assert '_AttackCone.x' in shader
 with tempfile.TemporaryDirectory(prefix='df-selected-abilities-') as directory:
     d=Path(directory);bridge=d/'Arena.cs';bridge.write_text('namespace Alterverse.Match {'+enum+'}')
-    fixture=d/'Fixtures.cs';engine=(root/'Tools/SpaceBomber/NukeRegression/Fixtures.cs').read_text().replace('public static Vector3 up=>','public static Vector3 forward=>new(0,0,1);public static Vector3 up=>').replace('public float MoveMultiplier=1f;','public bool Rooted;public float MoveMultiplier=1f;');fixture.write_text(engine)
+    fixture=d/'Fixtures.cs';engine=(root/'Tools/SpaceBomber/NukeRegression/Fixtures.cs').read_text().replace('public static Vector3 up=>','public static Vector3 forward=>new(0,0,1);public static Vector3 up=>').replace('public float MoveMultiplier=1f;','public bool Rooted,Stunned;public float MoveMultiplier=1f;');fixture.write_text(engine)
     out=d/'Regression.dll'
     subprocess.run([str(dotnet/'dotnet'),str(csc),'-nologo','-noconfig','-define:UNITY_EDITOR','-langversion:latest','-out:'+str(out),
         *['-r:'+str(x) for x in refs.glob('*.dll')],str(fixture),str(here/'Regression.cs'),str(bridge),

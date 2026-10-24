@@ -39,7 +39,7 @@ static class Regression
         int count=GameObject.All.Count;SelectedAbilityVfx.TimmyHold(actor,hp,1.5f);Check(GameObject.All.Count==count,"hold refresh cannot stack another stars effect");
         victim.transform.position=new Vector3(3,0,4);Time.time+=.2f;GameObject.Invoke(stars.GetComponent<SelectedAbilityVfx>(),"LateUpdate");Check(stars.transform.position.x==3&&stars.transform.position.z==4&&stars.transform.position.y>1,"stars follow target overhead");
         SelectedAbilityVfx.TimmyHold(actor,hp,0);Check(stars.GetComponentsInChildren<Renderer>(true).All(r=>!r.enabled),"confirmed hold end immediately clears status indication");Finish(stars);
-        before=GameObject.All.Count;SelectedAbilityVfx.TimmyHold(actor,hp,1);var next=Last(5,before);state.Rooted=false;Time.time+=.2f;GameObject.Invoke(next.GetComponent<SelectedAbilityVfx>(),"LateUpdate");Check(next.GetComponentsInChildren<Renderer>(true).All(r=>!r.enabled),"observed root ending removes stars early");Finish(next);
+        before=GameObject.All.Count;SelectedAbilityVfx.TimmyHold(actor,hp,1);var next=Last(5,before);state.Rooted=false;state.Stunned=true;Time.time+=.1f;GameObject.Invoke(next.GetComponent<SelectedAbilityVfx>(),"LateUpdate");Check(next.GetComponentsInChildren<Renderer>(true).All(r=>r.enabled),"stunned network snapshot retains stars during confirmed control");state.Stunned=false;Time.time+=.2f;GameObject.Invoke(next.GetComponent<SelectedAbilityVfx>(),"LateUpdate");Check(next.GetComponentsInChildren<Renderer>(true).All(r=>!r.enabled),"observed root ending removes stars early");Finish(next);
         before=GameObject.All.Count;Check(SelectedAbilityVfx.TimmyHold(actor,hp,1,2)&&GameObject.All.Count==before,"late expired stars do not restart");
         hp.IsDead=true;SelectedAbilityVfx.TimmyHold(actor,hp,1);Check(GameObject.All.Count==before,"dead target cannot gain stars");hp.IsDead=false;
         foreach(int kind in new[]{SelectedAbilityVfx.Circle,SelectedAbilityVfx.Fire})foreach(float radius in new[]{.5f,3.2f,3.8f,6})
@@ -59,6 +59,11 @@ static class Regression
         Check(SelectedAbilityVfx.TryEchoImpact(actor,new Vector3(0,0,2)),"confirmed Vacant Echo creates native blood explosion");var blood=Last(1,before);
         Check(Clip(blood).w==3&&Clip(blood).z==3.5f,"blood explosion is bounded to actual release cone");
         var cone=blood.GetComponentsInChildren<Renderer>(true).Single().Block.Vectors["_AttackCone"];Check(Math.Abs(cone.x-(float)Math.Cos(35*Math.PI/180))<.0001,"blood uses actual half cone angle");Finish(blood);
+        AssetDatabase.Assets.Remove(paths[1]);AssetDatabase.Assets.Remove(paths[5]);
+        string folderBlood="Assets/Epic Toon FX/Prefabs/Combat/Explosions/SpikyBlood/Blood.prefab",folderStars="Assets/Epic Toon FX/Prefabs/Status/Stunning/CirclingStars.prefab";
+        Native(folderBlood,m);Native(folderStars,m);AssetDatabase.Dependency="folder-categories";SelectedAbilityVfxBuilder.Build();
+        var category=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Alterverse/Resources/CombatVfx/SelectedAbilities/Library.prefab").GetComponent<SelectedAbilityVfx>();
+        Check(category.blood.source==folderBlood&&category.stars.source==folderStars,"native families are discoverable when part of their label is a directory name");
         Resources.Prefab=null;Reset();Check(!SelectedAbilityVfx.TryArea(3,new(),3.8f),"missing native library preserves old visible fallback");
         Console.WriteLine($"PASS {checks} selected native ability source/scale/clip/hold/smoke/delivery/lifecycle checks. Controlled fixtures; Unity import, GPU appearance and Android acceptance remain separate.");
     }

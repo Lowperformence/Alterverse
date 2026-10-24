@@ -36,6 +36,7 @@ namespace Alterverse.Visuals
             SmallBulletVfx.CancelDelivery(id);
             SivraNovaVfx.CancelDelivery(id);
             SelectedAbilityVfx.CancelDelivery(id);
+            TravelerLightningVfx.CancelDelivery(id);
             if (id <= 0 || instance == null) return;
             foreach (Slot slot in instance.slots)
                 if (slot != null && slot.Active && slot.DeliveryId == id && IsProjectile(slot)) instance.Hide(slot);
@@ -201,6 +202,7 @@ namespace Alterverse.Visuals
             SmallBulletVfx.CancelOwner(actor);
             SivraNovaVfx.CancelOwner(actor);
             SelectedAbilityVfx.CancelOwner(actor);
+            TravelerLightningVfx.CancelOwner(actor);
             if(instance==null)return;
             foreach(Slot slot in instance.slots)
                 if(slot!=null&&slot.Active&&IsProjectile(slot)&&slot.Owner==actor)instance.Hide(slot);

@@ -102,7 +102,7 @@ namespace Alterverse.Visuals
             var part=Spawn(e,Stars,point,Quaternion.identity,.25f*SizeMultiplier,.25f*SizeMultiplier,elapsed,point,point,1);
             part.owner=actor;part.ownerHealth=actor.GetComponent<Health>();part.subject=target;part.status=target.GetComponent<HeroCombatStatus>();
             part.follow=target.transform;part.offset=Vector3.up*1.05f;part.held=true;part.holdUntil=Time.time+duration-elapsed;
-            part.rootObserved=part.status!=null&&part.status.Rooted;return true;
+            part.rootObserved=part.status!=null&&(part.status.Rooted||part.status.Stunned);return true;
         }
         public static void CancelSmoke(GameObject actor)
         {for(int i=active.Count-1;i>=0;i--)if(active[i]!=null&&active[i].owner==actor&&active[i].kind==Smoke)active[i].Release();}
@@ -129,8 +129,8 @@ namespace Alterverse.Visuals
             if(held&&(owner==null||!owner.activeInHierarchy||ownerHealth!=null&&ownerHealth.IsDead))Release();
             if(held&&kind==Stars)
             {
-                if(status!=null&&status.Rooted)rootObserved=true;
-                if(subject==null||subject.IsDead||!subject.gameObject.activeInHierarchy||rootObserved&&(status==null||!status.Rooted))Release();
+                if(status!=null&&(status.Rooted||status.Stunned))rootObserved=true;
+                if(subject==null||subject.IsDead||!subject.gameObject.activeInHierarchy||rootObserved&&(status==null||!status.Rooted&&!status.Stunned))Release();
             }
             if(moving)
             {

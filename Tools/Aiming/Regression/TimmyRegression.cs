@@ -104,6 +104,7 @@ partial class Regression
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*6);execution=a.GetComponent<HeroAbilityExecution>();
   execution.TryCastAimed(3,Forward(a,9));Run(.25f);b.transform.position+=Vector3.right*5;Run(2.7f);
   Near(Total(b),1000,"leaving the original Scratch field avoids damage");Check(b.GetComponent<HeroCombatStatus>()?.Rooted!=true,"field exit does not root");
+  Check(Alterverse.Visuals.SelectedAbilityVfx.HoldStarts==1,"a missed Scratch never starts the confirmed-contact stars");
 
   for(int interruption=0;interruption<5;interruption++)
   {

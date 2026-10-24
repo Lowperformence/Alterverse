@@ -489,6 +489,21 @@ static partial class VfxRegression
         Check(manager.CustomMessagingManager.Packets.Count==before+2,"replayed hold events cannot echo");
         relay.Unbind();SelectedAbilityVfx.Available=false;SelectedAbilityVfx.StarsSound=null;
     }
+    static void TravelerLightningRoutes()
+    {
+        Reset();TravelerLightningVfx.Available=true;TravelerLightningVfx.Casts=TravelerLightningVfx.Launches=TravelerLightningVfx.Hits=TravelerLightningVfx.Areas=0;
+        var actor=Hero(HeroId.Traveler,0);var target=Hero(HeroId.Kaelon,1);target.transform.position=Vector3.forward*3;var hp=target.GetComponent<Health>();
+        int before=Visible().Length;HeroSkillVfx.Cast(actor,0);HeroSkillVfx.Spell(actor,target.transform.position,0,.2f);HeroSkillVfx.Impact(actor,hp,0);
+        Check(TravelerLightningVfx.Casts==1&&TravelerLightningVfx.Launches==1&&TravelerLightningVfx.Hits==1,"Temporal routes preparation, flight and confirmed contact through native chain");
+        Check(Visible().Length==before,"Temporal native chain replaces all former cast/shot/contact layers");
+        HeroSkillVfx.Cast(actor,2);HeroSkillVfx.Spell(actor,target.transform.position,2,.38f);HeroSkillVfx.Impact(actor,hp,2);HeroSkillVfx.Area(actor,target.transform.position,2.2f,.3f,false,false,2);
+        Check(TravelerLightningVfx.Areas==1&&TravelerLightningVfx.Radius==2.2f&&Visible().Length==before,"Chrono native chain owns one central actual-radius detonation");
+        HeroSkillVfx.Area(actor,target.transform.position,2.2f,.38f,true,false,2);Check(Visible().Length>before,"Chrono retains its accurate original warning boundary");
+        before=TravelerLightningVfx.Areas;HeroSkillVfx.Area(actor,target.transform.position,2.5f,.3f,false,false,3);Check(TravelerLightningVfx.Areas==before,"Traveler ultimate remains outside the two selected shot chains");
+        before=Visible().Length;HeroSkillVfx.Debuff(actor,hp,2);Check(Visible().Length==before,"selected Chrono does not stack an old debuff ring over native contact");
+        HeroSkillVfx.Debuff(actor,hp,3);Check(Visible().Length>before,"Traveler ultimate retains its original victim debuff presentation");
+        TravelerLightningVfx.Available=false;TravelerLightningVfx.NativeClips.Clear();
+    }
     static void Main()
     {
         var manager=new NetworkManager{IsServer=true,IsListening=true,IsConnectedClient=true};
@@ -507,7 +522,7 @@ static partial class VfxRegression
         Check(manager.CustomMessagingManager.Packets.Count==1,"Client replay cannot echo an event");
         before=Visible().Length;relay.Receive(9,packet);Check(Visible().Length==before,"A non-server cannot inject visual events");
         relay.Unbind();NetworkPresentationFollowers();AllCues();CommandDamage();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();ConfirmedBasicWindups();PendingCooldowns();OfflineOnlineParity();
-        AttackAtlasChecks();ThalaHealingRoutes();SelectedAbilityRoutes();
+        AttackAtlasChecks();ThalaHealingRoutes();SelectedAbilityRoutes();TravelerLightningRoutes();
         Console.WriteLine("PASS "+checks+" production online VFX and combat/shader checks (controlled Unity/GPU/network fixtures)");
     }
 }

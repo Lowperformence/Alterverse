@@ -345,7 +345,7 @@ namespace Alterverse.Characters
             if (visual&&!launched) HeroSkillVfx.Spell(gameObject, target.transform.position, slot);
             if(damaged&&(identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Mira||identity.Hero==HeroId.Veyr&&slot==1||
                 identity.Hero==HeroId.Nyra&&slot==2||identity.Hero==HeroId.Elyra&&(slot==1||slot==3)||identity.Hero==HeroId.Rook&&slot==0||identity.Hero==HeroId.Traveler&&(slot==2||slot==3)))
-                HeroSkillVfx.Debuff(gameObject,target);
+                HeroSkillVfx.Debuff(gameObject,target,slot);
         }
     }
 }

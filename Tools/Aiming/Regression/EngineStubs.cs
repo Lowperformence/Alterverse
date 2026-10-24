@@ -125,7 +125,7 @@ namespace Alterverse.Visuals {
   public static void TargetWarning(UnityEngine.GameObject a,Alterverse.Combat.Health h,float s){}
   public static void Cast(UnityEngine.GameObject a,int s,float windup=-1){}
   public static void Impact(UnityEngine.GameObject a,Alterverse.Combat.Health h,int s){}
-  public static void Debuff(UnityEngine.GameObject a,Alterverse.Combat.Health h){}
+  public static void Debuff(UnityEngine.GameObject a,Alterverse.Combat.Health h,int slot=-1){}
   public static void Dash(UnityEngine.GameObject a,UnityEngine.Vector3 p,UnityEngine.Vector3 q,int slot=2,float duration=.16f){if(Hero(a)==Alterverse.Characters.HeroId.Timmy)TimmyEffect(a,slot==3?3:2,p,q,0,duration);}
   public static void Support(UnityEngine.GameObject a,Alterverse.Combat.Health h,bool s,float d){}
   public static void SupportLink(UnityEngine.GameObject a,Alterverse.Combat.Health h){}
@@ -211,4 +211,16 @@ namespace Alterverse.Visuals {public static class SelectedAbilityVfx {
  public static bool JetSmoke(UnityEngine.GameObject a,UnityEngine.Transform nozzle,UnityEngine.Vector3 p,UnityEngine.Quaternion q,UnityEngine.Vector3 end,float d,float elapsed=0){SmokeCalls++;return Available;}
  public static bool TimmyHold(UnityEngine.GameObject a,Alterverse.Combat.Health t,float d,float elapsed=0){if(d>0)HoldStarts++;else HoldStops++;return Available;}
  public static void CancelSmoke(UnityEngine.GameObject a){}public static void CancelDelivery(int id){}public static void CancelOwner(UnityEngine.GameObject a){}
+}}
+
+namespace Alterverse.Visuals {public static class TravelerLightningVfx {
+ public static bool Available;public static int Casts,Launches,Hits,Areas;public static float Radius;public static bool Defer;public static System.Action Pending;
+ public static System.Collections.Generic.Dictionary<int,UnityEngine.AudioClip> NativeClips=new();
+ public static bool Ready(int skill)=>Available;public static bool Cast(UnityEngine.GameObject a,int skill){Casts++;return Available;}
+ public static bool Launch(UnityEngine.GameObject a,int s,UnityEngine.Vector3 f,UnityEngine.Vector3 t,float sec,float width,int deliveryId=0,float elapsed=0){Launches++;return Available;}
+ public static bool ConfirmHit(UnityEngine.GameObject a,Alterverse.Combat.Health h,int s,float elapsed=0){Hits++;return Available;}
+ public static bool ResolveArea(UnityEngine.GameObject a,UnityEngine.Vector3 p,float r,System.Action play,float elapsed=0){Areas++;Radius=r;if(Available)play?.Invoke();return Available;}
+ public static UnityEngine.AudioClip AudioFor(int skill,int phase)=>NativeClips.GetValueOrDefault(skill*3+phase);
+ public static bool ScheduleImpactAudio(UnityEngine.GameObject a,int s,UnityEngine.Vector3 p,System.Action play){if(!Defer)return false;Pending=play;return true;}
+ public static void CancelOwner(UnityEngine.GameObject a){}public static void CancelDelivery(int id){}
 }}
