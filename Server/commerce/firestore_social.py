@@ -51,7 +51,7 @@ class FirestoreSocial:
         self.ledger = ledger
         self.chat_config = chat_config or ChatConfig.from_env()
         self.client = ledger.client
-        prefix = getattr(ledger, 'social_namespace', None) or ledger.accounts.id.removesuffix('-accounts')
+        prefix = ledger.accounts.id.removesuffix('-accounts')
         self.collections = {table:self.client.collection(prefix+'-'+table.replace('_','-')) for table in TABLES}
         self.unique = self.client.collection(prefix+'-social-clan-unique')
 
@@ -295,9 +295,7 @@ class FirestoreSocial:
             if route=='/social/clan/create' and result.get('wallet') is not None:
                 wallet=result['wallet']
                 updated=dict(caller_account,balance=wallet['balance'],revision=wallet['revision'],profileRevision=wallet['profileRevision'],profile=wallet['profile'])
-                if updated!=caller_account:
-                    # Account adapters may retain metadata beyond the ledger fields.
-                    tx.set(self.ledger.accounts.document(account),dict(profile.to_dict() or {}, **updated))
+                if updated!=caller_account: tx.set(self.ledger.accounts.document(account),updated)
             # All reads above finish before any Firestore write is queued.
             for table in TABLES:
                 for identifier in before[table].keys()-after[table].keys():
@@ -378,3 +376,5 @@ if __name__ == '__main__':
     social = FirestoreSocial(ledger)
     for snapshot in ledger.accounts.stream():
         social.sync_wallet(snapshot.id)
+
+

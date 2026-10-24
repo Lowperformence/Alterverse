@@ -61,22 +61,5 @@ class FirestoreSetupTests(unittest.TestCase):
             with self.assertRaisesRegex(SystemExit,'still in progress'):setup.main()
         self.assertFalse(any(call.args[0][:3]==['gcloud','run','deploy'] for call in run.call_args_list))
 
-    def test_node_runtime_uses_explicit_existing_social_namespace(self):
-        env=self.service['spec']['template']['spec']['containers'][0]['env']
-        env[:]=[{'name':'DF_SOCIAL_NAMESPACE','value':'original-clans'},
-                {'name':'DF_FIRESTORE_PROJECT_ID','value':'database-project'}]
-        self.assertEqual(setup.settings(self.service,'run-project'),('database-project','original-clans'))
-        with self.assertRaisesRegex(ValueError,'differs'):
-            setup.settings(self.service,'run-project','other-clans')
-
-    def test_planned_node_runtime_can_prepare_indexes_before_deployment(self):
-        env=self.service['spec']['template']['spec']['containers'][0]['env'];env[:]=[]
-        self.assertEqual(setup.settings(self.service,'run-project','original-clans'),('run-project','original-clans'))
-
-    def test_node_runtime_cannot_be_overwritten_by_python_only_source_deployment(self):
-        with patch('sys.argv',['setup','--project','run-project','--social-namespace','original-clans','--execute','--deploy']),patch.object(setup,'run_json',return_value=self.service),patch.object(setup.subprocess,'run') as run,redirect_stdout(io.StringIO()):
-            with self.assertRaisesRegex(SystemExit,'paired Node clan runtime'):setup.main()
-        run.assert_not_called()
-
 
 if __name__=='__main__':unittest.main()

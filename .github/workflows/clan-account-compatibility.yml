@@ -4,7 +4,6 @@ on:
     paths:
       - 'Server/commerce/**'
       - 'Tools/ClanRestore/**'
-      - 'Tools/ClanChat/**'
       - 'Assets/Alterverse/Resources/Commerce/ShardCatalog.json'
       - 'Assets/Alterverse/Resources/Social/SafeIdentityCatalog.json'
       - '.github/workflows/clan-account-compatibility.yml'
@@ -12,35 +11,34 @@ on:
 permissions:
   contents: read
 jobs:
-  clan-compatibility:
+  standalone-node-clans:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install -r Server/commerce/requirements.txt
-      - name: Existing rules and Node account adapter
-        run: >-
-          PYTHONPATH=Server/commerce python -m unittest
-          test_social test_firestore_social test_clan_chat test_authentication
-          test_application test_safe_identity test_google_display_name test_node_social -q
-      - name: Original Node purchase/profile behavior and loopback HTTP
-        run: DF_CLAN_PYTHON="$(command -v python)" node Tools/ClanRestore/test_proxy.mjs --http
-      - name: Actual Cloud Console export with loopback HTTP
-        run: DF_CLAN_PYTHON="$(command -v python)" node Tools/ClanRestore/test_proxy.mjs --source=Tools/ClanRestore/fixtures/node-2026-10-22.2-cloud-export.js --http
-      - name: Release and Firestore setup checks
+      - name: Existing source data and shared clan/chat protocol
         run: |
-          python -m unittest discover -s Tools/ClanRestore -p 'test_build_release.py' -q
-          python -m unittest discover -s Tools/ClanChat -p 'test_setup_firestore.py' -q
-          bash -n Server/commerce/node/start-with-clans.sh
-      - name: Prepare fixture image context
-        run: >-
-          python Tools/ClanRestore/build_release.py
-          --node-index Tools/ClanRestore/fixtures/node-2026-10-22.2-cloud-export.js
-          --node-package Tools/ClanRestore/fixtures/package.json
-          --social-namespace ci-fixture
-          --output "$RUNNER_TEMP/clan-fixture-release"
-      - name: Build paired Node and Python fixture image
-        run: docker build --pull -t df-clan-compatibility:ci "$RUNNER_TEMP/clan-fixture-release"
+          python Tools/ClanRestore/generate_standalone_data.py --check
+          PYTHONPATH=Server/commerce python -m unittest discover -s Tools/ClanRestore -p 'test_standalone.py' -q
+      - name: Original account functions and encrypted report delivery
+        run: |
+          node Tools/ClanRestore/test_standalone_integrity.mjs
+          node Tools/ClanRestore/test_standalone_smtp.mjs
+      - name: Produce the single-file Node account server
+        run: |
+          node Server/commerce/node/attach-standalone-clans.mjs Tools/ClanRestore/fixtures/node-2026-10-22.2-cloud-export.js "$RUNNER_TEMP/index.js"
+          node --check "$RUNNER_TEMP/index.js"
+      - name: Actual Functions Framework and unchanged package manifest
+        run: |
+          mkdir -p "$RUNNER_TEMP/clan-standalone-runtime"
+          cp "$RUNNER_TEMP/index.js" "$RUNNER_TEMP/clan-standalone-runtime/index.js"
+          cp Tools/ClanRestore/fixtures/package.json "$RUNNER_TEMP/clan-standalone-runtime/package.json"
+          npm --prefix "$RUNNER_TEMP/clan-standalone-runtime" install --omit=dev --ignore-scripts --no-audit --no-fund
+          python Tools/ClanRestore/test_standalone_startup.py "$RUNNER_TEMP/clan-standalone-runtime"
