@@ -1518,16 +1518,14 @@ namespace Alterverse.UI
 
         private void DrawLaunch()
         {
-            theme.Label(new Rect(Left,230,ContentWidth,60),"Entering the Front",theme.Title);
-            theme.Label(new Rect(Left,316,ContentWidth,40),HeroName+"  /  "+Roles[selectedHero],theme.Heading);
             string mode=coopLaunching&&CoopAuthority.ActivePlan!=null
                 ?$"PRIVATE CO-OP  •  {CoopAuthority.ActivePlan.HumanCount} PLAYERS  /  {ArenaShopCatalog.For(CoopAuthority.ActivePlan.Arena).Name}  /  ZERO TEAM"
                 :ArenaVariantRuntime.ShuffleEnabled
                     ?"MATCH 4v4  /  RANDOM OWNED ARENA  /  ZERO TEAM"
                     : "MATCH 4v4  /  "+ArenaShopCatalog.For(ArenaVariantRuntime.Selected).Name+"  /  ZERO TEAM";
-            theme.Label(new Rect(Left,372,ContentWidth,32),mode,theme.Body,true);
-            theme.Progress(new Rect(Left,452,ContentWidth,5),Mathf.Clamp01((Time.unscaledTime-launchAt)/.55f));
-            theme.Label(new Rect(Left,480,ContentWidth,30),coopLaunching?"Synchronizing co-op battlefield":"Preparing your local match",theme.Small,true);
+            MatchLoadingPresentation.Draw(theme, coopLaunching
+                ? "SYNCHRONIZING BATTLEFIELD" : "PREPARING BATTLEFIELD", mode,
+                HeroName+"  /  "+Roles[selectedHero]);
         }
         private void EnterMatch()
         {

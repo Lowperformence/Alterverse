@@ -39,26 +39,34 @@ namespace Alterverse.Match{
  public class MatchSession{public bool IsFull=true;public MatchPlayerSlot[] Slots={new(){Hero=3}};}
  public enum PauseReason{Menu,Result}
  public static class MatchClock{public static void Set(PauseReason p,bool b){}}
- public static class ArenaVariantRuntime{public static string Current="Moon";}
+ public static class ArenaVariantRuntime{public static string Current="Moon",Selected="Moon";public static bool ShuffleEnabled;}
  public static class MatchExit{public static bool Leaving;public static string Error;public static Task ReturnToMenuAsync(string message=null){Leaving=true;Error=message;Alterverse.UI.OnlineMatchLoadingScreen.Cancel();return Task.CompletedTask;}}
 }
 namespace Alterverse.Multiplayer{
- public class OnlineMatchPlan{public Alterverse.Match.MatchSession Session=new();}
+ public class OnlineMatchPlan{public Alterverse.Match.MatchSession Session=new();public int HumanCount=2;public string Arena="Moon";}
  public static class CoopAuthority{public static OnlineMatchPlan ActivePlan;public static bool Active=>ActivePlan!=null;public static bool LocalHasServerAuthority;public static void EndMatch(){ActivePlan=null;}}
  public static class CoopRosterBuilder{public static int LocalSlot;public static int FindLocalHumanSlot(OnlineMatchPlan p)=>LocalSlot;}
  public class EdgegapOnlineFlow{public static EdgegapOnlineFlow Instance=new();public bool IsSearching;public string LastError="",Status="GAME SERVER CONNECTED • WAITING FOR MATCH START";}
  public class EdgegapMatchmakerClient{public static EdgegapMatchmakerClient Instance=new();public bool HasAssignment;}
 }
 namespace Alterverse.UI{
- public static class MainMenuController{public static bool IsVisible;}
+ public sealed partial class MainMenuController{
+  public static bool IsVisible;private FrontEndTheme theme=new();private bool coopLaunching;private int selectedHero=0;
+  private string HeroName=>"ROOK";private static readonly string[] Roles={"VANGUARD"};
+  public MainMenuController(bool coop=false){coopLaunching=coop;}
+ }
  public class FrontEndTheme{
   public object Title,Heading,Body,Small;public static UnityEngine.Color Raised,Accent;
-  public static List<string> Labels=new();public static UnityEngine.Rect Cover;public static bool Click;
+  public static List<string> Labels=new(),Actions=new();public static UnityEngine.Rect Cover;public static bool Click;
   public static void Fill(UnityEngine.Rect r,UnityEngine.Color c){if(r.width==UnityEngine.Screen.width)Cover=r;}
   public void Label(UnityEngine.Rect r,string s,object t,bool muted=false){Labels.Add(s);}
   public void FitLabel(UnityEngine.Rect r,string s,object t,bool muted=false){Labels.Add(s);}
-  public bool Action(UnityEngine.Rect r,string s){bool b=Click;Click=false;return b;}
+  public bool Action(UnityEngine.Rect r,string s){Actions.Add(s);bool b=Click;Click=false;return b;}
  }
+}
+namespace Alterverse.Shop{
+ public class ArenaFixture{public string Name;}
+ public static class ArenaShopCatalog{public static ArenaFixture For(string arena)=>new(){Name=arena};}
 }
 namespace Alterverse.Prototype{
  public sealed partial class PrototypeBootstrap:UnityEngine.MonoBehaviour{
@@ -72,3 +80,4 @@ namespace Alterverse.Prototype{
   private static void RecoverFailedBuild(){_=Alterverse.Match.MatchExit.ReturnToMenuAsync("Build failed");}
  }
 }
+
