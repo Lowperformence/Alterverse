@@ -28,10 +28,12 @@ namespace Alterverse.Visuals
         }
         private static HeroVfxPool instance;
         private static int nextDeliveryId, deliveryScope;
+        internal static int CurrentDelivery=>deliveryScope;
         internal static int BeginDelivery() { deliveryScope = ++nextDeliveryId; return deliveryScope; }
         internal static void EndDelivery() => deliveryScope = 0;
         internal static void CancelDelivery(int id)
         {
+            SmallBulletVfx.CancelDelivery(id);
             if (id <= 0 || instance == null) return;
             foreach (Slot slot in instance.slots)
                 if (slot != null && slot.Active && slot.DeliveryId == id && IsProjectile(slot)) instance.Hide(slot);
@@ -194,6 +196,7 @@ namespace Alterverse.Visuals
         }
         public static void CancelProjectiles(GameObject actor)
         {
+            SmallBulletVfx.CancelOwner(actor);
             if(instance==null)return;
             foreach(Slot slot in instance.slots)
                 if(slot!=null&&slot.Active&&IsProjectile(slot)&&slot.Owner==actor)instance.Hide(slot);

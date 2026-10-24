@@ -74,12 +74,14 @@ static class Regression
         solid.SetColor("_Color",new Color(1,.6f,.2f,.8f));
         original.GetComponent<ParticleSystemRenderer>().sharedMaterials=new[]{solid};
         AssetDatabase.Assets["NativeSolid.mat"]=solid;AssetDatabase.Assets[BomberNukeBuilder.Source]=original;
+        original.SetActive(false);
         AssetDatabase.Dependency="solid-fix";BomberNukeBuilder.Build();
         var fixedPrefab=AssetDatabase.LoadAssetAtPath<GameObject>(generated);
         var fixedMaterial=fixedPrefab.GetComponentsInChildren<Renderer>(true).Single().sharedMaterials.Single();
         Check(fixedMaterial.GetTexture("_MainTex")==Texture2D.whiteTexture,"solid_AB uses neutral white rather than failing import");
         Check(fixedMaterial.GetColor("_Tint").g==.6f&&fixedMaterial.GetColor("_Tint").a==.8f,"solid_AB native colour and opacity survive");
         Check(!solid.HasProperty("_MainTex"),"colour-only source material remains untouched");
+        Check(fixedPrefab.GetComponentsInChildren<ParticleSystem>(true).Single().gameObject.activeSelf,"inactive purchased root is enabled inside the prepared composition");
         Console.WriteLine($"PASS {checks} bomber Nuke import/playback/audio/footprint contracts across all {maps.Length} production arena variants. Controlled engine/editor fixtures; native Unity/GPU/phone review remains separate.");
     }
 }

@@ -791,6 +791,7 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Impact,actor,slot:slot,target:target!=null?target.gameObject:null);
             if(actor==null||target==null)return;
+            if(slot<0&&Hero(actor)==HeroId.Nyra&&SmallBulletVfx.ConfirmHit(actor,target.transform.position+Vector3.up*.35f))return;
             PolishImpact(actor,target,slot);
             Vector3 p=target.transform.position+Vector3.up*.35f;Color c=Accent(actor);
             float strength=slot<0?.35f:slot==3?.90f:.62f;
@@ -960,6 +961,8 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Basic,actor,impact,slot:-1,duration:travelTime,target:target!=null?target.gameObject:null,flag:animate);
             if(actor==null)return;if(animate)actor.GetComponent<HeroVisualMotion>()?.PulseAttack(false);
+            if(Hero(actor)==HeroId.Nyra&&SmallBulletVfx.Launch(actor,Muzzle(actor),impact+Vector3.up*.25f,travelTime,target,
+                HeroVfxPool.CurrentDelivery,HeroVfxEvents.ReplayElapsed))return;
             PolishRelease(actor,impact,-1,travelTime,target);
             if(Hero(actor)==HeroId.Timmy){TimmyClaws(actor,impact,-1);return;}
             switch(Hero(actor))

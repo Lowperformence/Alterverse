@@ -31,6 +31,7 @@ namespace UnityEngine
         public GameObject(string name=""){this.name=name;All.Add(this);Components.Add(new Transform{gameObject=this});}
         public T AddComponent<T>()where T:Component,new(){var c=new T{gameObject=this};Components.Add(c);return c;}
         public T GetComponent<T>()where T:class=>Components.OfType<T>().FirstOrDefault();
+        public T GetComponentInChildren<T>()where T:class=>GetComponentsInChildren<T>(true).FirstOrDefault();
         public T[] GetComponentsInChildren<T>(bool inactive=false)where T:class=>(inactive||activeInHierarchy?Components.OfType<T>():Enumerable.Empty<T>())
             .Concat(transform.Children.SelectMany(c=>c.gameObject.GetComponentsInChildren<T>(inactive))).ToArray();
         public void SetActive(bool value)
@@ -56,22 +57,24 @@ namespace UnityEngine
     }
     public sealed class Transform:Component
     {
-        public Vector3 localPosition,localScale=Vector3.one;public Transform parent;public readonly List<Transform> Children=new();
+        public Vector3 localPosition,localScale=Vector3.one;public Quaternion rotation;public Transform parent;public readonly List<Transform> Children=new();
         public Vector3 position {get=>parent==null?localPosition:parent.position+localPosition;set=>localPosition=value;}
         public void SetParent(Transform next,bool world){parent?.Children.Remove(this);parent=next;parent?.Children.Add(this);}
     }
-    public struct Vector3 {public float x,y,z;public Vector3(float x,float y,float z){this.x=x;this.y=y;this.z=z;}public static Vector3 one=>new(1,1,1);
+    public struct Vector3 {public float x,y,z;public Vector3(float x,float y,float z){this.x=x;this.y=y;this.z=z;}public static Vector3 one=>new(1,1,1);public static Vector3 up=>new(0,1,0);public float sqrMagnitude=>x*x+y*y+z*z;public float magnitude=>MathF.Sqrt(sqrMagnitude);
+        public static Vector3 operator-(Vector3 a,Vector3 b)=>new(a.x-b.x,a.y-b.y,a.z-b.z);public static float Distance(Vector3 a,Vector3 b)=>(a-b).magnitude;
+        public static Vector3 ClampMagnitude(Vector3 v,float max)=>v.magnitude>max?v*(max/v.magnitude):v;public static Vector3 Lerp(Vector3 a,Vector3 b,float t)=>a+(b-a)*t;
         public static Vector3 operator*(Vector3 v,float s)=>new(v.x*s,v.y*s,v.z*s);public static Vector3 operator+(Vector3 a,Vector3 b)=>new(a.x+b.x,a.y+b.y,a.z+b.z);}
     public struct Vector4 {public float x,y,z,w;public Vector4(float x,float y,float z,float w){this.x=x;this.y=y;this.z=z;this.w=w;}}
     public struct Vector2 {public float x,y;public Vector2(float x,float y){this.x=x;this.y=y;}public static Vector2 one=>new(1,1);public static Vector2 zero=>new(0,0);}
-    public struct Quaternion {public static Quaternion identity=>new();}
+    public struct Quaternion {public static Quaternion identity=>new();public static Quaternion LookRotation(Vector3 v)=>new();}
     public struct Color {public float r,g,b,a;public Color(float r,float g,float b,float a=1){this.r=r;this.g=g;this.b=b;this.a=a;}public static Color white=>new(1,1,1);}
     public struct Bounds {public Vector3 center,extents;}
     public static class Time {public static float time;}
-    public static class Mathf {public static float Max(params float[] v)=>v.Max();public static float Abs(float v)=>Math.Abs(v);}
+    public static class Mathf {public static float Max(params float[] v)=>v.Max();public static float Abs(float v)=>Math.Abs(v);public static float Clamp01(float value)=>Math.Clamp(value,0,1);}
     public class HideInInspector:Attribute {}public class RuntimeInitializeOnLoadMethodAttribute:Attribute {public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType t){}}
     public enum RuntimeInitializeLoadType {SubsystemRegistration}
-    public static class Debug {public static int Warnings;public static void LogWarning(object value){Warnings++;}public static void LogError(object value){throw new Exception(value.ToString());}}
+    public static class Debug {public static int Warnings;public static void Log(object value){}public static void LogWarning(object value){Warnings++;}public static void LogError(object value){throw new Exception(value.ToString());}}
     public static class Resources {public static GameObject Prefab;public static T Load<T>(string path)where T:class=>Prefab as T;}
     public sealed class MaterialPropertyBlock {public readonly Dictionary<string,Vector4> Vectors=new();public void SetVector(string key,Vector4 value)=>Vectors[key]=value;}
     public class Renderer:Component
@@ -82,13 +85,17 @@ namespace UnityEngine
     }
     public sealed class MeshRenderer:Renderer {}public sealed class MeshFilter:Component {}
     public class ParticleSystemRenderer:Renderer {public Material trailMaterial;}
-    public enum ParticleSystemStopBehavior {StopEmittingAndClear}
+    public enum ParticleSystemStopBehavior {StopEmittingAndClear,StopEmitting}
     public enum ParticleSystemStopAction {None,Destroy}
     public enum ParticleSystemScalingMode {Hierarchy,Local}
     public enum ParticleSystemSimulationSpace {Local,World}
     public enum ParticleSystemCullingMode {AlwaysSimulate}
     public sealed class ParticleSystem:Component
     {
+        public struct MinMaxCurve {public float constantMax;}
+        public struct Burst {public Burst(float time,short count){}}
+        public sealed class EmissionModule {public MinMaxCurve rateOverDistance;public int burstCount;public void SetBursts(Burst[] bursts){burstCount=bursts.Length;}}
+        public EmissionModule emission=new();
         public sealed class Module {public bool enabled=true;}
         public sealed class MainModule
         {
@@ -99,7 +106,7 @@ namespace UnityEngine
         }
         public MainModule main=new();public Module collision=new(),trigger=new(),lights=new(),subEmitters=new();
         public bool useAutoRandomSeed=true,Playing;public uint randomSeed;public float Age;
-        public int particleCount=>IsAlive(false)?1:0;
+        public int particleCount=>IsAlive(false)?1:0;public bool isPlaying=>Playing;
         public bool IsAlive(bool children)=>Playing&&Age<.3f;
         public void Stop(bool children,ParticleSystemStopBehavior behavior){Playing=false;Age=0;}
         public void Play(bool children){Playing=true;Age=0;}
@@ -119,7 +126,7 @@ namespace UnityEngine
         public void SetTexture(string key,Texture value)=>Values[key]=value;public void SetColor(string key,Color value)=>Values[key]=value;
         public Color GetColor(string key)=>(Color)Values[key];public void SetFloat(string key,float value)=>Values[key]=value;public float GetFloat(string key)=>(float)Values[key];
     }
-    public class AudioSource:Component {}public class Collider:Component {}public class DemoController:MonoBehaviour {}
+    public class AudioSource:Component {}public class Collider:Component {}public class DemoController:MonoBehaviour {public Dictionary<string,GameObject> References=new();}
 }
 namespace UnityEngine.Rendering {public enum ShadowCastingMode{Off}public enum LightProbeUsage{Off}public enum ReflectionProbeUsage{Off}public enum BlendMode{One=1,SrcAlpha=5,OneMinusSrcAlpha=10}}
 namespace UnityEngine.SceneManagement {public struct Scene {}public static class SceneManager {public static void MoveGameObjectToScene(UnityEngine.GameObject g,Scene s){}}}
@@ -129,6 +136,15 @@ namespace UnityEditor
     public enum PlayModeStateChange {ExitingEditMode}
     public static class EditorApplication {public static bool isPlaying,isCompiling;public static Action delayCall;public static Action<PlayModeStateChange> playModeStateChanged;}
     public static class GameObjectUtility {public static void RemoveMonoBehavioursWithMissingScript(UnityEngine.GameObject g){}}
+    public enum SerializedPropertyType {ObjectReference}
+    public class SerializedObject {private UnityEngine.Component target;public SerializedObject(UnityEngine.Component target){this.target=target;}public SerializedProperty GetIterator()=>new(target);}
+    public class SerializedProperty
+    {
+        private KeyValuePair<string,UnityEngine.GameObject>[] references;private int index=-1;
+        public SerializedProperty(UnityEngine.Component target){references=(target as UnityEngine.DemoController)?.References.ToArray()??Array.Empty<KeyValuePair<string,UnityEngine.GameObject>>();}
+        public bool NextVisible(bool children)=>++index<references.Length;public SerializedPropertyType propertyType=>SerializedPropertyType.ObjectReference;
+        public string name=>references[index].Key;public UnityEngine.Object objectReferenceValue=>references[index].Value;
+    }
     public static class EditorUtility {public static void SetDirty(object value){}}
     public static class AssetDatabase
     {
@@ -136,6 +152,8 @@ namespace UnityEditor
         public static T LoadAssetAtPath<T>(string path)where T:class=>Assets.GetValueOrDefault(path) as T;
         public static string GetAssetPath(UnityEngine.Object value)=>Assets.FirstOrDefault(p=>ReferenceEquals(p.Value,value)).Key??"shader";
         public static string AssetPathToGUID(string path)=>"source-material";
+        public static string[] FindAssets(string query,string[] roots)=>Assets.Where(a=>a.Value is UnityEngine.GameObject&&roots.Any(r=>a.Key.StartsWith(r,StringComparison.Ordinal))).Select(a=>a.Key).ToArray();
+        public static string GUIDToAssetPath(string guid)=>guid;public static bool IsValidFolder(string path)=>true;
         public static string GetAssetDependencyHash(string path)=>Dependency;
         public static void CreateAsset(UnityEngine.Object value,string path)=>Assets[path]=value;
         public static void Refresh(){}public static void SaveAssets(){Saves++;}
@@ -147,5 +165,6 @@ namespace UnityEditor.Build.Reporting {public class BuildReport {}}
 namespace UnityEditor.SceneManagement {public static class EditorSceneManager {public static UnityEngine.SceneManagement.Scene NewPreviewScene()=>new();public static bool ClosePreviewScene(UnityEngine.SceneManagement.Scene s)=>true;}}
 namespace Alterverse.Match {public static class ArenaVariantRuntime {public static ArenaVariant Current;public static bool IsKryon=>Current==ArenaVariant.Kryon;public static bool IsNoxara=>Current==ArenaVariant.Noxara;}}
 namespace Alterverse.Combat {public static class ArenaVariantRuntime {public static bool IsKryon=>Alterverse.Match.ArenaVariantRuntime.IsKryon;public static bool IsNoxara=>Alterverse.Match.ArenaVariantRuntime.IsNoxara;}}
+namespace Alterverse.Combat {public class Health:UnityEngine.MonoBehaviour {public bool IsDead;}}
 namespace Alterverse.Visuals {public static class BomberExplosionVfx {public static int Calls;public static void Play(UnityEngine.Vector3 p,UnityEngine.Color c,float r){Calls++;}}}
-namespace Alterverse.Audio {public enum DimensionSound {Explosion}public static class DimensionAudio {public static int Calls;public static float Gain;public static void PlayAt(DimensionSound cue,UnityEngine.Vector3 p,float gain){Calls++;Gain=gain;}}}
+namespace Alterverse.Audio {public enum DimensionSound {Explosion,MechGun}public static class DimensionAudio {public static int Calls;public static float Gain;public static void PlayAt(DimensionSound cue,UnityEngine.Vector3 p,float gain,float elapsed=0){Calls++;Gain=gain;}}}

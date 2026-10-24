@@ -73,6 +73,7 @@ namespace Alterverse.Editor
                 SceneManager.MoveGameObjectToScene(root, preview);
                 var composition = Object.Instantiate(original, root.transform, false);
                 composition.name = "NukeConeExplosionFire";
+                composition.SetActive(true);
                 // Keep the complete authored particle/mesh composition, never demo logic or audio.
                 foreach (var transform in composition.GetComponentsInChildren<Transform>(true))
                 {
@@ -132,6 +133,7 @@ namespace Alterverse.Editor
                 if (PrefabUtility.SaveAsPrefabAsset(root, PrefabPath) == null)
                     throw new IOException("Could not save the prepared bomber Nuke prefab.");
                 AssetDatabase.SaveAssets();
+                Debug.Log("DIMENSIONS FRONT VFX: NukeConeExplosionFire PREPARED; nativeRadius=" + horizontalRadius + "; " + signature);
             }
             finally
             {
@@ -149,7 +151,7 @@ namespace Alterverse.Editor
             converted = AssetDatabase.LoadAssetAtPath<Material>(path);
             bool create = converted == null;
             if (create) converted = new Material(shader); else converted.shader = shader;
-            converted.name = "DF_BomberNuke_" + source.name;
+            converted.name = (output == Output ? "DF_BomberNuke_" : "DF_SmallBullet_") + source.name;
             string texture = source.HasProperty("_BaseMap") && source.GetTexture("_BaseMap") != null ? "_BaseMap" : "_MainTex";
             bool textured = source.HasProperty(texture) && source.GetTexture(texture) != null;
             // solid_AB is an authored colour-only material, not a missing resource.

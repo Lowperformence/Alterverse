@@ -6,16 +6,17 @@ namespace Alterverse.Visuals
     public sealed class BomberNukeVfx : MonoBehaviour
     {
         public const string ResourcePath = "CombatVfx/BomberNuke/Explosion";
-        public const string ImportVersion = "Bomber Nuke Cone 2";
+        public const string ImportVersion = "Bomber Nuke Cone 3";
         [HideInInspector] public float nativeRadius = 1f;
         [HideInInspector] public string sourceSignature;
         private static GameObject prefab;
         private static bool warned;
+        private static bool reported;
         private ParticleSystem[] systems;
         private float started;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatic() { prefab = null; warned = false; }
+        private static void ResetStatic() { prefab = null; warned = false; reported = false; }
 
         public static bool TryPlay(Vector3 position, float radius)
         {
@@ -42,6 +43,12 @@ namespace Alterverse.Visuals
                 renderer.SetPropertyBlock(block);
             }
             instance.SetActive(true);
+            if (!reported)
+            {
+                Debug.Log("DIMENSIONS FRONT VFX: NukeConeExplosionFire ACTIVE; radius=" + radius +
+                    "; nativeRadius=" + definition.nativeRadius + "; scale=" + instance.transform.localScale.x + "; " + definition.sourceSignature);
+                reported = true;
+            }
             return true;
         }
 
