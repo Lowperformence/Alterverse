@@ -9,6 +9,7 @@ namespace Alterverse.Visuals
     public sealed class SivraNovaVfx:MonoBehaviour
     {
         public const string ResourcePath="CombatVfx/SivraNova/Library";
+        private const float SizeMultiplier=2.5f;
         [Serializable] public sealed class Effect
         {
             public GameObject prefab;
@@ -214,7 +215,7 @@ namespace Alterverse.Visuals
         private static GameObject Part(Effect effect,Vector3 point,Quaternion rotation,float radius,float elapsed,
             Vector3 segmentStart,Vector3 segmentEnd,float clipRadius,bool moving=false,Transform follow=null)
         {
-            var root=Instantiate(effect.prefab,point,rotation);root.transform.localScale=Vector3.one*(radius/effect.radius);
+            var root=Instantiate(effect.prefab,point,rotation);root.transform.localScale=Vector3.one*(radius*SizeMultiplier/effect.radius);
             var visual=root.AddComponent<SivraNovaVfx>();visual.part=true;visual.held=moving;
             visual.started=Time.time;visual.cycleStarted=Time.time-Mathf.Max(0,elapsed);visual.stopEmissionAt=Mathf.Max(.05f,effect.emissionSeconds);
             visual.follow=follow;visual.offset=follow!=null?point-follow.position:Vector3.zero;
@@ -226,6 +227,7 @@ namespace Alterverse.Visuals
         }
         private void Clip(Vector3 start,Vector3 end,float radius,bool moving)
         {
+            radius*=SizeMultiplier;
             foreach(var renderer in renderers)
             {
                 renderer.GetPropertyBlock(block);
