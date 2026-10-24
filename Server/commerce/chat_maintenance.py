@@ -4,6 +4,7 @@ Schedule every minute for SMTP retries, daily for deletion (or use Firestore TTL
 No public HTTP endpoint or additional service is required.
 """
 import argparse
+import os
 from clan_chat import ClanChat
 from chat_delivery import ChatDelivery
 
@@ -25,8 +26,16 @@ def cleanup(social, limit=100):
         batch.commit()
 
 
+def configured_application():
+    if os.environ.get('DF_SOCIAL_NAMESPACE'):
+        from node_social import create_application
+        return create_application()
+    from wsgi import application
+    return application
+
+
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--cleanup',action='store_true');args=parser.parse_args()
-    from wsgi import application
+    application=configured_application()
     if args.cleanup:cleanup(application.social)
     print(ChatDelivery(application.social).pump(20))

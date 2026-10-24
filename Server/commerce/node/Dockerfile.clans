@@ -1,0 +1,16 @@
+FROM node:24-bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-venv ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY package.json ./
+RUN npm install --omit=dev --ignore-scripts && npm cache clean --force
+COPY Server/commerce/requirements.txt /app/Server/commerce/requirements.txt
+RUN python3 -m venv /opt/df-social && /opt/df-social/bin/pip install --no-cache-dir -r Server/commerce/requirements.txt
+COPY . /app
+ENV PORT=8080 \
+    PYTHONPATH=/app/Server/commerce \
+    DF_UNITY_PROJECT_ID=__UNITY_PROJECT__ \
+    DF_SOCIAL_NAMESPACE=__SOCIAL_NAMESPACE__ \
+    DF_SOCIAL_ALLOW_EMPTY_NAMESPACE=0
+EXPOSE 8080
+CMD ["bash", "/app/Server/commerce/node/start-with-clans.sh"]

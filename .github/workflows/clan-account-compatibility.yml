@@ -1,0 +1,44 @@
+name: Clan account compatibility
+on:
+  pull_request:
+    paths:
+      - 'Server/commerce/**'
+      - 'Tools/ClanRestore/**'
+      - 'Tools/ClanChat/**'
+      - 'Assets/Alterverse/Resources/Commerce/ShardCatalog.json'
+      - 'Assets/Alterverse/Resources/Social/SafeIdentityCatalog.json'
+      - '.github/workflows/clan-account-compatibility.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  clan-compatibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r Server/commerce/requirements.txt
+      - name: Existing rules and Node account adapter
+        run: >-
+          PYTHONPATH=Server/commerce python -m unittest
+          test_social test_firestore_social test_clan_chat test_authentication
+          test_application test_safe_identity test_google_display_name test_node_social -q
+      - name: Original Node purchase/profile behavior and loopback HTTP
+        run: DF_CLAN_PYTHON="$(command -v python)" node Tools/ClanRestore/test_proxy.mjs --http
+      - name: Release and Firestore setup checks
+        run: |
+          python -m unittest discover -s Tools/ClanRestore -p 'test_build_release.py' -q
+          python -m unittest discover -s Tools/ClanChat -p 'test_setup_firestore.py' -q
+          bash -n Server/commerce/node/start-with-clans.sh
+      - name: Prepare fixture image context
+        run: >-
+          python Tools/ClanRestore/build_release.py
+          --node-index Tools/ClanRestore/fixtures/node-2026-10-22.2.js
+          --node-package Tools/ClanRestore/fixtures/package.json
+          --social-namespace ci-fixture
+          --output "$RUNNER_TEMP/clan-fixture-release"
+      - name: Build paired Node and Python fixture image
+        run: docker build --pull -t df-clan-compatibility:ci "$RUNNER_TEMP/clan-fixture-release"

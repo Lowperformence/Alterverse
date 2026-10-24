@@ -34,7 +34,7 @@ def resolve_project(explicit=None):
     return metadata['projectId']
 
 
-def settings(service,project):
+def settings(service,project,social_namespace=None):
     containers=service['spec']['template']['spec']['containers']
     if len(containers)!=1:raise ValueError('Expected the existing single-container account service')
     env={entry['name']:entry for entry in containers[0].get('env',[])}
@@ -42,8 +42,13 @@ def settings(service,project):
         entry=env.get(name,{})
         if entry.get('valueFrom'):raise ValueError(name+' must be readable configuration, not a secret reference')
         return entry.get('value',default)
-    if value('DF_ACCOUNT_STORAGE','sqlite')!='firestore':raise ValueError('This service does not use Firestore; no storage migration is performed')
-    namespace=value('DF_FIRESTORE_NAMESPACE','dimensions-front')
+    bridge_namespace=value('DF_SOCIAL_NAMESPACE','')
+    if bridge_namespace and social_namespace and bridge_namespace!=social_namespace:
+        raise ValueError('The selected namespace differs from the existing clan runtime')
+    namespace=social_namespace or bridge_namespace
+    if not namespace:
+        if value('DF_ACCOUNT_STORAGE','sqlite')!='firestore':raise ValueError('This service does not use Firestore; no storage migration is performed')
+        namespace=value('DF_FIRESTORE_NAMESPACE','dimensions-front')
     database_project=value('DF_FIRESTORE_PROJECT_ID',project) or project
     for name,item in (('namespace',namespace),('project',database_project)):
         if not isinstance(item,str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,100}',item):raise ValueError('Invalid '+name)
@@ -94,6 +99,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--project',help='Existing Cloud Run project ID; default: resolve from the game account endpoint')
     parser.add_argument('--execute',action='store_true')
+    parser.add_argument('--social-namespace',help='Verified existing clan namespace for the paired Node/Python account runtime')
     parser.add_argument('--deploy',action='store_true',help='Also deploy the existing account backend; requires --execute')
     args=parser.parse_args()
     if args.deploy and not args.execute:parser.error('--deploy requires --execute')
@@ -101,7 +107,10 @@ def main():
         args.project=resolve_project(args.project)
         if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,100}',args.project):raise ValueError('Invalid project ID')
         service=run_json(['gcloud','run','services','describe',SERVICE,'--project='+args.project,'--region='+REGION,'--format=json'])
-        project,namespace=settings(service,args.project);config=definitions(namespace)
+        project,namespace=settings(service,args.project,args.social_namespace);config=definitions(namespace)
+        env=service['spec']['template']['spec']['containers'][0].get('env',[])
+        if args.deploy and (args.social_namespace or any(e['name']=='DF_SOCIAL_NAMESPACE' for e in env)):
+            raise ValueError('The paired Node clan runtime must be deployed from its prepared release directory; --deploy here would replace the purchase service with another runtime')
         listing=['gcloud','firestore','indexes','composite','list','--project='+project,'--database=(default)','--format=json']
         existing=run_json(listing)
         for command in setup_commands(config,existing,project):

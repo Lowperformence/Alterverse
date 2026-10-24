@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.0.0",
+    "@google-cloud/firestore": "^9.3.1",
+    "@googleapis/androidpublisher": "^42.1.0",
+    "google-auth-library": "^11.1.0",
+    "jose": "^6.2.12"
+  },
+  "type": "module"
+}
