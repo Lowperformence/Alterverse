@@ -285,7 +285,8 @@ static class Regression
     static void HatSizeChecks()
     {
         // Recorded before the size corrections. The UFO must grow exactly 25%
-        // from its one-third version, and all other hats must match its full width.
+        // from its one-third version. Relative to that shared width, the wizard
+        // is 25% larger and the propeller/mushroom hats are 25% smaller.
         var originalSizes=new Dictionary<UniversalHeroCosmetic,Vector3>
         {
             {UniversalHeroCosmetic.BetaCap,new Vector3(.6413307f,.25305986f,.9218707f)},
@@ -303,10 +304,12 @@ static class Regression
             Bounds actual=model.GetComponent<MeshFilter>().sharedMesh.bounds;
             bool ufo=entry.Key==UniversalHeroCosmetic.UfoTestHat;
             float referenceWidth=originalSizes[UniversalHeroCosmetic.UfoTestHat].x/3f*1.25f;
+            if(entry.Key==UniversalHeroCosmetic.WizardHat)referenceWidth*=1.25f;
+            if(entry.Key==UniversalHeroCosmetic.PropellerCap||entry.Key==UniversalHeroCosmetic.MushroomHat)referenceWidth*=.75f;
             Vector3 expected=entry.Value*(referenceWidth/entry.Value.x);
             Check(Math.Abs(actual.size.x-expected.x)<.00001f&&
                 Math.Abs(actual.size.y-expected.y)<.00001f&&Math.Abs(actual.size.z-expected.z)<.00001f,
-                ufo?"UFO did not grow exactly 25% from the one-third version.":"Hat does not match the UFO reference width or its previous proportions changed.");
+                ufo?"UFO reference size changed.":"Hat does not match its requested size adjustment or its previous proportions changed.");
             float expectedSeat=1.25f-.1f*(referenceWidth/entry.Value.x);
             Check(Math.Abs(view.SeatInHeadSpace.y-expectedSeat)<.00001f,
                 "Hat size correction lost the crown contact position.");
@@ -353,7 +356,10 @@ static class Regression
         {
             Check(view.Apply(id),"Hat failed on the helmet plus merged-halo fixture.");
             float width=view.Head.Find("DF_Headwear_"+HeadwearSelection.ResourceFor(id)).GetComponent<MeshFilter>().sharedMesh.bounds.size.x;
-            Check(Math.Abs(width-helmetWidth)<.00001f,"Hat width matching failed on a differently shaped, helmeted head.");
+            float target=helmetWidth;
+            if(id==UniversalHeroCosmetic.WizardHat)target*=1.25f;
+            if(id==UniversalHeroCosmetic.PropellerCap||id==UniversalHeroCosmetic.MushroomHat)target*=.75f;
+            Check(Math.Abs(width-target)<.00001f,"Hat size adjustment failed on a differently shaped, helmeted head.");
         }
         Check(skin.sharedMesh==source&&source.GetTriangles(1).Length>0&&skin.enabled,
             "Headwear fitting removed or hid Tahla's halo instead of excluding it from measurement.");

@@ -47,7 +47,7 @@ namespace Alterverse.EditorChecks
                         Bounds fitted=new Bounds(toRoot.MultiplyPoint3x4(points[0]),Vector3.zero);
                         foreach(Vector3 point in points)fitted.Encapsulate(toRoot.MultiplyPoint3x4(point));
                         Require(view.ReferenceWidth>0&&Mathf.Abs(fitted.size.x-view.ReferenceWidth)<Mathf.Max(.0001f,view.ReferenceWidth*.001f),
-                            "Hat does not match the approved UFO reference width.");
+                            "Hat does not match its target width relative to the approved UFO reference.");
                         Require(cap.GetComponentsInChildren<Collider>(true).Length==0,"Cosmetic introduced a collider.");
                         Vector3 position=cap.localPosition,scale=cap.localScale;
                         Quaternion rotation=cap.localRotation;

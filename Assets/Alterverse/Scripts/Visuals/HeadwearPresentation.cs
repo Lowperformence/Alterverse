@@ -77,7 +77,10 @@ namespace Alterverse.Visuals
             if(!UfoHatMesh.TryGetBounds("UfoTestHat",out Bounds referenceBounds,out string referenceError))
             {LastFitError=referenceError;return false;}
             // The approved reference is 25% larger than the previous one-third UFO.
-            float width=referenceBounds.size.x*referenceScale.x*(1.25f/3f);
+            // Apply the model-specific visual adjustments around that shared reference.
+            float adjustment=selected==UniversalHeroCosmetic.WizardHat?1.25f:
+                selected==UniversalHeroCosmetic.PropellerCap||selected==UniversalHeroCosmetic.MushroomHat?.75f:1f;
+            float width=referenceBounds.size.x*referenceScale.x*(1.25f/3f)*adjustment;
             if(asset)
             {
                 if(!UfoHatMesh.TryBuildResource(resource,Matrix4x4.identity,shader,out mesh,out materials,out string message))
@@ -97,7 +100,7 @@ namespace Alterverse.Visuals
                 materials[i]=material;
             }
             }
-            // Match the full model width, keeping each hat's fitted proportions.
+            // Match the model's target width, keeping each hat's fitted proportions.
             // Scale its crown insertion by the same amount so small hats don't sink.
             float size=width/(mesh.bounds.size.x*scale.x);
             scale*=size;
