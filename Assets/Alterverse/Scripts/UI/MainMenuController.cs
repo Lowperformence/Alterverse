@@ -327,9 +327,9 @@ namespace Alterverse.UI
             DrawHomeCard(new Rect(Left,542,cardWidth,126),"01  /  DEPLOYMENT","ENTER THE FRONT",Page.Play);
             DrawHomeCard(new Rect(Left+cardWidth+12,542,cardWidth,126),"02  /  SEASON REWARDS","BATTLE PASS",Page.BattlePass);
             DrawHomeCard(new Rect(Left+(cardWidth+12)*2,542,cardWidth,126),"03  /  DAILY OBJECTIVES","MISSIONS",Page.Quests);
-            if(theme.Action(new Rect(Left,680,112,28),"RANKING"))SetPage(Page.Leaderboard);
-            if(theme.Action(new Rect(Left+124,680,112,28),"SETTINGS"))SetPage(Page.Settings);
-            if(theme.Action(new Rect(Left+248,680,112,28),"CLANS"))SetPage(Page.Clans);
+            if(theme.Action(new Rect(Left,672,cardWidth,44),"RANKING"))SetPage(Page.Leaderboard);
+            if(theme.Action(new Rect(Left+cardWidth+12,672,cardWidth,44),"SETTINGS"))SetPage(Page.Settings);
+            if(theme.Action(new Rect(Left+(cardWidth+12)*2,672,cardWidth,44),"CLANS"))SetPage(Page.Clans);
             theme.FitLabel(new Rect(Right-350,681,350,26),"SAME STARS. NEW POSSIBILITIES.",theme.Small,true);
         }
         private void DrawHomeCard(Rect rect,string eyebrow,string title,Page target)
