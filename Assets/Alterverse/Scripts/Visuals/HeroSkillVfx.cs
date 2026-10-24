@@ -314,6 +314,7 @@ namespace Alterverse.Visuals
             }
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Cast,actor,slot:slot,duration:Mathf.Max(0,windup));
             if(actor==null)return;
+            if(Hero(actor)==HeroId.Nyra&&(slot==2||slot==3)&&SivraNovaVfx.Cast(actor,slot,Muzzle(actor),windup,HeroVfxEvents.ReplayElapsed))return;
             PolishCast(actor,slot);
             if(Hero(actor)==HeroId.Timmy){TimmyCast(actor,slot);return;}
             HeroId h=Hero(actor);Color c=h==HeroId.Mira&&(slot==1||slot==2||slot==3)?new Color(.24f,1f,.42f):Accent(actor);float size=slot==3?.45f:.22f;Vector3 p=Muzzle(actor);
@@ -664,6 +665,8 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Spell,actor,impact,slot,duration:travelTime,target:target!=null?target.gameObject:null);
             if(actor==null)return;HeroId h=Hero(actor);
+            if(h==HeroId.Nyra&&(slot==2||slot==3)&&SivraNovaVfx.Launch(actor,slot,Muzzle(actor),impact+Vector3.up*.25f,
+                travelTime,target,HeroVfxPool.CurrentDelivery,HeroVfxEvents.ReplayElapsed))return;
             PolishRelease(actor,impact,slot,travelTime,target);
             if(h==HeroId.Timmy)
             {
@@ -792,6 +795,7 @@ namespace Alterverse.Visuals
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Impact,actor,slot:slot,target:target!=null?target.gameObject:null);
             if(actor==null||target==null)return;
             if(slot<0&&Hero(actor)==HeroId.Nyra&&SmallBulletVfx.ConfirmHit(actor,target.transform.position+Vector3.up*.35f))return;
+            if(Hero(actor)==HeroId.Nyra&&(slot==2||slot==3)&&SivraNovaVfx.ConfirmHit(actor,target,slot,HeroVfxEvents.ReplayElapsed))return;
             PolishImpact(actor,target,slot);
             Vector3 p=target.transform.position+Vector3.up*.35f;Color c=Accent(actor);
             float strength=slot<0?.35f:slot==3?.90f:.62f;
@@ -947,7 +951,9 @@ namespace Alterverse.Visuals
         public static void Debuff(GameObject actor,Health target)
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Debuff,actor,target:target!=null?target.gameObject:null);
-            if(actor==null||target==null||target.GetComponent<HeroIdentity>()==null)return;
+            if(actor==null||target==null)return;
+            if(Hero(actor)==HeroId.Nyra&&SivraNovaVfx.SnareStatus(actor,target,HeroVfxEvents.ReplayElapsed))return;
+            if(target.GetComponent<HeroIdentity>()==null)return;
             HeroId h=Hero(actor);if(h==HeroId.Nyra)return; // Dedicated snare bands already show this effect.
             Ring(actor,Ground(target.transform.position),.6f,.35f,h==HeroId.Elyra,h==HeroId.Kaelon,follow:target.transform);
         }

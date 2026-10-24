@@ -183,3 +183,13 @@ namespace Alterverse.Multiplayer {public class CoopWorldEntityKey:UnityEngine.Mo
 // Existing suites exercise the unimported fallback. The focused suite compiles the real presenter.
 namespace Alterverse.Visuals {public static class SmallBulletVfx {public static bool Launch(UnityEngine.GameObject actor,UnityEngine.Vector3 from,UnityEngine.Vector3 to,float duration,UnityEngine.Transform target=null,int deliveryId=0,float elapsed=0,bool confirmedHit=false,float delay=0)=>false;public static bool ConfirmHit(UnityEngine.GameObject actor,UnityEngine.Vector3 point)=>false;public static void CancelOwner(UnityEngine.GameObject actor){}public static void CancelDelivery(int id){}}}
 
+namespace Alterverse.Visuals {public static class SivraNovaVfx {
+ public static bool Cast(UnityEngine.GameObject actor,int slot,UnityEngine.Vector3 muzzle,float windup,float elapsed=0)=>false;
+ public static bool Launch(UnityEngine.GameObject actor,int slot,UnityEngine.Vector3 from,UnityEngine.Vector3 to,float seconds,UnityEngine.Transform follow=null,int deliveryId=0,float elapsed=0)=>false;
+ public static bool ConfirmHit(UnityEngine.GameObject actor,Alterverse.Combat.Health target,int slot,float elapsed=0)=>false;
+ public static bool SnareStatus(UnityEngine.GameObject actor,Alterverse.Combat.Health target,float elapsed=0)=>false;
+ public static UnityEngine.AudioClip AudioFor(int slot,int phase)=>null;
+ public static bool ScheduleImpactAudio(UnityEngine.GameObject actor,int slot,UnityEngine.Vector3 point,System.Action play)=>false;
+ public static void CancelDelivery(int id){}public static void CancelOwner(UnityEngine.GameObject actor){}
+}}
+

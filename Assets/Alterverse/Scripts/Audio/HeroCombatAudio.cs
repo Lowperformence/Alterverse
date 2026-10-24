@@ -5,6 +5,8 @@ namespace Alterverse.Audio
 {
     public static class HeroCombatAudio
     {
+        static bool UsesNovaAudio(int hero,int action)=>hero==(int)HeroId.Nyra&&(action==3||action==4)&&
+            Alterverse.Visuals.SivraNovaVfx.AudioFor(action-1,0)!=null;
         // Preserve original cast/impact cue indices; preparation occupies the appended bank.
         public const int CueCount=HeroIdentity.HeroCount*15;
         static readonly string[] Heroes={"Veyr","Kaelon","Nyra","Elyra","Mira","Rook","Traveler","Nerok"};
@@ -27,12 +29,12 @@ namespace Alterverse.Audio
             8=>action==1||action==2||action==4,
             _=>false
         };
-        public static bool HasImpact(int hero,int action)=>hero==(int)HeroId.VoidKnight||!UsesSelectedRecording(hero,action)&&(action==0||(RecordingHero(hero,action) switch
+        public static bool HasImpact(int hero,int action)=>UsesNovaAudio(hero,action)?Alterverse.Visuals.SivraNovaVfx.AudioFor(action-1,1)!=null:hero==(int)HeroId.VoidKnight||!UsesSelectedRecording(hero,action)&&(action==0||(RecordingHero(hero,action) switch
         {
             0=>action!=3,1=>action!=2,2=>action!=2,3=>action!=3,4=>action==1||action==4,5=>action!=2,6=>action!=2,7=>action!=2,_=>false
         }));
-        public static bool HasWindup(int hero,int action)=>hero==(int)HeroId.VoidKnight?action!=2:!UsesSelectedRecording(hero,action)&&(action==0||HasImpact(hero,action));
-        public static int VariantCount(int hero,int action,int phase)=>hero==(int)HeroId.VoidKnight?(action==0&&phase==0?3:1):hero==7?1:phase!=2&&(action==0||phase==1&&hero==2&&action==4)?3:1;
+        public static bool HasWindup(int hero,int action)=>UsesNovaAudio(hero,action)?Alterverse.Visuals.SivraNovaVfx.AudioFor(action-1,2)!=null:hero==(int)HeroId.VoidKnight?action!=2:!UsesSelectedRecording(hero,action)&&(action==0||HasImpact(hero,action));
+        public static int VariantCount(int hero,int action,int phase)=>UsesNovaAudio(hero,action)?1:hero==(int)HeroId.VoidKnight?(action==0&&phase==0?3:1):hero==7?1:phase!=2&&(action==0||phase==1&&hero==2&&action==4)?3:1;
         public static int Cue(int hero,int action,int phase)
         {hero=RecordingHero(hero,action);return hero==(int)HeroId.VoidKnight?135+action*3+phase:hero==(int)HeroId.Timmy?120+action*3+phase:hero==7?105+action*3+phase:phase==2?70+hero*5+action:hero*10+action*2+phase;}
         public static AudioClip[][] Load()
@@ -49,7 +51,7 @@ namespace Alterverse.Audio
                 {
                     string path="Audio/Heroes/"+Heroes[h]+"/"+Actions[a]+(phase==0?"_Cast":phase==1?"_Impact":"_Windup")+(v==0?"":"_v"+(v+1));
                     if(a==4&&phase==0)path="Audio/Heroes/"+Heroes[h]+"/Ultimate_Selected";
-                    clips[cue][v]=Resources.Load<AudioClip>(path);
+                    clips[cue][v]=UsesNovaAudio(h,a)?Alterverse.Visuals.SivraNovaVfx.AudioFor(a-1,phase):Resources.Load<AudioClip>(path);
                     if(clips[cue][v]==null)Debug.LogWarning("DIMENSIONS FRONT: missing combat audio: "+path);
                 }
             }
@@ -106,9 +108,13 @@ namespace Alterverse.Audio
             }
             float pan=local?0:Mathf.Clamp((p.x-.5f)*1.1f,-.65f,.65f);
             // Per-actor throttling: other actors of the same class cannot silence the player.
-            // Sivra fires four shots in .54s; the selected ultimate recording starts only once.
-            float cooldown=ultimate&&phase==0?1f:phase==2?.045f:ultimate&&hero==2?.06f:phase==1?.065f:.08f;
+            // The selected ultimate recording starts once; native Nova audio follows
+            // Sivra's three existing releases without the one-second voice throttle.
+            bool novaAudio=UsesNovaAudio(hero,action);
+            float cooldown=novaAudio&&ultimate&&phase==0?.06f:ultimate&&phase==0?1f:phase==2?.045f:ultimate&&hero==2?.06f:phase==1?.065f:.08f;
             int cue=Cue(hero,action,phase);
+            if(novaAudio&&phase==1&&Alterverse.Visuals.SivraNovaVfx.ScheduleImpactAudio(actor,action-1,position,
+                ()=>DimensionAudio.PlayHero(cue,gain*attenuation,local?2:ultimate?1:0,cooldown,pan,1f,actor.GetEntityId().GetHashCode())))return;
             DimensionAudio.PlayHero(cue,gain*attenuation,local?2:ultimate?1:0,cooldown,pan,1f,actor.GetEntityId().GetHashCode());
         }
         // A confirmed hero kill is feedback for its owner, independent of camera visibility.

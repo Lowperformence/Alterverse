@@ -61,13 +61,13 @@ namespace UnityEngine
         public Vector3 position {get=>parent==null?localPosition:parent.position+localPosition;set=>localPosition=value;}
         public void SetParent(Transform next,bool world){parent?.Children.Remove(this);parent=next;parent?.Children.Add(this);}
     }
-    public struct Vector3 {public float x,y,z;public Vector3(float x,float y,float z){this.x=x;this.y=y;this.z=z;}public static Vector3 one=>new(1,1,1);public static Vector3 up=>new(0,1,0);public float sqrMagnitude=>x*x+y*y+z*z;public float magnitude=>MathF.Sqrt(sqrMagnitude);
+    public struct Vector3 {public float x,y,z;public Vector3(float x,float y,float z){this.x=x;this.y=y;this.z=z;}public static Vector3 zero=>new(0,0,0);public static Vector3 one=>new(1,1,1);public static Vector3 up=>new(0,1,0);public float sqrMagnitude=>x*x+y*y+z*z;public float magnitude=>MathF.Sqrt(sqrMagnitude);
         public static Vector3 operator-(Vector3 a,Vector3 b)=>new(a.x-b.x,a.y-b.y,a.z-b.z);public static float Distance(Vector3 a,Vector3 b)=>(a-b).magnitude;
         public static Vector3 ClampMagnitude(Vector3 v,float max)=>v.magnitude>max?v*(max/v.magnitude):v;public static Vector3 Lerp(Vector3 a,Vector3 b,float t)=>a+(b-a)*t;
         public static Vector3 operator*(Vector3 v,float s)=>new(v.x*s,v.y*s,v.z*s);public static Vector3 operator+(Vector3 a,Vector3 b)=>new(a.x+b.x,a.y+b.y,a.z+b.z);}
     public struct Vector4 {public float x,y,z,w;public Vector4(float x,float y,float z,float w){this.x=x;this.y=y;this.z=z;this.w=w;}}
     public struct Vector2 {public float x,y;public Vector2(float x,float y){this.x=x;this.y=y;}public static Vector2 one=>new(1,1);public static Vector2 zero=>new(0,0);}
-    public struct Quaternion {public static Quaternion identity=>new();public static Quaternion LookRotation(Vector3 v)=>new();}
+    public struct Quaternion {public static Quaternion identity=>new();public static Quaternion LookRotation(Vector3 v)=>new();public static Quaternion Euler(float x,float y,float z)=>new();}
     public struct Color {public float r,g,b,a;public Color(float r,float g,float b,float a=1){this.r=r;this.g=g;this.b=b;this.a=a;}public static Color white=>new(1,1,1);}
     public struct Bounds {public Vector3 center,extents;}
     public static class Time {public static float time;}
@@ -126,7 +126,8 @@ namespace UnityEngine
         public void SetTexture(string key,Texture value)=>Values[key]=value;public void SetColor(string key,Color value)=>Values[key]=value;
         public Color GetColor(string key)=>(Color)Values[key];public void SetFloat(string key,float value)=>Values[key]=value;public float GetFloat(string key)=>(float)Values[key];
     }
-    public class AudioSource:Component {}public class Collider:Component {}public class DemoController:MonoBehaviour {public Dictionary<string,GameObject> References=new();}
+    public class AudioClip:Object {}
+    public class AudioSource:Component {public AudioClip clip;}public class Collider:Component {}public class DemoController:MonoBehaviour {public Dictionary<string,GameObject> References=new();public Dictionary<string,Object> ObjectReferences=new();}
 }
 namespace UnityEngine.Rendering {public enum ShadowCastingMode{Off}public enum LightProbeUsage{Off}public enum ReflectionProbeUsage{Off}public enum BlendMode{One=1,SrcAlpha=5,OneMinusSrcAlpha=10}}
 namespace UnityEngine.SceneManagement {public struct Scene {}public static class SceneManager {public static void MoveGameObjectToScene(UnityEngine.GameObject g,Scene s){}}}
@@ -140,8 +141,8 @@ namespace UnityEditor
     public class SerializedObject {private UnityEngine.Component target;public SerializedObject(UnityEngine.Component target){this.target=target;}public SerializedProperty GetIterator()=>new(target);}
     public class SerializedProperty
     {
-        private KeyValuePair<string,UnityEngine.GameObject>[] references;private int index=-1;
-        public SerializedProperty(UnityEngine.Component target){references=(target as UnityEngine.DemoController)?.References.ToArray()??Array.Empty<KeyValuePair<string,UnityEngine.GameObject>>();}
+        private KeyValuePair<string,UnityEngine.Object>[] references;private int index=-1;
+        public SerializedProperty(UnityEngine.Component target){var demo=target as UnityEngine.DemoController;references=demo==null?Array.Empty<KeyValuePair<string,UnityEngine.Object>>():demo.References.Select(p=>new KeyValuePair<string,UnityEngine.Object>(p.Key,p.Value)).Concat(demo.ObjectReferences).ToArray();}
         public bool NextVisible(bool children)=>++index<references.Length;public SerializedPropertyType propertyType=>SerializedPropertyType.ObjectReference;
         public string name=>references[index].Key;public UnityEngine.Object objectReferenceValue=>references[index].Value;
     }
@@ -152,7 +153,7 @@ namespace UnityEditor
         public static T LoadAssetAtPath<T>(string path)where T:class=>Assets.GetValueOrDefault(path) as T;
         public static string GetAssetPath(UnityEngine.Object value)=>Assets.FirstOrDefault(p=>ReferenceEquals(p.Value,value)).Key??"shader";
         public static string AssetPathToGUID(string path)=>"source-material";
-        public static string[] FindAssets(string query,string[] roots)=>Assets.Where(a=>a.Value is UnityEngine.GameObject&&roots.Any(r=>a.Key.StartsWith(r,StringComparison.Ordinal))).Select(a=>a.Key).ToArray();
+        public static string[] FindAssets(string query,string[] roots)=>Assets.Where(a=>(query.Contains("t:AudioClip")?a.Value is UnityEngine.AudioClip:a.Value is UnityEngine.GameObject)&&roots.Any(r=>a.Key.StartsWith(r,StringComparison.Ordinal))).Select(a=>a.Key).ToArray();
         public static string GUIDToAssetPath(string guid)=>guid;public static bool IsValidFolder(string path)=>true;
         public static string GetAssetDependencyHash(string path)=>Dependency;
         public static void CreateAsset(UnityEngine.Object value,string path)=>Assets[path]=value;
@@ -166,5 +167,6 @@ namespace UnityEditor.SceneManagement {public static class EditorSceneManager {p
 namespace Alterverse.Match {public static class ArenaVariantRuntime {public static ArenaVariant Current;public static bool IsKryon=>Current==ArenaVariant.Kryon;public static bool IsNoxara=>Current==ArenaVariant.Noxara;}}
 namespace Alterverse.Combat {public static class ArenaVariantRuntime {public static bool IsKryon=>Alterverse.Match.ArenaVariantRuntime.IsKryon;public static bool IsNoxara=>Alterverse.Match.ArenaVariantRuntime.IsNoxara;}}
 namespace Alterverse.Combat {public class Health:UnityEngine.MonoBehaviour {public bool IsDead;}}
+namespace Alterverse.Combat {public class HeroCombatStatus:UnityEngine.MonoBehaviour {public float MoveMultiplier=1f;}}
 namespace Alterverse.Visuals {public static class BomberExplosionVfx {public static int Calls;public static void Play(UnityEngine.Vector3 p,UnityEngine.Color c,float r){Calls++;}}}
 namespace Alterverse.Audio {public enum DimensionSound {Explosion,MechGun}public static class DimensionAudio {public static int Calls;public static float Gain;public static void PlayAt(DimensionSound cue,UnityEngine.Vector3 p,float gain,float elapsed=0){Calls++;Gain=gain;}}}

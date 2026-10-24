@@ -20,4 +20,4 @@ Validation states must be explicit:
 
 Fixture tests do not establish native import or rendered appearance. Never report a visual as finished on the basis of a prefab name, source-code selection or synthetic particle fixture alone. A runtime fallback to the original effect is a fallback, not proof that the purchased effect is visible.
 
-Current assignments: bomber `NukeConeExplosionFire` on all maps; complete Small Bullet chain for Sivra/Nyra basic and base guardian shots. Leave the other restored attacks alone until the user selects the next one.
+Current assignments: bomber `NukeConeExplosionFire` on all maps; complete Small Bullet chain for Sivra/Nyra basic and base guardian shots. The next selected changes are blue Nova Small for Light Snare and blue Nova for Sightline Break, with purchased-package audio for these two skills. Leave the other restored attacks alone until the user selects the next one.
