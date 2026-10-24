@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "parts": 143,
+  "vertices": 20847,
+  "triangles": 41294,
+  "closed_manifold_parts": 143,
+  "bounds_m": [
+    [
+      -0.533,
+      0.0045000000000000005,
+      -0.293
+    ],
+    [
+      0.865,
+      2.025,
+      0.335
+    ]
+  ],
+  "checks": [
+    "unique part names",
+    "finite positions",
+    "valid triangle indices",
+    "nonzero triangle areas",
+    "each edge has exactly two incident faces",
+    "all materials achromatic",
+    "glTF embedded buffer lengths and accessor bounds independently read",
+    "OBJ round-trip counts and indices independently read",
+    "Python source compilation"
+  ],
+  "not_tested": [
+    "Blender execution",
+    "FBX round trip",
+    "skin weights",
+    "animations",
+    "Unity rendering",
+    "Android performance"
+  ]
+}

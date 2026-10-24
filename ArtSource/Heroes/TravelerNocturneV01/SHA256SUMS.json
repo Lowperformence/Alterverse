@@ -1,0 +1,18 @@
+{
+  "DESIGN.md": "406e9b4703d0c77fad323b41edfda3c181dea8dcaf1ca53c4eb862865d9c101d",
+  "PROVENANCE.md": "0395861c21acb843fa4451fbd330b4c063c93ac6271dd01263bdaa1c57dfa51f",
+  "README.md": "4ce099f54951b84b6b36d5dd6c4c06d840881766093591126fb67a51e6069c2e",
+  "RIGHTS.md": "13a275420c60b7120243cd7d373cab4397300932e79508a949270b310627596d",
+  "build_traveler.py": "170789b6fd6ed7b1585c1918aef4db4039cae84cb7789ddc010345b799fec995",
+  "concept_exploded.png": "3d4791f5e2ca738f32ee654ca584e6e164c9ac870b0602373b5f24299d8a68f2",
+  "exploded_geometry.png": "a7d958724ece3c2dc906aa9feb4af98d03d0366e40d0b486e569afb93bf81df7",
+  "import_blender.py": "cad4b40cb3e5c3980754341606ea08baa9981c93c42a4f5a4eeab5fda56afbda",
+  "parts.json": "d9013da36f5e8acad6529bfecafc2e6f4b24a4ca47ff31d8dfef29581aeafcbe",
+  "prompts.txt": "b0d8d68446e30935bc4b45162a74bfec360fccd911ded2451bf65e165efca56e",
+  "prototype_geometry.png": "5fab3f01d1be7d23403785d5a229c8563215448d972f1ccba942a0ee14d65a26",
+  "traveler.mtl": "27b8f00484055754e7dae939bcdba311b8c41361aadf047631d036a0b943f79d",
+  "traveler_exploded.obj": "70ee16ec7b0b4e0a849ec3e1133400a4ba6d418221ab4d790d23bc5333ac88a4",
+  "traveler_prototype.gltf": "c2a9bb6bc49e93214e0e0762f0712309715c74d561383be1c26642eb82caf6f9",
+  "traveler_prototype.obj": "f404370c40eeba5787cc12dbe49a9c62377f82c38c0e311d1397352eb65f910b",
+  "validation.json": "99ab0bf0136cfa9ffb3813ea3d7458637cd73611e684980c31f5fe9905d09ba1"
+}
