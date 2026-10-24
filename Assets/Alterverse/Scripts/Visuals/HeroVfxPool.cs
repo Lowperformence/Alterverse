@@ -16,6 +16,7 @@ namespace Alterverse.Visuals
         private const int Capacity=192,WarningReserve=32,CoreReserve=32;
         private sealed class Slot
         {
+            public EpicVisual Epic;public bool EpicBeam;public HeroFxShape Shape;
             public Transform Transform;public MeshRenderer Renderer;public MeshFilter Filter;
             public MaterialPropertyBlock Block;
             public Vector3 From,To,Size,Offset;public Quaternion Rotation;
@@ -90,6 +91,7 @@ namespace Alterverse.Visuals
                 Debug.LogWarning("DF: recovered HeroEnergy material from its Resources shader.");
             }
             LoadAttackAtlas();
+            LoadEpicLibrary();
             for(int i=0;i<shapes.Length;i++)
             {
                 HeroFxShape shape=(HeroFxShape)i;shapes[i]=BuildShape(shape);
@@ -117,7 +119,7 @@ namespace Alterverse.Visuals
             elapsed+=HeroVfxEvents.ReplayElapsed;
             Warm();if(instance==null||instance.material==null)return;
             // An unavailable atlas only omits its extra layer; never show an opaque fallback quad.
-            if(sprite!=HeroFxSprite.None&&(warning||instance.attackAtlas==null))return;
+            if(sprite!=HeroFxSprite.None&&(warning||instance.attackAtlas==null&&instance.epicLibrary==null))return;
             instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay,endFollow,decorative,elapsed,cancelOnOwnerDeath,maxRange,sprite,billboard,roll);
         }
         private void Show(HeroFxShape shape,Vector3 from,Vector3 to,Vector3 size,Color color,float duration,
@@ -147,6 +149,7 @@ namespace Alterverse.Visuals
             }
             // Never steal a visible warning; optional flourishes are dropped at saturation.
             if(slot==null)return;
+            slot.Shape=shape;
             slot.DeliveryId=deliveryScope;slot.Active=true;slot.Warning=warning;slot.Decorative=decorative;slot.CancelOnOwnerDeath=cancelOnOwnerDeath||owner!=null&&owner.GetComponent<HeroIdentity>()?.Hero==HeroId.Nerok;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
             slot.Sprite=sprite;slot.Billboard=billboard;slot.Roll=roll;
             slot.Follow=follow;slot.Follows=follow!=null;slot.FollowMotion=follow!=null?follow.GetComponent<HeroVisualMotion>():null;slot.Offset=slot.Follows?from-follow.position:Vector3.zero;
@@ -184,6 +187,7 @@ namespace Alterverse.Visuals
             else if(!warning&&shape==HeroFxShape.MonsterSlime)
                 surface=monsterSlime??=RuntimeShaderLibrary.Create(Color.white,false,.02f,.78f);
             slot.Renderer.sharedMaterial=surface!=null?surface:material;
+            AttachEpic(slot,shape);
             Draw(slot,Mathf.Clamp01((Time.time-slot.Start)/slot.Duration));
             if(Time.time<slot.Start)slot.Renderer.enabled=false;
         }
@@ -202,10 +206,10 @@ namespace Alterverse.Visuals
         {
             if(instance==null)return;
             foreach(Slot slot in instance.slots)
-                if(slot!=null&&slot.Active&&slot.Owner==actor&&slot.Filter.sharedMesh==instance.shapes[(int)shape]&&
+                if(slot!=null&&slot.Active&&slot.Owner==actor&&slot.Shape==shape&&
                     (!motion.HasValue||slot.Motion==motion.Value))instance.Hide(slot);
         }
-        private void Hide(Slot s){s.Active=false;s.Renderer.enabled=false;s.Follow=null;s.Owner=null;s.OwnerHealth=null;s.Shield=null;s.EndFollow=null;s.EndHealth=null;s.FollowMotion=s.EndMotion=null;s.TracksEnd=false;}
+        private void Hide(Slot s){ReleaseEpic(s);s.Active=false;s.Renderer.enabled=false;s.Follow=null;s.Owner=null;s.OwnerHealth=null;s.Shield=null;s.EndFollow=null;s.EndHealth=null;s.FollowMotion=s.EndMotion=null;s.TracksEnd=false;}
         private void Update()
         {
             if(Time.timeScale<=0)return;
@@ -337,6 +341,10 @@ namespace Alterverse.Visuals
             Color color=s.Color;
             if(!s.Warning){color.r*=1.28f;color.g*=1.28f;color.b*=1.28f;}
             color.a*=fade;
+            if(s.Epic!=null)
+            {
+                s.Renderer.enabled=false;DrawEpic(s,Mathf.Max(0,Time.time-s.Start),fade);return;
+            }
             s.Block.SetFloat(Life,t);s.Block.SetFloat(SurfaceStyle,s.SurfaceStyle);
             if(s.Sprite!=HeroFxSprite.None)s.Block.SetFloat(AtlasCell,AtlasFrame(s.Sprite,t));
             s.Block.SetFloat(DetailQuality,s.Warning?0f:AdaptiveVfxBudget.SurfaceDetail);
@@ -350,6 +358,8 @@ namespace Alterverse.Visuals
                 if(warningShapes[i]!=null&&warningShapes[i]!=shapes[i])Destroy(warningShapes[i]);
                 if(shapes[i]!=null)Destroy(shapes[i]);
             }
+            if(epicBeam!=null)Destroy(epicBeam);
+            if(epicTrace!=null)Destroy(epicTrace);
             if(ownsMaterial&&material!=null)Destroy(material);
             if(anchorMetal!=null)Destroy(anchorMetal);
             if(timmyGrenadeMetal!=null)Destroy(timmyGrenadeMetal);
@@ -675,4 +685,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

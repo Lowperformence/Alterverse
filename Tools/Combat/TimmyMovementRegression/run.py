@@ -73,6 +73,7 @@ with tempfile.TemporaryDirectory(prefix='df-timmy-movement-') as d:
     subprocess.run([str(mono), str(a.roslyn), '-nologo', '-noconfig', '-langversion:9',
         '-r:'+str(a.mono_root/'usr/lib/mono/4.5/System.dll'),
         '-r:'+str(a.mono_root/'usr/lib/mono/4.5/System.Core.dll'), '-out:'+str(binary),
-        str(d/'Engine.cs'), str(here/'Regression.cs'), str(here/'BasicMovementRegression.cs'), *[str(src/n) for n in names]],
+        str(d/'Engine.cs'), str(root/'Tools/Aiming/Regression/EpicToonDisabled.cs'), str(here/'Regression.cs'), str(here/'BasicMovementRegression.cs'), *[str(src/n) for n in names]],
         env=env, check=True)
     subprocess.run([str(mono), str(binary)], env=env, check=True)
+

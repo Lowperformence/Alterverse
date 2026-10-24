@@ -38,10 +38,13 @@ def main():
     names += ['Visuals/HeroSkillVfx.cs', 'Visuals/HeroSkillVfx.AttackPolish.cs', 'Visuals/MonsterAttackVfx.cs', 'Visuals/PrototypeVfx.cs', 'Visuals/BomberExplosionVfx.cs', 'Visuals/HeroSkillVfx.VoidKnight.cs',
               'Characters/VoidKnightBalance.cs', 'Characters/VoidKnightState.cs',
               'Characters/HeroAbilityExecution.VoidKnight.cs', 'Multiplayer/CoopHeroStateSync.Vfx.cs', 'Characters/HeroLocomotion.cs', 'Visuals/HeroPresentationBuffer.cs', 'UI/TargetIndicatorHUD.cs']
+    names += ['Visuals/EpicVfxLibrary.cs', 'Visuals/HeroVfxPool.EpicToon.cs', 'Visuals/HeroAbilityReadabilityBoost.cs', 'Visuals/HeroAttackReadabilityPresentation.cs']
     engine = (shared / 'EngineStubs.cs').read_text()
     engine = remove_class(engine, 'public sealed partial class HeroSkillVfx:')
     engine = remove_class(engine, 'public static class CoopHeroStateSync ')
     engine = remove_class(engine, 'public class HeroLocomotion:')
+    engine = remove_class(engine, 'public class HeroAbilityReadabilityBoost:')
+    engine = remove_class(engine, 'public class HeroAttackReadabilityPresentation:')
     engine = engine.replace('public struct Quaternion {', 'public struct Quaternion {public static Quaternion Slerp(Quaternion a,Quaternion b,float t){var q=System.Numerics.Quaternion.Slerp(new(a.x,a.y,a.z,a.w),new(b.x,b.y,b.z,b.w),t);return new Quaternion{x=q.X,y=q.Y,z=q.Z,w=q.W};}')
     engine = engine.replace('public class GUIStyle {', 'public enum FontStyle{Bold}public class GUIStyleState{public Color textColor;}public class GUIStyle {public object font;public FontStyle fontStyle;public GUIStyleState normal=new();')
     engine = engine.replace('public static class GUI {', 'public static class GUI {public static void Label(Rect r,string text,GUIStyle style){}')
@@ -76,10 +79,16 @@ def main():
     engine = engine.replace('LastMessage=s;LastPacket=w.Data;', 'LastMessage=s;LastPacket=w.Data;Packets.Add((s,w.Data,id));')
     engine = engine.replace('public void WriteValueSafe(int i)=>', 'public void WriteValueSafe(double d)=>writer.Write(d);public void WriteValueSafe(int i)=>')
     engine = engine.replace('public void ReadValueSafe(out int i)=>', 'public void ReadValueSafe(out double d)=>d=reader.ReadDouble();public void ReadValueSafe(out int i)=>')
+    # Minimal particle APIs for testing the real replacement scheduler; native rendering is separate.
+    engine = engine.replace('public class MeshRenderer:Component {', 'public class MeshRenderer:Renderer {} public class Renderer:Component {')
+    engine = engine.replace('public class Transform:Component {', 'public class Transform:Component {public Vector3 localPosition;public Quaternion localRotation;')
+    engine = engine.replace('public static class Resources {', 'public static class Resources {public static object EpicLibrary;')
+    engine = engine.replace('where T:class{if(s=="CombatVfx/AttackAtlas"', 'where T:class{if(s=="CombatVfx/EpicToon/Library")return EpicLibrary as T;if(s=="CombatVfx/AttackAtlas"')
+    engine = engine.replace('public class Object {', 'public class Object {public static GameObject Instantiate(GameObject source,Transform parent,bool world){var clone=new GameObject(source.name);clone.transform.SetParent(parent,world);clone.AddComponent<ParticleSystem>();clone.AddComponent<ParticleSystemRenderer>();return clone;}')
     with tempfile.TemporaryDirectory(prefix='df-vfx-') as directory:
         directory = Path(directory)
         fixtures = directory / 'Engine.cs'
-        fixtures.write_text(engine)
+        fixtures.write_text(engine + (here / 'EpicParticleFixtures.cs').read_text())
         # Compile the production snapshot body and expiry properties without replacing the
         # combat suite's separate fake damage engine. This isolates network shield lifetime.
         health = (root / 'Assets/Alterverse/Scripts/Combat/Health.cs').read_text()
@@ -94,15 +103,15 @@ def main():
                            'private float maxHealth=1000;public float Current=1000;public bool IsDead;public event Action<float,float> Changed;' +
                            capacity + transient + shield + add_shield + snapshot + '}}')
         output = directory / 'Regression.dll'
-        files = [fixtures, replica, here / 'Regression.cs', here / 'AttackAtlasRegression.cs', here / 'MonsterPresentationFixtures.cs', here / 'NetworkFixtures.cs',
+        files = [fixtures, replica, here / 'Regression.cs', here / 'EpicToonRegression.cs', here / 'AttackAtlasRegression.cs', here / 'MonsterPresentationFixtures.cs', here / 'NetworkFixtures.cs',
                  *[root / 'Assets/Alterverse/Scripts' / n for n in names]]
         if args.negative_control:
-            original = root / 'Assets/Alterverse/Scripts/Visuals/HeroVfxPool.Textures.cs'
-            disabled = directory / 'AtlasDisabled.cs'
+            original = root / 'Assets/Alterverse/Scripts/Visuals/HeroVfxPool.EpicToon.cs'
+            disabled = directory / 'EpicDisabled.cs'
             content = original.read_text()
-            needle = 'attackAtlas=Resources.Load<Material>("CombatVfx/AttackAtlas");'
+            needle = 'if(epicLibrary==null)return false;'
             assert content.count(needle) == 1
-            disabled.write_text(content.replace(needle, 'attackAtlas=null; return;'))
+            disabled.write_text(content.replace(needle, 'return false; // negative control: no native replacement'))
             files = [disabled if file == original else file for file in files]
         subprocess.run([str(dotnet / 'dotnet'), str(csc), '-nologo', '-noconfig', '-langversion:9',
                         '-out:' + str(output), *['-r:' + str(p) for p in refs.glob('*.dll')], *map(str, files)], check=True)
@@ -113,3 +122,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

@@ -37,7 +37,7 @@ def main():
         temp=Path(temp)
         pool=temp/"HeroVfxPool.cs";pool.write_bytes(source)
         binary=temp/"Regression.exe"
-        sources=[pool,HERE/"EngineStubs.cs",HERE/"Regression.cs",
+        sources=[pool,ROOT/"Tools/Aiming/Regression/EpicToonDisabled.cs",HERE/"EngineStubs.cs",HERE/"Regression.cs",
             ROOT/"Assets/Alterverse/Scripts/Performance/VfxQualityHysteresis.cs",
             ROOT/"Assets/Alterverse/Scripts/Performance/RuntimePerformanceMonitor.cs",
             ROOT/"Assets/Alterverse/Scripts/Performance/AdaptiveVfxBudget.cs",
@@ -46,3 +46,4 @@ def main():
         subprocess.run([str(mono),str(binary)],env=env,check=True)
 
 if __name__=="__main__":main()
+

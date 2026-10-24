@@ -18,10 +18,16 @@ namespace Alterverse.Visuals
             seconds=Mathf.Max(0,seconds-elapsed);if(seconds<=0)return;
             if(!warning)
             {
+                if(thrust)
+                {
+                    HeroVfxPool.Emit(HeroFxShape.Laser,origin,origin+direction*range,new Vector3(.18f,.06f,range),
+                        color,originalSeconds,HeroFxMotion.LaserBeam,Face(origin,origin+direction),actor,elapsed:elapsed);
+                    return;
+                }
                 Vector3 contact=origin+direction*Mathf.Min(range*.50f,1.6f)+Vector3.up*.18f;
-                float diameter=Mathf.Min(range*1.25f,3.1f);
-                HeroVfxPool.Sprite(HeroFxSprite.SlashHeavy,contact,contact,new Vector2(diameter,diameter),
-                    color,originalSeconds,actor,rotation:Face(origin,origin+direction)*Quaternion.Euler(90f,0,0),billboard:false,elapsed:elapsed);
+                HeroVfxPool.Emit(HeroFxShape.Slash,contact,contact,Vector3.one*Mathf.Min(range*.62f,1.55f),
+                    color,originalSeconds,HeroFxMotion.Hold,Face(origin,origin+direction),actor,elapsed:elapsed);
+                return;
             }
             if(thrust)
             {
@@ -36,3 +42,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

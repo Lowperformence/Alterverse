@@ -448,9 +448,10 @@ static partial class VfxRegression
         Check(Visible().Length>before,"Production receiver and full facade create visible client meshes");
         Check(manager.CustomMessagingManager.Packets.Count==1,"Client replay cannot echo an event");
         before=Visible().Length;relay.Receive(9,packet);Check(Visible().Length==before,"A non-server cannot inject visual events");
-        relay.Unbind();NetworkPresentationFollowers();AllCues();CommandDamage();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();ConfirmedBasicWindups();PendingCooldowns();OfflineOnlineParity();
-        AttackAtlasChecks();
-        Console.WriteLine("PASS "+checks+" production online VFX and combat/shader checks (controlled Unity/GPU/network fixtures)");
+        relay.Unbind();NetworkPresentationFollowers();CommandDamage();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();ConfirmedBasicWindups();PendingCooldowns();OfflineOnlineParity();
+        EpicToonChecks();
+        Console.WriteLine("PASS "+checks+" production combat, network and Epic Toon replacement checks (controlled Unity/GPU/network fixtures)");
     }
 }
+
 
