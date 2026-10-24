@@ -2,9 +2,9 @@ name: Ranked and account regression
 on:
   push:
     branches: ['dev/vertical-slice']
-    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Editor/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Ranked/**', 'Tools/Profile/GoogleNameRegression/**', 'Tools/DedicatedServer/**', 'Tools/Multiplayer/**', '.github/workflows/ranked-regression.yml']
+    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Editor/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Ranked/**', 'Tools/Profile/GoogleNameRegression/**', 'Tools/DedicatedServer/**', 'Tools/Multiplayer/**', 'Tools/SpaceBomber/**', '.github/workflows/ranked-regression.yml']
   pull_request:
-    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Editor/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Ranked/**', 'Tools/Profile/GoogleNameRegression/**', 'Tools/DedicatedServer/**', 'Tools/Multiplayer/**', '.github/workflows/ranked-regression.yml']
+    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Editor/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Ranked/**', 'Tools/Profile/GoogleNameRegression/**', 'Tools/DedicatedServer/**', 'Tools/Multiplayer/**', 'Tools/SpaceBomber/**', '.github/workflows/ranked-regression.yml']
 jobs:
   regression:
     runs-on: ubuntu-latest
@@ -30,6 +30,7 @@ jobs:
 
 
       - run: python Tools/Multiplayer/VfxRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/SpaceBomber/NukeRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Multiplayer/LoadingRegression/run.py --dotnet-root "$DOTNET_ROOT"
 
 
