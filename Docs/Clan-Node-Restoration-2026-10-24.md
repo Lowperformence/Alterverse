@@ -12,6 +12,8 @@ The **actual existing social namespace must be supplied explicitly**. Its existi
 
 Committed Node profile saves synchronize the public clan directory through the existing profile-sync implementation. A delayed directory refresh does not invalidate or repeat a committed save. Private credentials, purchase tokens and receipt data are not forwarded to the clan process; it receives the player's original authorization plus social request data. Both authentication implementations remain in place.
 
+The account and clan collections must also be in the **same actual Firestore project**. The adapter resolves the default project used by the inspected `new Firestore()` Node source and rejects a conflicting project override. Cross-project migration is not implemented and must not be approximated by pointing the clan service at a second wallet.
+
 ## Preparing the actual release
 
 Export **the current** Cloud Run Node `index.js` and `package.json`, including any hat additions made in the other conversation. Do not use the historical test fixture as the live source.
@@ -42,7 +44,7 @@ This helper now recognizes the paired runtime. Its Python-only `--deploy` path i
 ## Validation completed
 
 - **120 existing Python tests passed** for clan rules, Firestore transactions, chat/moderation, authentication, identities, HTTP application behavior and aliases.
-- **58 Node-adapter scenarios passed** across the shared clan/chat scenarios and targeted compatibility checks: retained old membership/public IDs, exact earned/paid debit and retry, stale saves, forged account fields, retained Node metadata/purchase records, closed billing routes, suspension and namespace/maintenance configuration.
+- **59 Node-adapter scenarios passed** across the shared clan/chat scenarios and targeted compatibility checks: retained old membership/public IDs, exact earned/paid debit and retry, stale saves, forged account fields, retained Node metadata/purchase records, closed billing routes, suspension and namespace/project/maintenance configuration.
 - **62 JavaScript checks passed** using the actual retained Node functions against network/Firestore fixtures: unchanged authentication/profile/purchase/subscription functions and catalog text, loopback routing, errors, scope, original Google grant/replay and shop debit/retry.
 - **15 two-process HTTP checks passed** between the patched Node handler and actual Python rules over loopback, using Firestore/authentication fixtures: old clan discovery, explicit empty membership, creation/debit/retry, leave/join and summed-level ranking.
 - **5 release-builder tests and 10 Firestore setup tests passed**; Python/JavaScript syntax and shell syntax checks passed.

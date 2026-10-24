@@ -199,5 +199,15 @@ class NodeAccountCompatibilityTests(unittest.TestCase):
             self.assertIs(configured_application(),self.app)
         create.assert_called_once_with()
 
+    def test_other_project_cannot_select_a_different_players_ledger(self):
+        self.client.project='actual-node-project'
+        before=copy.deepcopy(self.client.data)
+        with patch('google.cloud.firestore.Client',return_value=self.client):
+            with self.assertRaisesRegex(ValueError,'same Firestore project'):
+                NodeAccountLedger('old-clans',project_id='other-project')
+            matched=NodeAccountLedger('old-clans',project_id='actual-node-project')
+        self.assertIs(matched.client,self.client)
+        self.assertEqual(self.client.data,before)
+
 
 if __name__=='__main__':unittest.main()

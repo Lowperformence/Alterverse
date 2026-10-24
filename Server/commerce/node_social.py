@@ -12,12 +12,19 @@ from authentication import UnityPlayerAuthenticator
 from firestore_ledger import FirestoreLedger
 from safe_identity import profile_name, valid_player_name
 from social import SocialForbidden
+from google.cloud import firestore
 
 
 class NodeAccountLedger(FirestoreLedger):
     def __init__(self, namespace, project_id=None, client=None):
         if not isinstance(namespace, str) or not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,62}', namespace):
             raise ValueError('Explicit existing social namespace required')
+        if client is None:
+            # The inspected Node source uses new Firestore() without an override.
+            # Never select another project's similarly named players collection.
+            client = firestore.Client()
+            if project_id and project_id != client.project:
+                raise ValueError('Clan and Node account data must use the same Firestore project; verify the previous deployment')
         super().__init__(project_id=project_id, namespace=namespace, client=client)
         self.accounts = self.client.collection('players')
         self.social_namespace = namespace
