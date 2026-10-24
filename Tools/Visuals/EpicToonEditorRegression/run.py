@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise the production editor material validator with controlled Unity adapters.
+"""Exercise production material validation and emission conversion with Unity adapters.
 Does not execute prefab conversion, native rendering or shader compilation.
 """
 import argparse
@@ -20,17 +20,20 @@ def main():
     output = re.search(r'private const string Output=[^;]+;', source)[0]
     start = source.index('private static readonly (string key,string path,float scale)[] Sources=')
     sources = source[start:source.index('};', start)+2]
-    start = source.index('public static void Validate()')
-    brace = source.index('{', start)
-    end, depth = brace+1, 1
-    while depth:
-        depth += (source[end] == '{') - (source[end] == '}')
-        end += 1
+    def method(signature):
+        start = source.index(signature)
+        brace = source.index('{', start)
+        end, depth = brace+1, 1
+        while depth:
+            depth += (source[end] == '{') - (source[end] == '}')
+            end += 1
+        return source[start:end]
     # Compile the exact production method and its registry; only editor/engine dependencies
     # are replaced. No test-side copy of the validation policy.
     validator = ('using Alterverse.Visuals;using UnityEngine;using UnityEditor;using UnityEditor.Build;'
                  'namespace Alterverse.Editor {public sealed class EpicToonReplacementBuilder {'
-                 + output + sources + source[start:end] + '}}')
+                 + output + sources + method('public static void Validate()')
+                 + method('private static void PrepareManualEmission(') + '}}')
     dotnet = args.dotnet_root.resolve()
     refs = sorted((dotnet / 'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'))[-1]
     csc = sorted((dotnet / 'sdk').glob('*/Roslyn/bincore/csc.dll'))[-1]

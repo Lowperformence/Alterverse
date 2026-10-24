@@ -23,7 +23,20 @@ namespace UnityEngine
     public class Renderer : Component {public Material[] sharedMaterials=Array.Empty<Material>();}
     public sealed class MeshRenderer : Renderer {}
     public sealed class ParticleSystemRenderer : Renderer {}
-    public sealed class ParticleSystem : Component {public sealed class TrailsModule{public bool enabled;}public TrailsModule trails=new();}
+    public sealed class ParticleSystem : Component
+    {
+        public sealed class TrailsModule{public bool enabled;}public TrailsModule trails=new();
+        public struct MinMaxCurve{public float constantMax;public static implicit operator MinMaxCurve(float v)=>new(){constantMax=v};}
+        public struct Burst{public float time;public short minCount;public Burst(float time,short count){this.time=time;minCount=count;}}
+        public sealed class EmissionModule
+        {
+            public bool enabled=true;public MinMaxCurve rateOverTime,rateOverDistance;
+            public Burst[] bursts=Array.Empty<Burst>();public int burstCount=>bursts.Length;
+            public void SetBursts(Burst[] value){bursts=value;}
+        }
+        public EmissionModule emission=new();
+    }
+    public static class Mathf {public static float Clamp(float v,float min,float max)=>Math.Clamp(v,min,max);}
     public sealed class Shader : Object {}
     public sealed class Material : Object {public Shader shader;public object mainTexture;}
 }

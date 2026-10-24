@@ -6,7 +6,7 @@ namespace Alterverse.Visuals
     // Generated from the user's licensed Epic Toon FX import, never from demo controllers.
     public sealed class EpicVfxLibrary : ScriptableObject
     {
-        public const string CurrentVersion = "Epic Toon FX user import; DF replacement 2";
+        public const string CurrentVersion = "Epic Toon FX user import; DF replacement 3";
         public const string ResourcePath = "CombatVfx/EpicToon/Library";
         [Serializable] public sealed class Entry
         {

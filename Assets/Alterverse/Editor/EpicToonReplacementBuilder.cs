@@ -117,6 +117,7 @@ namespace Alterverse.Editor
                         main.simulationSpace=ParticleSystemSimulationSpace.Local;
                         main.cullingMode=ParticleSystemCullingMode.AlwaysSimulate;
                         main.maxParticles=Mathf.Min(main.maxParticles,perSystem);
+                        PrepareManualEmission(item.key,ps);
                         var collision=ps.collision;collision.enabled=false;
                         var trigger=ps.trigger;trigger.enabled=false;
                         var lights=ps.lights;lights.enabled=false;
@@ -175,6 +176,30 @@ namespace Alterverse.Editor
             if(createLibrary)AssetDatabase.CreateAsset(library,Output+"/Library.asset");else EditorUtility.SetDirty(library);
             AssetDatabase.SaveAssets();AssetDatabase.Refresh();Validate();EpicToonVisibilityReview.Schedule();
             Debug.Log("DF: Epic Toon replacement built. "+Sources.Length+" effect families; Nerok is excluded. Run Test Epic Toon emission, then review the hero checklist in Play Mode.");
+        }
+        private static void PrepareManualEmission(string key,ParticleSystem system)
+        {
+            var emission=system.emission;if(!emission.enabled)return;
+            bool seed=false;
+            if((key=="ShadowMissile"||key=="Fire")&&
+                emission.rateOverTime.constantMax<=0f&&emission.rateOverDistance.constantMax>0f)
+            {
+                // These purchased trails emit ONLY when their transform moves. The combat
+                // pool advances local particles with a manual clock, including stationary
+                // first frames and held rifts. Use bounded time emission on the cloned asset
+                // and remove distance emission so movement cannot double the particle rate.
+                emission.rateOverTime=Mathf.Clamp(emission.rateOverDistance.constantMax*8f,8f,48f);
+                emission.rateOverDistance=0f;seed=true;
+            }
+            if((key=="Portal"||key=="Vortex")&&
+                emission.rateOverTime.constantMax>0f&&emission.rateOverTime.constantMax<=2f)
+            {
+                // The visible portal discs otherwise first appear at 0.5 seconds. Keep
+                // their authored fade/rotation but start the first disc at slot birth.
+                seed=true;
+            }
+            if(seed&&emission.burstCount==0)
+                emission.SetBursts(new[]{new ParticleSystem.Burst(0f,1)});
         }
         [MenuItem("DIMENSIONS FRONT/VFX/Validate Epic Toon replacement")]
         public static void Validate()
