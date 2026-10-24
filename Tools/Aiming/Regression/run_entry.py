@@ -62,7 +62,7 @@ public sealed partial class HeroSkillVfx {
                  'RangedConeRegression.cs']
         if args.aim_jitter:
             tests.append('JitterRegression.cs')
-        files = [fixtures, presentation, *[here / n for n in tests],
+        files = [fixtures, presentation, here / 'EpicToonDisabled.cs', *[here / n for n in tests],
                  root / 'Assets/Alterverse/Editor/AttackDeliveryRegression.cs',
                  root / 'Assets/Alterverse/Editor/BasicAttackDeliveryRegression.cs',
                  *[root / 'Assets/Alterverse/Scripts' / n for n in names]]

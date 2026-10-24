@@ -8,7 +8,7 @@ namespace Alterverse.Visuals {
  public static class HeroVfxPool {
  internal static void Sprite(HeroFxSprite sprite,Vector3 from,Vector3 to,Vector2 size,Color color,float duration,GameObject owner,Quaternion rotation=default,bool billboard=true,float elapsed=0){}
  internal static int BeginDelivery()=>1;internal static void EndDelivery(){}internal static void CancelDelivery(int n){}public static void CancelProjectiles(GameObject a){}public static void CancelWarnings(GameObject a){}
- internal static void Emit(HeroFxShape s,Vector3 f,Vector3 t,Vector3 z,Color c,float d,HeroFxMotion m,Quaternion q,GameObject a,bool warning=false){}
+ internal static void Emit(HeroFxShape s,Vector3 f,Vector3 t,Vector3 z,Color c,float d,HeroFxMotion m,Quaternion q,GameObject a,bool warning=false,float elapsed=0){}
  }
  public sealed partial class HeroSkillVfx {public static void EndTimmyLeap(GameObject a){}public static void TimmyEffect(GameObject a,int kind,Vector3 from,Vector3 to,float radius,float duration){}}
 }
