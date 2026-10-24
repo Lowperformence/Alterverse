@@ -141,21 +141,22 @@ namespace Alterverse.Editor
             }
         }
 
-        private static Material ConvertMaterial(Material source, Shader shader, Dictionary<Material, Material> cache)
+        internal static Material ConvertMaterial(Material source, Shader shader, Dictionary<Material, Material> cache, string output = Output)
         {
             if (source == null) throw new InvalidOperationException("Nuke Cone contains a missing material.");
             if (cache.TryGetValue(source, out var converted)) return converted;
-            string path = Output + "/Materials/" + AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(source)) + ".mat";
+            string path = output + "/Materials/" + AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(source)) + ".mat";
             converted = AssetDatabase.LoadAssetAtPath<Material>(path);
             bool create = converted == null;
             if (create) converted = new Material(shader); else converted.shader = shader;
             converted.name = "DF_BomberNuke_" + source.name;
             string texture = source.HasProperty("_BaseMap") && source.GetTexture("_BaseMap") != null ? "_BaseMap" : "_MainTex";
-            if (!source.HasProperty(texture) || source.GetTexture(texture) == null)
-                throw new InvalidOperationException("Nuke Cone material has no effect texture: " + source.name);
-            converted.SetTexture("_MainTex", source.GetTexture(texture));
-            converted.SetTextureScale("_MainTex", source.GetTextureScale(texture));
-            converted.SetTextureOffset("_MainTex", source.GetTextureOffset(texture));
+            bool textured = source.HasProperty(texture) && source.GetTexture(texture) != null;
+            // solid_AB is an authored colour-only material, not a missing resource.
+            // White contributes no extra texture pattern and preserves its native tint.
+            converted.SetTexture("_MainTex", textured ? source.GetTexture(texture) : Texture2D.whiteTexture);
+            converted.SetTextureScale("_MainTex", textured ? source.GetTextureScale(texture) : Vector2.one);
+            converted.SetTextureOffset("_MainTex", textured ? source.GetTextureOffset(texture) : Vector2.zero);
             converted.SetColor("_Tint", source.HasProperty("_TintColor") ? source.GetColor("_TintColor") :
                 source.HasProperty("_BaseColor") ? source.GetColor("_BaseColor") : source.HasProperty("_Color") ? source.GetColor("_Color") : Color.white);
             converted.SetFloat("_SrcBlend", source.HasProperty("_SrcBlend") ? source.GetFloat("_SrcBlend") : (float)BlendMode.SrcAlpha);
@@ -166,7 +167,7 @@ namespace Alterverse.Editor
             return converted;
         }
 
-        private static float Measure(GameObject root, ParticleSystem[] systems, bool[] autoPlay)
+        internal static float Measure(GameObject root, ParticleSystem[] systems, bool[] autoPlay)
         {
             var roots = new List<ParticleSystem>();
             for (int i = 0; i < systems.Length; i++)

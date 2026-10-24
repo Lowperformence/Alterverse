@@ -6,7 +6,7 @@ namespace Alterverse.Visuals
     public sealed class BomberNukeVfx : MonoBehaviour
     {
         public const string ResourcePath = "CombatVfx/BomberNuke/Explosion";
-        public const string ImportVersion = "Bomber Nuke Cone 1";
+        public const string ImportVersion = "Bomber Nuke Cone 2";
         [HideInInspector] public float nativeRadius = 1f;
         [HideInInspector] public string sourceSignature;
         private static GameObject prefab;

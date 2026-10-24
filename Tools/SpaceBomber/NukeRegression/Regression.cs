@@ -69,6 +69,17 @@ static class Regression
         AssetDatabase.Assets.Remove(BomberNukeBuilder.Source);bool blocked=false;
         try {new BomberNukeBuilder().OnPreprocessBuild(new());}catch(UnityEditor.Build.BuildFailedException){blocked=true;}
         Check(blocked,"player build cannot silently ship without the selected purchased source");
+        // Reproduce the reported real package material: no texture property at all.
+        var solid=new Material(new Shader{name="Native solid"}){name="solid_AB"};
+        solid.SetColor("_Color",new Color(1,.6f,.2f,.8f));
+        original.GetComponent<ParticleSystemRenderer>().sharedMaterials=new[]{solid};
+        AssetDatabase.Assets["NativeSolid.mat"]=solid;AssetDatabase.Assets[BomberNukeBuilder.Source]=original;
+        AssetDatabase.Dependency="solid-fix";BomberNukeBuilder.Build();
+        var fixedPrefab=AssetDatabase.LoadAssetAtPath<GameObject>(generated);
+        var fixedMaterial=fixedPrefab.GetComponentsInChildren<Renderer>(true).Single().sharedMaterials.Single();
+        Check(fixedMaterial.GetTexture("_MainTex")==Texture2D.whiteTexture,"solid_AB uses neutral white rather than failing import");
+        Check(fixedMaterial.GetColor("_Tint").g==.6f&&fixedMaterial.GetColor("_Tint").a==.8f,"solid_AB native colour and opacity survive");
+        Check(!solid.HasProperty("_MainTex"),"colour-only source material remains untouched");
         Console.WriteLine($"PASS {checks} bomber Nuke import/playback/audio/footprint contracts across all {maps.Length} production arena variants. Controlled engine/editor fixtures; native Unity/GPU/phone review remains separate.");
     }
 }

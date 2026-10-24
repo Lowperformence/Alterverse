@@ -63,6 +63,7 @@ namespace UnityEngine
     public struct Vector3 {public float x,y,z;public Vector3(float x,float y,float z){this.x=x;this.y=y;this.z=z;}public static Vector3 one=>new(1,1,1);
         public static Vector3 operator*(Vector3 v,float s)=>new(v.x*s,v.y*s,v.z*s);public static Vector3 operator+(Vector3 a,Vector3 b)=>new(a.x+b.x,a.y+b.y,a.z+b.z);}
     public struct Vector4 {public float x,y,z,w;public Vector4(float x,float y,float z,float w){this.x=x;this.y=y;this.z=z;this.w=w;}}
+    public struct Vector2 {public float x,y;public Vector2(float x,float y){this.x=x;this.y=y;}public static Vector2 one=>new(1,1);public static Vector2 zero=>new(0,0);}
     public struct Quaternion {public static Quaternion identity=>new();}
     public struct Color {public float r,g,b,a;public Color(float r,float g,float b,float a=1){this.r=r;this.g=g;this.b=b;this.a=a;}public static Color white=>new(1,1,1);}
     public struct Bounds {public Vector3 center,extents;}
@@ -107,13 +108,14 @@ namespace UnityEngine
     }
     public class Shader:Object {public static Shader Find(string name)=>new(){name=name};}
     public class Texture:Object {}
+    public class Texture2D:Texture {public static readonly Texture2D whiteTexture=new(){name="White"};}
     public class Material:Object
     {
         public Shader shader;public int renderQueue;public readonly Dictionary<string,object> Values=new();
         public Material(Shader shader){this.shader=shader;}
         public bool HasProperty(string key)=>Values.ContainsKey(key);public Texture GetTexture(string key)=>Values.GetValueOrDefault(key) as Texture;
-        public Vector3 GetTextureScale(string key)=>Vector3.one;public Vector3 GetTextureOffset(string key)=>new();
-        public void SetTextureScale(string key,Vector3 value){}public void SetTextureOffset(string key,Vector3 value){}
+        public Vector2 GetTextureScale(string key)=>Vector2.one;public Vector2 GetTextureOffset(string key)=>new();
+        public void SetTextureScale(string key,Vector2 value){}public void SetTextureOffset(string key,Vector2 value){}
         public void SetTexture(string key,Texture value)=>Values[key]=value;public void SetColor(string key,Color value)=>Values[key]=value;
         public Color GetColor(string key)=>(Color)Values[key];public void SetFloat(string key,float value)=>Values[key]=value;public float GetFloat(string key)=>(float)Values[key];
     }
