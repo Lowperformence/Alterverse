@@ -123,7 +123,9 @@ namespace Alterverse.Editor
                     {if(best!=null)Object.DestroyImmediate(best);best=frame;result.visiblePixels=pixels;}
                     else Object.DestroyImmediate(frame);
                 }
-                result.passed=result.shaderSupported&&result.peakParticles>0&&result.visiblePixels>2;
+                // A few sparkle pixels must not hide an edge-on, unreadable portal disc.
+                int minimumPixels=entry.key=="Portal"||entry.key=="Vortex"?24:3;
+                result.passed=result.shaderSupported&&result.peakParticles>0&&result.visiblePixels>=minimumPixels;
                 if(best!=null)
                 {
                     File.WriteAllBytes(Path.Combine(directory,result.image),best.EncodeToPNG());

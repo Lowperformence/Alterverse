@@ -95,6 +95,7 @@ namespace Alterverse.Editor
                         var part=Object.Instantiate(original,go.transform,false);
                         part.name=item.key+"_"+copy;
                         part.transform.localPosition=copies==1?Vector3.zero:Vector3.right*((copy-1)*.26f);
+                        PreparePortalGeometry(item.key,part);
                     }
                     // Whitelist visual components only: no demo scripts, movement, audio, lights or colliders.
                     foreach(var transform in go.GetComponentsInChildren<Transform>(true))
@@ -176,6 +177,25 @@ namespace Alterverse.Editor
             if(createLibrary)AssetDatabase.CreateAsset(library,Output+"/Library.asset");else EditorUtility.SetDirty(library);
             AssetDatabase.SaveAssets();AssetDatabase.Refresh();Validate();EpicToonVisibilityReview.Schedule();
             Debug.Log("DF: Epic Toon replacement built. "+Sources.Length+" effect families; Nerok is excluded. Run Test Epic Toon emission, then review the hero checklist in Play Mode.");
+        }
+        private static void PreparePortalGeometry(string key,GameObject source)
+        {
+            if(key!="Portal"&&key!="Vortex")return;
+            bool portal=key=="Portal";
+            // The source's 90-degree Z frame plus its discs' 90-degree X rotation
+            // puts their normal on X: the gameplay preview sees only their edge.
+            // Keep sparks in the portal/floor plane and render the two authored flat
+            // discs as textured quads with an explicit, stable facing.
+            source.transform.localRotation=portal?Quaternion.Euler(-90f,0f,0f):Quaternion.identity;
+            foreach(var renderer in source.GetComponentsInChildren<ParticleSystemRenderer>(true))
+            {
+                if(renderer.renderMode!=ParticleSystemRenderMode.Mesh)continue;
+                renderer.renderMode=portal?ParticleSystemRenderMode.Billboard:ParticleSystemRenderMode.HorizontalBillboard;
+                renderer.alignment=portal?ParticleSystemRenderSpace.View:ParticleSystemRenderSpace.World;
+                var main=renderer.GetComponent<ParticleSystem>().main;
+                main.startRotation3D=false;main.startRotationX=0f;main.startRotationY=0f;
+                // Authored Z spin, size, colour and alpha curves remain unchanged.
+            }
         }
         private static void PrepareManualEmission(string key,ParticleSystem system)
         {

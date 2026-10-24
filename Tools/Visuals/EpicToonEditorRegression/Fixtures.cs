@@ -13,16 +13,29 @@ namespace UnityEngine
     public sealed class GameObject : Object
     {
         public readonly List<Component> Components=new();
+        public Transform transform=>GetComponent<Transform>();
         public GameObject(){Add<Transform>();}
         public T Add<T>() where T:Component,new(){var c=new T{gameObject=this};Components.Add(c);return c;}
         public T GetComponent<T>() where T:class=>Components.OfType<T>().FirstOrDefault();
         public T[] GetComponentsInChildren<T>(bool inactive) where T:class=>Components.OfType<T>().ToArray();
     }
-    public sealed class Transform : Component {}
+    public struct Quaternion
+    {
+        public float x,y,z,w;
+        public static Quaternion identity=>new(){w=1};
+        public static Quaternion Euler(float x,float y,float z)
+        {
+            var q=System.Numerics.Quaternion.CreateFromYawPitchRoll(y*MathF.PI/180,x*MathF.PI/180,z*MathF.PI/180);
+            return new(){x=q.X,y=q.Y,z=q.Z,w=q.W};
+        }
+    }
+    public sealed class Transform : Component {public Quaternion localRotation=Quaternion.identity;}
     public sealed class MeshFilter : Component {}
     public class Renderer : Component {public Material[] sharedMaterials=Array.Empty<Material>();}
     public sealed class MeshRenderer : Renderer {}
-    public sealed class ParticleSystemRenderer : Renderer {}
+    public enum ParticleSystemRenderMode{Billboard,Stretch,HorizontalBillboard,VerticalBillboard,Mesh,None}
+    public enum ParticleSystemRenderSpace{View,World,Local,Facing,Velocity}
+    public sealed class ParticleSystemRenderer : Renderer {public ParticleSystemRenderMode renderMode;public ParticleSystemRenderSpace alignment;}
     public sealed class ParticleSystem : Component
     {
         public sealed class TrailsModule{public bool enabled;}public TrailsModule trails=new();
@@ -35,6 +48,8 @@ namespace UnityEngine
             public void SetBursts(Burst[] value){bursts=value;}
         }
         public EmissionModule emission=new();
+        public sealed class MainModule {public bool startRotation3D;public MinMaxCurve startRotationX,startRotationY,startRotationZ;}
+        public MainModule main=new();
     }
     public static class Mathf {public static float Clamp(float v,float min,float max)=>Math.Clamp(v,min,max);}
     public sealed class Shader : Object {}
