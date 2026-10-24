@@ -286,7 +286,7 @@ namespace Alterverse.UI
             return rect;
         }
 
-        public bool Action(Rect rect, string text, bool primary = false, bool selected = false, bool enabled = true, bool locked = false)
+        public bool Action(Rect rect, string text, bool primary = false, bool selected = false, bool enabled = true, bool locked = false, Color? accent = null)
         {
             enabled = enabled && !locked;
             // Buttons are menu actions, not paragraphs: normalize any legacy hard line break.
@@ -298,10 +298,14 @@ namespace Alterverse.UI
 
             bool hovered=enabled && rect.Contains(Event.current.mousePosition);
             Color surface = primary ? new Color(.23f,.18f,.11f,.90f) : selected || hovered ? Raised : Surface;
+            if (accent.HasValue)
+                surface = Color.Lerp(accent.Value, Color.white, selected ? .18f : hovered ? .10f : 0f);
             RoundedFill(rect, enabled ? surface : Surface);
 
             Color border = !enabled
                 ? new Color(OutlineSoft.r, OutlineSoft.g, OutlineSoft.b, .52f)
+                : accent.HasValue
+                    ? selected ? Color.white : new Color(.62f, .90f, 1f, .96f)
                 : primary
                     ? new Color(1f, .85f, .63f, 1f)
                     : selected
@@ -312,8 +316,9 @@ namespace Alterverse.UI
             // Important/selected controls receive one inner ring rather than the old square side stripe.
             if ((selected || primary) && rect.width > 8 && rect.height > 8)
             {
-                Color inner = primary
-                    ? new Color(1f, 1f, 1f, .32f)
+                Color inner = accent.HasValue
+                    ? new Color(1f, 1f, 1f, .58f)
+                    : primary ? new Color(1f, 1f, 1f, .32f)
                     : new Color(Accent.r, Accent.g, Accent.b, .48f);
                 RoundedOutline(new Rect(rect.x + 2, rect.y + 2, rect.width - 4, rect.height - 4), inner);
             }
@@ -328,7 +333,7 @@ namespace Alterverse.UI
             if (labelWidth > availableTextWidth)
                 Button.fontSize = Mathf.Max(12, Mathf.FloorToInt(originalFontSize * availableTextWidth / labelWidth));
 
-            GUI.color *= !enabled ? Muted : primary ? new Color(1f,.91f,.75f) : Text;
+            GUI.color *= !enabled ? Muted : accent.HasValue ? new Color(.025f,.085f,.14f) : primary ? new Color(1f,.91f,.75f) : Text;
             GUI.Label(textRect, text, Button);
             GUI.color = before;
             Button.fontSize = originalFontSize;

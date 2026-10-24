@@ -687,8 +687,10 @@ namespace Alterverse.UI
             if(theme.Action(new Rect(Left+(tabW+tabGap),204,tabW,52),"AVATARS",selected:avatarShop))
             {skinShop=shardShop=itemShop=weaponShop=mapShop=battlePassShop=heroShop=false;shopMessage="";}
             theme.Label(new Rect(Right-264,116,264,42),collection.BalanceText((HeroId)selectedHero),theme.Small);
-            if(theme.Action(new Rect(Left+(tabW+tabGap)*2,204,tabW,52),"SHARDS",selected:shardShop))
+            Rect shardTab=new Rect(Left+(tabW+tabGap)*2,204,tabW,52);
+            if(theme.Action(shardTab,"SHARDS",selected:shardShop,accent:ShardShopVisualOverlay.TabAccent))
             {skinShop=itemShop=weaponShop=mapShop=battlePassShop=heroShop=false;shardShop=true;shopMessage="";}
+            ShardShopVisualOverlay.DrawTabSparkles(shardTab,shardShop);
             if(theme.Action(new Rect(Left+(tabW+tabGap)*3,204,tabW,52),"WEAPONS",selected:weaponShop))
             {skinShop=shardShop=itemShop=mapShop=battlePassShop=heroShop=false;weaponShop=true;shopMessage="";}
             if(theme.Action(new Rect(Left+(tabW+tabGap)*4,204,tabW,52),"HERO",selected:heroShop))
