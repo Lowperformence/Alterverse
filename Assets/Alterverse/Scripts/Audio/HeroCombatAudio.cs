@@ -50,11 +50,6 @@ namespace Alterverse.Audio
                     string path="Audio/Heroes/"+Heroes[h]+"/"+Actions[a]+(phase==0?"_Cast":phase==1?"_Impact":"_Windup")+(v==0?"":"_v"+(v+1));
                     if(a==4&&phase==0)path="Audio/Heroes/"+Heroes[h]+"/Ultimate_Selected";
                     clips[cue][v]=Resources.Load<AudioClip>(path);
-                    if(a==0&&(phase==0&&(h==2||h==3||h==4||h==6)||phase==1&&(h==1||h==5)))
-                    {
-                        var epic=Resources.Load<AudioClip>("Audio/EpicBasics/"+Heroes[h]+(phase==0?"_Cast":"_Impact"));
-                        if(epic!=null)clips[cue][v]=epic;
-                    }
                     if(clips[cue][v]==null)Debug.LogWarning("DIMENSIONS FRONT: missing combat audio: "+path);
                 }
             }

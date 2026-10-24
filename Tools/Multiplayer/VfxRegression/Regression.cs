@@ -11,7 +11,6 @@ using UnityEngine;
 static partial class VfxRegression
 {
     static int checks;
-    static Action ObserveFrame;
     static void Check(bool valid,string reason){if(!valid)throw new Exception(reason);checks++;}
     static GameObject Hero(HeroId hero,int slot,bool local=false)
     {
@@ -50,7 +49,6 @@ static partial class VfxRegression
             foreach(var component in components)if(component!=null)component.GetType().GetMethod("Update",BindingFlags.Instance|BindingFlags.NonPublic)?.Invoke(component,null);
             var pool=g.GetComponent<HeroVfxPool>();if(pool!=null)GameObject.Invoke(pool,"LateUpdate");
         }
-        ObserveFrame?.Invoke();
     }
     static void CommandDamage()
     {
@@ -317,7 +315,6 @@ static partial class VfxRegression
         }
         else accepted=action<0?actor.GetComponent<BasicAttack>().TryAttackAimed(pose):actor.GetComponent<PlayerHeroAbilities>().CastAimed(action,pose);
         Check(accepted,"Valid offline/server action begins "+id+action+" fps="+fps);
-        ObserveFrame?.Invoke();
         bool atlasSeen=AtlasVisible().Length>0;
         for(int frame=0;frame<fps*5;frame++){Step(1f/fps);if(render)atlasSeen|=AtlasVisible().Length>0;}
         HeroVfxEvents.Emitted-=observer;
@@ -451,10 +448,9 @@ static partial class VfxRegression
         Check(Visible().Length>before,"Production receiver and full facade create visible client meshes");
         Check(manager.CustomMessagingManager.Packets.Count==1,"Client replay cannot echo an event");
         before=Visible().Length;relay.Receive(9,packet);Check(Visible().Length==before,"A non-server cannot inject visual events");
-        relay.Unbind();NetworkPresentationFollowers();CommandDamage();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();ConfirmedBasicWindups();PendingCooldowns();OfflineOnlineParity();
-        EpicToonChecks();
-        Console.WriteLine("PASS "+checks+" production combat, network and Epic Toon replacement checks (controlled Unity/GPU/network fixtures)");
+        relay.Unbind();NetworkPresentationFollowers();AllCues();CommandDamage();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();ConfirmedBasicWindups();PendingCooldowns();OfflineOnlineParity();
+        AttackAtlasChecks();
+        Console.WriteLine("PASS "+checks+" production online VFX and combat/shader checks (controlled Unity/GPU/network fixtures)");
     }
 }
-
 

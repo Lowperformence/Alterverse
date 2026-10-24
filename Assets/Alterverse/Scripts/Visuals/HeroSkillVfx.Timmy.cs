@@ -40,7 +40,6 @@ namespace Alterverse.Visuals
             bool relay=true,float elapsed=0)
         {
             if(actor==null||Hero(actor)!=HeroId.Timmy)return;
-            using var original=HeroVfxPool.PreserveNerokOriginal();
             if(kind==4||kind==6)
             {
                 HeroVfxPool.CancelShape(actor,HeroFxShape.Claw,HeroFxMotion.TravelFixedFrame);
@@ -115,11 +114,14 @@ namespace Alterverse.Visuals
                 Vector3 p=nozzle!=null?nozzle.position:Chest(actor)-heading*.22f+facing*Vector3.right*(side*.12f);
                 Transform follow=nozzle!=null?nozzle:actor.transform;
                 Quaternion exhaust=Quaternion.LookRotation((heading+Vector3.up*.35f).normalized);
-                // One purchased flamethrower per live nozzle replaces the former stacked
-                // flame sprite and two cores. Scratch's original claws below stay intact.
+                HeroVfxPool.Sprite(HeroFxSprite.Flame,p,p,new Vector2(.23f,.39f),
+                    new Color(.24f,.82f,1f,.72f),jetLife,actor,HeroFxMotion.AttachedJet,
+                    exhaust,follow:follow,elapsed:elapsed);
+                HeroVfxPool.Emit(HeroFxShape.Streak,p,p,new Vector3(.14f,.14f,.72f),cyan,jetLife,
+                    HeroFxMotion.AttachedJet,exhaust,actor,follow:follow,elapsed:elapsed,cancelOnOwnerDeath:true);
                 HeroVfxPool.Emit(HeroFxShape.Streak,p,p,new Vector3(.055f,.055f,.38f),
-                    Color.white,jetLife,HeroFxMotion.AttachedJet,exhaust*Quaternion.Euler(0,180f,0),actor,
-                    follow:follow,elapsed:elapsed,cancelOnOwnerDeath:true,epicKey:"TimmyJet",effectRadius:.55f);
+                    new Color(1f,.72f,.30f,.96f),jetLife,HeroFxMotion.AttachedJet,exhaust,actor,
+                    follow:follow,elapsed:elapsed,cancelOnOwnerDeath:true);
             }
             if(scratch)
             {
@@ -137,4 +139,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-

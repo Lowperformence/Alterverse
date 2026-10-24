@@ -27,8 +27,6 @@ namespace Alterverse.Visuals
             abilities = GetComponent<HeroAbilityExecution>();
             motion = GetComponent<HeroVisualMotion>();
             health = GetComponent<Health>();
-            // Nerok and Timmy retain their original observers; eight heroes use the new facade.
-            if(identity==null||(identity.Hero!=HeroId.Nerok&&identity.Hero!=HeroId.Timmy))enabled=false;
         }
 
         private void Start() => Prime();
@@ -47,7 +45,6 @@ namespace Alterverse.Visuals
 
         private void Update()
         {
-            if(identity==null||(identity.Hero!=HeroId.Nerok&&identity.Hero!=HeroId.Timmy))return;
             if (Time.timeScale <= 0f || health != null && health.IsDead) return;
             if (!primed || identity == null || kit == null || abilities == null) { Prime(); return; }
 
@@ -296,4 +293,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-

@@ -11,25 +11,17 @@ namespace Alterverse.Visuals
         public static void VoidKnightField(GameObject actor,Vector3 direction,float range,float seconds,bool warning,bool thrust=false,bool relay=true,float elapsed=0,Vector3? fixedOrigin=null)
         {
             if(actor==null||actor.GetComponent<Alterverse.Characters.HeroIdentity>()?.Hero!=Alterverse.Characters.HeroId.VoidKnight)return;
-            using var style=HeroVfxEvents.UseAbility(actor,thrust?2:warning?0:3,HeroVfxCue.Spell);
             Color color=StylizedArtDirection.HeroAccent(Alterverse.Characters.HeroId.VoidKnight);Vector3 origin=Ground(fixedOrigin??actor.transform.position);
             direction=Alterverse.Combat.AimGeometry.Direction(direction);
-            HeroVfxEvents.SetAbilityGeometry(origin,origin+direction);
             if(relay)Alterverse.Multiplayer.CoopHeroStateSync.BroadcastVoidKnightEffect(actor,thrust?2:warning?0:1,origin,origin+direction,range,seconds);
             float originalSeconds=seconds;
             seconds=Mathf.Max(0,seconds-elapsed);if(seconds<=0)return;
             if(!warning)
             {
-                if(thrust)
-                {
-                    HeroVfxPool.Emit(HeroFxShape.Laser,origin,origin+direction*range,new Vector3(.18f,.06f,range),
-                        color,originalSeconds,HeroFxMotion.LaserBeam,Face(origin,origin+direction),actor,elapsed:elapsed);
-                    return;
-                }
                 Vector3 contact=origin+direction*Mathf.Min(range*.50f,1.6f)+Vector3.up*.18f;
-                HeroVfxPool.Emit(HeroFxShape.Slash,contact,contact,Vector3.one*Mathf.Min(range*.62f,1.55f),
-                    color,originalSeconds,HeroFxMotion.Hold,Face(origin,origin+direction),actor,elapsed:elapsed);
-                return;
+                float diameter=Mathf.Min(range*1.25f,3.1f);
+                HeroVfxPool.Sprite(HeroFxSprite.SlashHeavy,contact,contact,new Vector2(diameter,diameter),
+                    color,originalSeconds,actor,rotation:Face(origin,origin+direction)*Quaternion.Euler(90f,0,0),billboard:false,elapsed:elapsed);
             }
             if(thrust)
             {
@@ -44,4 +36,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
