@@ -17,10 +17,10 @@ namespace Alterverse.Editor
     [InitializeOnLoad]
     public sealed class ThalaHealingBuilder:IPreprocessBuildWithReport
     {
-        public const string TargetSource="Assets/Epic Toon FX/Prefabs/Interactive/Healing/HealOnceBurst.prefab";
-        public const string AreaSource="Assets/Epic Toon FX/Prefabs/Interactive/Healing/HealNova.prefab";
+        public const string TargetSource="Assets/Epic Toon FX/Prefabs/Interactive/Healing/HealOnceLoop.prefab";
+        public const string AreaSource="Assets/Epic Toon FX/Prefabs/Interactive/Healing/HealField.prefab";
         private const string Output="Assets/Alterverse/Resources/CombatVfx/ThalaHealing";
-        private const string Version="Thala healing native chains 1";
+        private const string Version="Thala marked healing field and rising crosses 2";
         private static bool building;
         public int callbackOrder=>-460;
         static ThalaHealingBuilder()
@@ -53,7 +53,7 @@ namespace Alterverse.Editor
                 root=new GameObject("DF_ThalaHealing_Library");SceneManager.MoveGameObjectToScene(root,preview);root.SetActive(false);
                 var data=root.AddComponent<ThalaHealingVfx>();var cache=new Dictionary<Material,Material>();
                 data.target=Prepare(target,"TargetHeal",TargetSource,shader,cache);
-                data.area=Prepare(area,"WildsurgeHealNova",AreaSource,shader,cache);data.sourceSignature=signature;
+                data.area=Prepare(area,"WildsurgeHealField",AreaSource,shader,cache);data.sourceSignature=signature;
                 if(PrefabUtility.SaveAsPrefabAsset(root,Output+"/Library.prefab")==null)throw new IOException("Could not save Thala healing resource library.");
                 AssetDatabase.SaveAssets();Debug.Log("DIMENSIONS FRONT VFX: Thala healing PREPARED; target="+TargetSource+"; Wildsurge="+AreaSource+"; source audio excluded.");
             }
@@ -74,7 +74,12 @@ namespace Alterverse.Editor
                 for(int i=0;i<systems.Length;i++)
                 {
                     var system=systems[i];autoPlay[i]=system.main.playOnAwake;system.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);
-                    var main=system.main;main.loop=false;main.stopAction=ParticleSystemStopAction.None;main.scalingMode=ParticleSystemScalingMode.Hierarchy;
+                    var main=system.main;
+                    // Looping showcase fields become a short heal pulse. Keep emitted
+                    // particles and sub-emitter tails instead of showing a fictitious heal-over-time zone.
+                    if(main.loop&&(system.emission.rateOverTime.constantMax>0||system.emission.rateOverDistance.constantMax>0))
+                        main.duration=Mathf.Min(main.duration,.65f*Mathf.Max(.01f,main.simulationSpeed));
+                    main.loop=false;main.stopAction=ParticleSystemStopAction.None;main.scalingMode=ParticleSystemScalingMode.Hierarchy;
                     main.simulationSpace=ParticleSystemSimulationSpace.Local;main.cullingMode=ParticleSystemCullingMode.AlwaysSimulate;main.useUnscaledTime=false;
                     system.useAutoRandomSeed=false;system.randomSeed=(uint)(20309+i*67);
                     if(autoPlay[i])emission=Mathf.Max(emission,BomberNukeBuilder.LastEmissionSeconds(system));

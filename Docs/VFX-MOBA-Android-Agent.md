@@ -24,4 +24,4 @@ Current assignments: bomber `NukeConeExplosionFire` on all maps; complete Small 
 
 Selected visual-only detonation work: Impossible Center (Ione/Elyra) uses Lightning Nova, Traveler ultimate uses Lightning Explosion, each fitted to its actual Area radius. Existing sounds and the other attack phases remain unchanged.
 
-Selected Thala Venn healing work: Growth Veil uses native HealOnceBurst on its single recipient; Wildsurge uses large native HealNova at the actual AoE center, with recipient healing confirmations. Both receive +250% (3.5x) geometry; the area footprint remains limited to the real healing radius. Keep existing sounds and all shield presentation.
+Selected Thala Venn healing work: Growth Veil uses native HealOnceLoop on its single recipient; Wildsurge uses ringed native HealField at the actual AoE center, with recipient healing confirmations. Target accents receive +250% (3.5x) geometry; the entire field rim is fitted to the real healing radius to avoid clipping it away. Keep existing sounds and all shield presentation.

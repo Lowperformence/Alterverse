@@ -57,8 +57,9 @@ namespace Alterverse.Visuals
         {
             if(!(radius>0)||float.IsInfinity(radius)||!ValidElapsed(elapsed))return false;
             var entry=Ready(false);if(entry==null)return false;
-            // Enlarge native geometry only; the actual ability area is never enlarged.
-            Spawn(entry,"DF_Thala_Wildsurge_Heal",center,radius*SizeMultiplier,radius,null,null,elapsed);
+            // A field must retain its enclosing ring. Fit the whole authored field to
+            // the real area instead of scaling its rim out of the shader clip.
+            Spawn(entry,"DF_Thala_Wildsurge_Heal",center,radius,radius,null,null,elapsed);
             if(!reportedArea){Debug.Log("DIMENSIONS FRONT VFX: Thala Wildsurge healing ACTIVE; source="+entry.source+"; actualRadius="+radius);reportedArea=true;}
             return true;
         }

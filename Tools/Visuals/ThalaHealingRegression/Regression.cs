@@ -33,16 +33,18 @@ static class Regression
     {
         var material=new Material(new Shader()){name="NativeHealingGreen"};material.SetColor("_Color",new Color(.2f,1f,.4f,.8f));
         AssetDatabase.Assets["Assets/Epic Toon FX/Materials/HealingGreen.mat"]=material;
-        var small=Native("NativeSmallHeal",material);var big=Native("NativeLargeHealNova",material);
+        var small=Native("NativeSmallHeal",material);var big=Native("NativeLargeHealField",material);
+        big.GetComponent<ParticleSystem>().emission.rateOverTime=8f;
+        big.GetComponent<ParticleSystem>().main.duration=100000f;
         var subObject=new GameObject("NativeDelayedSubEmitter");subObject.transform.SetParent(small.transform,false);
         var sub=subObject.AddComponent<ParticleSystem>();sub.main.playOnAwake=false;
         small.GetComponent<ParticleSystem>().main.duration=100000f;
         small.GetComponent<ParticleSystem>().emission.SetBursts(new[]{new ParticleSystem.Burst(0,1)});
         AssetDatabase.Assets[ThalaHealingBuilder.TargetSource]=small;AssetDatabase.Assets[ThalaHealingBuilder.AreaSource]=big;
-        AssetDatabase.Assets["Assets/Epic Toon FX/Prefabs/2D Alternate/HealOnceBurst.prefab"]=Native("Wrong2D",material);
+        AssetDatabase.Assets["Assets/Epic Toon FX/Prefabs/2D Alternate/HealOnceLoop.prefab"]=Native("Wrong2D",material);
         ThalaHealingBuilder.Build();var data=Data();
-        Check(data.target.source=="Assets/Epic Toon FX/Prefabs/Interactive/Healing/HealOnceBurst.prefab","Growth Veil uses exact native small healing burst");
-        Check(data.area.source=="Assets/Epic Toon FX/Prefabs/Interactive/Healing/HealNova.prefab","Wildsurge uses exact native large healing nova");
+        Check(data.target.source=="Assets/Epic Toon FX/Prefabs/Interactive/Healing/HealOnceLoop.prefab","Growth Veil uses native rising-cross heal composition");
+        Check(data.area.source=="Assets/Epic Toon FX/Prefabs/Interactive/Healing/HealField.prefab","Wildsurge uses native ringed healing field");
         foreach(var entry in new[]{data.target,data.area})
         {
             Check(!entry.prefab.activeSelf,"prepared healing is inactive before correct positioning");
@@ -52,6 +54,7 @@ static class Regression
             Check(entry.prefab.GetComponentsInChildren<ParticleSystem>(true).All(p=>p.main.maxParticles==321),"native particle budgets retain full source detail");
             Check(entry.prefab.GetComponentsInChildren<ParticleSystem>(true).All(p=>!p.main.loop&&p.main.stopAction==ParticleSystemStopAction.None),"heal is an owned one-shot with natural tail cleanup");
         }
+        Check(data.area.emissionSeconds<1,"looping field emits only a bounded healing pulse and cannot imply ongoing healing");
         Check(data.target.emissionSeconds<1,"large burst-only duration does not become a long fake emission window");
         Check(!small.activeSelf&&!big.activeSelf&&small.GetComponent<AudioSource>()!=null,"purchased source prefabs remain unmodified");
         int saves=AssetDatabase.Saves;ThalaHealingBuilder.Build();Check(AssetDatabase.Saves==saves,"same native import does not rebuild repeatedly");
@@ -71,9 +74,9 @@ static class Regression
         {
             Time.time+=20;before=GameObject.All.Count;var center=new Vector3(7,.2f,-4);
             Check(ThalaHealingVfx.TryArea(center,radius),"large Wildsurge healing starts");var area=Latest("DF_Thala_Wildsurge_Heal",before);
-            Check(Math.Abs(area.transform.localScale.x-radius*3.5f/6f)<.0001f,"large native healing uses +250 percent geometry at live AoE scale");
+            Check(Math.Abs(area.transform.localScale.x-radius/6f)<.0001f,"complete field rim is fitted inside actual AoE rather than clipped away");
             var clip=Clip(area);Check(clip.x==7&&clip.y==-4&&clip.z==radius&&clip.w==1,"Wildsurge visual footprint stays within actual ability radius");
-            Check(area.GetComponentsInChildren<Transform>(true).Any(t=>t.gameObject.name=="NativeLargeHealNova"),"large native composition is retained");
+            Check(area.GetComponentsInChildren<Transform>(true).Any(t=>t.gameObject.name=="NativeLargeHealField"),"large native composition is retained");
             Finish(area);
         }
         Time.time+=20;before=GameObject.All.Count;Check(ThalaHealingVfx.TryTarget(patient.transform),"second recipient heal starts independently");
