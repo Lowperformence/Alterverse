@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "meshParts": 88,
+  "bones": 18,
+  "poseConfigurations": 27,
+  "verticesChecked": 177768,
+  "fbxRoundtrip": "passed",
+  "limits": "No Unity render/playtest; no proof of intersection-free armor against old body."
+}

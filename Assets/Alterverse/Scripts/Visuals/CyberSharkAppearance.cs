@@ -289,7 +289,64 @@ namespace Alterverse.Visuals
             hookRenderer.quality = anatomy.quality;
             hookRenderer.updateWhenOffscreen = anatomy.updateWhenOffscreen;
             RendererGroup(hookRenderer, 1, anatomy.transform, vertices, normals, weights, bones, materials);
+            BuildAuthoredArmor(model, anatomy, bones, lookup, heads, rotations, scales);
             return true;
+        }
+
+        // Separate additive armor only: keep the original anatomy and both weapons untouched.
+        private void BuildAuthoredArmor(Transform model, SkinnedMeshRenderer anatomy, Transform[] bones,
+            Dictionary<string, int> lookup, Vector3[] heads, Quaternion[] rotations, float[] scales)
+        {
+            TextAsset asset = Resources.Load<TextAsset>("CyberShark/Armor20261012");
+            if (asset == null) return;
+            Geometry armor;
+            try
+            {
+                using (var stream = new GZipStream(new MemoryStream(asset.bytes), CompressionMode.Decompress))
+                using (var reader = new StreamReader(stream)) armor = JsonUtility.FromJson<Geometry>(reader.ReadToEnd());
+            }
+            catch (Exception error) { Debug.LogWarning("DF: Nerok armor: " + error.Message, this); return; }
+            if (!Valid(armor)) { Debug.LogWarning("DF: Nerok armor data is invalid.", this); return; }
+            int count = armor.vertices.Length / 3;
+            var vertices = new Vector3[count]; var normals = new Vector3[count]; var weights = new BoneWeight[count];
+            Matrix4x4 toMesh = anatomy.transform.worldToLocalMatrix * model.localToWorldMatrix;
+            Matrix4x4 toNormal = toMesh.inverse.transpose;
+            // The exporter uses the established coordinate contract, including matching bone order.
+            for (int i = 0; i < armor.boneNames.Length; i++)
+                if (i >= geometry.boneNames.Length || armor.boneNames[i] != geometry.boneNames[i])
+                { Debug.LogWarning("DF: Nerok armor bone contract mismatch.", this); return; }
+            for (int i = 0; i < count; i++)
+            {
+                int source = armor.boneIndices[i], b = lookup[armor.boneNames[source]];
+                Vector3 p = Point(armor.vertices, i * 3), n = Point(armor.normals, i * 3);
+                FitSilhouette(armor, source, lookup, rotations[b], ref p, ref n);
+                p = heads[b] + rotations[b] * (p - Point(armor.anchors[source].head)) * scales[b];
+                vertices[i] = toMesh.MultiplyPoint3x4(p);
+                normals[i] = toNormal.MultiplyVector(rotations[b] * n).normalized;
+                weights[i] = new BoneWeight { boneIndex0 = b, weight0 = 1f };
+            }
+            var mesh = new Mesh { name = "DF_Nerok_AuthoredArmor20261012",
+                indexFormat = count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16 };
+            ownedMeshes.Add(mesh); mesh.vertices = vertices; mesh.normals = normals; mesh.boneWeights = weights;
+            var bindposes = new Matrix4x4[bones.Length];
+            for (int i = 0; i < bones.Length; i++) bindposes[i] = bones[i].worldToLocalMatrix * anatomy.transform.localToWorldMatrix;
+            mesh.bindposes = bindposes; mesh.subMeshCount = armor.submeshes.Length;
+            for (int i = 0; i < armor.submeshes.Length; i++) mesh.SetTriangles(armor.submeshes[i].triangles, i, false);
+            mesh.RecalculateBounds();
+            var go = new GameObject("DF_Nerok_AuthoredArmor20261012"); go.layer = anatomy.gameObject.layer;
+            go.transform.SetParent(anatomy.transform, false);
+            var renderer = go.AddComponent<SkinnedMeshRenderer>(); renderer.sharedMesh = mesh;
+            renderer.bones = bones; renderer.rootBone = anatomy.rootBone; renderer.quality = SkinQuality.Bone1;
+            renderer.updateWhenOffscreen = anatomy.updateWhenOffscreen;
+            renderer.sharedMaterials = new[] {
+                Surface("Authored armor forged naval steel", new Color(.06f,.085f,.10f), .8f,.66f),
+                Surface("Authored armor saltwater ceramic", new Color(.22f,.38f,.38f), .35f,.60f),
+                Surface("Authored armor brushed copper", new Color(.49f,.23f,.105f), .75f,.68f),
+                Surface("Authored armor brown leather straps", new Color(.11f,.047f,.025f), 0f,.24f),
+                Surface("Authored armor pale rivet metal", new Color(.56f,.60f,.56f), .7f,.66f),
+                Surface("Authored armor deep crimson braid", new Color(.27f,.032f,.026f), 0f,.25f)
+            };
+            Bounds bounds = mesh.bounds; bounds.Expand(bounds.size * .45f); renderer.localBounds = bounds;
         }
 
         private static void InsetShoulderJoints(Transform model, Transform[] bones,
@@ -1011,6 +1068,7 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
 
