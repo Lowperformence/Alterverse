@@ -19,17 +19,21 @@ namespace UnityEngine
     public class MonoBehaviour:Component{}
     public class GameObject:Object
     {
-        readonly Dictionary<Type,Component> components=new();public int layer;public Transform transform;
+        readonly Dictionary<Type,Component> components=new();public int layer;public Transform transform;public HideFlags hideFlags;
         public GameObject(string n=""){name=n;transform=new Transform{gameObject=this,name=n};}
-        public T GetComponent<T>() where T:class=>typeof(T)==typeof(Transform)?transform as T:components.GetValueOrDefault(typeof(T)) as T;
+        public T GetComponent<T>() where T:class=>typeof(T)==typeof(Transform)?transform as T:components.Values.OfType<T>().FirstOrDefault();
         public T AddComponent<T>() where T:Component,new(){var c=new T{gameObject=this};components[typeof(T)]=c;return c;}
         public T[] GetComponentsInChildren<T>(bool inactive=true) where T:class=>transform.GetComponentsInChildren<T>(inactive);
-        public void SetActive(bool value){}
+        public bool activeSelf=true;public bool activeInHierarchy=>activeSelf&&(transform.parent==null||transform.parent.gameObject.activeInHierarchy);
+        public void SetActive(bool value){activeSelf=value;}
     }
     public class Transform:Component
     {
         readonly List<Transform> children=new();
         public Transform parent;public Matrix4x4 worldToLocalMatrix=Matrix4x4.identity,localToWorldMatrix=Matrix4x4.identity;
+        public Vector3 position,localPosition,localScale=Vector3.one,up=Vector3.up;public Quaternion rotation,localRotation;
+        public Vector3 TransformPoint(Vector3 p)=>localToWorldMatrix.MultiplyPoint3x4(p);
+        public Vector3 InverseTransformPoint(Vector3 p)=>worldToLocalMatrix.MultiplyPoint3x4(p);
         public void SetParent(Transform t,bool world){parent?.children.Remove(this);parent=t;parent?.children.Add(this);}
         public Transform Find(string n)=>children.FirstOrDefault(t=>t.name==n);
         public new T[] GetComponentsInChildren<T>(bool inactive=true) where T:class
@@ -42,18 +46,31 @@ namespace UnityEngine
     {
         public float x,y,z;public Vector3(float a,float b,float c){x=a;y=b;z=c;}
         public static Vector3 zero=>new(0,0,0);
+        public static Vector3 one=>new(1,1,1);public static Vector3 up=>new(0,1,0);
+        public static bool operator ==(Vector3 a,Vector3 b)=>a.x==b.x&&a.y==b.y&&a.z==b.z;
+        public static bool operator !=(Vector3 a,Vector3 b)=>!(a==b);
+        public override bool Equals(object value)=>value is Vector3 v&&this==v;
+        public override int GetHashCode()=>HashCode.Combine(x,y,z);
         public static Vector3 operator +(Vector3 a,Vector3 b)=>new(a.x+b.x,a.y+b.y,a.z+b.z);
         public static Vector3 operator -(Vector3 a,Vector3 b)=>new(a.x-b.x,a.y-b.y,a.z-b.z);
         public static Vector3 operator *(Vector3 a,float b)=>new(a.x*b,a.y*b,a.z*b);
         public static Vector3 Scale(Vector3 a,Vector3 b)=>new(a.x*b.x,a.y*b.y,a.z*b.z);
     }
-    public struct Quaternion{public static Quaternion identity=>default;}
+    public struct Quaternion
+    {
+        public static Quaternion identity=>default;public static Quaternion Euler(float x,float y,float z)=>default;
+        public static Quaternion LookRotation(Vector3 direction,Vector3 up)=>default;
+        public static Quaternion operator *(Quaternion a,Quaternion b)=>default;public static Vector3 operator *(Quaternion a,Vector3 b)=>b;
+        public static bool operator ==(Quaternion a,Quaternion b)=>true;public static bool operator !=(Quaternion a,Quaternion b)=>false;
+        public override bool Equals(object value)=>value is Quaternion;public override int GetHashCode()=>0;
+    }
     public struct Matrix4x4
     {
         Vector3 scale,position;
         public static Matrix4x4 identity=>TRS(Vector3.zero,Quaternion.identity,new Vector3(1,1,1));
         public static Matrix4x4 TRS(Vector3 p,Quaternion q,Vector3 s)=>new(){position=p,scale=s};
         public Vector3 MultiplyPoint3x4(Vector3 p)=>Vector3.Scale(p,scale)+position;
+        public Matrix4x4 inverse=>TRS(new Vector3(-position.x/scale.x,-position.y/scale.y,-position.z/scale.z),default,new Vector3(1/scale.x,1/scale.y,1/scale.z));
         public static Matrix4x4 operator *(Matrix4x4 a,Matrix4x4 b)=>TRS(a.MultiplyPoint3x4(b.position),default,Vector3.Scale(a.scale,b.scale));
     }
     public struct Bounds
@@ -63,37 +80,52 @@ namespace UnityEngine
         public void Encapsulate(Vector3 p)
         {var a=min;var b=max;var lo=new Vector3(Math.Min(a.x,p.x),Math.Min(a.y,p.y),Math.Min(a.z,p.z));
          var hi=new Vector3(Math.Max(b.x,p.x),Math.Max(b.y,p.y),Math.Max(b.z,p.z));center=(lo+hi)*.5f;size=hi-lo;}
+        public void Encapsulate(Bounds b){Encapsulate(b.min);Encapsulate(b.max);}
     }
     public struct BoneWeight{public int boneIndex0,boneIndex1,boneIndex2,boneIndex3;public float weight0,weight1,weight2,weight3;}
     public class Mesh:Object
     {
-        public int subMeshCount;public Vector3[] vertices=Array.Empty<Vector3>();public BoneWeight[] boneWeights=Array.Empty<BoneWeight>();
+        public int subMeshCount;public Vector3[] vertices=Array.Empty<Vector3>();public BoneWeight[] boneWeights=Array.Empty<BoneWeight>();public Matrix4x4[] bindposes=Array.Empty<Matrix4x4>();
         public bool isReadable=true;public Bounds bounds;public int vertexCount=>vertices.Length;
         public readonly Dictionary<int,int[]> Indices=new();
+        public int[] triangles=>Indices.Values.SelectMany(x=>x).ToArray();
         public void SetVertices(List<Vector3> v){vertices=v.ToArray();}
         public void SetTriangles(List<int> t,int sub){Indices[sub]=t.ToArray();}
+        public int[] GetTriangles(int sub)=>Indices.GetValueOrDefault(sub,Array.Empty<int>());
         public void RecalculateNormals(){}
         public void RecalculateBounds(){if(vertices.Length==0)return;bounds=new Bounds(vertices[0],Vector3.zero);foreach(var v in vertices)bounds.Encapsulate(v);}
     }
     public class MeshFilter:Component{public Mesh sharedMesh;}
-    public class MeshRenderer:Component{public Material[] sharedMaterials;}
-    public class SkinnedMeshRenderer:Component{public Mesh sharedMesh;public Transform[] bones;public void BakeMesh(Mesh mesh){mesh.vertices=sharedMesh.vertices;}}
+    public class Renderer:Component{public bool enabled=true;public Bounds bounds;public Material[] sharedMaterials=Array.Empty<Material>();}
+    public class MeshRenderer:Renderer{}
+    public class SkinnedMeshRenderer:Renderer{public Mesh sharedMesh;public Transform[] bones;public void BakeMesh(Mesh mesh){mesh.vertices=sharedMesh.vertices;}}
     public class Shader:Object{public static bool Available=true;public static Shader Find(string n)=>Available?new():null;}
     public class Material:Object{public Material(Shader s){}public bool HasProperty(string p)=>true;public void SetColor(string p,Color c){}public void SetFloat(string p,float f){}public void EnableKeyword(string name){}}
     public static class Application{public static bool isPlaying;}
     public class Texture2D{public string Resource;}
+    public enum ScaleMode {ScaleToFit,StretchToFill}
+    public struct Rect {public float x,y,width,height;public Rect(float x,float y,float width,float height){this.x=x;this.y=y;this.width=width;this.height=height;}public bool Contains(Vector2 point)=>false;}
+    public static class GUI
+    {
+        public static readonly List<(Texture2D Texture,ScaleMode Scale,bool Alpha)> Draws=new();
+        public static readonly List<string> Labels=new();
+        public static void DrawTexture(Rect rect,Texture2D texture,ScaleMode scale,bool alpha)=>Draws.Add((texture,scale,alpha));
+        public static void Label(Rect rect,string value)=>Labels.Add(value);
+    }
     public class TextAsset{public string text;}
     public static class JsonUtility{public static T FromJson<T>(string text)=>System.Text.Json.JsonSerializer.Deserialize<T>(text,new System.Text.Json.JsonSerializerOptions{IncludeFields=true});}
     public struct Color{public Color(float r,float g,float b,float a=1){}}
     public static class Resources
     {
         public static readonly Dictionary<string,int> Loads=new();
+        public static readonly HashSet<string> MissingTextures=new();
         public static T Load<T>(string p) where T:class
-        {Loads[p]=Loads.GetValueOrDefault(p)+1;if(typeof(T)==typeof(TextAsset))return new TextAsset{text=System.IO.File.ReadAllText("Assets/Alterverse/Resources/"+p+".json")} as T;return new Texture2D{Resource=p} as T;}
+        {Loads[p]=Loads.GetValueOrDefault(p)+1;if(typeof(T)==typeof(TextAsset))return new TextAsset{text=System.IO.File.ReadAllText("Assets/Alterverse/Resources/"+p+".json")} as T;return MissingTextures.Contains(p)?null:new Texture2D{Resource=p} as T;}
     }
     public static class Mathf
     {
         public const float PI=(float)Math.PI;
+        public const float Deg2Rad=PI/180;public static float Tan(float v)=>(float)Math.Tan(v);
         public static float Cos(float v)=>(float)Math.Cos(v);public static float Sin(float v)=>(float)Math.Sin(v);
         public static float Sqrt(float v)=>(float)Math.Sqrt(v);
         public static float Abs(float v)=>Math.Abs(v);
@@ -110,7 +142,7 @@ namespace UnityEditor{public sealed class MenuItem:Attribute{public MenuItem(str
 namespace Alterverse.Characters
 {
     public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok,Timmy,VoidKnight}
-    public sealed class HeroIdentity:UnityEngine.Component{public const int HeroCount=10;public HeroId Hero;}
+    public sealed class HeroIdentity:UnityEngine.Component{public const int HeroCount=10;public HeroId Hero;public void Configure(HeroId id){Hero=id;}}
     public static class PlayerHeroSelection{public static HeroId Selected;public static void Select(HeroId h)=>Selected=h;}
 }
 namespace Alterverse.Profile
@@ -148,8 +180,9 @@ namespace Alterverse.Shop
 {
     public enum AvatarPurchaseResult{InvalidItem,AlreadyOwned,InsufficientShards,Pending,Purchased}
     public class PaidShardCommerce{public static PaidShardCommerce Instance;public bool Ready;public static bool OwnsVoidfall=>false;}
-    public class SkinPreviewSelection:UnityEngine.Component{public UniversalHeroCosmetic Headwear;}
+    public class SkinPreviewSelection:UnityEngine.Component{public UniversalHeroCosmetic Headwear,UniversalCosmetic;}
 }
 namespace Alterverse.Characters{public static class LocalHeroContext{public static bool IsLocal(UnityEngine.GameObject actor)=>false;}}
 namespace Alterverse.Audio
 {public enum DimensionSound{Purchase}public static class DimensionAudio{public static void Play(DimensionSound s,float v){}}}
+

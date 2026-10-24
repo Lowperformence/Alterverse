@@ -42,7 +42,16 @@ namespace Alterverse.Shop
                 headwear:true,purchasable:false,unlockLabel:"PREMIUM BATTLE PASS / LEVEL 50"),
             new(UniversalHeroCosmetic.UfoTestHat,HeadwearSelection.UfoName,HeadwearSelection.UfoPrice,HeadwearSelection.UfoOwnedKey,
                 CosmeticCategory.Skins,"A confused little UFO with crooked antennae. Test headwear; wear it with wings.",
-                new Color(.25f,.9f,.7f),headwear:true,unlockLabel:"1 SHARD")
+                new Color(.25f,.9f,.7f),headwear:true,unlockLabel:"1 SHARD"),
+            new(UniversalHeroCosmetic.WizardHat,"WIZARD HAT",0,"DF_HeadwearOwned_WizardHat",CosmeticCategory.Skins,
+                "A crooked violet wizard hat with embroidered stars and a moonstone buckle.",new Color(.65f,.38f,.95f),
+                headwear:true,purchasable:false,unlockLabel:"FREE TEST HAT"),
+            new(UniversalHeroCosmetic.PropellerCap,"PROPELLER CAP",0,"DF_HeadwearOwned_PropellerCap",CosmeticCategory.Skins,
+                "A cheerful four-panel cap with a colorful three-blade propeller.",new Color(.20f,.80f,.70f),
+                headwear:true,purchasable:false,unlockLabel:"FREE TEST HAT"),
+            new(UniversalHeroCosmetic.MushroomHat,"MUSHROOM HAT",0,"DF_HeadwearOwned_MushroomHat",CosmeticCategory.Skins,
+                "A red mushroom canopy with cream spots and a soft fitted headband.",new Color(.95f,.30f,.35f),
+                headwear:true,purchasable:false,unlockLabel:"FREE TEST HAT")
         };
         public static IReadOnlyList<CosmeticDefinition> All { get; }=System.Array.AsReadOnly(definitions);
         public static CosmeticDefinition Find(UniversalHeroCosmetic id)
@@ -51,7 +60,7 @@ namespace Alterverse.Shop
         {
             var definition=Find(id);if(definition==null)return false;
             if(id==UniversalHeroCosmetic.BetaCap&&!CosmeticProfile.IsTest)BattlePassProgress.ReconcileCosmeticRewards();
-            return id==UniversalHeroCosmetic.Original||CosmeticProfile.GetInt(definition.OwnedKey,0)==1||
+            return id==UniversalHeroCosmetic.Original||HeadwearSelection.IsFreeTestHat(id)||CosmeticProfile.GetInt(definition.OwnedKey,0)==1||
                 id==UniversalHeroCosmetic.Voidfall&&CosmeticProfile.PaidVoidfall;
         }
         public static string Sku(UniversalHeroCosmetic id) => id switch
@@ -84,5 +93,6 @@ namespace Alterverse.Shop
         }
     }
 }
+
 
 

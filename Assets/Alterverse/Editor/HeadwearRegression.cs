@@ -19,19 +19,18 @@ namespace Alterverse.EditorChecks
             int checkedHeroes=0;
             try
             {
-                foreach(string resource in new[]{"BetaCap","UfoTestHat","WizardHat","PropellerCap","MushroomHat"})
+                foreach(var item in new[]{UniversalHeroCosmetic.BetaCap,UniversalHeroCosmetic.UfoTestHat,
+                    UniversalHeroCosmetic.WizardHat,UniversalHeroCosmetic.PropellerCap,UniversalHeroCosmetic.MushroomHat})
                 for(int i=0;i<HeroIdentity.HeroCount;i++)
                 {
                     GameObject actor=null;
                     try
                     {
-                        bool prototype=resource!="BetaCap"&&resource!="UfoTestHat";
-                        var item=resource=="BetaCap"?UniversalHeroCosmetic.BetaCap:UniversalHeroCosmetic.UfoTestHat;
-                        actor=prototype?HeadwearFitWindow.CreatePrototypeActor((HeroId)i,resource,true):
-                            HeadwearFitWindow.CreatePreviewActor((HeroId)i,item,true);
+                        string resource=HeadwearSelection.ResourceFor(item);
+                        actor=HeadwearFitWindow.CreatePreviewActor((HeroId)i,item,true);
                         SceneManager.MoveGameObjectToScene(actor,scene);
                         var view=actor.GetComponent<HeadwearPresentation>();
-                        Require(view!=null&&(prototype?view.PreviewResource==resource:view.Current==item),
+                        Require(view!=null&&view.Current==item,
                             (HeroId)i+": "+(view?.LastFitError??"headwear missing"));
                         Require(view.Head!=null,"Head bone missing.");
                         var cap=view.Head.Find("DF_Headwear_"+resource);
@@ -41,7 +40,14 @@ namespace Alterverse.EditorChecks
                         Require(mesh.subMeshCount==(resource=="BetaCap"?3:6),"Unexpected headwear material count.");
                         var root=actor.transform.Find("DF_VisualRoot");
                         Vector3 contact=root.InverseTransformPoint(view.Head.TransformPoint(view.SeatInHeadSpace));
-                        Require(Mathf.Abs(contact.y-view.HeadBounds.max.y)<.0001f,"Hat seat does not meet the upper head contour.");
+                        Require(contact.y<view.HeadBounds.max.y&&contact.y>=view.HeadBounds.center.y,
+                            "Head does not enter the hat opening around the upper crown.");
+                        Matrix4x4 toRoot=root.worldToLocalMatrix*cap.localToWorldMatrix;
+                        var points=mesh.vertices;
+                        Bounds fitted=new Bounds(toRoot.MultiplyPoint3x4(points[0]),Vector3.zero);
+                        foreach(Vector3 point in points)fitted.Encapsulate(toRoot.MultiplyPoint3x4(point));
+                        Require(view.ReferenceWidth>0&&Mathf.Abs(fitted.size.x-view.ReferenceWidth)<Mathf.Max(.0001f,view.ReferenceWidth*.001f),
+                            "Hat does not match the approved UFO reference width.");
                         Require(cap.GetComponentsInChildren<Collider>(true).Length==0,"Cosmetic introduced a collider.");
                         Vector3 position=cap.localPosition,scale=cap.localScale;
                         Quaternion rotation=cap.localRotation;
@@ -49,7 +55,7 @@ namespace Alterverse.EditorChecks
                         Require(cap.parent==view.Head&&cap.localPosition==position&&cap.localScale==scale&&cap.localRotation==rotation,
                             "Cap did not retain its head attachment under a head pose.");
                         int count=actor.GetComponentsInChildren<MeshFilter>(true).Length;
-                        Require(prototype?view.ApplyPrototype(resource):view.Apply(item),"Repeated equip failed.");
+                        Require(view.Apply(item),"Repeated equip failed.");
                         Require(actor.GetComponentsInChildren<MeshFilter>(true).Length==count,"Repeated equip duplicated cap geometry.");
                         Require(view.Apply(UniversalHeroCosmetic.Original),"Unequip failed.");
                         Require(view.Current==UniversalHeroCosmetic.Original,"Unequip did not clear the headwear slot.");
@@ -66,4 +72,5 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+
 

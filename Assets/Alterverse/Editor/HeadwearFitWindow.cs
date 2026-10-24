@@ -26,14 +26,20 @@ namespace Alterverse.EditorChecks
         void Build()
         {
             preview?.Cleanup();preview=new PreviewRenderUtility();
-            var selected=hat==Hat.BetaTruckerCap?UniversalHeroCosmetic.BetaCap:hat==Hat.UfoTestHat?UniversalHeroCosmetic.UfoTestHat:UniversalHeroCosmetic.Original;
-            bool prototype=(int)hat>=(int)Hat.WizardHat;
-            actor=prototype?CreatePrototypeActor(hero,hat.ToString(),wings):CreatePreviewActor(hero,selected,wings);
+            var selected=hat switch
+            {
+                Hat.BetaTruckerCap=>UniversalHeroCosmetic.BetaCap,
+                Hat.UfoTestHat=>UniversalHeroCosmetic.UfoTestHat,
+                Hat.WizardHat=>UniversalHeroCosmetic.WizardHat,
+                Hat.PropellerCap=>UniversalHeroCosmetic.PropellerCap,
+                Hat.MushroomHat=>UniversalHeroCosmetic.MushroomHat,
+                _=>UniversalHeroCosmetic.Original
+            };
+            actor=CreatePreviewActor(hero,selected,wings);
             preview.AddSingleGO(actor);
             var view=actor.GetComponent<HeadwearPresentation>();
             if(view.Head!=null)headRest=view.Head.localRotation;
-            status=prototype?"Prototype · "+hat+" · Head: "+view.Head.name:
-                selected!=UniversalHeroCosmetic.Original?(view.Current==selected?
+            status=selected!=UniversalHeroCosmetic.Original?(view.Current==selected?
                 "Head found: "+view.Head.name+" · bounds "+view.HeadBounds.size: view.LastFitError):"Headwear removed; wing selection retained.";
             preview.camera.nearClipPlane=.01f;preview.camera.farClipPlane=50;
             preview.camera.fieldOfView=30;
@@ -78,7 +84,7 @@ namespace Alterverse.EditorChecks
             }
             EditorGUILayout.HelpBox(status??"Head attachment unavailable.",MessageType.None);
             if((int)hat>=(int)Hat.WizardHat)
-                EditorGUILayout.HelpBox("Test model. No shop price or reward assigned. Previewing never grants ownership.",MessageType.Info);
+                EditorGUILayout.HelpBox("Free test hat. Available in Inventory > Cosmetics > Skins. The BETA cap remains a premium Battle Pass reward.",MessageType.Info);
             string art=hat==Hat.BetaTruckerCap?"BetaCap":hat.ToString();
             var icon=hat==Hat.None?null:Resources.Load<Texture2D>("Headwear/"+art+"Icon");
             if(icon!=null)GUILayout.Label(icon,GUILayout.Height(100));
@@ -125,4 +131,5 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+
 

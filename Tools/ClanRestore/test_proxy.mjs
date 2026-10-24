@@ -7,7 +7,8 @@ import {fileURLToPath} from 'node:url';
 import {once} from 'node:events';
 import {attachClans} from '../../Server/commerce/node/attach-clans.mjs';
 
-const original=await readFile(new URL('./fixtures/node-2026-10-22.2.js',import.meta.url),'utf8');
+const sourceArgument=process.argv.find(value=>value.startsWith('--source='));
+const original=await readFile(sourceArgument?.slice('--source='.length)||new URL('./fixtures/node-2026-10-22.2.js',import.meta.url),'utf8');
 const patched=await attachClans(original);
 let checks=0;
 const check=(value,message)=>{assert.ok(value,message);checks++;};
@@ -15,21 +16,29 @@ const hash=value=>createHash('sha256').update(value).digest('hex');
 const copy=value=>JSON.parse(JSON.stringify(value));
 const alice=hash('alice');
 
-for(const name of ['authenticateUnity','saveProfile','spendWallet','fulfillGooglePurchase','syncSubscription',
-  'handleSubscriptionPush','reservePlayerName','readWallet','walletSnapshot','success']){
-  const pattern=new RegExp('^(?:async )?function '+name+'\\([^]*?(?=^(?:async )?function |^http\\(|$(?![^]))','m');
-  const before=original.match(pattern)?.[0]?.trim(),after=patched.match(pattern)?.[0]?.trim();
-  check(before&&before===after,'original account/billing function preserved: '+name);
+const accountFunctions=['authenticateUnity','saveProfile','spendWallet','fulfillGooglePurchase','syncSubscription',
+  'handleSubscriptionPush','reservePlayerName','readWallet','walletSnapshot','success'];
+const beforeRuntime=runtime(original),afterRuntime=runtime(patched);
+for(const name of accountFunctions){
+  const before=beforeRuntime.functions[name],after=afterRuntime.functions[name];
+  check(before&&before===after,'original account/billing function preserved byte for byte: '+name);
 }
-const catalog=source=>source.slice(source.indexOf('const ITEMS = {'),source.indexOf('const db = new Firestore();'));
+const catalog=source=>{
+  const start=/\bconst\s+ITEMS\s*=\s*\{/.exec(source)?.index;
+  const end=/\bconst\s+db\s*=\s*new\s+Firestore/.exec(source)?.index;
+  assert.ok(start!==undefined&&end>start,'catalog boundaries must be present');
+  return source.slice(start,end);
+};
 check(catalog(original)===catalog(patched),'entire catalog, prices, IDs and ownership writes preserved');
 await assert.rejects(attachClans(patched),/already present/);checks++;
-await assert.rejects(attachClans(original.replace("'social_feature_not_deployed'","'other_route'")),/unsupported-social/);checks++;
-await assert.rejects(attachClans(original.replace('await saveProfile(','await anotherSave(')),/profile-save/);checks++;
-const withHat=original.replace('const ITEMS = {',"const ITEMS = {\n  another_future_hat: item(1, [w('DF_HeadwearOwned_FutureHat')]),");
+await assert.rejects(attachClans(original.replace(/(['"])social_feature_not_deployed\1/g,"'other_route'")),/unsupported-social/);checks++;
+await assert.rejects(attachClans(original.replace(/await\s+saveProfile\(/,'await anotherSave(')),/profile-save/);checks++;
+await assert.rejects(attachClans(original.replace(/new\s+Firestore(?:\(\s*\))?/,"new Firestore({projectId:'other'})")),/Firestore/);checks++;
+await assert.rejects(attachClans(original.replace(/body\.profile\s*,\s*body\.expectedProfileRevision\s*\)/,'body.profile, body.otherRevision)')),/profile-save/);checks++;
+const withHat=original.replace(/const\s+ITEMS\s*=\s*\{/,match=>match+"\n  another_future_hat: item(1, [w('DF_HeadwearOwned_FutureHat')]),");
 check(catalog(await attachClans(withHat))===catalog(withHat),'fresh export keeps later hat/catalog additions exactly');
 
-function runtime(){
+function runtime(source=patched){
   const data=new Map(),calls=[],warnings=[],googleCalls=[];
   let handler,fetchBehavior;
   const profile=[{key:'DF_PlayerName',kind:1,text:'SolarFox1234567'},
@@ -76,14 +85,19 @@ function runtime(){
     AbortSignal,fetch:async(url,options)=>{calls.push({url,options});return fetchBehavior(url,options);},
     http:(name,fn)=>{check(name==='helloHttp','entry point name preserved');handler=fn;}
   };
-  vm.runInNewContext(patched.replace(/^import .*;\n/gm,''),context,{timeout:2000});
+  // The SDK/authentication dependencies are the same mocks for both real export
+  // formats. Node's own parser supplies function boundaries for preservation
+  // checks, so minified functions are compared without a formatting heuristic.
+  const executable=source.replace(/\bimport\s*(?:\{[^}]*\}|[A-Za-z_$][\w$]*)\s*from\s*(['"])[^'"]+\1\s*;?/g,'');
+  vm.runInNewContext(executable,context,{timeout:2000});
+  const functions=Object.fromEntries(accountFunctions.map(name=>[name,context[name]?.toString()]));
   async function request(path,body={},token='alice-token',method='POST'){
     const res={code:0,body:null,sends:0,headers:{},set(k,v){this.headers[k]=v;return this;},status(code){this.code=code;return this;},
       json(value){this.body=copy(value);this.sends++;return this;},send(value){this.body=value;this.sends++;return this;}};
     await handler({path,body,method,get:name=>name.toLowerCase()==='authorization'?(token?'Bearer '+token:''):''},res);
     check(res.sends===1,'HTTP response emitted exactly once');return res;
   }
-  return {data,calls,warnings,googleCalls,request,response,setFetch:value=>{fetchBehavior=value;}};
+  return {data,calls,warnings,googleCalls,request,response,functions,setFetch:value=>{fetchBehavior=value;}};
 }
 
 let r=runtime();

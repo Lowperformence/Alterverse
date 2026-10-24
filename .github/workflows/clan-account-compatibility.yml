@@ -28,6 +28,8 @@ jobs:
           test_application test_safe_identity test_google_display_name test_node_social -q
       - name: Original Node purchase/profile behavior and loopback HTTP
         run: DF_CLAN_PYTHON="$(command -v python)" node Tools/ClanRestore/test_proxy.mjs --http
+      - name: Actual Cloud Console export with loopback HTTP
+        run: DF_CLAN_PYTHON="$(command -v python)" node Tools/ClanRestore/test_proxy.mjs --source=Tools/ClanRestore/fixtures/node-2026-10-22.2-cloud-export.js --http
       - name: Release and Firestore setup checks
         run: |
           python -m unittest discover -s Tools/ClanRestore -p 'test_build_release.py' -q
@@ -36,7 +38,7 @@ jobs:
       - name: Prepare fixture image context
         run: >-
           python Tools/ClanRestore/build_release.py
-          --node-index Tools/ClanRestore/fixtures/node-2026-10-22.2.js
+          --node-index Tools/ClanRestore/fixtures/node-2026-10-22.2-cloud-export.js
           --node-package Tools/ClanRestore/fixtures/package.json
           --social-namespace ci-fixture
           --output "$RUNNER_TEMP/clan-fixture-release"

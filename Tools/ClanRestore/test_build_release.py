@@ -47,6 +47,25 @@ class ReleaseTests(unittest.TestCase):
         self.prepare(index=fresh)
         self.assertIn("future_hat: item(1, [w('DF_HeadwearOwned_FutureHat')])",(self.output/'index.js').read_text())
 
+    def test_actual_console_export_uses_verified_namespace_and_preserves_input(self):
+        self.index=HERE/'fixtures/node-2026-10-22.2-cloud-export.js'
+        before=self.index.read_bytes()
+        self.prepare(namespace='dimensions-front')
+        self.assertEqual(self.index.read_bytes(),before)
+        self.assertEqual((self.output/'package.json').read_bytes(),self.package.read_bytes())
+        release=json.loads((self.output/'RELEASE.json').read_text())
+        self.assertEqual(release['socialNamespace'],'dimensions-front')
+        self.assertEqual(release['sourceIndexSha256'],'162bbdc85e02192d5b30240cc9acc1656545eea7f8cc6bcf8774c221e1921c88')
+        self.assertEqual(release['unityProjectId'],'57bb61ab-1371-4b7a-a996-5a932e351c03')
+        self.assertIn('DF_SOCIAL_NAMESPACE=dimensions-front',(self.output/'Dockerfile').read_text())
+
+    def test_firestore_project_override_needs_review_and_leaves_no_partial_release(self):
+        source=self.directory/'override.js'
+        source.write_text(self.index.read_text().replace('new Firestore()',"new Firestore({projectId:'another-project'})"))
+        import subprocess
+        with self.assertRaises(subprocess.CalledProcessError):self.prepare(index=source)
+        self.assertFalse(self.output.exists())
+
     def test_existing_output_is_never_overwritten(self):
         self.output.mkdir();(self.output/'keep').write_text('current release')
         with self.assertRaises(ValueError):self.prepare()

@@ -11,9 +11,21 @@ namespace Alterverse.Shop
         public const string UfoName = "UFO TEST HAT";
         public const string UfoOwnedKey = "DF_HeadwearOwned_UfoTestHat";
         public const int UfoPrice = 1;
+        public static string ResourceFor(UniversalHeroCosmetic value) => value switch
+        {
+            UniversalHeroCosmetic.BetaCap => "BetaCap",
+            UniversalHeroCosmetic.UfoTestHat => "UfoTestHat",
+            UniversalHeroCosmetic.WizardHat => "WizardHat",
+            UniversalHeroCosmetic.PropellerCap => "PropellerCap",
+            UniversalHeroCosmetic.MushroomHat => "MushroomHat",
+            _ => null
+        };
+        public static bool IsFreeTestHat(UniversalHeroCosmetic value) =>
+            value == UniversalHeroCosmetic.WizardHat || value == UniversalHeroCosmetic.PropellerCap ||
+            value == UniversalHeroCosmetic.MushroomHat;
         public static string HeroKey(HeroId hero) => "DF_HeadwearEquipped_" + (int)hero;
         public static bool IsHeadwear(UniversalHeroCosmetic value) =>
-            value == UniversalHeroCosmetic.BetaCap || value == UniversalHeroCosmetic.UfoTestHat;
+            ResourceFor(value) != null;
         public static bool Supported(UniversalHeroCosmetic value) =>
             value == UniversalHeroCosmetic.Original || IsHeadwear(value);
         public static UniversalHeroCosmetic EquippedFor(HeroId hero)
@@ -32,3 +44,4 @@ namespace Alterverse.Shop
         }
     }
 }
+

@@ -19,8 +19,9 @@ def prepare(index, package, namespace, output, root=None):
     if output.exists(): raise ValueError('Output must be a new directory')
     if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,62}',namespace): raise ValueError('Explicit existing social namespace required')
     source=index.read_text()
-    project=re.findall(r"const UNITY_PROJECT_ID = '([a-f0-9-]{36})';",source)
+    project=re.findall(r"\bconst\s+UNITY_PROJECT_ID\s*=\s*(['\"])([a-f0-9-]{36})\1\s*;",source)
     if len(project)!=1: raise ValueError('The current Node Unity project must be unambiguous')
+    project=[project[0][1]]
     manifest=json.loads(package.read_text())
     if manifest.get('type')!='module' or '@google-cloud/functions-framework' not in manifest.get('dependencies',{}):
         raise ValueError('Expected current Functions Framework ES module package')
