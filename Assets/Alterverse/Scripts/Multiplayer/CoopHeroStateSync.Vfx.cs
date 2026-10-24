@@ -61,7 +61,7 @@ namespace Alterverse.Multiplayer
             if(actor==null)return;
             HeroVfxCue cue=(HeroVfxCue)rawCue;
             float elapsed=Mathf.Max(0,(float)(manager.ServerTime.Time-sent));
-            bool cancellation=cue==HeroVfxCue.CancelWarnings||cue==HeroVfxCue.CancelProjectiles;
+            bool cancellation=cue==HeroVfxCue.CancelWarnings||cue==HeroVfxCue.CancelProjectiles||cue==HeroVfxCue.TimmyHold&&duration<=0;
             if(!cancellation&&elapsed>Mathf.Max(.5f,duration+.5f))return;
             Health target=null;
             string targetWorldKey=worldKey.ToString();
@@ -102,6 +102,7 @@ namespace Alterverse.Multiplayer
                 case HeroVfxCue.TargetWarning:if(target!=null)HeroSkillVfx.TargetWarning(actor,target,duration);break;
                 case HeroVfxCue.Support:if(target!=null)HeroSkillVfx.Support(actor,target,flag,duration);break;
                 case HeroVfxCue.SupportLink:if(target!=null)HeroSkillVfx.SupportLink(actor,target);break;
+                case HeroVfxCue.TimmyHold:if(target!=null)HeroSkillVfx.TimmyHold(actor,target,duration);break;
                 case HeroVfxCue.Debuff:if(target!=null)HeroSkillVfx.Debuff(actor,target);break;
                 case HeroVfxCue.Ultimate:HeroSkillVfx.Ultimate(actor,point);break;
                 case HeroVfxCue.CancelWarnings:HeroSkillVfx.CancelWarnings(actor);break;

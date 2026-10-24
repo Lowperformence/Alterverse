@@ -10,7 +10,7 @@ partial class Regression
   Check((int)HeroId.Timmy==8,"Timmy appends a stable hero ID");
   Check(HeroIdentity.HeroCount==System.Enum.GetValues(typeof(HeroId)).Length,"regular roster contains every catalogued hero");
   Check(HeroIdentity.HeroCount>=9,"Timmy is available without a preview switch");
-  Check(Alterverse.Audio.HeroCombatAudio.CueCount==HeroIdentity.HeroCount*15,"production audio bank accepts the expanded hero roster");
+  Check(Alterverse.Audio.HeroCombatAudio.CueCount==HeroIdentity.HeroCount*15+1,"audio bank appends one hold sound without changing hero cue indices");
   for(int h=0;h<8;h++)for(int action=0;action<5;action++)for(int phase=0;phase<3;phase++)
   {
    int expected=h==7?105+action*3+phase:phase==2?70+h*5+action:h*10+action*2+phase;
@@ -89,14 +89,17 @@ partial class Regression
   Check(execution.TryCastAimed(2,new AimPose((-Vector3.forward),(-Vector3.forward)*3.4f)),"Jet Pounce backwards");Near(a.transform.position.z,-TimmyBalance.JetRange,"Jet range");
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*6);other=Hero(HeroId.Kaelon,1,new Vector3(.8f,0,6));execution=a.GetComponent<HeroAbilityExecution>();
   Camera.main=new GameObject("Scratch audio camera").AddComponent<Camera>();Alterverse.Audio.DimensionAudio.TimmyUltimatePlays=0;
+  Alterverse.Visuals.SelectedAbilityVfx.HoldStarts=Alterverse.Visuals.SelectedAbilityVfx.HoldStops=0;
   Check(execution.TryCastAimed(3,Forward(a,9)),"Scratch acquires in the cast frame");Check(!execution.TryCastAimed(3,Forward(a,9)),"Scratch duplicate rejected");
   Run(.65f);Check(Alterverse.Audio.DimensionAudio.TimmyUltimatePlays==1,"Scratch plays the supplied recording at leap start");Check(b.GetComponent<HeroCombatStatus>()?.Rooted==true,"Scratch holds after physical contact");
+  Check(Alterverse.Visuals.SelectedAbilityVfx.HoldStarts==1,"confirmed Scratch root publishes one stars start");
   Check(HeroCombatStatus.CanAct(a)&&HeroCombatStatus.CanAct(b),"Scratch leaves Timmy and the victim able to attack");
   Check(a.GetComponent<HeroCombatStatus>()?.Rooted!=true,"Scratch never roots Timmy");
   Near(HeroCombatStatus.Speed(a),1,"Scratch leaves Timmy's movement available");Near(Total(b),1000,"first scratch waits half a second");
   Run(1.8f);Check(b.GetComponent<HeroCombatStatus>().Rooted,"hold remains active before its contact-based expiry");
   Run(.3f);Check(Alterverse.Audio.DimensionAudio.TimmyUltimatePlays==1,"four Scratch ticks never restart the selected recording");Near(Total(b),1000-TimmyBalance.ScratchDamage,"Scratch applies all four ticks once");Near(Total(other),1000,"Scratch damages exactly one enemy");
   Check(!b.GetComponent<HeroCombatStatus>().Rooted&&a.GetComponent<HeroCombatStatus>()?.Rooted!=true,"normal completion releases only the victim root");
+  Check(Alterverse.Visuals.SelectedAbilityVfx.HoldStarts==1&&Alterverse.Visuals.SelectedAbilityVfx.HoldStops>=1,"Scratch ticks do not restart stars and completion stops them");
 
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*6);execution=a.GetComponent<HeroAbilityExecution>();
   execution.TryCastAimed(3,Forward(a,9));Run(.25f);b.transform.position+=Vector3.right*5;Run(2.7f);

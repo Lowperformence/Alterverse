@@ -461,6 +461,34 @@ static partial class VfxRegression
         HeroSkillVfx.Support(actor,health,false,4);
         Check(Visible().Length>old,"Unprepared healing keeps its visible original fallback");
     }
+    static void SelectedAbilityRoutes()
+    {
+        Reset();SelectedAbilityVfx.Available=true;SelectedAbilityVfx.Areas=SelectedAbilityVfx.Shots=SelectedAbilityVfx.Echoes=0;
+        var zhaev=Hero(HeroId.Veyr,0);var victim=Hero(HeroId.Kaelon,1);var health=victim.GetComponent<Health>();victim.transform.position=Vector3.forward*2;
+        int before=Visible().Length;HeroSkillVfx.Spell(zhaev,victim.transform.position,1,.2f);
+        Check(SelectedAbilityVfx.Shots==1&&Visible().Length==before,"Rift Scar replaces old purple-X release rather than stacking it");
+        HeroSkillVfx.Impact(zhaev,health,3);Check(SelectedAbilityVfx.Echoes==1,"confirmed Vacant Echo hit selects blood explosion");
+        foreach(var hero in new[]{HeroId.Kaelon,HeroId.Rook})
+        {
+            var actor=Hero(hero,2);before=Visible().Length;HeroSkillVfx.Area(actor,new Vector3(2,0,3),3.2f,.3f,false,false,3);
+            Check(SelectedAbilityVfx.LastKind==(hero==HeroId.Kaelon?SelectedAbilityVfx.Circle:SelectedAbilityVfx.Fire),"selected ultimate maps to correct native family "+hero);
+            Check(SelectedAbilityVfx.LastRadius==3.2f&&Visible().Length==before,"selected ultimate preserves live radius and replaces old core "+hero);
+        }
+        var timmy=Hero(HeroId.Timmy,4);SelectedAbilityVfx.SmokeCalls=0;HeroSkillVfx.Dash(timmy,Vector3.zero,Vector3.forward*3,2,.24f);
+        HeroSkillVfx.Dash(timmy,Vector3.zero,Vector3.forward*3,3,.24f);
+        Check(SelectedAbilityVfx.SmokeCalls==4,"Jet Pounce and Scratch each emit smoke at both jetpack nozzles");
+        var manager=NetworkManager.Singleton;var relay=new GameObject("selected relay").AddComponent<CoopHeroStateSync>();relay.Bind(manager.CustomMessagingManager);
+        relay.Slot(timmy.GetComponent<CoopHeroSlot>());relay.Slot(victim.GetComponent<CoopHeroSlot>());
+        int starts=SelectedAbilityVfx.HoldStarts,stops=SelectedAbilityVfx.HoldStops;before=manager.CustomMessagingManager.Packets.Count;
+        HeroSkillVfx.TimmyHold(timmy,health,1.8f);var start=manager.CustomMessagingManager.LastPacket;
+        HeroSkillVfx.TimmyHold(timmy,health,0);var stop=manager.CustomMessagingManager.LastPacket;
+        Check(manager.CustomMessagingManager.Packets.Count==before+2,"hold start and end each publish one bounded semantic event");
+        CoopAuthority.LocalHasServerAuthority=false;manager.IsServer=false;
+        relay.Receive(0,start);manager.ServerTime.Time+=2;relay.Receive(0,stop);
+        Check(SelectedAbilityVfx.HoldStarts==starts+2&&SelectedAbilityVfx.HoldStops==stops+2,"clients receive stars start and even delayed explicit stop");
+        Check(manager.CustomMessagingManager.Packets.Count==before+2,"replayed hold events cannot echo");
+        relay.Unbind();SelectedAbilityVfx.Available=false;SelectedAbilityVfx.StarsSound=null;
+    }
     static void Main()
     {
         var manager=new NetworkManager{IsServer=true,IsListening=true,IsConnectedClient=true};
@@ -479,7 +507,7 @@ static partial class VfxRegression
         Check(manager.CustomMessagingManager.Packets.Count==1,"Client replay cannot echo an event");
         before=Visible().Length;relay.Receive(9,packet);Check(Visible().Length==before,"A non-server cannot inject visual events");
         relay.Unbind();NetworkPresentationFollowers();AllCues();CommandDamage();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();ConfirmedBasicWindups();PendingCooldowns();OfflineOnlineParity();
-        AttackAtlasChecks();ThalaHealingRoutes();
+        AttackAtlasChecks();ThalaHealingRoutes();SelectedAbilityRoutes();
         Console.WriteLine("PASS "+checks+" production online VFX and combat/shader checks (controlled Unity/GPU/network fixtures)");
     }
 }

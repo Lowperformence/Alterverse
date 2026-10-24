@@ -493,6 +493,9 @@ namespace Alterverse.Visuals
             if(!warning&&slot==3&&(hero==HeroId.Elyra||hero==HeroId.Traveler)&&
                 UltimateLightningVfx.TryPlay(hero==HeroId.Elyra?UltimateLightningVfx.Ione:UltimateLightningVfx.Traveler,
                     Ground(center),radius,HeroVfxEvents.ReplayElapsed))return;
+            if(!warning&&slot==3&&(hero==HeroId.Kaelon||hero==HeroId.Rook)&&
+                SelectedAbilityVfx.TryArea(hero==HeroId.Kaelon?SelectedAbilityVfx.Circle:SelectedAbilityVfx.Fire,
+                    Ground(center),radius,HeroVfxEvents.ReplayElapsed))return;
             if(!warning)PolishArea(actor,center,radius,slot,beneficial);
             if(hero==HeroId.Timmy&&slot==1)
             {
@@ -672,6 +675,18 @@ namespace Alterverse.Visuals
             if(actor==null)return;HeroId h=Hero(actor);
             if(h==HeroId.Nyra&&(slot==2||slot==3)&&SivraNovaVfx.Launch(actor,slot,Muzzle(actor),impact+Vector3.up*.25f,
                 travelTime,target,HeroVfxPool.CurrentDelivery,HeroVfxEvents.ReplayElapsed))return;
+            if(h==HeroId.Veyr&&slot==1&&SelectedAbilityVfx.TryRiftScar(actor,Muzzle(actor),impact+Vector3.up*.65f,
+                travelTime>0?travelTime:Mathf.Max(.01f,Vector3.Distance(Muzzle(actor),impact)/18f),
+                AimingSettings.Current.For(h,slot).projectileWidth,HeroVfxPool.CurrentDelivery,HeroVfxEvents.ReplayElapsed))return;
+            if(h==HeroId.Veyr&&slot==3)
+            {
+                var delivery=actor.GetComponent<HeroAttackDelivery>();
+                Vector3 origin=delivery?.VisualOrigin??HeroVfxEvents.ReplayOrigin??actor.transform.position;
+                Vector3 direction=delivery?.VisualDirection??(impact-origin);
+                var aim=AimingSettings.Current.For(h,slot);
+                SelectedAbilityVfx.RememberEcho(actor,origin,direction,aim.castRange,aim.coneAngle);
+                if(SelectedAbilityVfx.Ready(SelectedAbilityVfx.Blood)){VacantEchoSickle(actor,impact);return;}
+            }
             PolishRelease(actor,impact,slot,travelTime,target);
             if(h==HeroId.Timmy)
             {
@@ -801,6 +816,8 @@ namespace Alterverse.Visuals
             if(actor==null||target==null)return;
             if(slot<0&&Hero(actor)==HeroId.Nyra&&SmallBulletVfx.ConfirmHit(actor,target.transform.position+Vector3.up*.35f))return;
             if(Hero(actor)==HeroId.Nyra&&(slot==2||slot==3)&&SivraNovaVfx.ConfirmHit(actor,target,slot,HeroVfxEvents.ReplayElapsed))return;
+            if(Hero(actor)==HeroId.Veyr&&slot==3&&
+                SelectedAbilityVfx.TryEchoImpact(actor,target.transform.position+Vector3.up*.35f,HeroVfxEvents.ReplayElapsed))return;
             PolishImpact(actor,target,slot);
             Vector3 p=target.transform.position+Vector3.up*.35f;Color c=Accent(actor);
             float strength=slot<0?.35f:slot==3?.90f:.62f;

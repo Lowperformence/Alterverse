@@ -199,3 +199,16 @@ namespace Alterverse.Visuals {public static class SivraNovaVfx {
  public static void CancelDelivery(int id){}public static void CancelOwner(UnityEngine.GameObject actor){}
 }}
 
+
+namespace Alterverse.Visuals {public static class SelectedAbilityVfx {
+ public const int Smoke=0,Blood=1,Strike=2,Circle=3,Fire=4,Stars=5;public const float SizeMultiplier=3.5f;
+ public static bool Available;public static UnityEngine.AudioClip StarsSound;public static int SmokeCalls,HoldStarts,HoldStops,Areas,Echoes,Shots;public static int LastKind;public static float LastRadius;
+ public static bool Ready(int k)=>Available;public static UnityEngine.AudioClip StarsClip()=>StarsSound;
+ public static bool TryArea(int k,UnityEngine.Vector3 p,float r,float elapsed=0){Areas++;LastKind=k;LastRadius=r;return Available;}
+ public static void RememberEcho(UnityEngine.GameObject a,UnityEngine.Vector3 o,UnityEngine.Vector3 d,float r,float angle){}
+ public static bool TryEchoImpact(UnityEngine.GameObject a,UnityEngine.Vector3 p,float elapsed=0){Echoes++;return Available;}
+ public static bool TryRiftScar(UnityEngine.GameObject a,UnityEngine.Vector3 f,UnityEngine.Vector3 t,float d,float w,int id,float elapsed=0){Shots++;return Available;}
+ public static bool JetSmoke(UnityEngine.GameObject a,UnityEngine.Transform nozzle,UnityEngine.Vector3 p,UnityEngine.Quaternion q,UnityEngine.Vector3 end,float d,float elapsed=0){SmokeCalls++;return Available;}
+ public static bool TimmyHold(UnityEngine.GameObject a,Alterverse.Combat.Health t,float d,float elapsed=0){if(d>0)HoldStarts++;else HoldStops++;return Available;}
+ public static void CancelSmoke(UnityEngine.GameObject a){}public static void CancelDelivery(int id){}public static void CancelOwner(UnityEngine.GameObject a){}
+}}

@@ -173,6 +173,7 @@ namespace Alterverse.Characters
             timmyHeldStatus=target.GetComponent<HeroCombatStatus>()??target.gameObject.AddComponent<HeroCombatStatus>();
             if(!timmyHeldStatus.TryRoot(this,TimmyBalance.ScratchHoldSeconds))
             {EndTimmyScratch();yield break;}
+            HeroSkillVfx.TimmyHold(gameObject,target,TimmyBalance.ScratchHoldSeconds);
             float started=Time.time;int ticks=0;
             while(ticks<TimmyBalance.ScratchTicks)
             {
@@ -202,6 +203,7 @@ namespace Alterverse.Characters
         private void EndTimmyScratch()
         {
             if(identity!=null&&identity.Hero==HeroId.Timmy)HeroSkillVfx.EndTimmyLeap(gameObject);
+            if(timmyHeldStatus!=null)HeroSkillVfx.TimmyHold(gameObject,timmyHeldStatus.GetComponent<Health>(),0);
             timmyHeldStatus?.ReleaseRoot(this);
             timmyHeldStatus=null;timmyScratchPending=false;
         }

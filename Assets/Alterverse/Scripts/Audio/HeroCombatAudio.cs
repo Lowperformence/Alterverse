@@ -8,7 +8,8 @@ namespace Alterverse.Audio
         static bool UsesNovaAudio(int hero,int action)=>hero==(int)HeroId.Nyra&&(action==3||action==4)&&
             Alterverse.Visuals.SivraNovaVfx.AudioFor(action-1,0)!=null;
         // Preserve original cast/impact cue indices; preparation occupies the appended bank.
-        public const int CueCount=HeroIdentity.HeroCount*15;
+        public const int ScratchHoldCue=HeroIdentity.HeroCount*15;
+        public const int CueCount=ScratchHoldCue+1;
         static readonly string[] Heroes={"Veyr","Kaelon","Nyra","Elyra","Mira","Rook","Traveler","Nerok"};
         static readonly string[] Actions={"Basic","Q","W","E","R"};
         // Timmy has selected Q/W/R recordings; basic/E share the existing fast-cut bank.
@@ -65,6 +66,7 @@ namespace Alterverse.Audio
                 int cue=Cue((int)HeroId.VoidKnight,action,phase);clips[cue]=new AudioClip[VariantCount((int)HeroId.VoidKnight,action,phase)];
                 for(int v=0;v<clips[cue].Length;v++)clips[cue][v]=Resources.Load<AudioClip>(path+(v==0?"":"_v"+(v+1)));
             }
+            clips[ScratchHoldCue]=new[]{Alterverse.Visuals.SelectedAbilityVfx.StarsClip()};
             return clips;
         }
         static void LoadTimmyRecording(AudioClip[][] clips,int action,string path)
@@ -72,6 +74,14 @@ namespace Alterverse.Audio
             var recording=Resources.Load<AudioClip>(path);
             clips[Cue((int)HeroId.Timmy,action,0)]=new[]{recording};
             if(recording==null)Debug.LogWarning("DIMENSIONS FRONT: missing combat audio: "+path);
+        }
+        public static void PlayScratchHold(GameObject actor,Vector3 position,float elapsed)
+        {
+            if(actor==null||elapsed>.15f||Alterverse.Visuals.SelectedAbilityVfx.StarsClip()==null)return;
+            var camera=Camera.main;if(camera==null)return;var p=camera.WorldToViewportPoint(position);
+            bool local=IsLocal(actor);if(!local&&(p.z<=0||p.x<-.15f||p.x>1.15f||p.y<-.15f||p.y>1.15f))return;
+            DimensionAudio.PlayHero(ScratchHoldCue,local?.65f:.45f,local?2:0,.3f,
+                local?0:Mathf.Clamp((p.x-.5f)*1.1f,-.65f,.65f),1f,actor.GetEntityId().GetHashCode());
         }
         public static bool IsLocal(GameObject actor)
         {
