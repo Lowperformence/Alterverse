@@ -488,6 +488,9 @@ namespace Alterverse.Visuals
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Area,actor,center,slot,duration,radius,flag:warning,secondary:beneficial);
             if(actor==null)return;
             HeroId hero=Hero(actor);
+            if(!warning&&slot==3&&(hero==HeroId.Elyra||hero==HeroId.Traveler)&&
+                UltimateLightningVfx.TryPlay(hero==HeroId.Elyra?UltimateLightningVfx.Ione:UltimateLightningVfx.Traveler,
+                    Ground(center),radius,HeroVfxEvents.ReplayElapsed))return;
             if(!warning)PolishArea(actor,center,radius,slot,beneficial);
             if(hero==HeroId.Timmy&&slot==1)
             {

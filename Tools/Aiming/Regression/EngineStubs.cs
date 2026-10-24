@@ -181,6 +181,7 @@ namespace Alterverse.Combat {public static class ArenaLayout {public const float
 namespace Alterverse.Multiplayer {public class CoopWorldEntityKey:UnityEngine.MonoBehaviour {public string Key;public void Configure(){Key??=gameObject.name;}}}
 
 // Existing suites exercise the unimported fallback. The focused suite compiles the real presenter.
+namespace Alterverse.Visuals {public static class UltimateLightningVfx {public const int Ione=0,Traveler=1;public static bool TryPlay(int kind,UnityEngine.Vector3 center,float radius,float elapsed=0)=>false;}}
 namespace Alterverse.Visuals {public static class SmallBulletVfx {public static bool Launch(UnityEngine.GameObject actor,UnityEngine.Vector3 from,UnityEngine.Vector3 to,float duration,UnityEngine.Transform target=null,int deliveryId=0,float elapsed=0,bool confirmedHit=false,float delay=0)=>false;public static bool ConfirmHit(UnityEngine.GameObject actor,UnityEngine.Vector3 point)=>false;public static void CancelOwner(UnityEngine.GameObject actor){}public static void CancelDelivery(int id){}}}
 
 namespace Alterverse.Visuals {public static class SivraNovaVfx {

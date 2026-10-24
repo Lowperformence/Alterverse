@@ -152,7 +152,7 @@ namespace UnityEditor
         public static readonly Dictionary<string,UnityEngine.Object> Assets=new();public static int Saves;public static string Dependency="1";
         public static T LoadAssetAtPath<T>(string path)where T:class=>Assets.GetValueOrDefault(path) as T;
         public static string GetAssetPath(UnityEngine.Object value)=>Assets.FirstOrDefault(p=>ReferenceEquals(p.Value,value)).Key??"shader";
-        public static string AssetPathToGUID(string path)=>"source-material";
+        public static string AssetPathToGUID(string path)=>Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(path))).Substring(0,32).ToLowerInvariant();
         public static string[] FindAssets(string query,string[] roots)=>Assets.Where(a=>(query.Contains("t:AudioClip")?a.Value is UnityEngine.AudioClip:a.Value is UnityEngine.GameObject)&&roots.Any(r=>a.Key.StartsWith(r,StringComparison.Ordinal))).Select(a=>a.Key).ToArray();
         public static string GUIDToAssetPath(string guid)=>guid;public static bool IsValidFolder(string path)=>true;
         public static string GetAssetDependencyHash(string path)=>Dependency;

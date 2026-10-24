@@ -2,9 +2,9 @@ name: Ranked and account regression
 on:
   push:
     branches: ['dev/vertical-slice']
-    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Editor/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Ranked/**', 'Tools/Profile/GoogleNameRegression/**', 'Tools/DedicatedServer/**', 'Tools/Multiplayer/**', 'Tools/SpaceBomber/**', 'Tools/Visuals/SmallBulletRegression/**', 'Tools/Visuals/SivraNovaRegression/**', '.github/workflows/ranked-regression.yml']
+    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Editor/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Ranked/**', 'Tools/Profile/GoogleNameRegression/**', 'Tools/DedicatedServer/**', 'Tools/Multiplayer/**', 'Tools/SpaceBomber/**', 'Tools/Visuals/SmallBulletRegression/**', 'Tools/Visuals/SivraNovaRegression/**', 'Tools/Visuals/UltimateLightningRegression/**', '.github/workflows/ranked-regression.yml']
   pull_request:
-    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Editor/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Ranked/**', 'Tools/Profile/GoogleNameRegression/**', 'Tools/DedicatedServer/**', 'Tools/Multiplayer/**', 'Tools/SpaceBomber/**', 'Tools/Visuals/SmallBulletRegression/**', 'Tools/Visuals/SivraNovaRegression/**', '.github/workflows/ranked-regression.yml']
+    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Editor/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Ranked/**', 'Tools/Profile/GoogleNameRegression/**', 'Tools/DedicatedServer/**', 'Tools/Multiplayer/**', 'Tools/SpaceBomber/**', 'Tools/Visuals/SmallBulletRegression/**', 'Tools/Visuals/SivraNovaRegression/**', 'Tools/Visuals/UltimateLightningRegression/**', '.github/workflows/ranked-regression.yml']
 jobs:
   regression:
     runs-on: ubuntu-latest
@@ -34,6 +34,7 @@ jobs:
       - run: python Tools/Visuals/SmallBulletRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Visuals/SivraNovaRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Visuals/SivraNovaRegression/run_audio.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Visuals/UltimateLightningRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Multiplayer/LoadingRegression/run.py --dotnet-root "$DOTNET_ROOT"
 
 
