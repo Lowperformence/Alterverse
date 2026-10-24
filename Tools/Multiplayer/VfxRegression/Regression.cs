@@ -11,6 +11,7 @@ using UnityEngine;
 static partial class VfxRegression
 {
     static int checks;
+    static Action ObserveFrame;
     static void Check(bool valid,string reason){if(!valid)throw new Exception(reason);checks++;}
     static GameObject Hero(HeroId hero,int slot,bool local=false)
     {
@@ -49,6 +50,7 @@ static partial class VfxRegression
             foreach(var component in components)if(component!=null)component.GetType().GetMethod("Update",BindingFlags.Instance|BindingFlags.NonPublic)?.Invoke(component,null);
             var pool=g.GetComponent<HeroVfxPool>();if(pool!=null)GameObject.Invoke(pool,"LateUpdate");
         }
+        ObserveFrame?.Invoke();
     }
     static void CommandDamage()
     {
@@ -315,6 +317,7 @@ static partial class VfxRegression
         }
         else accepted=action<0?actor.GetComponent<BasicAttack>().TryAttackAimed(pose):actor.GetComponent<PlayerHeroAbilities>().CastAimed(action,pose);
         Check(accepted,"Valid offline/server action begins "+id+action+" fps="+fps);
+        ObserveFrame?.Invoke();
         bool atlasSeen=AtlasVisible().Length>0;
         for(int frame=0;frame<fps*5;frame++){Step(1f/fps);if(render)atlasSeen|=AtlasVisible().Length>0;}
         HeroVfxEvents.Emitted-=observer;

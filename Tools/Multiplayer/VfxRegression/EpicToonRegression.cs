@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using System.Reflection;
 using Alterverse.Characters;
 using Alterverse.Combat;
@@ -9,7 +10,7 @@ using UnityEngine;
 
 static partial class VfxRegression
 {
-    static readonly string[] EpicKeys={"Slash","HeavySlash","Claw","SwordImpact","Orb","Missile","Rune","Shield","Heal","Portal","Vortex","Water","Smoke","Nova","Punch","Impact","FireImpact","Spark","Fire","Muzzle","Jet"};
+    static readonly string[] EpicKeys={"Slash","HeavySlash","Claw","SwordImpact","Orb","Missile","Rune","Shield","Heal","Portal","Vortex","Water","Smoke","Nova","Punch","Impact","FireImpact","Spark","Fire","Muzzle","Jet","HeavyImpact","NatureMissile","NatureImpact","NatureNova","ArcaneMissile","MagicImpact","ShadowMissile","FireNova"};
     static EpicVfxLibrary TestLibrary()
     {
         var library=ScriptableObject.CreateInstance<EpicVfxLibrary>();
@@ -27,6 +28,7 @@ static partial class VfxRegression
     {
         foreach(HeroId id in Enum.GetValues(typeof(HeroId)))foreach(int action in new[]{-1,0,1,2,3})
         {
+            if(id==HeroId.Nerok)continue; // Explicit user exception: all original Nerok visuals stay.
             EpicReset();var actor=Hero(id,0);var target=Hero(HeroId.Kaelon,1);target.transform.position=Vector3.forward*3;
             float hp=target.GetComponent<Health>().Current;
             if(action<0)HeroSkillVfx.Basic(actor,target.transform.position,.4f,target.transform);
@@ -51,6 +53,7 @@ static partial class VfxRegression
         object slot=LiveSlots().Single();var epic=Field(slot,"Epic");var root=(GameObject)Field(epic,"Root");var ps=((ParticleSystem[])Field(epic,"Systems")).Single();
         Check(!root.activeSelf&&ps.Simulated==0,"Delayed effects stay hidden and unsimulated");
         Step(.3f);Check(root.activeSelf&&Mathf.Abs(ps.Simulated-.1f)<.001f,"Particle time follows existing delayed timeline");
+        Check(ps.PlayCalls>0&&ps.particleCount>0,"Stopped native emitters are explicitly started before simulation");
         var renderer=((Renderer[])Field(epic,"Renderers")).Single();var color=renderer.Block.Colors[Shader.PropertyToID("_Tint")];
         Check(color.r==tint.r&&color.g==tint.g&&color.b==tint.b,"Native material receives exact ability color");
         HeroVfxPool.CancelProjectiles(actor);Check(!root.activeSelf&&ps.Cleared&&LiveSlots().Length==0,"Cancellation clears particles immediately");
@@ -81,9 +84,71 @@ static partial class VfxRegression
             Check(baseline.Events.SequenceEqual(native.Events),"New renderer preserves semantic event order "+id+action+fps);
         }
     }
+    static void RealActionChecklist()
+    {
+        Resources.EpicLibrary=TestLibrary();
+        foreach(HeroId id in Enum.GetValues(typeof(HeroId)))for(int action=-1;action<4;action++)
+        {
+            if(id==HeroId.Nerok)
+            {
+                Console.WriteLine("CHECKLIST|"+HeroIdentity.NameFor(id)+"|"+(action<0?"Basisangriff":HeroAbilityKit.LoadoutFor(id).Spec(action).Name)+"|"+AimingSettings.Current.For(id,action).aimType+"|Original unveraendert|Nerok-Ausnahme");
+                continue;
+            }
+            var keys=new HashSet<string>();int samples=0;
+            ObserveFrame=()=>
+            {
+                foreach(var slot in LiveSlots())
+                {
+                    // Other actors can supply independent shield/hit feedback. Check this caster's cues.
+                    var owner=(GameObject)Field(slot,"Owner");
+                    if(owner==null||owner.GetComponent<HeroIdentity>()?.Hero!=id)continue;
+                    bool warning=(bool)Field(slot,"Warning");var shape=(HeroFxShape)Field(slot,"Shape");
+                    var epic=Field(slot,"Epic");
+                    if(epic!=null)
+                    {
+                        if(!((GameObject)Field(epic,"Root")).activeSelf)continue;
+                        samples++;
+                        Check(!((MeshRenderer)Field(slot,"Renderer")).enabled,"No old/new overlap during actual action "+id+action);
+                        Check(((ParticleSystem[])Field(epic,"Systems")).Any(ps=>ps.particleCount>0),"Actual action starts its native emitter "+id+action);
+                        keys.Add((string)Field(epic,"Key"));
+                    }
+                    else if((bool)Field(slot,"EpicBeam")){keys.Add("ExactBeam");samples++;}
+                    else if(!warning&&shape!=HeroFxShape.Shield&&shape!=HeroFxShape.TimmyGrenade)
+                        Check(false,"Unreplaced cosmetic cue in actual action "+id+action+" shape="+shape);
+                }
+            };
+            try{Scenario(id,action,false,60,true);}
+            finally{ObserveFrame=null;}
+            Check(samples>0&&keys.Count>0,"Every real basic/Q/W/E/ultimate has a new effect "+id+action);
+            Console.WriteLine("CHECKLIST|"+HeroIdentity.NameFor(id)+"|"+(action<0?"Basisangriff":HeroAbilityKit.LoadoutFor(id).Spec(action).Name)+"|"+AimingSettings.Current.For(id,action).aimType+"|"+string.Join(", ",keys.OrderBy(k=>k))+"|Code geprueft; Unity-Sichttest offen");
+        }
+    }
+    static void NerokPreservation()
+    {
+        for(int action=0;action<6;action++)
+        {
+            EpicReset();var actor=Hero(HeroId.Nerok,0);var target=Hero(HeroId.Kaelon,1);target.transform.position=Vector3.forward*3;
+            switch(action)
+            {
+                case 0:HeroSkillVfx.Basic(actor,target.transform.position,.3f,target.transform);break;
+                case 1:HeroSkillVfx.Cast(actor,1);break;
+                case 2:HeroSkillVfx.SharkAnchor(actor,target.transform.position,.4f,target.transform);break;
+                case 3:HeroSkillVfx.SharkPullChain(actor,target.GetComponent<Health>(),.6f);break;
+                case 4:HeroSkillVfx.SharkVortex(actor,target.transform.position,2.3f,1);break;
+                case 5:HeroSkillVfx.Area(actor,target.transform.position,2.8f,.4f,false,slot:2);break;
+            }
+            var live=LiveSlots();Check(live.Length>0,"Original Nerok cue remains present "+action);
+            Check(live.All(slot=>Field(slot,"Epic")==null&&!(bool)Field(slot,"EpicBeam")),"No Epic substitution anywhere in Nerok cue "+action);
+            if(action==2)Check(live.Length==4&&live.Any(slot=>(HeroFxShape)Field(slot,"Shape")==HeroFxShape.AnchorProjectile),"Nerok's complete original anchor recipe remains intact");
+            if(action==3)Check(live.Length==1&&(HeroFxMotion)Field(live[0],"Motion")==HeroFxMotion.Tether&&ReferenceEquals(Field(live[0],"EndFollow"),target.transform),"Nerok's original single chain/tether retains target following");
+            if(action==4)Check(live.Count(slot=>(HeroFxShape)Field(slot,"Shape")==HeroFxShape.WaterSpiral)==2&&live.Count(slot=>(HeroFxShape)Field(slot,"Shape")==HeroFxShape.WaveCrest)==3,"Nerok's original ultimate water layers are restored");
+        }
+        EpicReset();var nerok=Hero(HeroId.Nerok,0);
+        Check(nerok.AddComponent<HeroAbilityReadabilityBoost>().enabled&&nerok.AddComponent<HeroAttackReadabilityPresentation>().enabled,"Nerok retains his two original presentation observers");
+    }
     static void EpicToonChecks()
     {
-        ExclusiveReplacement();ParticleLifecycle();RenderingParity();
+        ExclusiveReplacement();ParticleLifecycle();RenderingParity();RealActionChecklist();NerokPreservation();
         EpicReset();var actor=Hero(HeroId.Veyr,0);
         Check(!actor.AddComponent<HeroAbilityReadabilityBoost>().enabled&&!actor.AddComponent<HeroAttackReadabilityPresentation>().enabled,"Legacy cooldown observers cannot add duplicate attacks");
         Resources.EpicLibrary=null;

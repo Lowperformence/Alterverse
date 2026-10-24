@@ -10,7 +10,7 @@ namespace Alterverse.Visuals
         private static Color AttackColour(GameObject actor,int slot)
         {
             HeroId hero=Hero(actor);
-            if(hero==HeroId.Nyra)return SivraSkillColor(slot);
+            if(hero==HeroId.Nyra)return slot<0||slot==1?StylizedArtDirection.HeroAccent(hero):SivraSkillColor(slot);
             if(hero==HeroId.Traveler&&slot>=0)return TravelerColor(slot);
             if(hero==HeroId.Rook)return new Color(1f,.38f,.09f,.85f);
             if(hero==HeroId.Nerok)return new Color(.10f,.76f,1f,.78f);

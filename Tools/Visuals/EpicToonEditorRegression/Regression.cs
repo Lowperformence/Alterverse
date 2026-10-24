@@ -13,7 +13,7 @@ static class Regression
     static EpicVfxLibrary Setup()
     {
         var sources=((string key,string path,float scale)[])typeof(EpicToonReplacementBuilder).GetField("Sources",BindingFlags.NonPublic|BindingFlags.Static).GetValue(null);
-        var library=new EpicVfxLibrary{beamMaterial=Valid(),entries=sources.Select(s=>new EpicVfxLibrary.Entry{key=s.key,prefab=new GameObject()}).ToArray()};
+        var library=new EpicVfxLibrary{sourceVersion=EpicVfxLibrary.CurrentVersion,beamMaterial=Valid(),entries=sources.Select(s=>new EpicVfxLibrary.Entry{key=s.key,prefab=new GameObject()}).ToArray()};
         foreach(var entry in library.entries)entry.prefab.Add<MeshRenderer>().sharedMaterials=new[]{Valid()};
         AssetDatabase.Assets["Assets/Alterverse/Resources/CombatVfx/EpicToon/Library.asset"]=library;
         return library;

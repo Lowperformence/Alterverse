@@ -106,11 +106,14 @@ namespace Alterverse.Visuals
                 Face(actor.transform.position,p),actor);
         }
         public static void CancelWarnings(GameObject actor)
-        {using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelWarnings,actor);HeroVfxPool.CancelWarnings(actor);}
+        {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalCancelWarnings(actor);return;}using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelWarnings,actor);HeroVfxPool.CancelWarnings(actor);}
         public static void CancelProjectiles(GameObject actor)
-        {using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelProjectiles,actor);HeroVfxPool.CancelProjectiles(actor);}
+        {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalCancelProjectiles(actor);return;}using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelProjectiles,actor);HeroVfxPool.CancelProjectiles(actor);}
         public static void Cast(GameObject actor,int slot,float windup=-1f)
         {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalCast(actor,slot,windup);return;}
             if(windup<0&&actor!=null&&slot>=0&&slot<4)
             {
                 var loadout=HeroAbilityKit.LoadoutFor(Hero(actor));
@@ -128,7 +131,7 @@ namespace Alterverse.Visuals
                 return;
             }
             bool defensive=slot==1&&(h==HeroId.Kaelon||h==HeroId.Nerok||h==HeroId.VoidKnight||h==HeroId.Rook)||h==HeroId.Mira&&slot==2;
-            HeroFxShape shape=defensive?HeroFxShape.Shield:h==HeroId.Mira&&slot>0?HeroFxShape.Plus:
+            HeroFxShape shape=defensive?HeroFxShape.Runes:h==HeroId.Mira&&slot>0?HeroFxShape.Plus:
                 h==HeroId.Elyra||h==HeroId.Traveler?HeroFxShape.Runes:h==HeroId.Veyr?HeroFxShape.Rift:HeroFxShape.Burst;
             Color tint=h==HeroId.Mira&&slot>0?new Color(.22f,1f,.52f):AttackColour(actor,slot);
             Fx(shape,Muzzle(actor),tint,slot==3?.48f:.28f,Mathf.Max(.06f,Mathf.Min(.24f,windup)),
@@ -137,6 +140,7 @@ namespace Alterverse.Visuals
 
         public static void TargetWarning(GameObject actor,Health target,float seconds)
         {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalTargetWarning(actor,target,seconds);return;}
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.TargetWarning,actor,duration:seconds,target:target!=null?target.gameObject:null);
             if(actor==null||target==null)return;
             Vector3 p=Ground(target.transform.position);
@@ -145,12 +149,14 @@ namespace Alterverse.Visuals
         }
         public static void SharkAnchor(GameObject actor,Vector3 impact,float flight,Transform target=null)
         {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalSharkAnchor(actor,impact,flight,target);return;}
             Vector3 from=Muzzle(actor),to=impact+Vector3.up*.35f;
             HeroVfxPool.Emit(HeroFxShape.AnchorProjectile,from,to,Vector3.one*.78f,new Color(.04f,.70f,1f,.94f),
                 flight,HeroFxMotion.TravelFixedFrame,Face(from,to),actor,endFollow:target);
         }
         public static void SharkPullChain(GameObject actor,Health target,float duration)
         {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalSharkPullChain(actor,target,duration);return;}
             if(actor==null||target==null||target.IsDead)return;
             Vector3 from=Muzzle(actor),to=target.transform.position+Vector3.up*.4f;
             HeroVfxPool.Emit(HeroFxShape.AnchorChain,from,to,new Vector3(.9f,.9f,1f),
@@ -159,11 +165,13 @@ namespace Alterverse.Visuals
         }
         public static void SharkVortex(GameObject actor,Vector3 center,float radius,float duration)
         {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalSharkVortex(actor,center,radius,duration);return;}
             Vector3 p=Ground(center);
             Fx(HeroFxShape.WaterSpiral,p,new Color(.02f,.48f,.95f,.65f),radius,duration,HeroFxMotion.Sustained,actor:actor);
         }
         public static void Area(GameObject actor,Vector3 center,float radius,float duration,bool warning,bool beneficial=false,int slot=-1)
         {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalArea(actor,center,radius,duration,warning,beneficial,slot);return;}
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Area,actor,center,slot,duration,radius,flag:warning,secondary:beneficial);
             if(actor==null)return;
             HeroId hero=Hero(actor);
@@ -268,6 +276,7 @@ namespace Alterverse.Visuals
         }
         public static void Spell(GameObject actor,Vector3 impact,int slot,float travelTime=0,Transform target=null)
         {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalSpell(actor,impact,slot,travelTime,target);return;}
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Spell,actor,impact,slot,duration:travelTime,target:target!=null?target.gameObject:null);
             if(actor==null)return;HeroId h=Hero(actor);
 
@@ -337,6 +346,7 @@ namespace Alterverse.Visuals
         }
         public static void OrunOverdrive(GameObject actor,Vector3 center)
         {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalOrunOverdrive(actor,center);return;}
             if(actor==null||Hero(actor)!=HeroId.Rook)return;
             AbilitySpec ultimate=HeroAbilityKit.LoadoutFor(HeroId.Rook).Ultimate;
             HeroVfxPool.Emit(HeroFxShape.PressureWave,Ground(center),Ground(center),Vector3.one*ultimate.Radius,
@@ -346,12 +356,14 @@ namespace Alterverse.Visuals
 
         public static void Ultimate(GameObject actor,Vector3 target)
         {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalUltimate(actor,target);return;}
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Ultimate,actor,target,slot:3);if(actor!=null)Cast(actor,3);}
 
 
         public static void Impact(GameObject actor,Health target,int slot)
         {
-using var cue=HeroVfxEvents.Begin(HeroVfxCue.Impact,actor,slot:slot,target:target!=null?target.gameObject:null);
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalImpact(actor,target,slot);return;}
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Impact,actor,slot:slot,target:target!=null?target.gameObject:null);
             if(actor==null||target==null)return;
             HeroId hero=Hero(actor);Color tint=AttackColour(actor,slot);
             if(hero==HeroId.Nyra&&slot==2)
@@ -369,6 +381,7 @@ using var cue=HeroVfxEvents.Begin(HeroVfxCue.Impact,actor,slot:slot,target:targe
 
         public static void ShieldContact(GameObject victim,GameObject source)
         {
+            if(Hero(victim)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalShieldContact(victim,source);return;}
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.ShieldContact,victim,target:source);
             if(victim==null)return;
             Vector3 p=victim.transform.position+Vector3.up*.35f;
@@ -378,17 +391,21 @@ using var cue=HeroVfxEvents.Begin(HeroVfxCue.Impact,actor,slot:slot,target:targe
         }
         public static void Support(GameObject actor,Health target,bool shield,float duration)
         {
-using var cue=HeroVfxEvents.Begin(HeroVfxCue.Support,actor,duration:duration,target:target!=null?target.gameObject:null,flag:shield);
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalSupport(actor,target,shield,duration);return;}
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Support,actor,duration:duration,target:target!=null?target.gameObject:null,flag:shield);
             if(actor==null||target==null)return;
             Color tint=!shield||Hero(actor)==HeroId.Mira?new Color(.22f,1f,.52f):Accent(actor);
             Vector3 point=target.transform.position+(shield?Vector3.down*.70f:Vector3.up*.45f);
-            HeroVfxPool.Emit(shield?HeroFxShape.Shield:HeroFxShape.Plus,point,point,Vector3.one*.85f,
+            if(shield&&Hero(actor)==HeroId.Mira)tint=Color.Lerp(tint,Color.white,.38f);
+            HeroVfxPool.Emit(shield?HeroFxShape.Shield:HeroFxShape.Plus,point,point,
+                shield?new Vector3(.87f,1.1f,.87f):Vector3.one*.85f,
                 tint,shield?duration:.48f,HeroFxMotion.Hold,owner:actor,follow:target.transform,shield:shield?target:null);
             if(shield&&Hero(actor)==HeroId.Rook)actor.GetComponent<HeroVisualMotion>()?.Empower(Mathf.Min(duration,1.2f));
         }
         public static void SupportLink(GameObject actor,Health target)
         {
-using var cue=HeroVfxEvents.Begin(HeroVfxCue.SupportLink,actor,target:target!=null?target.gameObject:null);
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalSupportLink(actor,target);return;}
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.SupportLink,actor,target:target!=null?target.gameObject:null);
             if(actor==null||target==null)return;
             Vector3 from=Muzzle(actor),to=target.transform.position+Vector3.up*.3f;
             HeroVfxPool.Emit(HeroFxShape.Seed,from,to,Vector3.one*.25f,new Color(.22f,1f,.52f),
@@ -396,6 +413,7 @@ using var cue=HeroVfxEvents.Begin(HeroVfxCue.SupportLink,actor,target:target!=nu
         }
         public static void Debuff(GameObject actor,Health target)
         {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalDebuff(actor,target);return;}
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Debuff,actor,target:target!=null?target.gameObject:null);
             if(actor==null||target==null||target.GetComponent<HeroIdentity>()==null)return;
             HeroId h=Hero(actor);if(h==HeroId.Nyra)return; // Dedicated snare bands already show this effect.
@@ -403,12 +421,14 @@ using var cue=HeroVfxEvents.Begin(HeroVfxCue.SupportLink,actor,target:target!=nu
         }
         public static void PlayerHit(GameObject victim,GameObject source)
         {
+            if(Hero(victim)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalPlayerHit(victim,source);return;}
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.PlayerHit,victim,target:source);
             if(victim==null||source==null)return;
             Fx(HeroFxShape.Slash,Chest(victim),new Color(1,.50f,.28f),.43f,.10f,HeroFxMotion.Contract,Face(victim.transform.position,source.transform.position));
         }
         public static void Basic(GameObject actor,Vector3 impact,float travelTime=0,Transform target=null,bool animate=true)
         {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalBasic(actor,impact,travelTime,target,animate);return;}
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Basic,actor,impact,slot:-1,duration:travelTime,target:target!=null?target.gameObject:null,flag:animate);
             if(actor==null)return;if(animate)actor.GetComponent<HeroVisualMotion>()?.PulseAttack(false);
 
@@ -424,22 +444,24 @@ using var cue=HeroVfxEvents.Begin(HeroVfxCue.SupportLink,actor,target:target!=nu
             }
         }
         public static void Link(GameObject actor,Vector3 impact,bool ultimate=false)
-        {Basic(actor,impact);if(ultimate)Spell(actor,impact,3);}
+        {
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalLink(actor,impact,ultimate);return;}Basic(actor,impact);if(ultimate)Spell(actor,impact,3);}
         public static void Dash(GameObject actor,Vector3 from,Vector3 to,int slot=2,float duration=.16f)
         {
-using var cue=HeroVfxEvents.Begin(HeroVfxCue.Dash,actor,to,slot,duration,origin:from);
+            if(Hero(actor)==HeroId.Nerok){using var original=HeroVfxPool.PreserveNerokOriginal();NerokOriginalDash(actor,from,to,slot,duration);return;}
             if(actor==null)return;
             HeroId hero=Hero(actor);
+            // The generic movement caller omits its optional VFX slot. Sivra/Traveler jump on W.
+            if(slot==2&&(hero==HeroId.Nyra||hero==HeroId.Traveler))slot=1;
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Dash,actor,to,slot,duration,origin:from);
             if(hero==HeroId.Timmy){TimmyEffect(actor,slot==3?3:2,from,to,0,duration);return;}
-            if(hero==HeroId.Traveler)
-            {
-                // Two distinct teleport endpoints, one authored portal at each; no old overlay.
-                TravelerPortal(actor,from+Vector3.up*.55f,.50f,.26f);
-                TravelerPortal(actor,to+Vector3.up*.55f,.58f,.28f,true);
-            }
-            else HeroVfxPool.Emit(hero==HeroId.Veyr||hero==HeroId.Elyra?HeroFxShape.Rift:HeroFxShape.Orb,
-                from+Vector3.up*.30f,to+Vector3.up*.30f,Vector3.one*.42f,AttackColour(actor,slot),
-                duration,HeroFxMotion.TravelFixedFrame,Face(from,to),actor,cancelOnOwnerDeath:true);
+            // This is a jump presentation, not a travelling spell projectile. Dust marks
+            // take-off and the actual actor's landing; the existing motion owns the jump.
+            Color tint=AttackColour(actor,slot);Vector3 foot=from+Vector3.up*.08f;
+            HeroVfxPool.Emit(HeroFxShape.Mist,foot,foot,Vector3.one*.34f,tint,.18f,
+                HeroFxMotion.Expand,owner:actor,cancelOnOwnerDeath:true);
+            HeroVfxPool.Emit(HeroFxShape.Mist,foot,foot,Vector3.one*.38f,tint,.20f,
+                HeroFxMotion.Expand,owner:actor,follow:actor.transform,delay:duration,cancelOnOwnerDeath:true);
             actor.GetComponent<HeroVisualMotion>()?.PulseDash();
         }
     }

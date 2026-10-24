@@ -38,7 +38,7 @@ def main():
     names += ['Visuals/HeroSkillVfx.cs', 'Visuals/HeroSkillVfx.AttackPolish.cs', 'Visuals/MonsterAttackVfx.cs', 'Visuals/PrototypeVfx.cs', 'Visuals/BomberExplosionVfx.cs', 'Visuals/HeroSkillVfx.VoidKnight.cs',
               'Characters/VoidKnightBalance.cs', 'Characters/VoidKnightState.cs',
               'Characters/HeroAbilityExecution.VoidKnight.cs', 'Multiplayer/CoopHeroStateSync.Vfx.cs', 'Characters/HeroLocomotion.cs', 'Visuals/HeroPresentationBuffer.cs', 'UI/TargetIndicatorHUD.cs']
-    names += ['Visuals/EpicVfxLibrary.cs', 'Visuals/HeroVfxPool.EpicToon.cs', 'Visuals/HeroAbilityReadabilityBoost.cs', 'Visuals/HeroAttackReadabilityPresentation.cs']
+    names += ['Visuals/HeroSkillVfx.NerokOriginal.cs', 'Visuals/EpicVfxLibrary.cs', 'Visuals/HeroVfxPool.EpicToon.cs', 'Visuals/HeroAbilityReadabilityBoost.cs', 'Visuals/HeroAttackReadabilityPresentation.cs']
     engine = (shared / 'EngineStubs.cs').read_text()
     engine = remove_class(engine, 'public sealed partial class HeroSkillVfx:')
     engine = remove_class(engine, 'public static class CoopHeroStateSync ')
@@ -81,7 +81,7 @@ def main():
     engine = engine.replace('public void ReadValueSafe(out int i)=>', 'public void ReadValueSafe(out double d)=>d=reader.ReadDouble();public void ReadValueSafe(out int i)=>')
     # Minimal particle APIs for testing the real replacement scheduler; native rendering is separate.
     engine = engine.replace('public class MeshRenderer:Component {', 'public class MeshRenderer:Renderer {} public class Renderer:Component {')
-    engine = engine.replace('public class Transform:Component {', 'public class Transform:Component {public Vector3 localPosition;public Quaternion localRotation;')
+    engine = engine.replace('public class Transform:Component {', 'public class Transform:Component {public Transform Find(string n)=>GameObject.All.Where(g=>g.transform.parent==this&&g.name==n).Select(g=>g.transform).FirstOrDefault();public Vector3 localPosition;public Quaternion localRotation;')
     engine = engine.replace('public static class Resources {', 'public static class Resources {public static object EpicLibrary;')
     engine = engine.replace('where T:class{if(s=="CombatVfx/AttackAtlas"', 'where T:class{if(s=="CombatVfx/EpicToon/Library")return EpicLibrary as T;if(s=="CombatVfx/AttackAtlas"')
     engine = engine.replace('public class Object {', 'public class Object {public static GameObject Instantiate(GameObject source,Transform parent,bool world){var clone=new GameObject(source.name);clone.transform.SetParent(parent,world);clone.AddComponent<ParticleSystem>();clone.AddComponent<ParticleSystemRenderer>();return clone;}')

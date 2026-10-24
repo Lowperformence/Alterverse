@@ -1,49 +1,35 @@
-# Epic Toon FX – Austausch der Kampfeffekte
+# Epic Toon FX – aktuelle VFX-Migration
 
-Die kosmetischen Angriffseffekte verwenden eine aus dem gekauften Epic-Toon-Import erzeugte Bibliothek. Ein belegter Effektplatz zeichnet entweder das neue Partikel-Prefab oder seinen bisherigen Mesh-Renderer. Bei einem Partikel-Prefab ist der alte Renderer ausgeschaltet. Die beiden zusätzlichen Cooldown-Beobachter sind deaktivierte Kompatibilitätskomponenten; ihre Script-GUIDs bleiben erhalten.
+Neun Helden mit jeweils Basisangriff/Q/W/E/Ultimate werden umgestellt. Die [Einzelcheckliste](Hero-VFX-Checklist-2026-10-24.md) führt alle 50 Katalogeinträge: 45 Code-Prüfungen und fünf ausdrücklich ausgenommene Nerok-Aktionen. Der ursprüngliche Nerok-Snapshot und seine Beobachter sind nur für Nerok aktiv. Anker, Kette, Wasser-Ultimate und seine restlichen bisherigen Effekte bleiben beim alten Aufbau. Der vom Nutzer bevorzugte alte Schildkörper bleibt auch bei den anderen Helden erhalten.
 
-## Einrichtung im Unity-Projekt
+Ein neuer Partikel-Effekt schaltet den bisherigen kosmetischen Mesh-Renderer seines Slots aus. Die alten zusätzlichen Cooldown-Beobachter sind für die anderen neun Helden deaktiviert. Exakte Warngeometrie und physische Granaten-/Monster-Geschossmodelle behalten ihre Form. Kein Schaden, Ziel, Bewegungspfad, Gameplay-Zeitpunkt, Cooldown oder Kollisionscode wird geändert.
 
-1. Diesen Branch übernehmen und den vollständigen gekauften Ordner unter `Assets/Epic Toon FX/` im Projekt behalten.
-2. Unity 6000.6.1f1 öffnen und den Import abschließen lassen. Wenn die Bibliothek fehlt und der gekaufte Import vorhanden ist, startet die Erzeugung automatisch nach dem Kompilieren.
-3. Bei Bedarf manuell `DIMENSIONS FRONT > VFX > Build Epic Toon replacement` ausführen; danach `Validate Epic Toon replacement`.
-4. Die erzeugten Dateien samt `.meta` unter `Assets/Alterverse/Resources/CombatVfx/EpicToon/` gemeinsam mit den referenzierten gekauften Assets im privaten Projekt sichern.
+## Zuordnung nach Funktion und Farbe
 
-Die Erzeugung kann wiederholt werden. Sie schreibt ausschließlich die erzeugte Bibliothek, Prefabs und Materialien. Original-Prefabs und URP-Projekteinstellungen werden nicht überschrieben. Das separate URP-Upgrade des Herstellers ist für diese konvertierten Prefabs nicht erforderlich: sie verwenden den mitgelieferten URP-Shader `DimensionsFront/EpicParticles`. Client-Builds werden ohne vollständige erzeugte Bibliothek abgebrochen; ein Linux-Dedicated-Server benötigt sie nicht. Im Editor bleibt bei fehlender Bibliothek ein protokollierter Fallback verfügbar.
+- Klingen und Klauen verwenden Schwert-/Klauenschnitte und passende Kontakteffekte. Timmys Claw-Prefab gruppiert drei gekaufte Mini-Schnitte als eine gemeinsame Darstellung.
+- Fernkampf und Zauber verwenden bewegte Geschossvorlagen. Tahlas Angriffe verwenden NatureMissile/NatureImpact statt eines Heilsymbols. Ione verwendet ArcaneMissile/MagicImpact, Zhaevs fliegender Riss ShadowMissile.
+- Faustwellen verwenden die gekaufte gerichtete SoftPunchHeavy-Vorlage. Schwere Kontakte verwenden RoundHit.
+- Flächen verwenden Nova-, Feuer-Nova-, Natur-Nova- oder Runeneffekte an den vorhandenen Zielpunkten. Warnränder markieren weiterhin die tatsächliche Gefahrenfläche.
+- Sprünge erhalten Effekte bei Absprung und Landung; die Landung folgt dem tatsächlichen Helden. Timmys zwei Düsen bleiben mit je einem Jet-Effekt an ihren vorhandenen Sockets befestigt.
+- Heilung verwendet Heal; sie wird nicht als Angriffsprojektil verwendet. Schildkörper behalten ihre alte Darstellung.
+- Helden-/Fähigkeitsfarben werden als Materialfarbe übertragen. Sivra: Basis/W cyan, Q blau, E weiß, R rot. Tahla: goldene Angriffe, grüne Heilung. Weitere Einzelwerte stehen in der Checkliste.
 
-## Zuordnung
+29 konvertierte Bibliothekseinträge decken diese Funktionen ab. Die Pakettexturen bleiben Effektmasken und werden nicht als Boden- oder Charakteroberflächen zweckentfremdet. Original-Prefabs und Projekteinstellungen werden nicht überschrieben. Die erzeugten Prefabs enthalten nur visuelle Komponenten, keine Demo-Scripts, Lichter, Audioquellen, Collider oder Subemitter.
 
-| Held | Neue Effektfamilien und Farben |
-|---|---|
-| Zhaev Null (`Veyr`) | Violette Risse, Schwertschnitte, Schwerttreffer |
-| Auren Kest (`Kaelon`) | Schwere Einschläge, Runen und Schilde; Q violett, E blau, Ultimate gelb |
-| Sivra Quell (`Nyra`) | Blauer durchgehender Q-Strahl mit Pakettextur, weiße E-Kugel und einzelne Fesselrune, rote übrige Energie |
-| Ione Vaska (`Elyra`) | Energiegeschosse, Portale, Runen und Nova in der vorhandenen Heldenfarbe |
-| Tahla Venn (`Mira`) | Goldene Angriffsenergie, grüne Heilung und Unterstützung |
-| Brakk Orun (`Rook`) | Orange Feuerenergie, metallische Explosionen, schwere Einschläge |
-| THE TRAVELER (`Traveler`) | Violetter Basisangriff, goldene Q/W-Energie und Portale, violettes E, weißes Ultimate |
-| Nerok Abyss (`Nerok`) | Cyanblaue Wasserspritzer, Wirbel und Schilde; physischer Anker und Kette bleiben als Waffenmodelle erkennbar |
-| Andromeda Timmy (`Timmy`) | Cyanfarbene Klauenschnitte, Rauch und je ein Jet-Effekt pro Düse; Granatenmodell bleibt erkennbar |
-| Void Knight | Violette schwere Schnitte und Treffer, einzelner exakt begrenzter Stoßstrahl |
+## Einrichtung und Diagnose
 
-21 Einträge decken Schnitte, Treffer, Geschosse, Runen, Schutz, Heilung, Portale, Wasser, Rauch, Explosionen und Jets ab. Portal und Wirbel teilen bewusst eine gekaufte Vorlage. Die ausgewählten Vorlagen nutzen 28 Pakettexturen sowie die horizontale Verlaufsmaske für maßgenaue Strahlen. Glanz, Alpha und Texturformen werden übernommen und mit der jeweiligen Fähigkeitsfarbe eingefärbt. Die Effektmasken eignen sich für Kampfenergie und Partikel; sie werden nicht als Boden-, Charakter- oder UI-Oberflächen eingesetzt.
+1. Vollständigen gekauften Ordner unter `Assets/Epic Toon FX/` behalten. Der Commit enthält keine gekauften Binärassets.
+2. Unity 6000.6.1f1 den Branch importieren und kompilieren lassen. Eine fehlende, unvollständige oder veraltete Bibliothek wird danach neu aufgebaut. Alternativ: `DIMENSIONS FRONT > VFX > Build Epic Toon replacement`.
+3. `DIMENSIONS FRONT > VFX > Validate Epic Toon replacement` prüft die erzeugten Assets. Ein leerer zweiter Materialplatz bei deaktivierten Partikel-Trails ist gültig; Hauptmaterialien und aktive Trails müssen ein konvertiertes Material besitzen.
+4. `DIMENSIONS FRONT > VFX > Test Epic Toon emission` prüft native Partikelemission und Shader-Unterstützung in einer isolierten Editor-Vorschauszene. Die Ausgabe nennt jede Familie und ihre Partikelzahl. Sie ersetzt keinen Sichttest.
+5. Erzeugte Dateien samt `.meta` unter `Assets/Alterverse/Resources/CombatVfx/EpicToon/` und die referenzierten gekauften Assets im privaten Projekt sichern.
 
-Exakte Warngeometrie, Anker/Kette, Timmy-Granate und physische Monster-Geschosse behalten ihre geometrische Darstellung. Das erhält die erkennbaren Gefahrenflächen und Waffen. Kosmetische Mesh-Stapel und alte zusätzliche Atlas-Ebenen im Helden-Facade werden entfernt. Zusammengesetzte gekaufte Prefabs können mehrere Partikelsysteme enthalten; sie laufen gemeinsam als ein Effekt unter derselben Lebensdauer.
+Client-Builds benötigen die gültige Bibliothek; der Linux-Dedicated-Server ist ausgenommen. Die alten Console-Meldungen bleiben nach einem Code-Update stehen, bis `Clear` gedrückt wird.
 
-## Lebensdauer und Begrenzung
+## Lebensdauer und Prüfung
 
-Die bestehenden Slots bestimmen weiterhin Startzeit, Verzögerung, Bewegung, Zielverfolgung, Ablauf und Abbruch. Die Partikel werden von dieser Uhr simuliert und pausiert; sie erzeugen keine eigenständigen Treffer oder Zeitabläufe. Beim Verbergen werden Partikel sofort geleert und wiederverwendet. Warnplätze bleiben reserviert; der Partikel-Cache ist auf 160 Instanzen begrenzt. Die ausgewählten Vorlagen enthalten zwei bis fünf Systeme und erhalten maximal 96 Partikel pro Effekt. Demo-Scripts, Audio, Lichter, Collider und Subemitter werden aus den erzeugten Prefabs entfernt; Partikelkollisionen und Trigger werden abgeschaltet.
+Die bestehenden Slots bestimmen Start, Verzögerung, Bewegung, Zielverfolgung, Ablauf und Abbruch. Nach Stop/Clear bzw. Pause wird das native Partikelsystem vor Simulate ausdrücklich mit Play gestartet; anschließend pausiert es wieder. Damit bleibt der Slot die einzige Zeitquelle. Beim Verbergen wird sofort geleert und wiederverwendet. Der Cache bleibt auf 160 Instanzen begrenzt, die Warnreserve getrennt und die ausgewählten Vorlagen auf höchstens 96 Partikel pro Effekt begrenzt.
 
-## Prüfung und verbleibende Abnahme
+Der Runtime-Harness kompiliert den tatsächlichen Runtime-Code mit kontrollierten Unity-/Netzwerk-/Partikel-Adaptern. Er führt alle neun Heldenaktionen durch, prüft expliziten Partikelstart, exklusiven Rendererbesitz, Ablauf/Abbruch, Farben, Warnreserve und identische Gameplay-Ergebnisse mit und ohne Renderer bei 30/60/120 FPS. Zusätzlich prüft er Neroks ursprüngliche Anker-Rezeptur, einzelne Kette mit Zielverfolgung und die wiederhergestellten Wasser-Layer seiner Ultimate. Der Editor-Validator hat zehn gezielte Materialprüfungen. Aiming/Skill-Entry hat separat 1.330 Prüfungen bestanden. Die 29 Quell-Prefabs wurden im Upload auf vorhandene Partikelsysteme, aktive Renderer und benötigte Materialplätze geprüft.
 
-`python Tools/Multiplayer/VfxRegression/run.py --dotnet-root <SDK8>`: 5.501 Prüfungen bestanden. Der Harness kompiliert den tatsächlichen Runtime-Code mit kontrollierten Unity-/Netzwerk-/Partikel-Adaptern. Er prüft unter anderem exklusiven Rendererbesitz, Verzögerung, Farbe, Abbruch, Wiederverwendung, Tod, verspätete Netzwerkereignisse, Warnreserve sowie Schaden/Heilung/Schilde, Bewegungsziel, Cooldown und Ereignisfolge bei 30/60/120 FPS. Der Negativlauf `--negative-control` deaktiviert den Austausch absichtlich und scheitert an der Prüfung auf verbliebene alte kosmetische Kerne.
-
-Die älteren Aiming-/Geometrie-Harnesses erhalten einen ausdrücklich deaktivierten Partikeladapter; der echte neue Backend-Code wird im Multiplayer-VFX-Harness geprüft. Alte Atlas- und Stapel-Erwartungen werden nicht als Abnahmekriterium für den neuen Look verwendet.
-
-Hier ist kein nativer Unity-Editor verfügbar. Die Editor-Konvertierung, Shader-Kompilierung, tatsächliche Darstellung und Leistung auf Android wurden deshalb noch nicht ausgeführt. Vor dem Zusammenführen müssen alle zehn Helden mit Basisangriff/Q/W/E/Ultimate, Schildverlust, Dash-Abbruch und Netzwerk-Replay in Unity geprüft werden; anschließend ein Android-Test mit mehreren gleichzeitigen Kämpfern. Größe, Orientierung, Transparenz und Bildrate sind die offenen visuellen Abnahmepunkte. Gameplay-, Balance-, Kollisions- und Netzwerk-Produktionsdateien werden in dieser Änderung nicht bearbeitet.
-
-## Importfehler bei Smoke
-
-`SmokeBurstWhiteSoft` enthält in beiden Partikel-Renderern einen leeren zweiten Materialplatz bei deaktivierten Trails. Dieser unbenutzte Trail-Platz ist gültig; die Materialprüfung berücksichtigt das jetzt. Fehlende Hauptmaterialien, fehlende Materialien aktiver Trails und falsche Shader werden weiter abgewiesen. Eine vorhandene Bibliothek wird beim Laden geprüft und bei unvollständiger Erzeugung erneut aufgebaut. Nach dem Update alte Console-Einträge löschen und `DIMENSIONS FRONT > VFX > Validate Epic Toon replacement` ausführen; bei unvollständigem Output stattdessen zuerst `Build Epic Toon replacement`.
-
-`python Tools/Visuals/EpicToonEditorRegression/run.py --dotnet-root <SDK8>` prüft die tatsächliche Editor-Validierung mit kontrollierten Unity-Adaptern. Zehn Fälle bestanden, darunter der optionale leere Smoke-Trail-Platz und weiterhin abgewiesene fehlende sichtbare Materialien, aktive Trails ohne Material, zusätzliche leere Plätze und Legacy-Shader. Diese Prüfung führt keinen nativen Unity-Import aus.
+Hier steht kein nativer Unity-Editor zur Verfügung. Die gemeldete fehlende Darstellung ist deshalb erst nach dem nativen Emissionstest und den Sichtprüfungen als behoben bestätigt. Vor dem Zusammenführen müssen Größe, Orientierung, Farbe, Transparenz, Abbruch und Android-Leistung im Spiel geprüft werden. Die Angriffssounds und ihr Timing werden in diesem VFX-Update nicht geändert; die Sound-Abnahme ist auf Nutzerwunsch zurückgestellt.

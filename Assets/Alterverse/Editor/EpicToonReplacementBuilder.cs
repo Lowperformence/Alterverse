@@ -33,7 +33,15 @@ namespace Alterverse.Editor
             ("Water","Environment/Water/Flowing/Soft/WaterSplashTinySoft.prefab",.55f),
             ("Smoke","Environment/Smoke/White/SmokeBurstWhiteSoft.prefab",.45f),
             ("Nova","Combat/Magic/Nova/MagicNovaBlue.prefab",.5f),
-            ("Punch","Combat/Explosions (Misc)/TargetHitExplosion.prefab",.4f),
+            ("Punch","Combat/Brawling/Soft/Directional/SoftPunchHeavy.prefab",.4f),
+            ("HeavyImpact","Combat/Brawling/RoundHit/RoundHitYellow.prefab",.4f),
+            ("NatureMissile","Combat/Missiles/MagicSoft/MagicMissileSoftGreen.prefab",.4f),
+            ("NatureImpact","Environment/Weather/Wind & Leaves/LeafExplosion.prefab",.4f),
+            ("NatureNova","Combat/Explosions/MagicNovaExplosion/MagicNovaExplosionGreen.prefab",.5f),
+            ("ArcaneMissile","Combat/Missiles/Mystic/MysticMissilePurple.prefab",.4f),
+            ("MagicImpact","Combat/Explosions/MysticExplosion/MysticExplosionWhite.prefab",.4f),
+            ("ShadowMissile","Combat/Missiles/Shadow/ShadowMissile.prefab",.35f),
+            ("FireNova","Combat/Explosions/NovaExplosion/ExplosionNovaFire.prefab",.5f),
             ("Impact","Combat/Explosions (Misc)/FlashExplosion.prefab",.35f),
             ("FireImpact","Combat/Explosions (Misc)/MetalExplosion.prefab",.35f),
             ("Spark","Combat/Explosions (Misc)/SparkExplosion.prefab",.3f),
@@ -78,8 +86,16 @@ namespace Alterverse.Editor
                 var wrapper=new GameObject("DF_Epic_"+item.key);
                 try
                 {
-                    var go=Object.Instantiate(original,wrapper.transform,false);
-                    go.name=item.key;go.transform.localPosition=Vector3.zero;
+                    var go=new GameObject(item.key);go.transform.SetParent(wrapper.transform,false);
+                    // A claw strike has three parallel cuts, authored as one purchased-particle
+                    // composition. Other families keep one native source prefab.
+                    int copies=item.key=="Claw"?3:1;
+                    for(int copy=0;copy<copies;copy++)
+                    {
+                        var part=Object.Instantiate(original,go.transform,false);
+                        part.name=item.key+"_"+copy;
+                        part.transform.localPosition=copies==1?Vector3.zero:Vector3.right*((copy-1)*.26f);
+                    }
                     // Whitelist visual components only: no demo scripts, movement, audio, lights or colliders.
                     foreach(var transform in go.GetComponentsInChildren<Transform>(true))
                     {
@@ -155,16 +171,16 @@ namespace Alterverse.Editor
             if(newBeam)AssetDatabase.CreateAsset(beam,Output+"/Materials/ExactBeam.mat");else EditorUtility.SetDirty(beam);
             var library=AssetDatabase.LoadAssetAtPath<EpicVfxLibrary>(Output+"/Library.asset");
             bool createLibrary=library==null;if(createLibrary)library=ScriptableObject.CreateInstance<EpicVfxLibrary>();
-            library.entries=entries.ToArray();library.beamMaterial=beam;library.sourceVersion="Epic Toon FX user import; DF replacement 1";
+            library.entries=entries.ToArray();library.beamMaterial=beam;library.sourceVersion=EpicVfxLibrary.CurrentVersion;
             if(createLibrary)AssetDatabase.CreateAsset(library,Output+"/Library.asset");else EditorUtility.SetDirty(library);
             AssetDatabase.SaveAssets();AssetDatabase.Refresh();Validate();
-            Debug.Log("DF: Epic Toon replacement built. 21 effect families, visual components only. Native Play/Android validation is still required.");
+            Debug.Log("DF: Epic Toon replacement built. "+Sources.Length+" effect families; Nerok is excluded. Run Test Epic Toon emission, then review the hero checklist in Play Mode.");
         }
         [MenuItem("DIMENSIONS FRONT/VFX/Validate Epic Toon replacement")]
         public static void Validate()
         {
             var library=AssetDatabase.LoadAssetAtPath<EpicVfxLibrary>(Output+"/Library.asset");
-            if(library==null||library.beamMaterial==null||library.beamMaterial.mainTexture==null)
+            if(library==null||library.sourceVersion!=EpicVfxLibrary.CurrentVersion||library.beamMaterial==null||library.beamMaterial.mainTexture==null)
                 throw new BuildFailedException("Build the Epic Toon replacement library first.");
             foreach(var source in Sources)
             {
@@ -191,6 +207,49 @@ namespace Alterverse.Editor
                     }
                 }
             }
+        }
+        [MenuItem("DIMENSIONS FRONT/VFX/Test Epic Toon emission")]
+        public static void TestEmission()
+        {
+            Validate();
+            var library=AssetDatabase.LoadAssetAtPath<EpicVfxLibrary>(Output+"/Library.asset");
+            var scene=UnityEditor.SceneManagement.EditorSceneManager.NewPreviewScene();
+            int failed=0;var report=new System.Text.StringBuilder();
+            try
+            {
+                foreach(var entry in library.entries)
+                {
+                    var root=Object.Instantiate(entry.prefab);
+                    UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(root,scene);
+                    try
+                    {
+                        root.SetActive(true);root.transform.localScale=Vector3.one*entry.scale;
+                        var systems=root.GetComponentsInChildren<ParticleSystem>(true);int peak=0;
+                        foreach(float sample in new[]{.03f,.10f,.25f,.50f})
+                        {
+                            int count=0;
+                            foreach(var ps in systems)
+                            {
+                                ps.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);
+                                ps.Play(false);ps.Simulate(sample,false,true,false);ps.Pause(false);
+                                count+=ps.particleCount;
+                            }
+                            peak=Mathf.Max(peak,count);
+                        }
+                        bool supported=true;
+                        foreach(var renderer in root.GetComponentsInChildren<Renderer>(true))
+                            foreach(var material in renderer.sharedMaterials)
+                                if(material!=null&&(material.shader==null||!material.shader.isSupported))supported=false;
+                        bool ok=peak>0&&supported;
+                        if(!ok)failed++;
+                        report.AppendLine((ok?"PASS ":"FAIL ")+entry.key+": peakParticles="+peak+", shaderSupported="+supported);
+                    }
+                    finally { Object.DestroyImmediate(root); }
+                }
+            }
+            finally { UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(scene); }
+            Debug.Log("DF Epic native emission test (does not verify appearance):\n"+report);
+            if(failed>0)throw new BuildFailedException("Epic native emission test failed for "+failed+" families. See Console.");
         }
         public void OnPreprocessBuild(BuildReport report)
         {

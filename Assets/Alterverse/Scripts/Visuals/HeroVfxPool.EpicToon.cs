@@ -7,6 +7,12 @@ namespace Alterverse.Visuals
     public sealed partial class HeroVfxPool
     {
         private EpicVfxLibrary epicLibrary;
+        private static int nerokOriginalDepth;
+        internal readonly struct NerokOriginalScope : System.IDisposable
+        {
+            public void Dispose(){nerokOriginalDepth=System.Math.Max(0,nerokOriginalDepth-1);}
+        }
+        internal static NerokOriginalScope PreserveNerokOriginal(){nerokOriginalDepth++;return new NerokOriginalScope();}
         private readonly Dictionary<string,Stack<EpicVisual>> epicFree = new();
         private int epicInstances;
         private const int EpicInstanceLimit = Capacity - WarningReserve;
@@ -44,24 +50,29 @@ namespace Alterverse.Visuals
             return shape switch
             {
                 HeroFxShape.Slash or HeroFxShape.ArcRibbon or HeroFxShape.EchoSickle => hero==HeroId.VoidKnight?"HeavySlash":"Slash",
-                HeroFxShape.Claw => "Claw", HeroFxShape.Rift or HeroFxShape.RiftCross => "Portal",
-                HeroFxShape.Shield => "Shield", HeroFxShape.Plus or HeroFxShape.Petals or HeroFxShape.Leaf or HeroFxShape.Seed => "Heal",
+                HeroFxShape.Claw => "Claw", HeroFxShape.Rift => "Portal", HeroFxShape.RiftCross => "ShadowMissile",
+                HeroFxShape.Shield => "Shield", HeroFxShape.Plus => "Heal",
+                HeroFxShape.Seed or HeroFxShape.Leaf => "NatureMissile",
+                HeroFxShape.Petals => motion==HeroFxMotion.Hold?"NatureImpact":"NatureNova",
                 HeroFxShape.Mist => "Smoke", HeroFxShape.WaterSpiral => "Vortex", HeroFxShape.WaveCrest => "Water",
-                HeroFxShape.PressureWave or HeroFxShape.ShockDome or HeroFxShape.Ring => "Nova",
+                HeroFxShape.PressureWave or HeroFxShape.ShockDome or HeroFxShape.Ring => hero==HeroId.Rook?"FireNova":"Nova",
                 HeroFxShape.Runes or HeroFxShape.Hex or HeroFxShape.GravityEight => "Rune",
                 HeroFxShape.AnchorStrikeZero => "Punch",
                 HeroFxShape.Cracks => "Impact", HeroFxShape.Burst => hero==HeroId.Rook?"FireImpact":"Impact",
-                HeroFxShape.ContactStar => hero==HeroId.Veyr||hero==HeroId.VoidKnight||hero==HeroId.Timmy?"SwordImpact":"Impact",
+                HeroFxShape.ContactStar => hero==HeroId.Veyr||hero==HeroId.VoidKnight||hero==HeroId.Timmy?"SwordImpact":
+                    hero==HeroId.Kaelon?"HeavyImpact":hero==HeroId.Elyra?"MagicImpact":"Impact",
                 HeroFxShape.Spark or HeroFxShape.Shard => "Spark",
                 HeroFxShape.Streak => motion==HeroFxMotion.AttachedJet?"Jet":"Missile",
-                HeroFxShape.Bolt => "Missile", HeroFxShape.Orb => hero==HeroId.Rook?"Fire":"Orb", _ => "Orb"
+                HeroFxShape.Bolt => "Missile", HeroFxShape.Orb => hero==HeroId.Rook?"Fire":hero==HeroId.Nyra?"Missile":hero==HeroId.Elyra?"ArcaneMissile":"Orb", _ => "Orb"
             };
         }
         private bool AttachEpic(Slot slot,HeroFxShape shape)
         {
             slot.Epic=null;slot.EpicBeam=false;
             // Solid weapon/monster models and exact telegraphs retain their geometry.
-            if(slot.Warning||PhysicalShape(shape))return false;
+            if(nerokOriginalDepth>0||slot.Warning||PhysicalShape(shape)||shape==HeroFxShape.Shield)return false;
+            // Nerok is explicitly excluded from this migration: his complete old presentation stays.
+            if(slot.Owner!=null&&slot.Owner.TryGetComponent(out HeroIdentity identity)&&identity.Hero==HeroId.Nerok)return false;
             if(epicLibrary==null)return false;
             if(shape==HeroFxShape.Laser||shape==HeroFxShape.MonsterBeam||
                 (shape==HeroFxShape.Bolt&&slot.Motion==HeroFxMotion.Hold))
@@ -117,6 +128,9 @@ namespace Alterverse.Visuals
             float delta=Mathf.Max(0,sample-visual.LastAge);
             foreach(var system in visual.Systems)
             {
+                // Stop/clear and playOnAwake=false leave native emission stopped. Resume it
+                // explicitly before advancing the paused system; the slot remains the only clock.
+                system.Play(false);
                 if(!visual.Started)system.Simulate(Mathf.Max(.001f,sample),false,true,false);
                 else if(delta>0)system.Simulate(delta,false,false,false);
                 system.Pause(false);
