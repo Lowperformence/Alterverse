@@ -48,8 +48,14 @@ namespace Alterverse.Editor
             if(EditorApplication.isCompiling||EditorApplication.isUpdating)
             { EditorApplication.delayCall+=BuildIfMissing;return; }
             if(EditorApplication.isPlayingOrWillChangePlaymode||
-                AssetDatabase.LoadAssetAtPath<EpicVfxLibrary>(Output+"/Library.asset")!=null||
                 AssetDatabase.LoadAssetAtPath<GameObject>(Source+"Prefabs/"+Sources[0].path)==null)return;
+            // A previous conversion can have saved Library.asset before final validation failed.
+            // Validate it before skipping setup; repair incomplete output after the next reload.
+            if(AssetDatabase.LoadAssetAtPath<EpicVfxLibrary>(Output+"/Library.asset")!=null)
+            {
+                try { Validate();return; }
+                catch(BuildFailedException) { }
+            }
             try { Build(); }
             catch(Exception error) { Debug.LogError("DF: Epic Toon setup failed. Use DIMENSIONS FRONT > VFX > Build Epic Toon replacement after importing the complete package. "+error.Message); }
         }
@@ -168,9 +174,22 @@ namespace Alterverse.Editor
                     if(component==null||!(component is Transform||component is ParticleSystem||component is Renderer||component is MeshFilter))
                         throw new BuildFailedException("Non-visual component in Epic VFX: "+source.key);
                 foreach(var renderer in entry.prefab.GetComponentsInChildren<Renderer>(true))
-                    foreach(var material in renderer.sharedMaterials)
+                {
+                    var rendererMaterials=renderer.sharedMaterials;
+                    if(rendererMaterials.Length==0||rendererMaterials[0]==null)
+                        throw new BuildFailedException("Missing primary Epic VFX material: "+source.key+" / "+renderer.name);
+                    var system=renderer is ParticleSystemRenderer?renderer.GetComponent<ParticleSystem>():null;
+                    for(int i=0;i<rendererMaterials.Length;i++)
+                    {
+                        var material=rendererMaterials[i];
+                        // Particle renderer slot 1 is the trail material. Unity preserves an empty
+                        // slot even with trails disabled (e.g. both SmokeBurstWhiteSoft systems).
+                        // Only this unused slot may be empty; visible particles/trails must validate.
+                        if(material==null&&i==1&&system!=null&&!system.trails.enabled)continue;
                         if(material==null||material.shader==null||material.shader.name!="DimensionsFront/EpicParticles")
-                            throw new BuildFailedException("Unconverted Epic VFX material: "+source.key);
+                            throw new BuildFailedException("Unconverted Epic VFX material: "+source.key+" / "+renderer.name+" ["+i+"]");
+                    }
+                }
             }
         }
         public void OnPreprocessBuild(BuildReport report)
