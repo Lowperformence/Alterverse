@@ -444,7 +444,7 @@ namespace Alterverse.UI
             if (theme.Action(new Rect(Left+matchButtonWidth+matchButtonGap,620,matchButtonWidth,58),"Ranked",true,
                 enabled:matchButtonsEnabled && HeroUnlockInventory.Owned((HeroId)selectedHero),locked:heroReleaseLocked || !RankedAvailability.Enabled))
             { PlayerHeroSelection.Select((HeroId)selectedHero); RankedPanel.Show(); }
-            if (theme.Action(new Rect(Left+2*(matchButtonWidth+matchButtonGap),620,matchButtonWidth,58),"Play Offline",
+            if (theme.Action(new Rect(Left+2*(matchButtonWidth+matchButtonGap),620,matchButtonWidth,58),"Play Offline",primary:true,
                 enabled:matchButtonsEnabled,locked:heroReleaseLocked)) _ = BeginOfflineMatchAsync();
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
                 !AccountServerBootstrap.CloudProfileReady?"WAIT FOR CLOUD SYNC  /  PROFILE > GOOGLE ACCOUNT":
