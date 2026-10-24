@@ -84,7 +84,7 @@ namespace Alterverse.EditorChecks
             }
             EditorGUILayout.HelpBox(status??"Head attachment unavailable.",MessageType.None);
             if((int)hat>=(int)Hat.WizardHat)
-                EditorGUILayout.HelpBox("Shop hat: 100 shards in Store > Cosmetics > Skins. Equip after purchase in Inventory > Cosmetics > Skins. The BETA cap remains a premium Battle Pass reward.",MessageType.Info);
+                EditorGUILayout.HelpBox("Shop hat: 100 shards in Store > Cosmetics > Hats. Equip after purchase in Inventory > Cosmetics > Hats. The BETA cap remains a premium Battle Pass reward.",MessageType.Info);
             string art=hat==Hat.BetaTruckerCap?"BetaCap":hat.ToString();
             var icon=hat==Hat.None?null:Resources.Load<Texture2D>("Headwear/"+art+"Icon");
             if(icon!=null)GUILayout.Label(icon,GUILayout.Height(100));

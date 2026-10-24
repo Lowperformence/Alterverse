@@ -1141,7 +1141,7 @@ namespace Alterverse.UI
 
         private string BattlePassRewardDescription(BattlePassReward reward)
         {
-            if(reward.Headwear==UniversalHeroCosmetic.BetaCap)return "Exclusive BETA cap. Equip per hero in Inventory > Cosmetics > Skins. Works with wings.";
+            if(reward.Headwear==UniversalHeroCosmetic.BetaCap)return "Exclusive BETA cap. Equip per hero in Inventory > Cosmetics > Hats. Works with wings.";
             if(reward.AvatarId==BattlePassProgress.BetaCrownAvatarId)return "Exclusive Beta Crown avatar.";
             if(reward.Item!=BattleItemType.None)return BattleItemInventory.ShortDescription(reward.Item);
             if(reward.Shards>0)return "Shard currency reward.";

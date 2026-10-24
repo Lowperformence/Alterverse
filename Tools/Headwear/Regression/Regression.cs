@@ -222,8 +222,43 @@ static class Regression
                 if(a.z>.7f&&b.z>.7f&&c.z>.7f&&a.y>.2f&&b.y>.2f&&c.y>.2f)
                     Check(z>0,"Front panel or BETA embroidery faces inward.");
             }
-        AttachmentChecks();NetworkChecks();UfoChecks();ShopHatChecks();HatVisibilityChecks();MergedHaloChecks();HatSizeChecks();HatIconChecks();ModernNetworkChecks();
+        CollectionCategoryChecks();AttachmentChecks();NetworkChecks();UfoChecks();ShopHatChecks();HatVisibilityChecks();MergedHaloChecks();HatSizeChecks();HatIconChecks();ModernNetworkChecks();
         Console.WriteLine("PASS "+checks+" headwear, battle-pass, persistence, mesh and message checks; Unity fit/device/live multiplayer validation remains required.");
+    }
+    static void CollectionCategoryChecks()
+    {
+        int commits=ProfileTransaction.Commits.Count;
+        Check(Alterverse.UI.CosmeticCollectionCategories.Count==2&&
+            Alterverse.UI.CosmeticCollectionCategories.Label(0)=="WINGS"&&Alterverse.UI.CosmeticCollectionCategories.Label(1)=="HATS",
+            "Collection still exposes All/Skins or lacks separate Wings/Hats tabs.");
+        foreach(var definition in CosmeticCatalog.All)
+        {
+            bool wings=Alterverse.UI.CosmeticCollectionCategories.Matches(definition,0);
+            bool hats=Alterverse.UI.CosmeticCollectionCategories.Matches(definition,1);
+            Check(!(wings&&hats)&&wings==(definition.Category==CosmeticCategory.Wings&&!definition.Headwear)&&hats==definition.Headwear,
+                "Wings and hats leak into each other's collection.");
+            Check(!Alterverse.UI.CosmeticCollectionCategories.Matches(definition,-1)&&!Alterverse.UI.CosmeticCollectionCategories.Matches(definition,2),
+                "Invalid category exposes an All view.");
+        }
+        var shop=CosmeticCatalog.All.Where(x=>x.Purchasable).ToArray();
+        Check(Alterverse.UI.CosmeticCollectionCategories.Choose(shop,1,UniversalHeroCosmetic.Voidfall)==UniversalHeroCosmetic.UfoTestHat,
+            "Switching to Hats retained a wing preview instead of selecting the first available hat.");
+        Check(Alterverse.UI.CosmeticCollectionCategories.Choose(shop,0,UniversalHeroCosmetic.WizardHat)==UniversalHeroCosmetic.Voidfall,
+            "Switching to Wings retained a hat preview.");
+        Check(Alterverse.UI.CosmeticCollectionCategories.Choose(shop,1,UniversalHeroCosmetic.MushroomHat)==UniversalHeroCosmetic.MushroomHat,
+            "A valid selection was lost on refresh.");
+        var owned=new[]{CosmeticCatalog.Find(UniversalHeroCosmetic.PropellerCap)};
+        Check(Alterverse.UI.CosmeticCollectionCategories.Choose(owned,1,UniversalHeroCosmetic.WizardHat)==UniversalHeroCosmetic.PropellerCap&&
+            Alterverse.UI.CosmeticCollectionCategories.Choose(owned,0,UniversalHeroCosmetic.PropellerCap)==UniversalHeroCosmetic.Original,
+            "Inventory selected an unavailable item or the empty category retained a preview from the other tab.");
+        Check(Alterverse.UI.CosmeticCollectionCategories.Choose(System.Array.Empty<CosmeticDefinition>(),1,UniversalHeroCosmetic.WizardHat)==UniversalHeroCosmetic.Original,
+            "Empty hat collection did not clear its selection.");
+        var future=new List<CosmeticDefinition>();
+        for(int i=0;i<150;i++)future.Add(new CosmeticDefinition((UniversalHeroCosmetic)(1000+i),"FUTURE HAT "+i,100,"",CosmeticCategory.Skins,"",default,headwear:true));
+        Check(future.All(x=>Alterverse.UI.CosmeticCollectionCategories.Matches(x,1)&&!Alterverse.UI.CosmeticCollectionCategories.Matches(x,0))&&
+            Alterverse.UI.CosmeticCollectionCategories.Choose(future,1,future[149].Id)==future[149].Id,
+            "Future hats depend on a fixed item count or hardcoded current IDs.");
+        Check(ProfileTransaction.Commits.Count==commits,"Changing category modified ownership, equipment or currency.");
     }
     static void UfoChecks()
     {

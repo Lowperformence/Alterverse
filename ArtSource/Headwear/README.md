@@ -3,10 +3,10 @@
 | Model | Inventory / unlock |
 | --- | --- |
 | BETA Trucker Cap (ID 7) | Premium Battle Pass level 50 only; existing ownership key retained |
-| UFO CRUISER (ID 8) | 100 shards in Store → Cosmetics → Skins; same SKU and ownership key |
-| ASTRAL WIZARD (ID 9) | 100 shards in Store → Cosmetics → Skins; equip after purchase in Inventory → Cosmetics → Skins |
-| SKY SPINNER (ID 10) | 100 shards in Store → Cosmetics → Skins; equip after purchase in Inventory → Cosmetics → Skins |
-| COSMIC MUSHROOM (ID 11) | 100 shards in Store → Cosmetics → Skins; equip after purchase in Inventory → Cosmetics → Skins |
+| UFO CRUISER (ID 8) | 100 shards in Store → Cosmetics → Hats; same SKU and ownership key |
+| ASTRAL WIZARD (ID 9) | 100 shards in Store → Cosmetics → Hats; equip after purchase in Inventory → Cosmetics → Hats |
+| SKY SPINNER (ID 10) | 100 shards in Store → Cosmetics → Hats; equip after purchase in Inventory → Cosmetics → Hats |
+| COSMIC MUSHROOM (ID 11) | 100 shards in Store → Cosmetics → Hats; equip after purchase in Inventory → Cosmetics → Hats |
 
 All five hats use the production headwear slot, real-model thumbnails and the same attachment renderer in inventory previews, matches and multiplayer. Each hero keeps a separate selection under the existing account-scoped headwear key. Selecting a hat preserves the equipped wings.
 
@@ -50,6 +50,8 @@ Use Blender 5.0.1 and .NET 8, from the repository root:
 
 ## Adding more hats
 
-Add a stable cosmetic ID and one headwear definition in CosmeticCatalog with its price, ownership key, purchase SKU and resource name. The existing scrollable Skins grid and inventory enumerate this catalog, so they need no new per-hat UI code or fixed number of slots. Resource lookup, thumbnails and the serialized loader also use this metadata. Supply the real model/icon, an appropriate inner-cavity fit profile, and a matching entry in Commerce/ShardCatalog.json. Keep existing numeric IDs, SKUs and ownership keys stable.
+Add a stable cosmetic ID and one headwear definition in CosmeticCatalog with its price, ownership key, purchase SKU and resource name. The existing scrollable Hats grid and inventory enumerate this catalog, so they need no new per-hat UI code or fixed number of slots. Resource lookup, thumbnails and the serialized loader also use this metadata. Supply the real model/icon, an appropriate inner-cavity fit profile, and a matching entry in Commerce/ShardCatalog.json. Keep existing numeric IDs, SKUs and ownership keys stable.
 
 The Python commerce service reads ShardCatalog.json. A Node Cloud Run service using inline ITEMS needs its catalog updated too: run `node Server/commerce/node/enable-ufo-test-hat.mjs /path/to/current/index.js` to check, then add `--write` to apply only the catalog entries with a backup. This script configures all four shop hats from the shared catalog, upgrades only the explicitly superseded 1-shard UFO, and rejects unexpected prices/ownership layouts. It never deploys. Deploy the current service source with this catalog change before testing purchases against that Node service; do not replace a current service with an old source snapshot.
+
+Shop and inventory expose only WINGS and HATS collection tabs. The Original/body card is not mixed into either accessory collection. Selecting a tab chooses an item from that category, preserving a valid selection or preferring the equipped item; empty owned categories show their own empty state. There is no combined All view or fixed limit on future hat entries.

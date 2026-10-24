@@ -40,7 +40,6 @@ namespace Alterverse.UI
         private BattleItemType selectedItem;
         private int balance;
         private string balanceLabel="",heroLabel="";
-        private bool categoriesAvailable;
         public bool InventoryPreview=>!battleItems;
         public UniversalHeroCosmetic Preview(bool ownedOnly)=>ownedOnly?inventory.Selected:shop.Selected;
         public CosmeticCollectionPanel(){ProfileTransaction.Committed+=Invalidate;PaidShardCommerce.EntitlementsChanged+=Invalidate;BattleItemInventory.Changed+=Invalidate;}
@@ -55,17 +54,15 @@ namespace Alterverse.UI
             equipped=UniversalCosmeticSelection.EquippedFor(hero);
             balance=PlayerWallet.Balance;balanceLabel="SHARDS  "+balance.ToString("N0");heroLabel=HeroIdentity.NameFor(hero);
             shopCards.Clear();inventoryCards.Clear();
-            bool skins=false,wings=false;
             for(int i=0;i<CosmeticCatalog.All.Count;i++)
             {
                 var definition=CosmeticCatalog.All[i];bool owned=CosmeticCatalog.IsOwned(definition.Id);
                 bool active=definition.Headwear?HeadwearSelection.EquippedFor(hero)==definition.Id:equipped==definition.Id;
                 var card=new Card{Definition=definition,Owned=owned,Equipped=active,Status=active?"EQUIPPED":owned?"OWNED":"LOCKED"};
                 if(definition.Purchasable)shopCards.Add(card);if(owned)inventoryCards.Add(card);
-                skins|=definition.Category==CosmeticCategory.Skins;wings|=definition.Category==CosmeticCategory.Wings;
             }
-            categoriesAvailable=CosmeticCatalog.All.Count>=6&&skins&&wings;
-            if(!Has(inventoryCards,inventory.Selected))inventory.Selected=equipped;
+            NormalizeSelection(shop,shopCards);
+            NormalizeSelection(inventory,inventoryCards);
             bagSlots.Clear();
             var activeItem=BattleItemInventory.Equipped;
             foreach(var item in BattleItemInventory.All)
@@ -77,8 +74,21 @@ namespace Alterverse.UI
             if(!found)selectedItem=bagSlots.Count>0?bagSlots[0].Item:BattleItemType.None;
             dirty=false;
         }
-        private static bool Has(List<Card> cards,UniversalHeroCosmetic id)
-        {foreach(var card in cards)if(card.Definition.Id==id)return true;return false;}
+        private static IEnumerable<CosmeticDefinition> Definitions(List<Card> cards)
+        {foreach(var card in cards)yield return card.Definition;}
+        private void NormalizeSelection(ViewState state,List<Card> cards)
+        {
+            var preferred=previewOnly?UniversalHeroCosmetic.Original:state.Filter==0?equipped:HeadwearSelection.EquippedFor(hero);
+            foreach(var card in cards)
+                if(card.Definition.Id==state.Selected&&Matches(card,state.Filter))
+                {preferred=state.Selected;break;}
+            var selected=CosmeticCollectionCategories.Choose(Definitions(cards),state.Filter,preferred);
+            if(state.Selected!=selected)state.Message="";
+            state.Selected=selected;
+        }
+        private static string EmptyCategory(ViewState state,bool ownedOnly)=>state.Filter==0?
+            (ownedOnly?"NO WINGS OWNED":"NO WINGS AVAILABLE"):
+            (ownedOnly?"NO HATS OWNED":"NO HATS AVAILABLE");
         public void DrawInventoryTabs(FrontEndTheme theme,Rect rect)
         {
             float width=Mathf.Min(210,(rect.width-12)*.5f);
@@ -104,13 +114,12 @@ namespace Alterverse.UI
             theme.Panel(grid);
             HeroSelector(theme,new Rect(grid.x+12,grid.y+10,grid.width-24,48),changeHero);
             float top=grid.y+70;
-            if(categoriesAvailable)
+            for(int i=0;i<CosmeticCollectionCategories.Count;i++)
             {
-                string[] labels=FilterLabels;
-                for(int i=0;i<labels.Length;i++)if(theme.Action(new Rect(grid.x+12+i*108,top,100,44),labels[i],selected:state.Filter==i))
-                {state.Filter=i;state.Scroll=Vector2.zero;}
-                top+=54;
+                if(theme.Action(new Rect(grid.x+12+i*108,top,100,44),CosmeticCollectionCategories.Label(i),selected:state.Filter==i))
+                {state.Filter=i;state.Scroll=Vector2.zero;state.Message="";NormalizeSelection(state,cards);}
             }
+            top+=54;
             Rect viewport=new(grid.x+12,top,grid.width-24,grid.yMax-top-34);
             int count=0;foreach(var card in cards)if(Matches(card,state.Filter))count++;
             int columns=CollectionGridLayout.Columns(viewport.width,170,compact?3:4);
@@ -137,6 +146,7 @@ namespace Alterverse.UI
                 {state.Selected=card.Definition.Id;state.DetailOpen=true;state.Message="";Alterverse.Audio.UiSoundRouter.Confirm();}
             }
             GUI.EndScrollView();
+            if(count==0)theme.FitLabel(new Rect(viewport.x,viewport.y+12,viewport.width,30),EmptyCategory(state,ownedOnly),theme.Small,true);
             theme.Label(new Rect(grid.x+12,grid.yMax-28,grid.width-24,22),ownedOnly?"ACCOUNT COLLECTION  •  EQUIP PER HERO":balanceLabel,theme.Small,true);
             if(!compact)DrawDetail(theme,detail,state,ownedOnly,showcase);
         }
@@ -148,17 +158,16 @@ namespace Alterverse.UI
             for(int i=0;i<100;i++)
             {
                 var source=CosmeticCatalog.All[i%CosmeticCatalog.All.Count];
-                var definition=new CosmeticDefinition((UniversalHeroCosmetic)(1000+i),i==3?"A VERY LONG FUTURE COSMETIC NAME FOR CLIPPING":source.Name+" "+(i+1),source.Price,"",source.Category,source.Description,source.Accent);
+                var definition=new CosmeticDefinition((UniversalHeroCosmetic)(1000+i),i==3?"A VERY LONG FUTURE COSMETIC NAME FOR CLIPPING":source.Name+" "+(i+1),source.Price,"",source.Category,source.Description,source.Accent,headwear:source.Headwear);
                 var card=new Card{Definition=definition,Owned=i%3!=0,Equipped=i==1,Status=i==1?"EQUIPPED":i%3!=0?"OWNED":"LOCKED"};
                 shopCards.Add(card);if(card.Owned)inventoryCards.Add(card);
             }
             for(int i=0;i<30;i++)bagSlots.Add(new BagSlot{Item=BattleItemInventory.All[i%4],Name="TEST STACK "+(i+1),Description="Layout fixture only. No inventory is changed.",Count="×"+(i+1),Equipped=i==0});
             shop.Selected=shopCards[0].Definition.Id;inventory.Selected=inventoryCards[0].Definition.Id;selectedItem=BattleItemType.Heal;
-            categoriesAvailable=true;
+            NormalizeSelection(shop,shopCards);NormalizeSelection(inventory,inventoryCards);
         }
 #endif
-        private static readonly string[] FilterLabels={"ALL","WINGS","SKINS"};
-        private static bool Matches(Card card,int filter)=>filter==0||card.Definition.Category==(filter==1?CosmeticCategory.Wings:CosmeticCategory.Skins);
+        private static bool Matches(Card card,int filter)=>CosmeticCollectionCategories.Matches(card.Definition,filter);
         private void HeroSelector(FrontEndTheme theme,Rect rect,Action<int> changeHero)
         {
             if(theme.Action(new Rect(rect.x,rect.y,52,rect.height),"<")){changeHero(((int)hero+HeroIdentity.HeroCount-1)%HeroIdentity.HeroCount);dirty=true;}
@@ -168,8 +177,13 @@ namespace Alterverse.UI
         private void DrawDetail(FrontEndTheme theme,Rect rect,ViewState state,bool ownedOnly,MenuHeroShowcase showcase)
         {
             var sourceCards=ownedOnly?inventoryCards:shopCards;
-            CosmeticDefinition definition=null;foreach(var card in sourceCards)if(card.Definition.Id==state.Selected){definition=card.Definition;break;}
-            if(definition==null)return;
+            CosmeticDefinition definition=null;foreach(var card in sourceCards)if(card.Definition.Id==state.Selected&&Matches(card,state.Filter)){definition=card.Definition;break;}
+            if(definition==null)
+            {
+                theme.Panel(rect);
+                theme.FitLabel(new Rect(rect.x+16,rect.y+16,rect.width-32,30),EmptyCategory(state,ownedOnly),theme.Small,true);
+                return;
+            }
             bool owned=false;foreach(var card in sourceCards)if(card.Definition.Id==definition.Id){owned=card.Owned;break;}
             bool active=definition.Headwear?HeadwearSelection.EquippedFor(hero)==definition.Id:equipped==definition.Id;
             theme.Panel(rect);FrontEndTheme.Fill(new Rect(rect.x,rect.y,rect.width,2),definition.Accent);
