@@ -10,30 +10,35 @@ namespace Alterverse.Multiplayer
 {
     public sealed partial class CoopHeroStateSync
     {
-        // Separate cosmetic messages: existing match/movement packet formats are untouched.
+        // Headwear-only capability upgrade. V1 peers receive only the IDs they already know.
         const string HeadwearRequestMessage="DF_HEADWEAR_REQUEST_V1",HeadwearStateMessage="DF_HEADWEAR_STATE_V1";
-        readonly HashSet<ulong> headwearPeers=new();
+        const string HeadwearRequestV2Message="DF_HEADWEAR_REQUEST_V2",HeadwearStateV2Message="DF_HEADWEAR_STATE_V2";
+        readonly HashSet<ulong> headwearPeers=new(),modernHeadwearPeers=new();
         readonly UniversalHeroCosmetic[] roundHeadwear=new UniversalHeroCosmetic[MatchSession.MaxPlayers];
         uint headwearRound;
-        bool headwearRoundReady,headwearServerReady;
+        bool headwearRoundReady,headwearServerReady,headwearModernServerReady;
         int headwearProbes;
         float nextHeadwear;
         void RegisterHeadwear()
         {
             messaging.RegisterNamedMessageHandler(HeadwearRequestMessage,OnHeadwearRequest);
             messaging.RegisterNamedMessageHandler(HeadwearStateMessage,OnHeadwearState);
+            messaging.RegisterNamedMessageHandler(HeadwearRequestV2Message,OnHeadwearRequestV2);
+            messaging.RegisterNamedMessageHandler(HeadwearStateV2Message,OnHeadwearStateV2);
             ResetHeadwear();
         }
         void UnregisterHeadwear()
         {
             messaging.UnregisterNamedMessageHandler(HeadwearRequestMessage);
             messaging.UnregisterNamedMessageHandler(HeadwearStateMessage);
+            messaging.UnregisterNamedMessageHandler(HeadwearRequestV2Message);
+            messaging.UnregisterNamedMessageHandler(HeadwearStateV2Message);
             ResetHeadwear();
         }
         void ResetHeadwear()
         {
-            headwearPeers.Clear();Array.Clear(roundHeadwear,0,roundHeadwear.Length);
-            headwearRoundReady=false;headwearServerReady=false;headwearProbes=0;nextHeadwear=0;
+            headwearPeers.Clear();modernHeadwearPeers.Clear();Array.Clear(roundHeadwear,0,roundHeadwear.Length);
+            headwearRoundReady=false;headwearServerReady=false;headwearModernServerReady=false;headwearProbes=0;nextHeadwear=0;
         }
         uint EnsureHeadwearRound()
         {
@@ -42,6 +47,10 @@ namespace Alterverse.Multiplayer
             {ResetHeadwear();headwearRound=round;headwearRoundReady=true;}
             return round;
         }
+        static bool LegacyHeadwear(UniversalHeroCosmetic value)=>
+            value==UniversalHeroCosmetic.Original||value==UniversalHeroCosmetic.BetaCap||value==UniversalHeroCosmetic.UfoTestHat;
+        static UniversalHeroCosmetic LegacyHeadwearValue(UniversalHeroCosmetic value)=>
+            LegacyHeadwear(value)?value:UniversalHeroCosmetic.Original;
         void TickHeadwear(NetworkManager manager)
         {
             if(messaging==null||Time.unscaledTime<nextHeadwear)return;
@@ -59,18 +68,27 @@ namespace Alterverse.Multiplayer
                     if(IsHeadwearPeerConnected(manager,peer))SendHeadwearState(peer);
                 return;
             }
-            // An older server is probed only three times, then remains compatible.
             if(localSlot<0||slots[localSlot]==null||!headwearServerReady&&headwearProbes>=3)return;
             var identity=slots[localSlot].GetComponent<Alterverse.Characters.HeroIdentity>();
             if(identity==null)return;
+            var selected=HeadwearSelection.EquippedFor(identity.Hero);
+            if(!headwearModernServerReady)SendHeadwearRequest(round,selected,false);
+            // Probe the new cosmetic capability three times at most on legacy hosts.
+            if(headwearModernServerReady||headwearProbes<3)SendHeadwearRequest(round,selected,true);
+            if(headwearProbes<3)headwearProbes++;
+        }
+        void SendHeadwearRequest(uint round,UniversalHeroCosmetic selected,bool modern)
+        {
             using FastBufferWriter writer=new(160,Allocator.Temp);
             writer.WriteValueSafe(round);writer.WriteValueSafe(localSlot);
             writer.WriteValueSafe(new FixedString128Bytes(localPlayerId));
-            writer.WriteValueSafe((int)HeadwearSelection.EquippedFor(identity.Hero));
-            messaging.SendNamedMessage(HeadwearRequestMessage,NetworkManager.ServerClientId,writer,NetworkDelivery.ReliableSequenced);
-            headwearProbes++;
+            writer.WriteValueSafe((int)(modern?selected:LegacyHeadwearValue(selected)));
+            messaging.SendNamedMessage(modern?HeadwearRequestV2Message:HeadwearRequestMessage,
+                NetworkManager.ServerClientId,writer,NetworkDelivery.ReliableSequenced);
         }
-        void OnHeadwearRequest(ulong sender,FastBufferReader reader)
+        void OnHeadwearRequest(ulong sender,FastBufferReader reader)=>ReadHeadwearRequest(sender,reader,false);
+        void OnHeadwearRequestV2(ulong sender,FastBufferReader reader)=>ReadHeadwearRequest(sender,reader,true);
+        void ReadHeadwearRequest(ulong sender,FastBufferReader reader,bool modern)
         {
             var manager=NetworkManager.Singleton;
             if(manager==null||!manager.IsServer||!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority)return;
@@ -80,39 +98,49 @@ namespace Alterverse.Multiplayer
                 EnsureHeadwearRound();
                 reader.ReadValueSafe(out int slot);reader.ReadValueSafe(out FixedString128Bytes player);
                 reader.ReadValueSafe(out int raw);
-                if(slot<0||slot>=slots.Length||!HeadwearSelection.Supported((UniversalHeroCosmetic)raw))return;
+                var selected=(UniversalHeroCosmetic)raw;
+                if(slot<0||slot>=slots.Length||!(modern?HeadwearSelection.Supported(selected):LegacyHeadwear(selected)))return;
                 if(slots[slot]==null)RefreshSlots(true);
                 if(!ValidateOwner(sender,slot,player.ToString()))return;
-                headwearPeers.Add(sender);roundHeadwear[slot]=(UniversalHeroCosmetic)raw;
-                ApplyHeadwear(slot,roundHeadwear[slot]);SendHeadwearState(sender);
+                // A delayed V1 probe must not overwrite a negotiated V2 hat with its fallback.
+                if(!modern&&modernHeadwearPeers.Contains(sender))return;
+                headwearPeers.Add(sender);if(modern)modernHeadwearPeers.Add(sender);
+                roundHeadwear[slot]=selected;
+                ApplyHeadwear(slot,selected);SendHeadwearState(sender);
             }
             catch(OverflowException){}catch(ArgumentException){}catch(InvalidOperationException){}
         }
         void SendHeadwearState(ulong peer)
         {
+            bool modern=modernHeadwearPeers.Contains(peer);
             using FastBufferWriter writer=new(8+MatchSession.MaxPlayers*8,Allocator.Temp);
             writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(slots.Length);
-            for(int i=0;i<slots.Length;i++){writer.WriteValueSafe(i);writer.WriteValueSafe((int)roundHeadwear[i]);}
-            messaging.SendNamedMessage(HeadwearStateMessage,peer,writer,NetworkDelivery.ReliableSequenced);
+            for(int i=0;i<slots.Length;i++)
+            {writer.WriteValueSafe(i);writer.WriteValueSafe((int)(modern?roundHeadwear[i]:LegacyHeadwearValue(roundHeadwear[i])));}
+            messaging.SendNamedMessage(modern?HeadwearStateV2Message:HeadwearStateMessage,peer,writer,NetworkDelivery.ReliableSequenced);
         }
-        void OnHeadwearState(ulong sender,FastBufferReader reader)
+        void OnHeadwearState(ulong sender,FastBufferReader reader)=>ReadHeadwearState(sender,reader,false);
+        void OnHeadwearStateV2(ulong sender,FastBufferReader reader)=>ReadHeadwearState(sender,reader,true);
+        void ReadHeadwearState(ulong sender,FastBufferReader reader,bool modern)
         {
             if(sender!=NetworkManager.ServerClientId||CoopAuthority.LocalHasServerAuthority||!CoopAuthority.Active)return;
             try
             {
                 if(!MatchNetworkProtocol.ReadRound(ref reader))return;
                 EnsureHeadwearRound();
+                if(!modern&&headwearModernServerReady)return;
                 reader.ReadValueSafe(out int count);
                 if(count!=slots.Length)return;
                 var values=new UniversalHeroCosmetic[count];var seen=new bool[count];
                 for(int i=0;i<count;i++)
                 {
                     reader.ReadValueSafe(out int slot);reader.ReadValueSafe(out int raw);
-                    if(slot<0||slot>=count||seen[slot]||!HeadwearSelection.Supported((UniversalHeroCosmetic)raw))return;
-                    values[slot]=(UniversalHeroCosmetic)raw;seen[slot]=true;
+                    var value=(UniversalHeroCosmetic)raw;
+                    if(slot<0||slot>=count||seen[slot]||!(modern?HeadwearSelection.Supported(value):LegacyHeadwear(value)))return;
+                    values[slot]=value;seen[slot]=true;
                 }
-                headwearServerReady=true;
+                headwearServerReady=true;if(modern)headwearModernServerReady=true;
                 for(int i=0;i<count;i++)if(i!=localSlot)ApplyHeadwear(i,values[i]);
             }
             catch(OverflowException){}catch(ArgumentException){}catch(InvalidOperationException){}
@@ -130,3 +158,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+

@@ -69,5 +69,8 @@ namespace Alterverse.Multiplayer
         public void Tick(Unity.Netcode.NetworkManager manager)=>TickHeadwear(manager);
         public void Request(ulong sender,params object[] values)=>OnHeadwearRequest(sender,new Unity.Netcode.FastBufferReader(values));
         public void State(ulong sender,params object[] values)=>OnHeadwearState(sender,new Unity.Netcode.FastBufferReader(values));
+        public void RequestV2(ulong sender,params object[] values)=>OnHeadwearRequestV2(sender,new Unity.Netcode.FastBufferReader(values));
+        public void StateV2(ulong sender,params object[] values)=>OnHeadwearStateV2(sender,new Unity.Netcode.FastBufferReader(values));
     }
 }
+

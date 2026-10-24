@@ -1,39 +1,47 @@
 # Headwear collection
 
-Only headwear models, attachment and preview tools are changed.
-
-| Model | Availability |
+| Model | Inventory / unlock |
 | --- | --- |
-| BETA Trucker Cap | Existing premium Battle Pass level 50 reward; same ownership key and cosmetic ID 7 |
-| UFO Test Hat | Existing 1-shard catalog item; same SKU, ownership key and cosmetic ID 8 |
-| Wizard Hat | New prototype in the Unity fitting studio |
-| Propeller Cap | New prototype in the Unity fitting studio |
-| Mushroom Hat | New prototype in the Unity fitting studio |
+| BETA Trucker Cap (ID 7) | Premium Battle Pass level 50 only; existing ownership key retained |
+| UFO Test Hat (ID 8) | Existing 1-shard purchase; same SKU and ownership key |
+| Wizard Hat (ID 9) | Free test hat, immediately available in Inventory → Cosmetics → Skins |
+| Propeller Cap (ID 10) | Free test hat, immediately available in Inventory → Cosmetics → Skins |
+| Mushroom Hat (ID 11) | Free test hat, immediately available in Inventory → Cosmetics → Skins |
 
-The three new prototypes have editable Blender files, GLB exports, runtime-format mesh JSON and transparent 768 × 640 thumbnails. They have no purchase price or reward assignment yet. Previewing does not unlock them or write a profile. Network IDs are unchanged.
+All five hats use the production headwear slot, real-model thumbnails and the same attachment renderer in inventory previews, matches and multiplayer. Each hero keeps a separate selection under the existing account-scoped headwear key. Selecting a hat preserves the equipped wings.
 
-The BETA cap now has a structured cream front, embroidered BETA patch, an actual open mesh rear, cyan piping and a curved stitched visor. Its preview is compiled from the production C# mesh. All other thumbnails are rendered from the exact serialized geometry Unity loads.
+The three free test hats require no purchase request, account-server SKU, ownership migration or shard debit. They do not grant the BETA cap or the paid UFO. Existing Battle Pass rewards, prices and gameplay bonuses are unchanged.
+
+The BETA cap has a structured front, open mesh rear and curved stitched visor. Its thumbnail comes from the production C# mesh. The other thumbnails are rendered from the exact serialized geometry Unity loads. Editable Blender and GLB sources are retained for the three new models.
 
 ## Attachment
 
-The seat plane is centered over the upper ten percent of the measured head contour and aligned to its top. This replaces the old fixed 18% inset. The mesh is transformed into the real head bone's space and parented to that bone. No colliders, gameplay stats or animation loops are added.
+Only visible, indexed head geometry contributes to fitting. Removed hair/flower vertices, disabled anatomy and hidden pose controls are excluded. Rigid head-bone attachments such as Tahla's helmet contribute their visible surface; floating halos and existing headwear do not.
 
-## Unity validation
+The opening surrounds the measured upper crown instead of placing its empty center at the absolute apex. Each hat uses its own inner-cavity profile; a bounded fit finds the smallest enclosing size for the visible crown, with half-percent shell clearance. The resulting mesh uses the real head bone's bind frame and follows head motion. Equipping after an animation has started does not bake an inverse head pose into the hat. Hats add no collider, combat power or progression bonus.
 
-Open **DIMENSIONS FRONT → Headwear → Fitting studio**. Select each hero and each of the five hats. Rotate the view, tilt the head and enable wings. The camera frames the full hat and head, including the tall wizard hat.
+## Multiplayer compatibility
 
-**Check all 5 hats on all 10 heroes** checks 50 combinations for head attachment, seat alignment, mesh budgets, repeated equip, removal, colliders and parent stability under a head pose.
+V2 headwear-only messages carry all five cosmetic IDs. Updated hosts downgrade newer hats to Original for V1 peers, preserving their existing BETA/UFO rendering and packet compatibility. An updated client probes V2 at most three times on legacy hosts, then keeps the V1 behavior. Validated modern state cannot be erased by a delayed legacy fallback.
 
-This structural check is not a visual clipping review. All ten real hero shapes, idle/running/attack poses and the Android build must still be inspected in Unity/on device. The isolated .NET fixture does not load real hero meshes.
+Seeing the three new models on other players requires an updated match host and clients. Older binaries cannot display models they do not contain. Existing movement and combat messages are unchanged.
 
-## Rebuild and checks
-
-From the repository root:
+## Checks
 
     python Tools/Headwear/Regression/run.py --dotnet-root /path/to/dotnet
     python Tools/Headwear/validate_assets.py
+
+The isolated .NET suite covers all five hats, free inventory availability, premium BETA restrictions, the unchanged 1-shard UFO purchase, per-hero equip and save/reload, separate wing slots, model-thumbnail caching, visible helmet fitting, removed hair vertices, and mixed V1/V2 peers. It also compiles the actual headwear editor tools against compile-only stand-ins. These fixtures do not simulate or certify Unity rendering.
+
+For the real Unity check, open **DIMENSIONS FRONT → Headwear → Fitting studio**. Rotate each of the ten heroes with each hat, tilt the head and enable wings. **Check all 5 hats on all 10 heroes** runs 50 structural combinations against the loaded hero models.
+
+Real-hero visual clipping, idle/running/attack poses and Android rendering must still be verified in Unity/on device. A passing isolated fixture is not that verification.
+
+## Rebuild art
+
+Use Blender 5.0.1 and .NET 8, from the repository root:
+
     blender --background --python ArtSource/Headwear/create_collection.py -- --root .
     blender --background --python ArtSource/Headwear/BetaCap/render_preview.py -- --source-root . --dotnet-root /path/to/dotnet --output Assets/Alterverse/Resources/Headwear/BetaCapIcon.png
 
-Use Blender 5.0.1 and .NET 8. The collection script exports the three prototypes, then renders the UFO and prototype previews. The separate BETA baker uses the actual production mesh.
 

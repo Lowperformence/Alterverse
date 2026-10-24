@@ -13,7 +13,10 @@ namespace Alterverse.Shop
         AngelWings=5,
         RgbRiftWings=6,
         BetaCap=7,
-        UfoTestHat=8
+        UfoTestHat=8,
+        WizardHat=9,
+        PropellerCap=10,
+        MushroomHat=11
     }
 
     /// <summary>Account ownership, one exclusive cosmetic slot per hero. Legacy keys are retained.</summary>
@@ -157,3 +160,4 @@ namespace Alterverse.Shop
         }
     }
 }
+
