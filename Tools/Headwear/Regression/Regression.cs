@@ -222,19 +222,19 @@ static class Regression
                 if(a.z>.7f&&b.z>.7f&&c.z>.7f&&a.y>.2f&&b.y>.2f&&c.y>.2f)
                     Check(z>0,"Front panel or BETA embroidery faces inward.");
             }
-        AttachmentChecks();NetworkChecks();UfoChecks();FreeHatChecks();HatVisibilityChecks();MergedHaloChecks();HatSizeChecks();HatIconChecks();ModernNetworkChecks();
+        AttachmentChecks();NetworkChecks();UfoChecks();ShopHatChecks();HatVisibilityChecks();MergedHaloChecks();HatSizeChecks();HatIconChecks();ModernNetworkChecks();
         Console.WriteLine("PASS "+checks+" headwear, battle-pass, persistence, mesh and message checks; Unity fit/device/live multiplayer validation remains required.");
     }
     static void UfoChecks()
     {
         Reset(1,false);
         var item=CosmeticCatalog.Find(UniversalHeroCosmetic.UfoTestHat);
-        Check(item.Headwear&&item.Purchasable&&item.Price==1&&item.PriceLabel=="1 SHARD","UFO is not the requested 1-shard shop item.");
+        Check(item.Headwear&&item.Purchasable&&item.Price==100&&item.PriceLabel=="100 SHARDS","UFO is not the requested 100-shard shop item.");
         Check(CosmeticCatalog.Sku(item.Id)=="ufo_test_hat","UFO client/server SKU mismatch.");
         Check(CosmeticCatalog.Purchase(item.Id)==AvatarPurchaseResult.InsufficientShards&&!CosmeticCatalog.IsOwned(item.Id),"Zero-shard account received the UFO.");
-        AccountProfilePrefs.SetInt("DF_Shards",1);AccountProfilePrefs.SetInt("DF_AccountXP",777);
-        Check(CosmeticCatalog.Purchase(item.Id)==AvatarPurchaseResult.Purchased,"Exact 1-shard purchase failed.");
-        Check(PlayerWallet.Balance==0&&CosmeticCatalog.IsOwned(item.Id),"Purchase did not charge exactly one shard and grant ownership.");
+        AccountProfilePrefs.SetInt("DF_Shards",100);AccountProfilePrefs.SetInt("DF_AccountXP",777);
+        Check(CosmeticCatalog.Purchase(item.Id)==AvatarPurchaseResult.Purchased,"Exact 100-shard purchase failed.");
+        Check(PlayerWallet.Balance==0&&CosmeticCatalog.IsOwned(item.Id),"Purchase did not charge exactly 100 shards and grant ownership.");
         Check(HeadwearSelection.EquippedFor(HeroId.Rook)==UniversalHeroCosmetic.Original,"Purchase auto-equipped the UFO.");
         Check(CosmeticCatalog.Purchase(item.Id)==AvatarPurchaseResult.AlreadyOwned&&PlayerWallet.Balance==0,"Repeated purchase charged twice.");
         AccountProfilePrefs.SetInt(UniversalSkin.OwnedKey,1);
@@ -303,7 +303,7 @@ static class Regression
             var model=view.Head.Find("DF_Headwear_"+HeadwearSelection.ResourceFor(entry.Key));
             Bounds actual=model.GetComponent<MeshFilter>().sharedMesh.bounds;
             bool ufo=entry.Key==UniversalHeroCosmetic.UfoTestHat;
-            float referenceWidth=originalSizes[UniversalHeroCosmetic.UfoTestHat].x/3f*1.25f;
+            float referenceWidth=originalSizes[UniversalHeroCosmetic.UfoTestHat].x/3f*1.25f*1.15f;
             if(entry.Key==UniversalHeroCosmetic.WizardHat)referenceWidth*=1.25f;
             if(entry.Key==UniversalHeroCosmetic.PropellerCap||entry.Key==UniversalHeroCosmetic.MushroomHat)referenceWidth*=.75f;
             Vector3 expected=entry.Value*(referenceWidth/entry.Value.x);
@@ -409,7 +409,10 @@ static class Regression
     }
     static void ModernNetworkChecks()
     {
-        Reset(1,false);HeadwearSelection.EquipFor(HeroId.Rook,UniversalHeroCosmetic.MushroomHat);
+        Reset(1,false);
+        AccountProfilePrefs.SetInt(CosmeticCatalog.Find(UniversalHeroCosmetic.MushroomHat).OwnedKey,1);
+        AccountProfilePrefs.SetInt(CosmeticCatalog.Find(UniversalHeroCosmetic.PropellerCap).OwnedKey,1);
+        HeadwearSelection.EquipFor(HeroId.Rook,UniversalHeroCosmetic.MushroomHat);
         int commits=ProfileTransaction.Commits.Count;
         var manager=new Unity.Netcode.NetworkManager{IsServer=true};Unity.Netcode.NetworkManager.Singleton=manager;
         Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority=true;Time.unscaledTime=0;
@@ -455,15 +458,44 @@ static class Regression
         Check(remote.GetComponent<HeadwearPresentation>().Current==UniversalHeroCosmetic.BetaCap,"New round retained old protocol capability state.");
         client.Stop();Check(client.Messages.Handlers.Count==0&&ProfileTransaction.Commits.Count==commits,"V2 renderer wrote to the account or leaked handlers.");
     }
-    static void FreeHatChecks()
+    static void ShopHatChecks()
     {
+        using(var shared=JsonDocument.Parse(System.IO.File.ReadAllText("Assets/Alterverse/Resources/Commerce/ShardCatalog.json")))
+        {
+            var items=shared.RootElement.GetProperty("cosmetics").EnumerateArray().ToArray();
+            var skus=new HashSet<string>();int hats=0;
+            foreach(var definition in CosmeticCatalog.All.Where(x=>x.Headwear&&x.Purchasable))
+            {
+                hats++;string sku=CosmeticCatalog.Sku(definition.Id);
+                Check(!string.IsNullOrEmpty(sku)&&skus.Add(sku),"Shop hats share an empty or duplicate purchase SKU.");
+                Check(definition.Name.IndexOf("test",StringComparison.OrdinalIgnoreCase)<0&&definition.Description.IndexOf("test",StringComparison.OrdinalIgnoreCase)<0,
+                    "Prototype name or description is exposed in the shop.");
+                var matches=items.Where(x=>x.GetProperty("id").GetString()==sku).ToArray();
+                Check(matches.Length==1&&matches[0].GetProperty("price").GetInt32()==definition.Price,"Client/server hat prices or SKUs differ.");
+                var writes=matches[0].GetProperty("writes").EnumerateArray().ToArray();
+                Check(writes.Length==1&&writes[0].GetProperty("key").GetString()==definition.OwnedKey&&
+                    writes[0].GetProperty("number").GetInt32()==1,"Client/server hat ownership keys differ.");
+            }
+            Check(hats==4,"Not all four hats are in the Skins shop.");
+            Check(!items.Any(x=>x.TryGetProperty("writes",out var w)&&w.EnumerateArray().Any(e=>e.GetProperty("key").GetString()==HeadwearSelection.BetaCapOwnedKey)),"BETA cap leaked into the shard shop.");
+        }
         Reset(1,false);int commits=ProfileTransaction.Commits.Count;
         foreach(var id in new[]{UniversalHeroCosmetic.WizardHat,UniversalHeroCosmetic.PropellerCap,UniversalHeroCosmetic.MushroomHat})
         {
+            Reset(1,false);
             string resource=HeadwearSelection.ResourceFor(id);
             var definition=CosmeticCatalog.Find(id);
-            Check(definition!=null&&definition.Headwear&&!definition.Purchasable&&definition.Price==0&&CosmeticCatalog.IsOwned(id),"Free test hat is missing from inventory.");
-            Check(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.AlreadyOwned,"Free test hat attempted a shard purchase.");
+            Check(definition!=null&&definition.Headwear&&definition.Purchasable&&definition.Category==CosmeticCategory.Skins&&
+                definition.Price==100&&definition.PriceLabel=="100 SHARDS"&&!CosmeticCatalog.IsOwned(id),"Shop hat has a wrong price/category or is still automatically free.");
+            Check(!string.IsNullOrEmpty(CosmeticCatalog.Sku(id))&&definition.HeadwearResource==resource,"Shop hat has no purchase SKU or art mapping.");
+            Check(!HeadwearSelection.EquipFor(HeroId.Rook,id),"Unpurchased shop hat can be equipped.");
+            AccountProfilePrefs.SetInt("DF_Shards",99);
+            Check(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.InsufficientShards&&PlayerWallet.Balance==99&&!CosmeticCatalog.IsOwned(id),"Underfunded purchase debited or granted a shop hat.");
+            AccountProfilePrefs.SetInt("DF_Shards",100);
+            Check(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.Purchased&&CosmeticCatalog.IsOwned(id)&&PlayerWallet.Balance==0,"100-shard hat purchase failed.");
+            Check(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.AlreadyOwned&&PlayerWallet.Balance==0,"Shop hat charged twice.");
+            Check(HeadwearSelection.EquippedFor(HeroId.Rook)==UniversalHeroCosmetic.Original,"Shop purchase silently equipped the hat.");
+            commits=ProfileTransaction.Commits.Count;
             Check(UfoHatMesh.TryBuildResource(resource,Matrix4x4.identity,Shader.Find("fixture"),out Mesh mesh,out Material[] materials,out string error),resource+": "+error);
             Check(mesh.vertexCount>0&&mesh.vertexCount<6000&&mesh.subMeshCount==6&&materials.Length==6,"Prototype mesh/material budget invalid.");
             foreach(bool authored in new[]{false,true})
@@ -484,25 +516,25 @@ static class Regression
             for(int i=0;i<HeroIdentity.HeroCount;i++)
             {
                 var hero=(HeroId)i;UniversalCosmeticSelection.EquipFor(hero,UniversalHeroCosmetic.Voidfall);
-                Check(HeadwearSelection.EquipFor(hero,id)&&HeadwearSelection.EquippedFor(hero)==id,"Free hat failed per-hero equip.");
-                Check(UniversalCosmeticSelection.EquippedFor(hero)==UniversalHeroCosmetic.Voidfall,"Free hat displaced the wing slot.");
+                Check(HeadwearSelection.EquipFor(hero,id)&&HeadwearSelection.EquippedFor(hero)==id,"Purchased hat failed per-hero equip.");
+                Check(UniversalCosmeticSelection.EquippedFor(hero)==UniversalHeroCosmetic.Voidfall,"Purchased hat displaced the wing slot.");
             }
             Check(HeadwearSelection.EquipFor(HeroId.Veyr,UniversalHeroCosmetic.Original)&&HeadwearSelection.EquippedFor(HeroId.Rook)==id&&
                 UniversalCosmeticSelection.EquippedFor(HeroId.Veyr)==UniversalHeroCosmetic.Voidfall,"Unequipping a test hat affected another hero or removed wings.");
             string saved=JsonSerializer.Serialize(AccountProfilePrefs.Ints);
             AccountProfilePrefs.Ints=JsonSerializer.Deserialize<Dictionary<string,int>>(saved);
             Check(HeadwearSelection.EquippedFor(HeroId.Rook)==id,"New test hat did not survive save/reload.");
-            Check(PlayerWallet.Balance==0,"Equipping a free test hat changed shards.");
+            Check(PlayerWallet.Balance==0,"Equipping a purchased hat changed shards.");
             commits=ProfileTransaction.Commits.Count;
         }
         Check(ProfileTransaction.Commits.Count==commits,"Prototype preview changed the account.");
         Check(!Actor().GetComponent<HeadwearPresentation>().ApplyPrototype("../OtherAsset"),"Unknown prototype path accepted.");
         Check(!UfoHatMesh.TryBuildResource("../OtherAsset",Matrix4x4.identity,Shader.Find("fixture"),out _,out _,out _),"Unknown serialized mesh path accepted.");
         Reset(1,false);
-        Check(!CosmeticCatalog.IsOwned(UniversalHeroCosmetic.BetaCap)&&!HeadwearSelection.EquipFor(HeroId.Rook,UniversalHeroCosmetic.BetaCap),"Free test hats bypassed the premium Battle Pass reward.");
-        Check(!CosmeticCatalog.IsOwned(UniversalHeroCosmetic.UfoTestHat),"Free test hats granted the paid UFO.");
+        Check(!CosmeticCatalog.IsOwned(UniversalHeroCosmetic.BetaCap)&&!HeadwearSelection.EquipFor(HeroId.Rook,UniversalHeroCosmetic.BetaCap),"Shop hats bypassed the premium Battle Pass reward.");
+        Check(!CosmeticCatalog.IsOwned(UniversalHeroCosmetic.UfoTestHat),"Another profile inherited UFO ownership.");
         foreach(var id in new[]{UniversalHeroCosmetic.WizardHat,UniversalHeroCosmetic.PropellerCap,UniversalHeroCosmetic.MushroomHat})
-            Check(CosmeticCatalog.IsOwned(id)&&HeadwearSelection.EquippedFor(HeroId.Rook)==UniversalHeroCosmetic.Original,"Another profile inherited an equipped hat.");
+            Check(!CosmeticCatalog.IsOwned(id)&&HeadwearSelection.EquippedFor(HeroId.Rook)==UniversalHeroCosmetic.Original,"Another profile inherited a purchased hat.");
     }
 }
 

@@ -304,7 +304,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(profile.x+68,profile.y+32,196,23),$"LEVEL {PlayerExperience.Level}",theme.Small,true);
             theme.Progress(new Rect(profile.x+68,profile.y+60,194,3),PlayerExperience.LevelProgress);
             if(GUI.Button(profile,GUIContent.none,GUIStyle.none))SetPage(Page.Profile);
-            DrawShardWallet(new Rect(Right-280,106,280,70));
+            DrawShardWallet(new Rect(profile.x-292,profile.y,280,profile.height));
 
             FrontEndTheme.Fill(new Rect(Left,246,1,276),new Color(.66f,.75f,.84f,.45f));
             int[] homeNavigation=HomeNavigation;

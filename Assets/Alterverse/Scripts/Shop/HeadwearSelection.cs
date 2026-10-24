@@ -8,21 +8,23 @@ namespace Alterverse.Shop
     {
         public const string BetaCapName = "BETA CAPPY";
         public const string BetaCapOwnedKey = "DF_HeadwearOwned_BetaCap";
-        public const string UfoName = "UFO TEST HAT";
+        public const string UfoName = "UFO CRUISER";
         public const string UfoOwnedKey = "DF_HeadwearOwned_UfoTestHat";
-        public const int UfoPrice = 1;
-        public static string ResourceFor(UniversalHeroCosmetic value) => value switch
+        public const int ShopPrice = 100;
+        public const int UfoPrice = ShopPrice;
+        // One catalog definition drives shop cards, purchase SKU, ownership and art.
+        public static string ResourceFor(UniversalHeroCosmetic value)
         {
-            UniversalHeroCosmetic.BetaCap => "BetaCap",
-            UniversalHeroCosmetic.UfoTestHat => "UfoTestHat",
-            UniversalHeroCosmetic.WizardHat => "WizardHat",
-            UniversalHeroCosmetic.PropellerCap => "PropellerCap",
-            UniversalHeroCosmetic.MushroomHat => "MushroomHat",
-            _ => null
-        };
-        public static bool IsFreeTestHat(UniversalHeroCosmetic value) =>
-            value == UniversalHeroCosmetic.WizardHat || value == UniversalHeroCosmetic.PropellerCap ||
-            value == UniversalHeroCosmetic.MushroomHat;
+            var definition=CosmeticCatalog.Find(value);
+            return definition!=null&&definition.Headwear?definition.HeadwearResource:null;
+        }
+        public static bool IsSerializedResource(string resource)
+        {
+            if(string.IsNullOrEmpty(resource))return false;
+            foreach(var definition in CosmeticCatalog.All)
+                if(definition.Headwear&&definition.Id!=UniversalHeroCosmetic.BetaCap&&definition.HeadwearResource==resource)return true;
+            return false;
+        }
         public static string HeroKey(HeroId hero) => "DF_HeadwearEquipped_" + (int)hero;
         public static bool IsHeadwear(UniversalHeroCosmetic value) =>
             ResourceFor(value) != null;

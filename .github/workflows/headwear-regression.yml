@@ -3,7 +3,7 @@ on:
   pull_request:
     paths: ['Assets/Alterverse/Scripts/Shop/**', 'Assets/Alterverse/Scripts/Profile/BattlePassProgress.cs', 'Assets/Alterverse/Scripts/Visuals/*Cap*.cs', 'Assets/Alterverse/Scripts/Visuals/Headwear*.cs', 'Assets/Alterverse/Scripts/UI/**', 'Assets/Alterverse/Scripts/Multiplayer/CoopHeroStateSync*.cs', 'Assets/Alterverse/Editor/Headwear*.cs', 'Assets/Alterverse/Resources/Headwear/**', 'Assets/Alterverse/Resources/Commerce/ShardCatalog.json', 'ArtSource/Headwear/**', 'Server/commerce/node/**', 'Tools/Headwear/**', 'Tools/Shop/PremiumWingsRegression/**', 'Tools/Multiplayer/Regression/**', '.github/workflows/headwear-regression.yml']
   push:
-    branches: ['dev/vertical-slice']
+    branches: ['dev/vertical-slice', 'codex/epic-toon-replacement-20261024']
     paths: ['Assets/Alterverse/Scripts/Shop/**', 'Assets/Alterverse/Scripts/Profile/BattlePassProgress.cs', 'Assets/Alterverse/Scripts/Visuals/*Cap*.cs', 'Assets/Alterverse/Scripts/Visuals/Headwear*.cs', 'Assets/Alterverse/Scripts/UI/**', 'Assets/Alterverse/Scripts/Multiplayer/CoopHeroStateSync*.cs', 'Assets/Alterverse/Editor/Headwear*.cs', 'Assets/Alterverse/Resources/Headwear/**', 'Assets/Alterverse/Resources/Commerce/ShardCatalog.json', 'ArtSource/Headwear/**', 'Server/commerce/node/**', 'Tools/Headwear/**', 'Tools/Shop/PremiumWingsRegression/**', 'Tools/Multiplayer/Regression/**', '.github/workflows/headwear-regression.yml']
 jobs:
   regression:
@@ -22,3 +22,4 @@ jobs:
       - run: python Tools/Multiplayer/Regression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: node Server/commerce/node/test-ufo-test-hat.mjs
 
+      - run: python -m unittest discover -s Server/commerce -p test_ufo_test_hat.py -v

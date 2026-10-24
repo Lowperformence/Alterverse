@@ -80,7 +80,7 @@ namespace Alterverse.Visuals
             // Apply the model-specific visual adjustments around that shared reference.
             float adjustment=selected==UniversalHeroCosmetic.WizardHat?1.25f:
                 selected==UniversalHeroCosmetic.PropellerCap||selected==UniversalHeroCosmetic.MushroomHat?.75f:1f;
-            float width=referenceBounds.size.x*referenceScale.x*(1.25f/3f)*adjustment;
+            float width=referenceBounds.size.x*referenceScale.x*(1.25f/3f)*adjustment*1.15f;
             if(asset)
             {
                 if(!UfoHatMesh.TryBuildResource(resource,Matrix4x4.identity,shader,out mesh,out materials,out string message))
