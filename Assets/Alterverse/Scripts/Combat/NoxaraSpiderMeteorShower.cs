@@ -140,6 +140,8 @@ namespace Alterverse.Combat
 
         private void BuildVisuals(Transform world)
         {
+            // Keep the strike and its original deadline; headless servers need no art.
+            if(Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested)return;
             Shader ink=Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
             Shader rock=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
             if(ink==null||rock==null)return;
@@ -278,4 +280,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
