@@ -23,6 +23,7 @@ namespace Alterverse.Visuals
         public Bounds HeadBounds {get;private set;}
         public Vector3 SeatInHeadSpace {get;private set;}
         public Bounds CrownSection {get;private set;}
+        public float ReferenceWidth {get;private set;}
         public UniversalHeroCosmetic Current {get;private set;}
         public string LastFitError {get;private set;}
 
@@ -69,27 +70,22 @@ namespace Alterverse.Visuals
             bool asset=selected!=UniversalHeroCosmetic.BetaCap;
             if(!FitOpening(selected,bounds,crown,surface,out Vector3 scale))
             {LastFitError="Head shape needs a manual headwear fit.";return false;}
-            Vector3 seat=crown.center;
-            if(selected==UniversalHeroCosmetic.UfoTestHat)
-            {
-                // The UFO is a small novelty hat: one third of the automatic fit.
-                // Shrink its insertion depth too, keeping it at the crown rather than
-                // sinking the smaller model into the old, deeper opening position.
-                const float size=1f/3f;
-                scale*=size;
-                seat.y=bounds.max.y+(seat.y-bounds.max.y)*size;
-            }
-            if(referenceHead==null)TryReferenceFrame(visualRoot,out referenceHead,out referenceToHead);
-            Matrix4x4 fit=referenceToHead*Matrix4x4.TRS(seat,Quaternion.identity,scale);
-            SeatInHeadSpace=fit.MultiplyPoint3x4(Vector3.zero);
+            Vector3 referenceScale=scale;
+            if(selected!=UniversalHeroCosmetic.UfoTestHat&&
+                !FitOpening(UniversalHeroCosmetic.UfoTestHat,bounds,crown,surface,out referenceScale))
+            {LastFitError="Head shape needs a manual UFO reference fit.";return false;}
+            if(!UfoHatMesh.TryGetBounds("UfoTestHat",out Bounds referenceBounds,out string referenceError))
+            {LastFitError=referenceError;return false;}
+            // The approved reference is 25% larger than the previous one-third UFO.
+            float width=referenceBounds.size.x*referenceScale.x*(1.25f/3f);
             if(asset)
             {
-                if(!UfoHatMesh.TryBuildResource(resource,fit,shader,out mesh,out materials,out string message))
+                if(!UfoHatMesh.TryBuildResource(resource,Matrix4x4.identity,shader,out mesh,out materials,out string message))
                 {LastFitError=message;return false;}
             }
             else
             {
-            mesh=BetaCapMesh.Build(fit);
+            mesh=BetaCapMesh.Build(Matrix4x4.identity);
             Color[] colors={new Color(.055f,.085f,.15f),new Color(.28f,.72f,.94f),new Color(.94f,.96f,1f)};
             materials=new Material[colors.Length];
             for(int i=0;i<materials.Length;i++)
@@ -101,6 +97,18 @@ namespace Alterverse.Visuals
                 materials[i]=material;
             }
             }
+            // Match the full model width, keeping each hat's fitted proportions.
+            // Scale its crown insertion by the same amount so small hats don't sink.
+            float size=width/(mesh.bounds.size.x*scale.x);
+            scale*=size;
+            Vector3 seat=crown.center;
+            seat.y=bounds.max.y+(seat.y-bounds.max.y)*size;
+            if(referenceHead==null)TryReferenceFrame(visualRoot,out referenceHead,out referenceToHead);
+            Matrix4x4 fit=referenceToHead*Matrix4x4.TRS(seat,Quaternion.identity,scale);
+            SeatInHeadSpace=fit.MultiplyPoint3x4(Vector3.zero);ReferenceWidth=width;
+            var fitted=mesh.vertices;
+            for(int i=0;i<fitted.Length;i++)fitted[i]=fit.MultiplyPoint3x4(fitted[i]);
+            mesh.vertices=fitted;mesh.RecalculateNormals();mesh.RecalculateBounds();
             mounted=new GameObject("DF_Headwear_"+resource);mounted.layer=visualRoot.gameObject.layer;
             mounted.transform.SetParent(head,false);
             mounted.AddComponent<MeshFilter>().sharedMesh=mesh;
@@ -122,7 +130,7 @@ namespace Alterverse.Visuals
             head=knownHead;
             foreach(var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
-                if(!skin.enabled||!skin.gameObject.activeInHierarchy)continue;
+                if(!skin.enabled||!skin.gameObject.activeInHierarchy||Decoration(skin.transform,root))continue;
                 Mesh source=skin.sharedMesh;
                 if(source==null||!source.isReadable)continue;
                 var bones=skin.bones;int index=-1;
@@ -132,7 +140,7 @@ namespace Alterverse.Visuals
                 if(weights.Length!=source.vertexCount)continue;
                 // Removed hair/flowers can remain in a mesh's vertex buffer. Only indexed
                 // geometry is visible and may define the hat's contact surface.
-                var used=ReferencedVertices(source);
+                var used=ReferencedVertices(source,skin.sharedMaterials);
                 {
                     // Use visible bind-pose geometry: a hat arriving over the network
                     // while the head is tilted must not bake that temporary pose into its fit.
@@ -165,7 +173,7 @@ namespace Alterverse.Visuals
                     if(renderer==null||!renderer.enabled||!filter.gameObject.activeInHierarchy||Decoration(filter.transform,head))continue;
                     Mesh source=filter.sharedMesh;
                     if(source==null||!source.isReadable)continue;
-                    var used=ReferencedVertices(source);var points=source.vertices;
+                    var used=ReferencedVertices(source,renderer.sharedMaterials);var points=source.vertices;
                     Matrix4x4 convert=knownFrame.inverse*head.worldToLocalMatrix*filter.transform.localToWorldMatrix;
                     for(int i=0;i<points.Length;i++)
                     {
@@ -285,10 +293,20 @@ namespace Alterverse.Visuals
                 {float t=(y-heights[i-1])/(heights[i]-heights[i-1]);return radii[i-1]+(radii[i]-radii[i-1])*t;}
             return 0;
         }
-        static bool[] ReferencedVertices(Mesh source)
+        static bool[] ReferencedVertices(Mesh source,Material[] slots)
         {
             var used=new bool[source.vertexCount];
-            foreach(int index in source.triangles)if(index>=0&&index<used.Length)used[index]=true;
+            for(int sub=0;sub<source.subMeshCount;sub++)
+            {
+                // HeadAdornmentSkin merges Tahla's halo into DF_Anatomy. It keeps
+                // its own material slot even though its vertices have head weights.
+                // Skin_FineOrnaments is genuine anatomy and must remain eligible.
+                string name=slots!=null&&sub<slots.Length&&slots[sub]!=null?slots[sub].name:null;
+                if(name!=null&&(name.IndexOf("Halo",System.StringComparison.OrdinalIgnoreCase)>=0||
+                    name.IndexOf("Headwear",System.StringComparison.OrdinalIgnoreCase)>=0||
+                    name.IndexOf("VFX",System.StringComparison.OrdinalIgnoreCase)>=0))continue;
+                foreach(int index in source.GetTriangles(sub))if(index>=0&&index<used.Length)used[index]=true;
+            }
             return used;
         }
         static bool Decoration(Transform part,Transform head)
@@ -308,7 +326,7 @@ namespace Alterverse.Visuals
             if(mounted!=null){mounted.SetActive(false);Release(mounted);}
             Release(mesh);
             if(materials!=null)foreach(var material in materials)Release(material);
-            mounted=null;mesh=null;materials=null;Current=UniversalHeroCosmetic.Original;
+            mounted=null;mesh=null;materials=null;ReferenceWidth=0;Current=UniversalHeroCosmetic.Original;
         }
         void OnDestroy()=>Clear();
     }

@@ -57,7 +57,8 @@ static class Regression
             Check(view.Apply(UniversalHeroCosmetic.BetaCap),"Cap did not fit synthetic head geometry: "+view.LastFitError);
             Check(view.Head.name==(authored?"Head":"DF_Head"),"Cap selected a pose control instead of the weighted head bone.");
             Check(Math.Abs(view.HeadBounds.size.x-.4f)<.001f&&Math.Abs(view.HeadBounds.size.y-.5f)<.001f,"Body/non-head vertices contaminated head bounds.");
-            Check(Math.Abs(view.SeatInHeadSpace.y-1.15f)<.0001f,"The head does not enter the hat opening at the upper crown.");
+            Check(view.SeatInHeadSpace.y>view.HeadBounds.center.y&&view.SeatInHeadSpace.y<view.HeadBounds.max.y,
+                "The head does not enter the hat opening at the upper crown.");
             Check(Math.Abs(view.SeatInHeadSpace.z-(authored?.08f:0))<.0001f,"Hat used the face/chin center instead of the upper contour center.");
             var cap=view.Head.Find("DF_Headwear_BetaCap");
             Check(cap!=null&&cap.parent==view.Head,"Cap was not attached to the selected head.");
@@ -221,7 +222,7 @@ static class Regression
                 if(a.z>.7f&&b.z>.7f&&c.z>.7f&&a.y>.2f&&b.y>.2f&&c.y>.2f)
                     Check(z>0,"Front panel or BETA embroidery faces inward.");
             }
-        AttachmentChecks();NetworkChecks();UfoChecks();FreeHatChecks();HatVisibilityChecks();HatSizeChecks();HatIconChecks();ModernNetworkChecks();
+        AttachmentChecks();NetworkChecks();UfoChecks();FreeHatChecks();HatVisibilityChecks();MergedHaloChecks();HatSizeChecks();HatIconChecks();ModernNetworkChecks();
         Console.WriteLine("PASS "+checks+" headwear, battle-pass, persistence, mesh and message checks; Unity fit/device/live multiplayer validation remains required.");
     }
     static void UfoChecks()
@@ -250,6 +251,9 @@ static class Regression
         int commits=ProfileTransaction.Commits.Count;
         Check(UfoHatMesh.TryBuild(Matrix4x4.identity,Shader.Find("fixture"),out Mesh mesh,out Material[] materials,out string error),"Blender mesh did not load: "+error);
         Check(mesh.vertexCount==2579&&mesh.Indices.Values.Sum(x=>x.Length)==4984*3&&mesh.subMeshCount==6&&materials.Length==6,"Runtime mesh differs from the real Blender export.");
+        Check(UfoHatMesh.TryGetBounds("UfoTestHat",out Bounds referenceBounds,out _)&&referenceBounds.size==mesh.bounds.size,
+            "Cached UFO reference dimensions differ from the production mesh.");
+        Check(!UfoHatMesh.TryGetBounds("../OtherAsset",out _,out _),"Unknown reference mesh path accepted.");
         foreach(bool authored in new[]{false,true})
         {
             var actor=Actor(authored);var view=actor.GetComponent<HeadwearPresentation>();
@@ -280,9 +284,8 @@ static class Regression
     }
     static void HatSizeChecks()
     {
-        // Recorded on the same synthetic head before the UFO size correction. Check
-        // the produced mesh dimensions, including its rim, antennae and visor, so an
-        // automatic fit cannot silently undo the requested one-third reduction.
+        // Recorded before the size corrections. The UFO must grow exactly 25%
+        // from its one-third version, and all other hats must match its full width.
         var originalSizes=new Dictionary<UniversalHeroCosmetic,Vector3>
         {
             {UniversalHeroCosmetic.BetaCap,new Vector3(.6413307f,.25305986f,.9218707f)},
@@ -299,16 +302,61 @@ static class Regression
             var model=view.Head.Find("DF_Headwear_"+HeadwearSelection.ResourceFor(entry.Key));
             Bounds actual=model.GetComponent<MeshFilter>().sharedMesh.bounds;
             bool ufo=entry.Key==UniversalHeroCosmetic.UfoTestHat;
-            Vector3 expected=entry.Value*(ufo?1f/3f:1f);
+            float referenceWidth=originalSizes[UniversalHeroCosmetic.UfoTestHat].x/3f*1.25f;
+            Vector3 expected=entry.Value*(referenceWidth/entry.Value.x);
             Check(Math.Abs(actual.size.x-expected.x)<.00001f&&
                 Math.Abs(actual.size.y-expected.y)<.00001f&&Math.Abs(actual.size.z-expected.z)<.00001f,
-                ufo?"UFO is not one third of its previous size on every axis.":"UFO correction changed another hat's size.");
-            float expectedSeat=ufo?1.2166667f:1.15f;
+                ufo?"UFO did not grow exactly 25% from the one-third version.":"Hat does not match the UFO reference width or its previous proportions changed.");
+            float expectedSeat=1.25f-.1f*(referenceWidth/entry.Value.x);
             Check(Math.Abs(view.SeatInHeadSpace.y-expectedSeat)<.00001f,
                 "Hat size correction lost the crown contact position.");
             Check(actual.min.y<view.HeadBounds.max.y&&actual.max.y>view.HeadBounds.max.y,
                 "Resized hat sits entirely above or below the crown.");
         }
+    }
+    static void MergedHaloChecks()
+    {
+        var actor=Actor(true);var view=actor.GetComponent<HeadwearPresentation>();
+        var skin=actor.GetComponentsInChildren<SkinnedMeshRenderer>()[0];
+        Mesh source=skin.sharedMesh;
+        var halo=Cube(new Vector3(0,1.70f,0),new Vector3(.70f,.06f,.70f));
+        var points=new List<Vector3>(source.vertices);var weights=new List<BoneWeight>(source.boneWeights);
+        int offset=points.Count;
+        points.AddRange(halo.vertices);
+        foreach(var point in halo.vertices)weights.Add(new BoneWeight{boneIndex0=1,weight0=1});
+        source.vertices=points.ToArray();source.boneWeights=weights.ToArray();source.subMeshCount=2;
+        source.SetTriangles(halo.triangles.Select(i=>i+offset).ToList(),1);
+        // TahlaHalo uses HeadAdornmentSkin.Merge: the halo shares DF_Anatomy and
+        // the real head weights. Skin_FineOrnaments is real skin, not floating decor.
+        skin.sharedMaterials=new[]{new Material(Shader.Find("fixture")){name="Skin_FineOrnaments"},
+            new Material(Shader.Find("fixture")){name="DF_TahlaHaloGlow"}};
+        foreach(var id in new[]{UniversalHeroCosmetic.BetaCap,UniversalHeroCosmetic.UfoTestHat,UniversalHeroCosmetic.WizardHat,UniversalHeroCosmetic.PropellerCap,UniversalHeroCosmetic.MushroomHat})
+        {
+            var baseline=Actor(true).GetComponent<HeadwearPresentation>();
+            Check(baseline.Apply(id)&&view.Apply(id),"Hat failed on the merged-halo fixture.");
+            Check(Math.Abs(view.HeadBounds.max.y-1.25f)<.00001f&&view.HeadBounds.size==baseline.HeadBounds.size,
+                "Merged halo was measured as skull geometry, or real ornament-shaded skin was discarded.");
+            Check(view.SeatInHeadSpace==baseline.SeatInHeadSpace,"Merged halo lifted the hat off the actual crown.");
+            var a=view.Head.Find("DF_Headwear_"+HeadwearSelection.ResourceFor(id)).GetComponent<MeshFilter>().sharedMesh;
+            var b=baseline.Head.Find("DF_Headwear_"+HeadwearSelection.ResourceFor(id)).GetComponent<MeshFilter>().sharedMesh;
+            Check(a.vertices.SequenceEqual(b.vertices),"Merged halo changed the hat size or attachment.");
+            view.Apply(UniversalHeroCosmetic.Original);
+        }
+        // A real rigid helmet must still define the top surface beneath every hat.
+        var helmet=new GameObject("DF_Tahla_GoldenHelmet");helmet.transform.SetParent(view.Head,false);
+        helmet.AddComponent<MeshFilter>().sharedMesh=Cube(new Vector3(0,1.35f,0),new Vector3(.42f,.20f,.44f));
+        helmet.AddComponent<MeshRenderer>();
+        Check(view.Apply(UniversalHeroCosmetic.UfoTestHat)&&Math.Abs(view.HeadBounds.max.y-1.45f)<.00001f,
+            "The halo exclusion also discarded Tahla's real helmet.");
+        float helmetWidth=view.Head.Find("DF_Headwear_UfoTestHat").GetComponent<MeshFilter>().sharedMesh.bounds.size.x;
+        foreach(var id in new[]{UniversalHeroCosmetic.BetaCap,UniversalHeroCosmetic.WizardHat,UniversalHeroCosmetic.PropellerCap,UniversalHeroCosmetic.MushroomHat})
+        {
+            Check(view.Apply(id),"Hat failed on the helmet plus merged-halo fixture.");
+            float width=view.Head.Find("DF_Headwear_"+HeadwearSelection.ResourceFor(id)).GetComponent<MeshFilter>().sharedMesh.bounds.size.x;
+            Check(Math.Abs(width-helmetWidth)<.00001f,"Hat width matching failed on a differently shaped, helmeted head.");
+        }
+        Check(skin.sharedMesh==source&&source.GetTriangles(1).Length>0&&skin.enabled,
+            "Headwear fitting removed or hid Tahla's halo instead of excluding it from measurement.");
     }
     static void HatVisibilityChecks()
     {
@@ -320,11 +368,11 @@ static class Regression
         helmet.AddComponent<MeshRenderer>();
         var halo=new GameObject("DF_TahlaHalo");halo.transform.SetParent(view.Head,false);
         halo.AddComponent<MeshFilter>().sharedMesh=Cube(new Vector3(0,9,0),new Vector3(1,1,1));halo.AddComponent<MeshRenderer>();
-        Check(view.Apply(UniversalHeroCosmetic.WizardHat)&&Math.Abs(view.SeatInHeadSpace.y-1.31f)<.0001f,"A rigid helmet was ignored or a floating halo set the hat seat.");
+        Check(view.Apply(UniversalHeroCosmetic.WizardHat)&&Math.Abs(view.HeadBounds.max.y-1.45f)<.0001f,"A rigid helmet was ignored or a floating halo set the hat seat.");
         view.Apply(UniversalHeroCosmetic.Original);helmet.GetComponent<MeshRenderer>().enabled=false;
-        Check(view.Apply(UniversalHeroCosmetic.MushroomHat)&&Math.Abs(view.SeatInHeadSpace.y-1.15f)<.0001f,"A hidden helmet influenced the hat seat.");
+        Check(view.Apply(UniversalHeroCosmetic.MushroomHat)&&Math.Abs(view.HeadBounds.max.y-1.25f)<.0001f,"A hidden helmet influenced the hat seat.");
         view.Apply(UniversalHeroCosmetic.Original);helmet.GetComponent<MeshRenderer>().enabled=true;helmet.SetActive(false);
-        Check(view.Apply(UniversalHeroCosmetic.PropellerCap)&&Math.Abs(view.SeatInHeadSpace.y-1.15f)<.0001f,"An inactive helmet influenced the hat seat.");
+        Check(view.Apply(UniversalHeroCosmetic.PropellerCap)&&Math.Abs(view.HeadBounds.max.y-1.25f)<.0001f,"An inactive helmet influenced the hat seat.");
         view.Apply(UniversalHeroCosmetic.Original);
         actor.GetComponentsInChildren<SkinnedMeshRenderer>()[0].enabled=false;
         Check(!view.Apply(UniversalHeroCosmetic.BetaCap),"Hidden anatomy or invisible pose controls were used for attachment.");
@@ -416,7 +464,8 @@ static class Regression
             {
                 var view=Actor(authored).GetComponent<HeadwearPresentation>();
                 Check(view.Apply(id)&&view.Current==id&&view.Head.Find("DF_Headwear_"+resource)!=null,"Test hat failed production head attachment.");
-                Check(Math.Abs(view.SeatInHeadSpace.y-1.15f)<.0001f,"The head does not enter the test hat opening.");
+                Check(view.SeatInHeadSpace.y>view.HeadBounds.center.y&&view.SeatInHeadSpace.y<view.HeadBounds.max.y,
+                    "The head does not enter the test hat opening.");
                 var fitted=view.Head.Find("DF_Headwear_"+resource).GetComponent<MeshFilter>().sharedMesh;
                 Check(fitted.bounds.min.y<view.HeadBounds.max.y&&fitted.bounds.max.y>view.HeadBounds.max.y,"Hat geometry sits entirely above or below the crown.");
                 int count=view.gameObject.GetComponentsInChildren<MeshFilter>().Length;

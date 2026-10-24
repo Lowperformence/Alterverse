@@ -12,6 +12,7 @@ namespace Alterverse.Visuals
         [Serializable] public sealed class Definition
         {public float[] vertices;public int[] triangles,submeshes;public Surface[] materials;}
         static readonly Dictionary<string,Definition> cache=new();
+        static readonly Dictionary<string,Bounds> boundsCache=new();
 
         public static bool TryBuild(Matrix4x4 toHead,Shader shader,out Mesh mesh,out Material[] materials,out string error)
             =>TryBuildResource("UfoTestHat",toHead,shader,out mesh,out materials,out error);
@@ -20,18 +21,7 @@ namespace Alterverse.Visuals
         public static bool TryBuildResource(string resource,Matrix4x4 toHead,Shader shader,out Mesh mesh,out Material[] materials,out string error)
         {
             mesh=null;materials=null;error=null;
-            if(resource!="UfoTestHat"&&resource!="WizardHat"&&resource!="PropellerCap"&&resource!="MushroomHat")
-            {error="Unknown headwear mesh resource.";return false;}
-            if(!cache.TryGetValue(resource,out Definition cached))
-            {
-                var asset=Resources.Load<TextAsset>("Headwear/"+resource);
-                if(asset==null){error="Headwear Blender mesh resource missing.";return false;}
-                Definition data;
-                try{data=JsonUtility.FromJson<Definition>(asset.text);}
-                catch(ArgumentException){error="Headwear Blender mesh resource invalid.";return false;}
-                if(!Valid(data)){error="Headwear Blender mesh layout invalid.";return false;}
-                cached=data;cache.Add(resource,data);
-            }
+            if(!TryDefinition(resource,out Definition cached,out error))return false;
             if(shader==null){error="UFO material shader missing.";return false;}
             var vertices=new List<Vector3>(cached.vertices.Length/3);
             for(int i=0;i<cached.vertices.Length;i+=3)
@@ -54,6 +44,36 @@ namespace Alterverse.Visuals
                 if(source.emission>0&&material.HasProperty("_EmissionColor"))
                 {material.EnableKeyword("_EMISSION");material.SetColor("_EmissionColor",new Color(source.r*source.emission,source.g*source.emission,source.b*source.emission));}
                 materials[i]=material;
+            }
+            return true;
+        }
+
+        // Read the same validated, cached geometry used to build the production mesh.
+        // Size matching needs no temporary reference mesh or extra materials.
+        public static bool TryGetBounds(string resource,out Bounds bounds,out string error)
+        {
+            bounds=default;
+            if(!TryDefinition(resource,out Definition data,out error))return false;
+            if(boundsCache.TryGetValue(resource,out bounds))return true;
+            bounds=new Bounds(new Vector3(data.vertices[0],data.vertices[1],data.vertices[2]),Vector3.zero);
+            for(int i=3;i<data.vertices.Length;i+=3)
+                bounds.Encapsulate(new Vector3(data.vertices[i],data.vertices[i+1],data.vertices[i+2]));
+            boundsCache.Add(resource,bounds);return true;
+        }
+        static bool TryDefinition(string resource,out Definition cached,out string error)
+        {
+            cached=null;error=null;
+            if(resource!="UfoTestHat"&&resource!="WizardHat"&&resource!="PropellerCap"&&resource!="MushroomHat")
+            {error="Unknown headwear mesh resource.";return false;}
+            if(!cache.TryGetValue(resource,out cached))
+            {
+                var asset=Resources.Load<TextAsset>("Headwear/"+resource);
+                if(asset==null){error="Headwear Blender mesh resource missing.";return false;}
+                Definition data;
+                try{data=JsonUtility.FromJson<Definition>(asset.text);}
+                catch(ArgumentException){error="Headwear Blender mesh resource invalid.";return false;}
+                if(!Valid(data)){error="Headwear Blender mesh layout invalid.";return false;}
+                cached=data;cache.Add(resource,data);
             }
             return true;
         }

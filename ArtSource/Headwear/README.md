@@ -16,11 +16,11 @@ The BETA cap has a structured front, open mesh rear and curved stitched visor. I
 
 ## Attachment
 
-Only visible, indexed head geometry contributes to fitting. Removed hair/flower vertices, disabled anatomy and hidden pose controls are excluded. Rigid head-bone attachments such as Tahla's helmet contribute their visible surface; floating halos and existing headwear do not.
+Only visible, indexed head geometry contributes to fitting. Removed hair/flower vertices, disabled anatomy and hidden pose controls are excluded. Rigid head-bone attachments such as Tahla's helmet contribute their visible surface; floating halos and existing headwear do not. This includes Tahla's halo after `HeadAdornmentSkin.Merge` has merged it into the body renderer: its `DF_TahlaHaloGlow` material submesh is excluded from head measurements. Real skin using `Skin_FineOrnaments` remains included. The halo itself stays visible and unchanged.
 
 The opening surrounds the measured upper crown instead of placing its empty center at the absolute apex. Each hat uses its own inner-cavity profile; a bounded fit finds the smallest enclosing size for the visible crown, with half-percent shell clearance. The resulting mesh uses the real head bone's bind frame and follows head motion. Equipping after an animation has started does not bake an inverse head pose into the hat. Hats add no collider, combat power or progression bonus.
 
-The UFO uses one third of that automatic fit on all three axes, in both previews and equipped gameplay. Its insertion depth is also reduced to one third about the head apex, keeping the smaller hat at the crown. The other four hats retain their existing dimensions. The isolated regression checks the resulting dimensions of all five meshes; real-hero clipping still needs the Unity visual check below.
+The approved UFO reference is 25% larger than its previous one-third size: `1.25 / 3` of its original automatic fit. All five hats now match that UFO's complete width on the same measured head, while each retains its fitted proportions and individual silhouette. Crown insertion depth scales with each model's size about the head apex, keeping the smaller hat at the crown. This shared sizing runs in previews and equipped gameplay. The isolated regression checks the dimensions of all five meshes and reproduces the merged-halo case; real-hero clipping still needs the Unity visual check below.
 
 ## Multiplayer compatibility
 
