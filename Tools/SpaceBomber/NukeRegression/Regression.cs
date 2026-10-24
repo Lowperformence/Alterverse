@@ -52,7 +52,7 @@ static class Regression
             int before=GameObject.All.Count;var strike=new Alterverse.Combat.Detonation();strike.Resolve();strike.Resolve();
             var explosion=GameObject.All.Skip(before).Single(g=>g.name=="DF_Bomber_NukeConeExplosion");
             Check(explosion.activeSelf,"nuke visible on map "+map);
-            Check(Math.Abs(explosion.transform.localScale.x-3.24f/6)<.0001f,"native scale follows actual blast radius on map "+map);
+            Check(Math.Abs(explosion.transform.localScale.x-3.24f*2.5f/6)<.0001f,"requested 150 percent increase is applied on map "+map);
             var clip=explosion.GetComponentsInChildren<Renderer>(true).Single().Block.Vectors["_AttackClip"];
             Check(clip.x==4&&clip.y==-9&&clip.z==3.24f&&clip.w==1,"world footprint locked to real impact on map "+map);
             Check(Alterverse.Audio.DimensionAudio.Calls==sound+map+1,"one original sound, including repeated resolve, on map "+map);

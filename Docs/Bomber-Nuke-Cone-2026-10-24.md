@@ -13,3 +13,5 @@ The complete animation is sampled to fit its horizontal extent to the actual **3
 Damage, hit radius, warnings, bomb flight, detonation timing and original explosion audio are unchanged. Other attacks, shield effects, the shield-amount HUD bar, menu and shop remain as restored in `a7a8b32`.
 
 Validation: 121 focused import/playback/footprint/audio contracts pass across all 14 production `ArenaVariant` values, alongside the existing 4,779 VFX/combat assertions. Both use controlled engine/editor fixtures. They do not render the purchased prefab. Native Unity appearance, the complete cone/smoke sequence, camera readability and Android performance still require Play Mode/device review with the imported package.
+
+Visual size adjustment: +150% means a 2.5 multiplier on the prepared Nuke composition. The fragment footprint remains clipped to the original 3.24-unit damage radius. Audio, emission timing and gameplay remain unchanged.

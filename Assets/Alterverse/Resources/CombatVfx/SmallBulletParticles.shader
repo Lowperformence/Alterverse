@@ -45,6 +45,14 @@ Shader "DimensionsFront/SmallBulletParticles"
                 if (_AttackClip.w > 1.5)
                 {
                     float2 relative = input.positionWS.xz - _AttackTrail.xy;
+                    // Increased cross-section must not extend the shot beyond either endpoint.
+                    float lengthSquared = dot(_AttackTrail.zw, _AttackTrail.zw);
+                    if (lengthSquared > .000001)
+                    {
+                        float distanceAlong = dot(relative, _AttackTrail.zw);
+                        clip(distanceAlong);
+                        clip(lengthSquared - distanceAlong);
+                    }
                     float along = saturate(dot(relative, _AttackTrail.zw) / max(.000001, dot(_AttackTrail.zw, _AttackTrail.zw)));
                     offset = relative - _AttackTrail.zw * along;
                 }

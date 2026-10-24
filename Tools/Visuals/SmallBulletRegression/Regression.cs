@@ -55,7 +55,7 @@ static class Regression
         var flight=GameObject.All.Skip(first).Single(g=>g.name=="DF_SmallBullet_Projectile");
         Check(Math.Abs(flight.transform.position.x-2)<.001f,"projectile travels rather than becoming a full-range beam");
         var clip=flight.GetComponentsInChildren<Renderer>(true).Single().Block.Vectors["_AttackClip"];
-        Check(clip.z==.10f&&clip.w==2,"small projectile and trail stay within the real shot segment");
+        Check(clip.z==.25f&&clip.w==2,"150 percent larger projectile/trail stays constrained to the shot segment");
         Tick(session,.17f);Check(Hits(first)==1,"one native impact at arrival");
         Check(!health.IsDead,"presentation never applies damage");
         Time.time=1;int miss=GameObject.All.Count;SmallBulletVfx.Launch(actor,new(),new(4,0,0),.16f,deliveryId:102);

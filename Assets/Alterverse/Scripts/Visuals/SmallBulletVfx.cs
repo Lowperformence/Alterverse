@@ -8,6 +8,7 @@ namespace Alterverse.Visuals
     public sealed class SmallBulletVfx : MonoBehaviour
     {
         public const string ResourcePath="CombatVfx/SmallBullet/Library";
+        private const float SizeMultiplier=2.5f;
         public GameObject muzzle,projectile,impact;
         public float muzzleRadius=1,projectileRadius=1,impactRadius=1;
         public string sourceSignature;
@@ -123,7 +124,7 @@ namespace Alterverse.Visuals
         private static GameObject Part(GameObject prefab,Vector3 point,Quaternion rotation,float scale,float elapsed,
             Vector3 start,Vector3 end,float radius,bool moving=false)
         {
-            var instance=Instantiate(prefab,point,rotation);instance.transform.localScale=Vector3.one*scale;
+            var instance=Instantiate(prefab,point,rotation);instance.transform.localScale=Vector3.one*(scale*SizeMultiplier);
             var life=instance.AddComponent<SmallBulletVfx>();life.tail=true;life.held=moving;life.started=Time.time+.1f;
             life.systems=instance.GetComponentsInChildren<ParticleSystem>(true);
             life.renderers=instance.GetComponentsInChildren<Renderer>(true);
@@ -136,6 +137,7 @@ namespace Alterverse.Visuals
         }
         private void Clip(Vector3 start,Vector3 end,float radius,bool moving)
         {
+            radius*=SizeMultiplier;
             foreach(var renderer in renderers)
             {
                 renderer.GetPropertyBlock(block);

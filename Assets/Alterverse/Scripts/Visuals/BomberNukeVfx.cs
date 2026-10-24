@@ -7,6 +7,7 @@ namespace Alterverse.Visuals
     {
         public const string ResourcePath = "CombatVfx/BomberNuke/Explosion";
         public const string ImportVersion = "Bomber Nuke Cone 4";
+        private const float SizeMultiplier = 2.5f;
         [HideInInspector] public float nativeRadius = 1f;
         [HideInInspector] public string sourceSignature;
         [HideInInspector] public float emissionStopAfter = .1f;
@@ -36,7 +37,7 @@ namespace Alterverse.Visuals
             // The saved root is inactive: place, scale and clip before any particles start.
             var instance = Instantiate(prefab, position, Quaternion.identity);
             instance.name = "DF_Bomber_NukeConeExplosion";
-            instance.transform.localScale = Vector3.one * (radius / definition.nativeRadius);
+            instance.transform.localScale = Vector3.one * (radius * SizeMultiplier / definition.nativeRadius);
             var block = new MaterialPropertyBlock();
             foreach (var renderer in instance.GetComponentsInChildren<Renderer>(true))
             {
