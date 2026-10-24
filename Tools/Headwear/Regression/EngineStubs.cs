@@ -91,12 +91,13 @@ namespace UnityEngine
         public int[] triangles=>Indices.Values.SelectMany(x=>x).ToArray();
         public void SetVertices(List<Vector3> v){vertices=v.ToArray();}
         public void SetTriangles(List<int> t,int sub){Indices[sub]=t.ToArray();}
+        public int[] GetTriangles(int sub)=>Indices.GetValueOrDefault(sub,Array.Empty<int>());
         public void RecalculateNormals(){}
         public void RecalculateBounds(){if(vertices.Length==0)return;bounds=new Bounds(vertices[0],Vector3.zero);foreach(var v in vertices)bounds.Encapsulate(v);}
     }
     public class MeshFilter:Component{public Mesh sharedMesh;}
-    public class Renderer:Component{public bool enabled=true;public Bounds bounds;}
-    public class MeshRenderer:Renderer{public Material[] sharedMaterials;}
+    public class Renderer:Component{public bool enabled=true;public Bounds bounds;public Material[] sharedMaterials=Array.Empty<Material>();}
+    public class MeshRenderer:Renderer{}
     public class SkinnedMeshRenderer:Renderer{public Mesh sharedMesh;public Transform[] bones;public void BakeMesh(Mesh mesh){mesh.vertices=sharedMesh.vertices;}}
     public class Shader:Object{public static bool Available=true;public static Shader Find(string n)=>Available?new():null;}
     public class Material:Object{public Material(Shader s){}public bool HasProperty(string p)=>true;public void SetColor(string p,Color c){}public void SetFloat(string p,float f){}public void EnableKeyword(string name){}}
