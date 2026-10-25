@@ -9,26 +9,27 @@ namespace Alterverse.Visuals
         private sealed class Part{public GameObject go,source,owner;public ParticleSystem[] systems;public AudioSource[] sounds;public int selectedAudioIndex;public AudioClip[] originalClips;public float[] gains;public bool[] soundStarted;public Renderer[] renderers;public MaterialPropertyBlock clipBlock;public float until,start,seconds,delay;public Vector3 from,to;public bool lob,travel,emissionStopped;}
         private static Bolt7Vfx runner;
         private static Bolt7VfxLibrary library;
-        private static AudioClip nullfieldSound;
+        private static AudioClip nullfieldSound,mechGunSound;
         private readonly List<Part> active=new(32);
         private readonly Dictionary<GameObject,Queue<Part>> pool=new();
         private bool warned;
         private Transform inactiveRoot;
         private const float GrenadeVisualScale=.70f;
         private const float BasicVisualScale=1f/3f;
-        private const float AttackSoundVolumeMultiplier=.65f;
+        private const float AttackSoundVolumeMultiplier=.65f*.75f;
         private static readonly Color RamColor=new Color(1f,.68f,.22f,.95f);
         public static void Warm()
         {
             if(SystemInfo.graphicsDeviceType==UnityEngine.Rendering.GraphicsDeviceType.Null)return;
             if(runner!=null)return;
             runner=new GameObject("DF_Bolt7VfxPool").AddComponent<Bolt7Vfx>();
+            mechGunSound=Resources.Load<AudioClip>("Audio/SFX/MechGun");
             var asset=Resources.Load<GameObject>("Bolt7/Vfx/Library");library=asset!=null?asset.GetComponent<Bolt7VfxLibrary>():null;
             if(library!=null)foreach(var p in new[]{library.muzzle,library.grenade,library.explosion,library.lightningOrb,library.starFog,library.heavyPunch,library.lightningNova,library.bulletMuzzle,library.bulletProjectile,library.bulletImpact})
                 if(p!=null){var a=runner.Take(p);var b=runner.Take(p);runner.Return(a);runner.Return(b);}
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void Reset(){runner=null;library=null;nullfieldSound=null;}
+        private static void Reset(){runner=null;library=null;nullfieldSound=mechGunSound=null;}
         private Part Take(GameObject source)
         {
             if(pool.TryGetValue(source,out var q)&&q.Count>0)return q.Dequeue();
@@ -79,13 +80,13 @@ namespace Alterverse.Visuals
             if(library!=null&&library.bulletProjectile!=null)
             {
                 Quaternion face=Quaternion.LookRotation(to-from);
-                if(elapsed<.12f)Spawn(library.bulletMuzzle,from,from,.15f,elapsed,owner:actor,visualScale:BasicVisualScale,rotation:face);
-                Spawn(library.bulletProjectile,from,to,Mathf.Max(.04f,seconds),elapsed,owner:actor,visualScale:BasicVisualScale,rotation:face,travel:true);
+                if(elapsed<.12f)Spawn(library.bulletMuzzle,from,from,.15f,elapsed,owner:actor,visualScale:BasicVisualScale,rotation:face,selectedSound:mechGunSound,muteNativeSound:true);
+                Spawn(library.bulletProjectile,from,to,Mathf.Max(.04f,seconds),elapsed,owner:actor,visualScale:BasicVisualScale,rotation:face,travel:true,muteNativeSound:true);
             }
             else HeroVfxPool.Trace(from,to,new Color(1,.72f,.25f),.018f*BasicVisualScale,.085f);
         }
         public static void BasicImpact(GameObject actor,Vector3 point)
-        {Warm();if(library!=null)Spawn(library.bulletImpact,point,point,.4f,HeroVfxEvents.ReplayElapsed,owner:actor,visualScale:BasicVisualScale);}
+        {Warm();if(library!=null)Spawn(library.bulletImpact,point,point,.4f,HeroVfxEvents.ReplayElapsed,owner:actor,visualScale:BasicVisualScale,muteNativeSound:true);}
         public static void Cast(GameObject actor,int slot)
         {
             actor.GetComponent<Bolt7Visual>()?.Skill(slot);
@@ -163,7 +164,8 @@ namespace Alterverse.Visuals
             }
             else if(slot==0||slot==2)
             {
-                float size=slot==2?GrenadeVisualScale*Bolt7Balance.ImpulseRadius/Bolt7Balance.GrenadeRadius:GrenadeVisualScale;
+                // The authored blast was fitted to the original 1.4m radius.
+                float size=GrenadeVisualScale*(slot==2?Bolt7Balance.ImpulseRadius:Bolt7Balance.GrenadeRadius)/1.4f;
                 Spawn(library.explosion,point,point,3f,elapsed,owner:actor,visualScale:size);
                 if(slot==2)HeroVfxPool.Emit(HeroFxShape.PressureWave,point+Vector3.up*.06f,point,Vector3.one*Bolt7Balance.ImpulseRadius,
                     new Color(.45f,.85f,1f,.9f),.35f,HeroFxMotion.RadialPulse,Quaternion.identity,actor);

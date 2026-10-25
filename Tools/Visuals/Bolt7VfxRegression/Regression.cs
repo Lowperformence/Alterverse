@@ -36,16 +36,17 @@ class Regression {
   var novaMaterial=lib.lightningNova.GetComponentsInChildren<Renderer>(true).Single().sharedMaterials[0];var grenadeMaterial=lib.explosion.GetComponentsInChildren<Renderer>(true).Single().sharedMaterials[0];
   Check(novaMaterial.shader.name=="DimensionsFront/BomberNukeParticles"&&grenadeMaterial.shader.name=="DimensionsFront/SelectedAbilityParticles","Nova clip shader does not overwrite shared materials of other stages");
   Resources.Prefabs["Bolt7/Vfx/Library"]=lib.gameObject;var actor=new GameObject("Bolt7");
+  var mechShot=new AudioClip{name="MechGun",length=.3f};Resources.AudioClips["Audio/SFX/MechGun"]=mechShot;
   // An active source variant must never enable native particles/audio at the origin during warmup.
   lib.explosion.SetActive(true);int enabledClones=UnityEngine.Object.EnabledClones;
   Bolt7Vfx.Warm();Check(UnityEngine.Object.EnabledClones==enabledClones&&Parts.Length==0,"Warmup cannot activate an explosion or emit a gameplay effect");
   lib.explosion.SetActive(false);
   Bolt7Vfx.Grenade(actor,new Vector3(0,0,4),.45f);Near(Last(0).transform.localScale.x,1.75f,"muzzle reduced 30 percent from 2.5");Near(Last(1).transform.localScale.x,1.75f,"projectile reduced 30 percent");Tick(.02f);
-  var flying=Last(1).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null);Check(flying.isPlaying&&flying.loop,"native projectile flight audio starts");Near(flying.volume,.7f*.65f,"existing 35 percent sound reduction remains applied");
+  var flying=Last(1).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null);Check(flying.isPlaying&&flying.loop,"native projectile flight audio starts");Near(flying.volume,.7f*.65f*.75f,"additional 25 percent reduction multiplies the existing 35 percent reduction");
   Alterverse.Profile.PlayerProfile.SfxVolume=0;Tick(.03f);Near(flying.volume,0,"SFX mute respected");Alterverse.Profile.PlayerProfile.SfxVolume=1;
-  Bolt7Vfx.Area(actor,new Vector3(0,0,4),0);Near(Last(2).transform.localScale.x,1.75f,"detonation reduced 30 percent");Tick(.04f);Check(Last(2).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null).isPlaying,"detonation audio plays independently of hit count");
+  Bolt7Vfx.Area(actor,new Vector3(0,0,4),0);Near(Last(2).transform.localScale.x,2.1875f,"Frag Arc blast scales with its 25 percent larger damage radius");Tick(.04f);Check(Last(2).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null).isPlaying,"detonation audio plays independently of hit count");
   Tick(.5f);Check(!flying.isPlaying,"flight loop stops at impact");
-  Bolt7Vfx.Grenade(actor,Vector3.zero,.55f,2);Check(Last(1).transform.localScale.x<1.75f,"second grenade has smaller visual footprint");Bolt7Vfx.Area(actor,Vector3.zero,2);
+  Bolt7Vfx.Grenade(actor,Vector3.zero,.55f,2);Check(Last(1).transform.localScale.x<1.75f,"second grenade has smaller visual footprint");Bolt7Vfx.Area(actor,Vector3.zero,2);Near(Last(2).transform.localScale.x,1.71875f,"Impulse blast scales with its 25 percent larger damage radius");
   int before=HeroVfxPool.Emits;Bolt7Vfx.Cast(actor,1);Bolt7Vfx.RamDash(actor,Vector3.zero,new Vector3(0,0,2),.15f);Bolt7Vfx.Area(actor,Vector3.zero,1);Check(HeroVfxPool.Emits-before>=9&&Last(5)!=null,"ram has charge, dash trails, native punch, pulse and sparks");
   Resources.AudioClips["Audio/Heroes/Bolt7/Nullfield_Selected"]=new AudioClip{name="UserNullfield",length=3.72f};
   Vector3 center=new Vector3(3,0,5);Bolt7Vfx.Area(actor,center,3);var nova=Last(6);var clip=nova.GetComponentsInChildren<Renderer>(true).Single().Block.Vectors["_AttackClip"];
@@ -55,8 +56,8 @@ class Regression {
   Check(Last(6).GetComponentsInChildren<AudioSource>(true).All(a=>a.clip==null)&&Last(4).GetComponentsInChildren<AudioSource>(true).All(a=>a.clip==null),"Nova and Fog do not duplicate the user's detonation sound");Tick(.7f);Check(Last(4).activeSelf,"Star Fog follows detonation");
   Check(lib.bulletMuzzle!=null&&lib.bulletProjectile!=null&&lib.bulletImpact!=null,"complete native Gatling bullet chain resolved");
   Bolt7Vfx.Basic(actor,new Vector3(0,0,4),.1f);Near(Last(8).transform.localScale.x,2.5f/3f,"Gatling projectile reduced to one third of previous size");Near(Last(7).transform.localScale.x,2.5f/3f,"Gatling muzzle reduced to one third");Tick(.72f);
-  Check(Last(7).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null).isPlaying,"Gatling plays the package's shot sound");var bulletSound=Last(8).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null);Check(bulletSound.isPlaying,"Gatling flight sound follows the projectile");
-  Bolt7Vfx.BasicImpact(actor,new Vector3(0,0,4));Near(Last(9).transform.localScale.x,2.5f/3f,"Gatling impact reduced to one third");Tick(.73f);Check(Last(9).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null).isPlaying,"confirmed basic hit plays native impact sound");Tick(.85f);Check(!bulletSound.isPlaying,"Gatling flight loop stops at arrival");
+  var shot=Last(7).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null);Check(shot.isPlaying&&ReferenceEquals(shot.clip,mechShot),"Gatling plays the exact existing mech recording once");Near(shot.volume,.65f*.75f,"replacement shot retains both requested volume reductions");Check(Last(8).GetComponentsInChildren<AudioSource>(true).All(a=>a.clip==null),"old projectile sound does not overlap the mech shot");
+  Bolt7Vfx.BasicImpact(actor,new Vector3(0,0,4));Near(Last(9).transform.localScale.x,2.5f/3f,"Gatling impact reduced to one third");Tick(.73f);Check(Last(9).GetComponentsInChildren<AudioSource>(true).All(a=>a.clip==null),"confirmed basic hit does not duplicate the mech recording with old audio");Tick(.85f);Check(shot.Plays==1,"one recorded burst per basic attack");
   Near(HeroVfxPool.RamOrigin.z,0,"ram sweep stays anchored to original cone, not dash endpoint");Near(HeroVfxPool.RamSize.z,3,"ram sweep reaches exactly the melee cone range");
   foreach(int slot in new[]{0,2})foreach(float range in new[]{0f,.1f,4f}){
    actor.transform.position=new Vector3(5,1,7);Vector3 point=new Vector3(5,0,7+range);float start=Time.time,seconds=slot==0?.45f:.55f;

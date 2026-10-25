@@ -55,9 +55,9 @@ namespace Alterverse.Characters
             AbilitySpec s = kit.Spec(slot);
             HeroId h = identity.Hero;
             if(h==HeroId.Bolt7)return slot switch {
-                0=>"Grenade: 35 centre / 15 edge damage, 1.4m radius, 5m range.",
+                0=>$"Grenade: 35 centre / 15 edge damage, {s.Radius:0.###}m radius, {s.Range:0.###}m range.",
                 1=>"Rush 2m and hit every enemy in the marked 3m, 70 degree cone for 40 damage and 0.8m knockback.",
-                2=>"Impulse grenade: 25 area damage in 1.1m, 4m throw range, 0.8m outward knockback. Walls block it.",
+                2=>$"Impulse grenade: 25 area damage in {s.Radius:0.###}m, {s.Range:0.###}m throw range, 0.8m outward knockback. Walls block it.",
                 3=>"After 0.9s, remove all enemy shields in 3m. No health damage. New shields work immediately; normal shield recharge applies.",
                 _=>""
             };
