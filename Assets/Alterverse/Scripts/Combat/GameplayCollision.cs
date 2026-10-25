@@ -26,7 +26,7 @@ namespace Alterverse.Combat
         // Identical defense anchors on every map, including the frontier planets.
         public const float BunkerX=CoreX-3.6f,BunkerZ=21.5f;
         public const float TrenchX=CoreX-2.6f,TrenchZ=10.75f;
-        public const float SpawnSpacing=2f;
+        public const float SpawnSpacing=1.4f;
         public static Vector3 Stretch(Vector3 point)
         {point.x*=LengthScale;return point;}
         public static Vector3 HealingPosition(int team,float y=.14f)
