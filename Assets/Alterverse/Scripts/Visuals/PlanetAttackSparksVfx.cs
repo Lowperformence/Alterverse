@@ -7,7 +7,7 @@ namespace Alterverse.Visuals
     public sealed class PlanetAttackSparksVfx:MonoBehaviour
     {
         public const string ResourcePath="CombatVfx/PlanetAttackSparks/Sparks";
-        public const float SizeMultiplier=4f; // Original size plus 300 percent.
+        public const float SizeMultiplier=8f; // Doubled again from 4x to 8x the original size.
         private const int Capacity=32;
         public string sourcePath,sourceSignature;
         public float emissionSeconds=.1f;

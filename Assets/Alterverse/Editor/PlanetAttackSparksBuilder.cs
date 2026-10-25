@@ -85,7 +85,7 @@ namespace Alterverse.Editor
                 var data=root.AddComponent<PlanetAttackSparksVfx>();data.sourcePath=path;data.sourceSignature=signature;data.emissionSeconds=Mathf.Max(.1f,emission+.05f);
                 root.SetActive(false);
                 if(PrefabUtility.SaveAsPrefabAsset(root,Output+"/Sparks.prefab")==null)throw new IOException("Could not save prepared native Sparks.");
-                AssetDatabase.SaveAssets();Debug.Log("DIMENSIONS FRONT VFX: planet attack Sparks PREPARED; "+path+"; runtime scale=4 (+300%).");
+                AssetDatabase.SaveAssets();Debug.Log("DIMENSIONS FRONT VFX: planet attack Sparks PREPARED; "+path+"; runtime scale="+PlanetAttackSparksVfx.SizeMultiplier+".");
             }
             finally{if(root!=null)Object.DestroyImmediate(root);EditorSceneManager.ClosePreviewScene(preview);building=false;}
         }

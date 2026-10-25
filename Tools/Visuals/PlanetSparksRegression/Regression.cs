@@ -39,7 +39,7 @@ static class Regression
         {
             var point=new Vector3(i,.3f,-i);Check(PlanetAttackSparksVfx.TryPlay(point),"simultaneous planet impacts have reserved Sparks");
             var effect=world.GetComponentsInChildren<PlanetAttackSparksVfx>(true).Single(e=>e.gameObject.activeSelf&&e.transform.position.x==i);
-            Check(effect.transform.localScale.x==4f&&effect.transform.localScale.y==4f&&effect.transform.localScale.z==4f,"+300 percent means four times original scale");
+            Check(effect.transform.localScale.x==8f&&effect.transform.localScale.y==8f&&effect.transform.localScale.z==8f,"another +100 percent doubles the previous four-times scale");
             Check(effect.transform.position.y==.3f&&effect.transform.position.z==-i,"Sparks appears at actual impact point");
         }
         Check(GameObject.All.Count==objects,"impact playback instantiates no new objects");

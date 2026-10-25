@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise native Sparks import, additive impact hooks and pooled +300% playback."""
+"""Exercise native Sparks import, additive impact hooks and pooled eight-times playback."""
 import argparse,json,re,subprocess,tempfile
 from pathlib import Path
 p=argparse.ArgumentParser(description=__doc__);p.add_argument('--dotnet-root',type=Path,required=True);a=p.parse_args()
