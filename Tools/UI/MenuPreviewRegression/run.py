@@ -5,6 +5,7 @@ measure Unity/Android frame time, native Perlin noise or GPU upload latency.
 """
 import argparse
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -34,13 +35,23 @@ with tempfile.TemporaryDirectory(prefix='df-preview-') as folder:
         method(showcase,'        private static int EquippedWeaponVariant(')+
         method(showcase,'        private static void SetPreviewWeaponVariant(')+
         'private Transform orbitLeft,orbitRight,wingLeft,wingRight;'+
-        'private void CreateStage(){stage=new GameObject("stage");}private void UpdateOriginWorld(HeroId hero){}'+
+        'private void CreateStage(){stage=new GameObject("stage");originWorld=new SpriteRenderer();}'+
         'public GameObject TestActor=>actor;public int TestCacheCount=>previews.Count;public bool TestNeedsFit=>needsFit;'+
+        'public Texture Image=>texture;public Texture BackgroundImage=>originWorld?.sprite?.texture;'+
+        'public void TestPoll()=>UpdateOriginWorld(selected);public void TestDispose()=>originBackdrop?.Dispose();'+
+        method(showcase,'        private void UpdateOriginWorld(')+
+        method(showcase,'        public void DrawPreview(')+
         method(showcase,'        public void Present(')+'}}')
+    # Use the production roster so a newly added hero cannot silently reuse another world's style.
+    identity=(root/'Assets/Alterverse/Scripts/Characters/HeroIdentity.cs').read_text()
+    hero_enum=re.search(r'public enum HeroId\s*\{[^}]+\}',identity).group()
+    fixture=(here/'Regression.cs').read_text().replace('/* HERO_ENUM */',hero_enum)
+    (folder/'Regression.cs').write_text(fixture)
     output=folder/'PreviewRegression.dll';response=folder/'compile.rsp'
     response.write_text('\n'.join(['-nologo','-nowarn:0649,0414','-langversion:9','-out:'+str(output),
-        *['-r:'+str(p) for p in runtime.glob('*.dll')],str(here/'Regression.cs'),str(folder/'Backdrop.cs'),str(folder/'Selection.cs')]))
+        *['-r:'+str(p) for p in runtime.glob('*.dll')],str(folder/'Regression.cs'),str(folder/'Backdrop.cs'),str(folder/'Selection.cs')]))
     subprocess.run([str(args.dotnet_root/'dotnet'),str(sdk/'Roslyn/bincore/csc.dll'),'@'+str(response)],check=True)
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))
     subprocess.run([str(args.dotnet_root/'dotnet'),str(output)],check=True)
+
 

@@ -70,9 +70,10 @@ namespace Alterverse.UI
             GUI.BeginGroup(rect);
             Rect local=new Rect(0f,0f,rect.width,rect.height);
             Color oldColor=GUI.color;
-            GUI.color=new Color(.010f,.014f,.024f,1f);
+            // Use the selected world's palette immediately, even while its artwork is preparing.
+            GUI.color=hasSelection?HeroOriginBackdrop.BaseColorFor(selected):new Color(.010f,.014f,.024f,1f);
             GUI.DrawTexture(local,Texture2D.whiteTexture,ScaleMode.StretchToFill,false);
-            GUI.color=oldColor;
+            GUI.color=new Color(1f,1f,1f,oldColor.a);
 
             if(BackgroundImage!=null)
             {
@@ -87,6 +88,7 @@ namespace Alterverse.UI
                 Rect heroRect=new Rect(-heroBleed,-heroBleed,rect.width+heroBleed*2f,rect.height+heroBleed*2f);
                 GUI.DrawTexture(heroRect,Image,ScaleMode.ScaleToFit,true);
             }
+            GUI.color=oldColor;
             GUI.EndGroup();
         }
 
@@ -173,7 +175,9 @@ namespace Alterverse.UI
             if(originWorld==null)return;
             originBackdrop??=new HeroOriginBackdrop();
             var sprite=originBackdrop.SpriteFor(hero);
-            if(sprite!=null)originWorld.sprite=sprite;
+            // A pending request must clear the previous hero's world. Keeping it here
+            // made the same hero appear to change colour when asynchronous work finished.
+            originWorld.sprite=sprite;
         }
         private void FitPreviewBounds()
         {
@@ -313,4 +317,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 
