@@ -829,20 +829,22 @@ namespace Alterverse.UI
             var sub=ShardPacks.Subscription;
             if(sub!=null)
             {
-                Rect club=new Rect(Left,312,ContentWidth,128);
+                float clubWidth=ContentWidth-268;
+                Rect club=new Rect(Left,312,clubWidth,128);
                 theme.Panel(club);ShardShopVisualOverlay.DrawSubscriptionArtwork(club);
-                theme.Label(new Rect(Left+124,322,ContentWidth-400,27),sub.Name+"  /  MONTHLY SUBSCRIPTION",theme.Small);
-                theme.Label(new Rect(Left+124,350,ContentWidth-400,34),$"{sub.Amount:N0} SHARDS EVERY MONTH",theme.Heading);
+                theme.Label(new Rect(Left+124,321,clubWidth-140,22),sub.Name+"  /  MONTHLY SUBSCRIPTION",theme.Small);
+                theme.FitLabel(new Rect(Left+124,343,clubWidth-140,30),$"{sub.Amount:N0} SHARDS EVERY MONTH",theme.Heading);
                 int discount=store?.SubscriptionDiscount??0;
                 string benefit=discount>0?$"SAVE {discount}% per shard vs. available one-time packs":store?.SubscriptionStatus??"Subscription setup in progress";
-                theme.Label(new Rect(Left+124,385,ContentWidth-400,22),benefit,theme.Small,true);
+                theme.Label(new Rect(Left+124,371,clubWidth-140,20),benefit,theme.Small,true);
                 bool active=store?.SubscriptionActive==true;
                 string price=store?.Price(sub.Id)??"Unavailable";
                 string action=active?"SUBSCRIPTION ACTIVE":price=="Unavailable"?"COMING SOON":price+" / MONTH";
-                if(theme.Action(new Rect(Right-250,328,232,48),action,true,enabled:store!=null&&store.CanBuy(sub.Id)))store.Buy(sub.Id);
-                if(theme.Action(new Rect(Right-250,382,232,26),"MANAGE / CANCEL"))store?.ManageSubscription();
-                theme.Label(new Rect(Left+16,410,ContentWidth-32,28),"Optional. Automatically bills monthly until cancelled in Google Play. Shards after each successful payment.",theme.Small,true);
+                if(theme.Action(new Rect(Left+124,393,190,26),action,true,enabled:store!=null&&store.CanBuy(sub.Id)))store.Buy(sub.Id);
+                if(theme.Action(new Rect(Left+328,393,174,26),"MANAGE / CANCEL"))store?.ManageSubscription();
+                theme.FitLabel(new Rect(Left+16,420,clubWidth-32,18),"Monthly billing until cancelled in Google Play. Shards after each successful payment.",theme.Small,true);
             }
+            DrawRewardedShardPanel();
             int packCount=ShardPacks.All.Length;
             float w=packCount>0?(ContentWidth-14f*(packCount-1))/packCount:0f;
             for(int i=0;i<packCount;i++)
@@ -1582,6 +1584,7 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 
 
