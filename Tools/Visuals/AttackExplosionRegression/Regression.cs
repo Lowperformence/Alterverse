@@ -139,13 +139,13 @@ static class Regression
         Check(world.GetComponentsInChildren<AttackExplosionVfx>(true).Length==40,"both pools reserved during loading");
         for(int index=0;index<2;index++)
         {
-            var kind=kinds[index];int capacity=index==0?8:32;float scale=index==0?4f:3f;
+            var kind=kinds[index];int capacity=index==0?8:32;float scale=index==0?4f/3f:3f;
             for(int i=0;i<capacity;i++)
             {
                 var point=new Vector3(i,.3f,-i);var color=i%2==0?new Color(1f,.63f,.23f):new Color(.08f,1f,.22f);
                 Check(index==0?AttackExplosionVfx.TryPlay(kind,point):AttackExplosionVfx.TryMeteor(point,color),"simultaneous impacts use reserved effect");
                 var effect=world.GetComponentsInChildren<AttackExplosionVfx>(true).Single(e=>e.sourcePath==sources[index]&&e.gameObject.activeSelf&&e.transform.position.x==i);
-                Check(effect.transform.localScale.x==scale&&effect.transform.localScale.y==scale&&effect.transform.localScale.z==scale,"Flux +300%=4x; meteor +200%=3x, independent of native authored scale");
+                Check(effect.transform.localScale.x==scale&&effect.transform.localScale.y==scale&&effect.transform.localScale.z==scale,"Flux reduced to one third of previous 4x size; meteor remains 3x");
                 Check(effect.transform.position.y==.3f&&effect.transform.position.z==-i,"actual impact position retained");
                 var block=effect.GetComponentsInChildren<Renderer>(true).Single().Block;var tint=block.Vectors["_EffectTint"];
                 Check(index==0?tint.w==0:tint.w==1&&tint.x==color.r&&tint.y==color.g&&tint.z==color.b,"native nuke colour retained; meteor hue matches orange/poison attack per instance");
