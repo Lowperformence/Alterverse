@@ -71,6 +71,7 @@ namespace Alterverse.Profile
         public Snapshot Reports { get; private set; }
         public string SentOperationId { get; private set; }
         public string Status { get; private set; }="Sign in to load friends and clans.";
+        public string ChatStatus { get; private set; }="Connecting to clan chat…";
         public bool Busy { get; private set; }
         public bool Connected=>!string.IsNullOrEmpty(endpoint)&&!string.IsNullOrEmpty(Credential());
         string ClanOperationKey=>"DF_CommerceClanCreate_"+PaidShardCommerce.Instance?.AccountHash;
@@ -95,7 +96,7 @@ namespace Alterverse.Profile
         public void KeepChatOpen(){chatVisibleUntil=Time.unscaledTime+.3f;}
         void OnApplicationFocus(bool focused){chatFocused=focused;if(!focused)ClearChat();}
         void OnApplicationPause(bool paused){chatPaused=paused;if(paused)ClearChat();}
-        void ClearChat(){Chat=null;if(State!=null)State.messages=null;nextChatPoll=Time.unscaledTime+2f;}
+        void ClearChat(string message="Connecting to clan chat…"){Chat=null;ChatStatus=message;if(State!=null)State.messages=null;nextChatPoll=Time.unscaledTime+2f;}
 
         public static void Connect(string address,Func<string> credential)
         {
@@ -125,6 +126,7 @@ namespace Alterverse.Profile
             loadedSyncedProfile=false;
             State=Search=Levels=Clans=ClanLevels=null;
             Chat=Reports=null;SentOperationId=null;chatVisibleUntil=nextChatPoll=0;
+            ChatStatus="Connecting to clan chat…";
         }
         string Credential(){try{return token?.Invoke();}catch(Exception){return null;}}
         void Update()
@@ -209,11 +211,11 @@ namespace Alterverse.Profile
                 }
                 if(request.responseCode==409){Status="Account changed. Refreshing your balance; retry after synchronization.";commerce?.Refresh();}
                 else if(request.responseCode==401){State=Search=Levels=Clans=ClanLevels=Reports=null;ClearChat();Status="Sign in to reconnect.";}
-                else Status=request.responseCode==403?"Your clan role does not allow this action.":
-                    !string.IsNullOrEmpty(response?.message)?response.message:"Social server unavailable. Tap REFRESH to retry.";
+                else Status=!string.IsNullOrEmpty(response?.message)?response.message:
+                    request.responseCode==403?"Your clan role does not allow this action.":"Social server unavailable. Tap REFRESH to retry.";
                 if(route.StartsWith("/social/chat/",StringComparison.Ordinal))
                 {
-                    ClearChat();nextChatPoll=Time.unscaledTime+5f;
+                    ClearChat(Status);nextChatPoll=Time.unscaledTime+5f;
                     if(request.responseCode==403){loadedSyncedProfile=false;State=null;Reports=null;}
                 }
                 Busy=false;yield break;
@@ -254,6 +256,7 @@ namespace Alterverse.Profile
                 if(route!="/social/state"){Levels=ClanLevels=Clans=Search=null;}
             }
             if(route=="/social/chat/send")SentOperationId=body.operationId;
+            if(Chat!=null&&route.StartsWith("/social/chat/",StringComparison.Ordinal))ChatStatus="Connected to clan chat.";
             if(route=="/social/chat/report")nextChatPoll=Time.unscaledTime+5f;
             Status=route=="/social/chat/report"?"Report saved for the game administration.":"Synchronized.";Busy=false;
         }
@@ -283,5 +286,6 @@ namespace Alterverse.Profile
         void OnDestroy(){if(Instance==this){ResetCache();Instance=null;}}
     }
 }
+
 
 

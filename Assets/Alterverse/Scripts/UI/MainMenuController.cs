@@ -723,7 +723,7 @@ namespace Alterverse.UI
             if (theme.Action(new Rect(Left+198,542,64,60),">")) { shopAvatarIndex=(shopAvatarIndex+1)%AvatarShopCatalog.Items.Length; shopMessage=""; }
             bool affordable=PlayerWallet.CanAfford(item.Price);
             string action=equipped?"EQUIPPED":owned?"EQUIP":affordable?"UNLOCK":"NEED MORE SHARDS";
-            if (theme.Action(new Rect(Left+292,542,galleryWidth-320,60),action,true,enabled:!cosmeticBusy&&!equipped&&(owned||affordable)))
+            if (ShardPurchaseAction(new Rect(Left+292,542,galleryWidth-320,60),action,owned?0:item.Price,true,enabled:!cosmeticBusy&&!equipped&&(owned||affordable||PlayerWallet.Balance<item.Price)))
             {
                 if (owned) { PlayerProfile.Avatar=item.AvatarId; shopMessage="Avatar equipped."; }
                 else { AvatarPurchaseResult result=AvatarShopService.TryPurchase(item); shopPurchasePending=result==AvatarPurchaseResult.Pending; shopMessage=result==AvatarPurchaseResult.Pending?"Saving purchase…":result==AvatarPurchaseResult.Purchased?"Unlocked and equipped.":result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed."; }
@@ -779,8 +779,8 @@ namespace Alterverse.UI
 
             string action=releaseLocked?$"UNLOCK {price:N0} SHARDS":owned?"SELECT "+HeroIdentity.NameFor(hero).ToUpperInvariant():
                 PlayerWallet.CanAfford(price)?$"UNLOCK {price:N0} SHARDS":$"NEED {price:N0} SHARDS";
-            bool enabled=owned||PlayerWallet.CanAfford(price);
-            if(theme.Action(new Rect(x,558,rw,62),action,true,enabled:enabled,locked:releaseLocked))
+            bool enabled=owned||PlayerWallet.CanAfford(price)||!PaidShardCommerce.Spending&&PlayerWallet.Balance<price;
+            if(ShardPurchaseAction(new Rect(x,558,rw,62),action,owned?0:price,true,enabled:enabled,locked:releaseLocked))
             {
                 if(owned)
                 {
@@ -844,7 +844,7 @@ namespace Alterverse.UI
 
         private void DrawSkinShop()
         {
-            collection.Draw(theme,new Rect(Left,270,ContentWidth,410),(HeroId)selectedHero,false,showcase,changeCollectionHero);
+            collection.Draw(theme,new Rect(Left,270,ContentWidth,410),(HeroId)selectedHero,false,showcase,changeCollectionHero,OpenShardStore);
         }
 
         private void DrawWeaponSkinShop()
@@ -894,8 +894,8 @@ namespace Alterverse.UI
             string originalName=hero==HeroId.Veyr?"SHADOW STEEL":"ORIGINAL";
             string action=!HeroUnlockCatalog.Released(hero)?"COMING SOON":!heroAvailable?"UNLOCK HERO FIRST":equipped?$"USE {originalName}":owned?"EQUIP":
                 PlayerWallet.CanAfford(item.Price)?"BUY & EQUIP":$"NEED {item.Price} SHARDS";
-            bool enabled=heroAvailable&&(equipped||owned||PlayerWallet.CanAfford(item.Price));
-            if(theme.Action(new Rect(x,588,rw,54),action,true,enabled:enabled))
+            bool enabled=heroAvailable&&(equipped||owned||PlayerWallet.CanAfford(item.Price)||!PaidShardCommerce.Spending&&PlayerWallet.Balance<item.Price);
+            if(ShardPurchaseAction(new Rect(x,588,rw,54),action,equipped||owned?0:item.Price,true,enabled:enabled))
             {
                 if(equipped)
                 {
@@ -960,9 +960,9 @@ namespace Alterverse.UI
                 if(releaseLocked)action=$"UNLOCK {item.Price}";
                 else if(owned){action=item.Price>0?"OWNED":"FREE";enabled=false;}
                 else if(PlayerWallet.CanAfford(item.Price))action=$"UNLOCK {item.Price}";
-                else {action=$"NEED {item.Price} SHARDS";enabled=false;}
+                else {action=$"NEED {item.Price} SHARDS";enabled=!PaidShardCommerce.Spending&&PlayerWallet.Balance<item.Price;}
 
-                if(theme.Action(new Rect(x+18,572,cardW-36,44),action,enabled:enabled,locked:releaseLocked))
+                if(ShardPurchaseAction(new Rect(x+18,572,cardW-36,44),action,item.Price,enabled:enabled,locked:releaseLocked))
                 {
                     if(!owned)
                     {
@@ -1061,7 +1061,7 @@ namespace Alterverse.UI
             if(!BattlePassProgress.PremiumUnlocked)
             {
                 bool canBuy=PlayerWallet.CanAfford(BattlePassProgress.PremiumPrice);
-                if(theme.Action(new Rect(px,632,previewW,44),canBuy?$"UNLOCK PREMIUM • {BattlePassProgress.PremiumPrice:N0} SHARDS":$"PREMIUM • NEED {BattlePassProgress.PremiumPrice-PlayerWallet.Balance:N0} SHARDS",true,enabled:canBuy))
+                if(ShardPurchaseAction(new Rect(px,632,previewW,44),canBuy?$"UNLOCK PREMIUM • {BattlePassProgress.PremiumPrice:N0} SHARDS":$"PREMIUM • NEED {BattlePassProgress.PremiumPrice-PlayerWallet.Balance:N0} SHARDS",BattlePassProgress.PremiumPrice,true,enabled:canBuy||!PaidShardCommerce.Spending&&PlayerWallet.Balance<BattlePassProgress.PremiumPrice))
                 {
                     BattlePassPurchaseResult result=BattlePassProgress.UnlockPremium();
                     shopPurchasePending=result==BattlePassPurchaseResult.Pending;
@@ -1174,7 +1174,7 @@ namespace Alterverse.UI
 
                 bool canBuy=PlayerWallet.CanAfford(BattleItemInventory.ShardPrice);
                 string action=canBuy?"BUY 1":$"NEED {BattleItemInventory.ShardPrice} SHARDS";
-                if(theme.Action(new Rect(x+128,y+110,cardW-142,38),action,true,enabled:canBuy))
+                if(ShardPurchaseAction(new Rect(x+128,y+110,cardW-142,38),action,BattleItemInventory.ShardPrice,true,enabled:canBuy||!PaidShardCommerce.Spending&&PlayerWallet.Balance<BattleItemInventory.ShardPrice))
                 {
                     bool bought=BattleItemInventory.TryBuy(item);
                     shopMessage=bought
@@ -1567,4 +1567,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 

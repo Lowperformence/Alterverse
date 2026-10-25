@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Alterverse.Profile;
 using Alterverse.Shop;
 using UnityEngine;
@@ -18,8 +19,10 @@ namespace Alterverse.Online
         [Serializable] private sealed class SettingsSnapshot { public string mAppId; }
         private static ConnectionState state=ConnectionState.Idle;
         private static string status="Google Play Games is not connected.";
-        private static bool authenticating, submitting, openingUi, openAfterAuthentication;
+        private static bool authenticating, submitting, openingUi, openAfterAuthentication,verifyRequested;
         private static int lastSubmittedScore=-1, generation;
+        private static long lastVerifiedScore=-1;
+        private static string lastGoogleFormattedScore;
         private static string lastSubmittedPlayer;
         private static bool? hasGameAppId;
 
@@ -58,6 +61,8 @@ namespace Alterverse.Online
         }
         public static int CurrentScore=>Mathf.Max(0,MatchRewardService.MatchesWon);
         public static int LastSubmittedScore=>lastSubmittedScore;
+        public static long LastVerifiedScore=>lastVerifiedScore;
+        public static string LastGoogleFormattedScore=>lastGoogleFormattedScore;
 
         private static bool HasGameAppId
         {
@@ -83,8 +88,9 @@ namespace Alterverse.Online
         {
             generation++;
             hasGameAppId=null;
-            authenticating=submitting=openingUi=openAfterAuthentication=false;
+            authenticating=submitting=openingUi=openAfterAuthentication=verifyRequested=false;
             lastSubmittedScore=-1;lastSubmittedPlayer=null;
+            lastVerifiedScore=-1;lastGoogleFormattedScore=null;
             state=ConnectionState.Idle;status="Google Play Games is not connected.";
         }
 
@@ -92,8 +98,9 @@ namespace Alterverse.Online
         {
             if(!IsConfigured){state=ConnectionState.NotConfigured;return;}
 #if UNITY_ANDROID && !UNITY_EDITOR
+            verifyRequested|=interactive;
             if(authenticating)return;
-            if(IsAuthenticated){SubmitCurrentScore();return;}
+            if(IsAuthenticated){SubmitCurrentScore(interactive);return;}
             authenticating=true;state=ConnectionState.Authenticating;
             status="Signing in to Google Play Games...";
             int requestGeneration=generation;
@@ -107,18 +114,19 @@ namespace Alterverse.Online
                 return;
             }
             state=ConnectionState.Ready;status="Google Play Games connected.";
-            SubmitCurrentScore();
-            if(openAfterAuthentication){openAfterAuthentication=false;ShowNativeLeaderboardUi();}
+            SubmitCurrentScore(interactive);
 #else
             Unsupported();
 #endif
         }
 
-        public static void SubmitCurrentScore()
+        public static void SubmitCurrentScore()=>SubmitCurrentScore(false);
+        private static async void SubmitCurrentScore(bool force)
         {
             if(!IsConfigured)return;
 #if UNITY_ANDROID && !UNITY_EDITOR
             if(!IsAuthenticated){AuthenticateAndSync();return;}
+            if(submitting)return;
             if(AccountServerBootstrap.Instance?.GooglePlayAccountReady!=true||PaidShardCommerce.Instance?.Ready!=true||
                 !AccountProfilePrefs.Attached||AccountProfilePrefs.Account!=PaidShardCommerce.Instance.AccountHash)
             {
@@ -126,33 +134,94 @@ namespace Alterverse.Online
                 string setup=GooglePlayAccountSession.ConfigurationError;
                 status=!string.IsNullOrEmpty(setup)?setup+" Cloud win sync is unavailable.":
                     "Waiting for the linked Google cloud profile before syncing wins. Connect Google in PROFILE.";
+                // Browsing remains available even if the linked cloud save is unavailable.
+                FinishPendingOpen();
                 return;
             }
-            if(submitting)return;
             string player=PlayGamesPlatform.Instance.localUser.id;
-            if(lastSubmittedPlayer!=player){lastSubmittedPlayer=player;lastSubmittedScore=-1;}
-            int wins=CurrentScore;
-            if(lastSubmittedScore==wins){state=ConnectionState.Ready;status="Wins "+wins+" synced to the global ranking.";return;}
-            submitting=true;state=ConnectionState.Submitting;status="Syncing wins "+wins+"...";
+            string account=PaidShardCommerce.Instance.AccountHash;
+            if(lastSubmittedPlayer!=player){lastSubmittedPlayer=player;lastSubmittedScore=-1;lastVerifiedScore=-1;lastGoogleFormattedScore=null;}
+            submitting=true;state=ConnectionState.Submitting;status="Saving your account before syncing wins...";
             int requestGeneration=generation;
             try
             {
-                PlayGamesPlatform.Instance.ReportScore(wins,MostWinsLeaderboardId,success=>
+                // A win can arrive while a save or native callback is in flight.
+                // Coalesce it, and never submit another account's cached profile.
+                for(int pass=0;pass<3;pass++)
                 {
-                    if(requestGeneration!=generation)return;
-                    submitting=false;
-                    if(!success){Fail("Win sync failed. Check the connection and published Play Games leaderboard.");return;}
-                    if(!IsAuthenticated||PlayGamesPlatform.Instance.localUser.id!=player){lastSubmittedScore=-1;return;}
-                    lastSubmittedScore=wins;state=ConnectionState.Ready;status="Wins "+wins+" synced to the global ranking.";
-                    // A match can finish while the previous score is still being sent.
-                    if(CurrentScore!=wins)SubmitCurrentScore();
-                });
+                    if(AccountProfilePrefs.Dirty)
+                    {
+                        var save=PaidShardCommerce.Instance.FlushProfileAsync();
+                        bool completed=await Task.WhenAny(save,Task.Delay(20000))==save;
+                        if(requestGeneration!=generation)return;
+                        if(!SameScoreAccount(player,account))return;
+                        if(!completed||!await save){Fail("Account save pending. Retry SYNC WINS after synchronization.");return;}
+                    }
+                    if(requestGeneration!=generation||!SameScoreAccount(player,account))return;
+                    int wins=CurrentScore;
+                    if(force||lastSubmittedScore!=wins)
+                    {
+                        status="Sending "+wins+" wins to Google Play...";
+                        var sent=new TaskCompletionSource<bool>();
+                        PlayGamesPlatform.Instance.ReportScore(wins,MostWinsLeaderboardId,result=>sent.TrySetResult(result));
+                        bool completed=await Task.WhenAny(sent.Task,Task.Delay(15000))==sent.Task;
+                        if(requestGeneration!=generation)return;
+                        if(!SameScoreAccount(player,account))return;
+                        if(!completed||!await sent.Task){Fail("Google win upload failed or timed out. Retry SYNC WINS.");return;}
+                        lastSubmittedScore=wins;
+                    }
+                    force=false;
+                    if(CurrentScore!=wins)continue;
+                    state=ConnectionState.Ready;status="Reported "+wins+" wins to Google Play.";
+                    if(verifyRequested||openAfterAuthentication)
+                    {
+                        verifyRequested=false;status="Checking the score stored by Google Play...";
+                        var loaded=new TaskCompletionSource<LeaderboardScoreData>();
+                        PlayGamesPlatform.Instance.LoadScores(MostWinsLeaderboardId,LeaderboardStart.PlayerCentered,1,
+                            LeaderboardCollection.Public,LeaderboardTimeSpan.AllTime,result=>loaded.TrySetResult(result));
+                        bool completed=await Task.WhenAny(loaded.Task,Task.Delay(15000))==loaded.Task;
+                        if(requestGeneration!=generation)return;
+                        if(!SameScoreAccount(player,account))return;
+                        var result=completed?await loaded.Task:null;
+                        if(result?.Valid!=true||result.PlayerScore==null)
+                        {Fail("Wins sent; Google score could not be read back. Retry SYNC WINS.");return;}
+                        lastVerifiedScore=result.PlayerScore.value;
+                        lastGoogleFormattedScore=result.PlayerScore.formattedValue;
+                        state=lastVerifiedScore>=wins?ConnectionState.Ready:ConnectionState.Error;
+                        status=lastVerifiedScore>=wins?
+                            "Google confirms "+lastVerifiedScore+" wins. Google display: "+lastGoogleFormattedScore:
+                            "Sent "+wins+" wins; Google still reports "+lastVerifiedScore+". Retry SYNC WINS.";
+                    }
+                    if(CurrentScore!=wins){verifyRequested|=openAfterAuthentication;continue;}
+                    // Native UI must open after upload/readback, not alongside them.
+                    FinishPendingOpen();return;
+                }
+                Fail("New wins are waiting. Tap SYNC WINS to finish synchronization.");
             }
-            catch(Exception e){submitting=false;Fail("Win sync could not start: "+e.Message);}
+            catch(Exception e){if(requestGeneration==generation)Fail("Win sync unavailable ("+e.GetType().Name+"). Retry SYNC WINS.");}
+            finally{if(requestGeneration==generation)submitting=false;}
 #else
+            await Task.CompletedTask;
             Unsupported();
 #endif
         }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+        private static bool SameScoreAccount(string player,string account)
+        {
+            if(IsAuthenticated&&PlayGamesPlatform.Instance.localUser.id==player&&
+                AccountServerBootstrap.Instance?.GooglePlayAccountReady==true&&PaidShardCommerce.Instance?.Ready==true&&
+                PaidShardCommerce.Instance.AccountHash==account&&AccountProfilePrefs.Attached&&AccountProfilePrefs.Account==account)return true;
+            lastSubmittedScore=-1;lastVerifiedScore=-1;lastGoogleFormattedScore=null;
+            openAfterAuthentication=verifyRequested=false;
+            state=ConnectionState.Idle;status="Account changed. Reconnect and retry SYNC WINS.";return false;
+        }
+        private static void FinishPendingOpen()
+        {
+            if(!openAfterAuthentication)return;
+            openAfterAuthentication=false;ShowNativeLeaderboardUi();
+        }
+#endif
 
         public static void ShowLeaderboard()
         {
@@ -161,13 +230,14 @@ namespace Alterverse.Online
             // Viewing Google's ranking only needs native Play Games sign-in.
             // SubmitCurrentScore retains the verified cloud-profile/account guard.
             if(openingUi)return;
+            openAfterAuthentication=verifyRequested=true;
             if(!IsAuthenticated)
             {
                 openAfterAuthentication=true;
                 AuthenticateAndSync(true);
                 return;
             }
-            SubmitCurrentScore();ShowNativeLeaderboardUi();
+            SubmitCurrentScore(true);
 #else
             Unsupported();
 #endif
@@ -193,6 +263,7 @@ namespace Alterverse.Online
         }
 
         private static void Unsupported(){state=ConnectionState.Unsupported;status="Google Play leaderboard is available in the Android build.";}
-        private static void Fail(string message){state=ConnectionState.Error;status=message;Debug.LogWarning("DIMENSIONS FRONT: "+message);}
+        private static void Fail(string message){openAfterAuthentication=verifyRequested=false;state=ConnectionState.Error;status=message;Debug.LogWarning("DIMENSIONS FRONT: "+message);}
     }
 }
+

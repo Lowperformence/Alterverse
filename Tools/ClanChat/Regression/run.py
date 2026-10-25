@@ -14,7 +14,7 @@ sdk=sorted((args.dotnet_root/'sdk').iterdir())[-1]
 runtime=sorted((args.dotnet_root/'shared/Microsoft.NETCore.App').iterdir())[-1]
 with tempfile.TemporaryDirectory(prefix='df-clan-chat-') as directory:
     output=Path(directory)/'ChatRegression.dll';response=Path(directory)/'compile.rsp'
-    names=('Profile/SafeIdentityCatalog.cs','Profile/SocialService.cs','UI/MainMenuSocial.cs','UI/MainMenuClanChat.cs')
+    names=('Profile/SafeIdentityCatalog.cs','Profile/SocialService.cs','UI/MainMenuSocial.cs','UI/MainMenuClanChat.cs','UI/MainMenuStoreNavigation.cs')
     response.write_text('\n'.join(['-nologo','-nowarn:0649,0414','-langversion:9','-out:'+str(output),
         *['-r:'+str(path) for path in runtime.glob('*.dll')],str(here/'EngineStubs.cs'),str(here/'Regression.cs'),
         *[str(root/'Assets/Alterverse/Scripts'/name) for name in names]]))
@@ -22,3 +22,4 @@ with tempfile.TemporaryDirectory(prefix='df-clan-chat-') as directory:
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))
     environment=dict(os.environ,DF_TEST_IDENTITY_CATALOG=str(root/'Assets/Alterverse/Resources/Social/SafeIdentityCatalog.json'))
     subprocess.run([str(args.dotnet_root/'dotnet'),str(output)],env=environment,check=True)
+

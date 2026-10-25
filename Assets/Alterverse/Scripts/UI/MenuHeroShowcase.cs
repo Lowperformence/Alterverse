@@ -27,6 +27,18 @@ namespace Alterverse.UI
         private Alterverse.Shop.UniversalHeroCosmetic cachedCosmetic;
         private HeroOriginBackdrop originBackdrop;
         private SpriteRenderer originWorld;
+        // Keep only the active preview and its two most recent variants. Returning
+        // to a hero reuses its model/materials instead of rebuilding everything.
+        private const int PreviewCacheCapacity=3;
+        private sealed class CachedPreview
+        {
+            public HeroId Hero;
+            public Alterverse.Shop.UniversalHeroCosmetic Cosmetic,Headwear;
+            public bool Weapon;
+            public int WeaponVariant;
+            public GameObject Actor;
+        }
+        private readonly System.Collections.Generic.List<CachedPreview> previews=new();
         // Older local skin scripts expose only Equipped/WeaponOverdrive. Preserve the
         // selected variant when the newer API is present without requiring it to compile.
         private static int EquippedWeaponVariant(HeroId hero)
@@ -81,7 +93,7 @@ namespace Alterverse.UI
         public void Present(HeroId hero, bool visible, bool? skinOverride=null,bool? weaponOverride=null,
             Alterverse.Shop.UniversalHeroCosmetic? cosmeticOverride=null,int? weaponVariantOverride=null)
         {
-            if (!visible) { if (stage != null) stage.SetActive(false); return; }
+            if (!visible) { if (stage != null) stage.SetActive(false); originBackdrop?.CancelPending(); return; }
             if (stage == null) CreateStage();
             stage.SetActive(true);
 
@@ -108,42 +120,60 @@ namespace Alterverse.UI
             if (hasSelection && selected == hero && selectedCosmetic==cosmetic && selectedHeadwear==headwear && selectedWeapon==weapon && selectedWeaponVariant==weaponVariant) return;
             selectedHeadwear=headwear;
             selectedCosmetic=cosmetic;selectedWeapon=weapon;selectedWeaponVariant=weaponVariant;
-            if (actor != null) { actor.SetActive(false); Destroy(actor); }
+            if (actor != null) actor.SetActive(false);
             selected = hero; hasSelection = true; selectedAt = Time.unscaledTime;
             UpdateOriginWorld(hero);
-            actor = new GameObject("DF_MenuHero");
-            actor.transform.SetParent(stage.transform, false);
-            actor.AddComponent<HeroIdentity>().Configure(hero);
-            var preview=actor.AddComponent<Alterverse.Shop.SkinPreviewSelection>();
-            preview.UniversalCosmetic=cosmetic;
-            preview.Headwear=headwear;
-            preview.WeaponOverdrive=weapon;
-            SetPreviewWeaponVariant(preview,weaponVariant);
-            actor.AddComponent<StylizedHeroVisual>().Build();
+            actor=null;
+            for(int i=0;i<previews.Count;i++)
+            {
+                var cached=previews[i];
+                if(cached.Actor==null||cached.Hero!=hero||cached.Cosmetic!=cosmetic||cached.Headwear!=headwear||cached.Weapon!=weapon||cached.WeaponVariant!=weaponVariant)continue;
+                actor=cached.Actor;previews.RemoveAt(i);previews.Add(cached);break;
+            }
+            if(actor==null)
+            {
+                while(previews.Count>=PreviewCacheCapacity)
+                {
+                    var stale=previews[0];previews.RemoveAt(0);
+                    if(stale.Actor!=null)Destroy(stale.Actor);
+                }
+                actor = new GameObject("DF_MenuHero");
+                actor.transform.SetParent(stage.transform, false);
+                actor.AddComponent<HeroIdentity>().Configure(hero);
+                var preview=actor.AddComponent<Alterverse.Shop.SkinPreviewSelection>();
+                preview.UniversalCosmetic=cosmetic;
+                preview.Headwear=headwear;
+                preview.WeaponOverdrive=weapon;
+                SetPreviewWeaponVariant(preview,weaponVariant);
+                actor.AddComponent<StylizedHeroVisual>().Build();
+                // No health, colliders, input, abilities, team membership or game-world registration.
+                foreach (Transform part in actor.GetComponentsInChildren<Transform>(true)) part.gameObject.layer = PreviewLayer;
+                foreach (Renderer renderer in actor.GetComponentsInChildren<Renderer>())
+                {
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    renderer.receiveShadows = false;
+                    if(renderer.sharedMaterial!=null&&renderer.sharedMaterial.HasProperty("_ShowcaseLighting"))
+                    {
+                        var block=new MaterialPropertyBlock();renderer.GetPropertyBlock(block);
+                        block.SetFloat("_ShowcaseLighting",1f);renderer.SetPropertyBlock(block);
+                    }
+                }
+                previews.Add(new CachedPreview{Hero=hero,Cosmetic=cosmetic,Headwear=headwear,Weapon=weapon,WeaponVariant=weaponVariant,Actor=actor});
+            }
+            actor.SetActive(true);
             Transform visual=actor.transform.Find("DF_VisualRoot");
             orbitLeft=visual.Find("DF_OrbitL"); orbitRight=visual.Find("DF_OrbitR");
             wingLeft=visual.Find("DF_WingL"); wingRight=visual.Find("DF_WingR");
             float facing=hero==HeroId.Nyra?-24:hero==HeroId.Kaelon?-24:-16;
             actor.transform.localRotation=Quaternion.Euler(0,facing,0);
             needsFit = true;
-            // No health, colliders, input, abilities, team membership or game-world registration.
-            foreach (Transform part in actor.GetComponentsInChildren<Transform>(true)) part.gameObject.layer = PreviewLayer;
-            foreach (Renderer renderer in actor.GetComponentsInChildren<Renderer>())
-            {
-                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                renderer.receiveShadows = false;
-                if(renderer.sharedMaterial!=null&&renderer.sharedMaterial.HasProperty("_ShowcaseLighting"))
-                {
-                    var block=new MaterialPropertyBlock();renderer.GetPropertyBlock(block);
-                    block.SetFloat("_ShowcaseLighting",1f);renderer.SetPropertyBlock(block);
-                }
-            }
         }
         private void UpdateOriginWorld(HeroId hero)
         {
             if(originWorld==null)return;
             originBackdrop??=new HeroOriginBackdrop();
-            originWorld.sprite=originBackdrop.SpriteFor(hero);
+            var sprite=originBackdrop.SpriteFor(hero);
+            if(sprite!=null)originWorld.sprite=sprite;
         }
         private void FitPreviewBounds()
         {
@@ -254,6 +284,7 @@ namespace Alterverse.UI
         private void LateUpdate()
         {
             if (actor == null || stage == null || !stage.activeSelf) return;
+            UpdateOriginWorld(selected);
             float t = Time.unscaledTime - selectedAt;
             float facing=selected==HeroId.Nyra?-24: selected==HeroId.Kaelon?-24:-16;
             actor.transform.localRotation = Quaternion.Euler(0,facing+Mathf.Sin(t*.55f)*4,0);
@@ -269,14 +300,16 @@ namespace Alterverse.UI
                 needsFit = false;
             }
         }
-        private void OnDisable() { Alterverse.Profile.ProfileTransaction.Committed-=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged-=InvalidateLoadout; if (stage != null) stage.SetActive(false); }
+        private void OnDisable() { Alterverse.Profile.ProfileTransaction.Committed-=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged-=InvalidateLoadout; originBackdrop?.CancelPending(); if (stage != null) stage.SetActive(false); }
         private void OnDestroy()
         {
             if (previewCamera != null) previewCamera.targetTexture = null;
             if (texture != null) { texture.Release(); Destroy(texture); }
             originBackdrop?.Dispose();
             originBackdrop=null;
+            previews.Clear();
             if (stage != null) Destroy(stage);
         }
     }
 }
+

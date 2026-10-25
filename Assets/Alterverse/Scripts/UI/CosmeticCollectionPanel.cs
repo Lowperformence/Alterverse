@@ -95,7 +95,7 @@ namespace Alterverse.UI
             if(theme.Action(new Rect(rect.x,rect.y,width,52),"COSMETICS",selected:!battleItems))battleItems=false;
             if(theme.Action(new Rect(rect.x+width+12,rect.y,width,52),"BATTLE ITEMS",selected:battleItems))battleItems=true;
         }
-        public void Draw(FrontEndTheme theme,Rect area,HeroId selectedHero,bool ownedOnly,MenuHeroShowcase showcase,Action<int> changeHero)
+        public void Draw(FrontEndTheme theme,Rect area,HeroId selectedHero,bool ownedOnly,MenuHeroShowcase showcase,Action<int> changeHero,Action openShards=null)
         {
             Refresh(selectedHero);
             bool compact=Screen.safeArea.width<1000||area.width<900;
@@ -108,7 +108,7 @@ namespace Alterverse.UI
             if(compact&&state.DetailOpen)
             {
                 if(theme.Action(new Rect(area.x,area.y,150,48),"< COLLECTION"))state.DetailOpen=false;
-                DrawDetail(theme,new Rect(area.x,area.y+58,area.width,area.height-58),state,ownedOnly,showcase);
+                DrawDetail(theme,new Rect(area.x,area.y+58,area.width,area.height-58),state,ownedOnly,showcase,openShards);
                 return;
             }
             theme.Panel(grid);
@@ -148,7 +148,7 @@ namespace Alterverse.UI
             GUI.EndScrollView();
             if(count==0)theme.FitLabel(new Rect(viewport.x,viewport.y+12,viewport.width,30),EmptyCategory(state,ownedOnly),theme.Small,true);
             theme.Label(new Rect(grid.x+12,grid.yMax-28,grid.width-24,22),ownedOnly?"ACCOUNT COLLECTION  •  EQUIP PER HERO":balanceLabel,theme.Small,true);
-            if(!compact)DrawDetail(theme,detail,state,ownedOnly,showcase);
+            if(!compact)DrawDetail(theme,detail,state,ownedOnly,showcase,openShards);
         }
 #if UNITY_EDITOR
         internal void PopulateStressFixture(bool items)
@@ -174,7 +174,7 @@ namespace Alterverse.UI
             theme.FitLabel(new Rect(rect.x+64,rect.y,rect.width-128,rect.height),heroLabel,theme.Body);
             if(theme.Action(new Rect(rect.xMax-52,rect.y,52,rect.height),">")){changeHero(((int)hero+1)%HeroIdentity.HeroCount);dirty=true;}
         }
-        private void DrawDetail(FrontEndTheme theme,Rect rect,ViewState state,bool ownedOnly,MenuHeroShowcase showcase)
+        private void DrawDetail(FrontEndTheme theme,Rect rect,ViewState state,bool ownedOnly,MenuHeroShowcase showcase,Action openShards)
         {
             var sourceCards=ownedOnly?inventoryCards:shopCards;
             CosmeticDefinition definition=null;foreach(var card in sourceCards)if(card.Definition.Id==state.Selected&&Matches(card,state.Filter)){definition=card.Definition;break;}
@@ -199,7 +199,8 @@ namespace Alterverse.UI
             theme.Label(new Rect(x,y+136,w,40),definition.BonusLabel,theme.Small);
             theme.Label(new Rect(x,y+182,w,22),"NO COMBAT POWER",theme.Small,true);
             string action=ownedOnly?(active?"EQUIPPED":"EQUIP FOR HERO"):owned?"OWNED":balance>=definition.Price?"BUY":"NOT ENOUGH SHARDS";
-            bool enabled=!previewOnly&&(ownedOnly?!active:!owned&&PlayerWallet.CanAfford(definition.Price));
+            bool shortOnShards=balance<definition.Price;
+            bool enabled=!previewOnly&&(ownedOnly?!active:!owned&&(PlayerWallet.CanAfford(definition.Price)||shortOnShards&&openShards!=null&&!PaidShardCommerce.Spending));
             float actionWidth=ownedOnly&&active&&definition.Id!=UniversalHeroCosmetic.Original?(rect.width-44)*.55f:rect.width-32;
             if(theme.Action(new Rect(rect.x+16,rect.yMax-75,actionWidth,48),action,true,enabled:enabled))
             {
@@ -207,6 +208,7 @@ namespace Alterverse.UI
                 {if(UniversalCosmeticSelection.EquipFor(hero,definition.Id)){state.Message="EQUIPPED  /  "+heroLabel;dirty=true;}}
                 else
                 {
+                    if(PlayerWallet.Balance<definition.Price){openShards?.Invoke();return;}
                     var result=CosmeticCatalog.Purchase(definition.Id);
                     state.Message=result==AvatarPurchaseResult.Pending?"Saving purchase…":result==AvatarPurchaseResult.Purchased?"PURCHASED  •  AVAILABLE IN INVENTORY":result==AvatarPurchaseResult.AlreadyOwned?"ALREADY OWNED":result==AvatarPurchaseResult.InsufficientShards?"NOT ENOUGH SHARDS":"Purchase could not be completed. Please try again.";
                     dirty=true;
@@ -326,5 +328,6 @@ namespace Alterverse.UI
         public static float ContentHeight(int count,int columns,float height)=>Mathf.Max(0,Mathf.CeilToInt(count/(float)columns)*(height+12)-12);
     }
 }
+
 
 

@@ -5,6 +5,7 @@ namespace Alterverse.Profile {
  public static class AccountProfilePrefs {public class Entry{}public static bool Attached=true,Dirty=false;public static long Revision;public static Entry[] Capture()=>Array.Empty<Entry>();}
  public static class PlayerExperience {public static int Level=1;}
  public static class PlayerWallet {public static int Balance=1000;}
+ public static class AvatarCollection {public static System.Collections.Generic.List<int> OwnedIds()=>new(){0,1,16};}
  public class AccountServerBootstrap {public static AccountServerBootstrap Instance;public string Status;}
 }
 namespace Alterverse.Shop {
@@ -21,13 +22,16 @@ namespace Alterverse.Shop {
 namespace Alterverse.UI {
  public class FrontEndTheme {
   public static object Positive,Accent;public GUIStyle Body=new(),Small=new(),Heading=new(),Field=new();
-  public bool Action(Rect r,string l,bool primary=false,bool selected=false,bool enabled=true)=>false;
+  public static System.Collections.Generic.List<(Rect Rect,string Text,bool Enabled)> Actions=new();
+  public static Func<Rect,string,bool> Click;
+  public bool Action(Rect r,string l,bool primary=false,bool selected=false,bool enabled=true,bool locked=false){Actions.Add((r,l,enabled&&!locked));return enabled&&!locked&&Click?.Invoke(r,l)==true;}
   public void Label(Rect r,string l,GUIStyle s,bool muted=false){}public void FitLabel(Rect r,string l,GUIStyle s,bool muted=false){}
-  public void Panel(Rect r){}public void Center(Rect r,string l){}public void StatusBadge(Rect r,string l,object c){}public void EmptyState(Rect r,string a,string b){}
+  public static Rect LastCheckbox;public static void Fill(Rect r,object c){}public void Panel(Rect r){}public void Frame(Rect r,bool emphasized=false){LastCheckbox=r;}public void Center(Rect r,string l){}public void StatusBadge(Rect r,string l,object c){}public void EmptyState(Rect r,string a,string b){}
  }
  public static class AvatarBadgeRenderer {public static void Draw(Rect r,int id,Texture2D t,float time){}}
  public sealed partial class MainMenuController {
   enum Page{Profile,Leaderboard,Clans,Shop}Page page;float Left=0,Right=1100,ContentWidth=1100;FrontEndTheme theme=new();
+  bool skinShop,itemShop,weaponShop,mapShop,battlePassShop,heroShop,shardShop;string shopMessage;
   void SetPage(Page p){page=p;}void Heading(string a,string b){}
  }
 }
@@ -54,6 +58,38 @@ public static class Fixture {
   var request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/state",new Alterverse.Profile.SocialService.Request(),0});
   while(request.MoveNext()){}
   Assert(service.State.clan==null&&service.Chat==null,"Membership revocation must remove cached chat");
-  Console.WriteLine("Chat client and UI compile; founder consent and focus-cache checks passed.");
+  UnityEngine.Networking.UnityWebRequest.Handler=r=>{r.responseCode=503;r.result=UnityEngine.Networking.UnityWebRequest.Result.ConnectionError;r.downloadHandler.text="{\"fulfilled\":false,\"message\":\"Clan service temporarily unavailable. Please retry.\"}";return new UnityEngine.Networking.UnityWebRequestAsyncOperation();};
+  request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/chat/read",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
+  Assert(service.Chat==null&&service.ChatStatus.Contains("temporarily unavailable"),"A chat failure must explain the blocked composer instead of showing Connecting forever");
+  var menu=new Alterverse.UI.MainMenuController();var flags=System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance;var ui=menu.GetType();
+  var consent=ui.GetMethod("DrawClanConsent",flags);
+  Alterverse.UI.FrontEndTheme.Click=(r,l)=>r.width==900&&l=="";
+  bool accepted=(bool)consent.Invoke(menu,new object[]{new Rect(0,0,900,56),false,"I accept the rules.",true});
+  Assert(accepted&&Alterverse.UI.FrontEndTheme.LastCheckbox.width>=36,"Full-width consent row must toggle a clearly visible checkbox");
+  accepted=(bool)consent.Invoke(menu,new object[]{new Rect(0,0,900,56),false,"I accept the rules.",false});
+  Assert(!accepted,"Busy consent cannot be accepted by a stale click");
+  Alterverse.UI.FrontEndTheme.Click=null;
+  state.clan=new Alterverse.Profile.SocialService.Clan{clanId="private",avatar=-1,members=Array.Empty<Alterverse.Profile.SocialService.Player>()};state.me=new();state.chatRules="Chat rules";
+  ui.GetField("clanDetailTab",flags).SetValue(menu,2);
+  Alterverse.UI.FrontEndTheme.Actions.Clear();ui.GetMethod("DrawMyClan",flags).Invoke(menu,new object[]{service,state});
+  Assert(Alterverse.UI.FrontEndTheme.Actions.Exists(a=>a.Text=="BACK TO CLAN")&&!Alterverse.UI.FrontEndTheme.Actions.Exists(a=>a.Text=="MEMBERS"),"Rules own the large content window without overlapping the clan header controls");
+  ui.GetField("chatTermsAccepted",flags).SetValue(menu,true);ui.GetField("chatAgeBand",flags).SetValue(menu,"under13");
+  Alterverse.UI.FrontEndTheme.Actions.Clear();ui.GetMethod("DrawChatConsent",flags).Invoke(menu,new object[]{service,state,false});
+  Assert(Alterverse.UI.FrontEndTheme.Actions.Exists(a=>a.Text=="ENTER CLAN CHAT"&&!a.Enabled),"Enlarging the dialog must preserve the age gate");
+  Alterverse.UI.FrontEndTheme.Actions.Clear();ui.GetMethod("DrawClanImage",flags).Invoke(menu,new object[]{service,state});
+  Assert(Alterverse.UI.FrontEndTheme.Actions.Exists(a=>a.Text=="SET CLAN IMAGE")&&!Alterverse.UI.FrontEndTheme.Actions.Exists(a=>a.Text=="OPEN STORE"),"Starter and reward avatars must be offered instead of a false empty-inventory message");
+  ui.GetField("skinShop",flags).SetValue(menu,true);ui.GetField("shardShop",flags).SetValue(menu,true);ui.GetMethod("OpenAvatarStore",flags).Invoke(menu,null);
+  Assert(!(bool)ui.GetField("skinShop",flags).GetValue(menu)&&!(bool)ui.GetField("shardShop",flags).GetValue(menu),"Avatar browsing must not retain Wings or Shards tab state");
+  Alterverse.Profile.PlayerWallet.Balance=10;Alterverse.UI.FrontEndTheme.Click=(r,l)=>true;
+  var purchase=ui.GetMethod("ShardPurchaseAction",flags);
+  bool buy=(bool)purchase.Invoke(menu,new object[]{new Rect(0,0,200,50),"NEED MORE SHARDS",500,true,true,false});
+  Assert(!buy&&(bool)ui.GetField("shardShop",flags).GetValue(menu),"Insufficient-funds action must navigate to Shards without executing a purchase");
+  ui.GetMethod("OpenAvatarStore",flags).Invoke(menu,null);
+  buy=(bool)purchase.Invoke(menu,new object[]{new Rect(0,0,200,50),"COMING SOON",500,true,true,true});
+  Assert(!buy&&!(bool)ui.GetField("shardShop",flags).GetValue(menu),"Unreleased content must remain locked");
+  buy=(bool)purchase.Invoke(menu,new object[]{new Rect(0,0,200,50),"EQUIP",0,true,true,false});
+  Assert(buy&&!(bool)ui.GetField("shardShop",flags).GetValue(menu),"Owned equipment must never redirect for insufficient funds");
+  Console.WriteLine("Chat UI compile, consent, age gate, avatar ownership, navigation and failure-state checks passed.");
  }
 }
+

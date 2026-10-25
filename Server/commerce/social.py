@@ -419,11 +419,15 @@ class Social:
         if route == '/social/clan/icon':
             if role != 'leader': raise SocialForbidden('Leader required')
             avatar = data.get('avatar')
-            if type(avatar) is not int or ('avatar_'+str(avatar)) not in ITEMS:
-                raise ValueError('Choose an owned shop icon')
+            if type(avatar) is not int or not 0 <= avatar <= 1000:
+                raise ValueError('Choose an owned avatar')
             entries = {e['key']:e for e in json.loads(db.execute('SELECT data FROM profile WHERE account=?',(account,)).fetchone()[0])}
-            owned = entries.get('DF_AvatarOwned_'+str(avatar),{}).get('number') == 1 or db.execute('SELECT 1 FROM cosmetic WHERE account=? AND sku=?',(account,'avatar_'+str(avatar))).fetchone()
-            if not owned: raise ValueError('Purchase this icon before choosing it for your clan')
+            def owned_flag(key):
+                entry=entries.get(key,{})
+                return entry.get('kind') == 0 and entry.get('number') == 1
+            owned = avatar < 6 or (avatar == 6 and owned_flag('DF_FoundersPack_Owned')) or (avatar > 6 and (
+                owned_flag('DF_AvatarOwned_'+str(avatar)) or db.execute('SELECT 1 FROM cosmetic WHERE account=? AND sku=?',(account,'avatar_'+str(avatar))).fetchone()))
+            if not owned: raise ValueError('Unlock this avatar before choosing it for your clan')
             db.execute('UPDATE social_clan SET avatar=? WHERE id=?',(avatar,identifier))
             return
         if route == '/social/clan/leave':
@@ -486,6 +490,7 @@ class Social:
     def check_account_allowed(self, account):
         with self.ledger.connect() as db:
             self.chat.account_allowed(db, account)
+
 
 
 
