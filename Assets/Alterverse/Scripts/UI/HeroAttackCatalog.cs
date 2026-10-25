@@ -65,6 +65,7 @@ namespace Alterverse.UI
             if(hero==HeroId.VoidKnight&&slot==3)return $"{spec.Power:0} DMG + {VoidKnightBalance.UltimateLifeDrain:0} LIFE DRAIN / TARGET";
             if(hero==HeroId.VoidKnight&&slot==1)return "50% FRONTAL REDUCTION / 0.65s";
             if(hero==HeroId.Elyra&&slot==2)return $"{HeroAbilityKit.PhaseFoldShield:0} SHIELD / {HeroAbilityKit.PhaseFoldShieldSeconds:0.##}s";
+            if(hero==HeroId.Nyra&&slot==0)return $"{spec.Power:0} DMG + {HeroAbilityKit.SivraPrismShieldAbsorb:0} SHIELD ABSORB";
             if(hero==HeroId.Kaelon&&slot==1)return $"{spec.Power:0} SHIELD / 4s";
             if(hero==HeroId.Kaelon&&slot==3)return $"{spec.Power:0} DMG + 50 SELF HEAL";
             if(hero==HeroId.Mira&&slot==1)return $"{spec.Power:0} HEAL";
@@ -129,7 +130,7 @@ namespace Alterverse.UI
             },
             HeroId.Nyra=>slot switch
             {
-                0=>"Aim a blue laser along a fixed direction.",
+                0=>$"Fixed-direction blue laser. Steal up to {HeroAbilityKit.SivraPrismShieldAbsorb:0} enemy shield before damage. Refill your base shield first; excess becomes {HeroAbilityKit.SivraPrismOvershieldSeconds:0.#}s bonus shield within the shield cap.",
                 1=>$"Reposition dash up to 3m. Passive: after the dash, gain +{(HeroAbilityKit.SivraDashSpeedMultiplier-1f)*100:0}% running speed for {HeroAbilityKit.SivraDashSpeedSeconds:0.#}s.",
                 2=>"Damages and slows the target by 30% for 1.8s.",
                 _=>"Three fixed-direction shots; 64 total damage if all shots connect."
@@ -173,4 +174,3 @@ namespace Alterverse.UI
         };
     }
 }
-

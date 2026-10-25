@@ -93,6 +93,48 @@ namespace Alterverse.Combat
             Changed?.Invoke(Current, maxHealth);
         }
 
+        // Transfer only existing enemy shield, without converting health into shield.
+        // Refill the recipient's base pool first; overflow uses the existing temporary
+        // pool/cap. Debit and credit exactly the same amount, including partial shields.
+        public float TransferShieldTo(Health recipient, float amount, float overflowDuration)
+        {
+            if (!Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState ||
+                IsDead || !isActiveAndEnabled || recipient == null || recipient == this ||
+                recipient.IsDead || !recipient.isActiveAndEnabled || amount <= 0 ||
+                IsFriendlySource(recipient.gameObject) || (DamageGate != null && !DamageGate()))
+                return 0;
+
+            RefreshHeroBaseShield();
+            recipient.RefreshHeroBaseShield();
+            float baseRoom = recipient.heroBaseShieldEnabled
+                ? Mathf.Max(0, recipient.HeroBaseShieldCapacity - recipient.heroBaseShield) : 0;
+            float temporaryRoom = overflowDuration > 0
+                ? Mathf.Max(0, recipient.maxHealth * .4f - recipient.TransientShield) : 0;
+            float transferred = Mathf.Min(amount, Mathf.Min(Shield, baseRoom + temporaryRoom));
+            if (transferred <= 0) return 0;
+
+            float temporaryTaken = Mathf.Min(TransientShield, transferred);
+            shield = TransientShield - temporaryTaken;
+            heroBaseShield -= transferred - temporaryTaken;
+            if (heroBaseShieldEnabled && heroBaseShield < HeroBaseShieldCapacity)
+                heroBaseShieldRechargeAt = Time.time + HeroBaseShieldRechargeDelay;
+
+            float baseReceived = Mathf.Min(baseRoom, transferred);
+            recipient.heroBaseShield += baseReceived;
+            if (recipient.heroBaseShieldEnabled && recipient.heroBaseShield >= recipient.HeroBaseShieldCapacity)
+                recipient.heroBaseShieldRechargeAt = -1f;
+            float overflow = transferred - baseReceived;
+            if (overflow > 0)
+            {
+                recipient.shield = recipient.TransientShield + overflow;
+                recipient.shieldUntil = Mathf.Max(recipient.shieldUntil, Time.time + overflowDuration);
+            }
+            Changed?.Invoke(Current, maxHealth);
+            Damaged?.Invoke(0, transferred, recipient.gameObject);
+            recipient.Changed?.Invoke(recipient.Current, recipient.maxHealth);
+            return transferred;
+        }
+
         // A one-time removal of the currently active pools, never a shield-blocking debuff.
         // AddShield remains immediately usable, and the base shield recharges normally.
         public float RemoveAllShields(GameObject source)
@@ -358,5 +400,3 @@ namespace Alterverse.Combat
         }
     }
 }
-
-

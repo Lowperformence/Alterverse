@@ -312,12 +312,23 @@ namespace Alterverse.Characters
         }
         private void Hit(int slot, Health target, bool visual = true,bool launched=false)
         {
+            if(!HeroCombatRules.Enemy(gameObject,target))return;
             float damage = kit.Spec(slot).Power;
             if (identity.Hero == HeroId.Veyr && slot == 3 && target.GetComponent<HeroIdentity>() != null)
                 damage *= 1f + (1f - target.Normalized) * .35f;
+            // Resolve only at confirmed contact, before normal damage consumes a small
+            // remaining shield. Health owns authority, invulnerability and pool limits.
+            float absorbed=identity.Hero==HeroId.Nyra&&slot==0
+                ? target.TransferShieldTo(self,HeroAbilityKit.SivraPrismShieldAbsorb,
+                    HeroAbilityKit.SivraPrismOvershieldSeconds) : 0;
+            if(absorbed>0)
+            {
+                Alterverse.Multiplayer.CoopGameplayCommands.RecordAuthoritativeDamage(gameObject,absorbed);
+                HeroSkillVfx.Support(gameObject,self,true,HeroAbilityKit.SivraPrismOvershieldSeconds);
+            }
             float before=target.Current+target.Shield;
             HeroCombatRules.Damage(gameObject, target, damage);
-            bool damaged=target!=null&&target.Current+target.Shield<before;
+            bool damaged=absorbed>0||target!=null&&target.Current+target.Shield<before;
             // A rejected hit (for example an invulnerable objective) cannot apply control either.
             if(!damaged)return;
             GetComponent<VoidKnightState>()?.RecordSkillHit();
@@ -351,4 +362,3 @@ namespace Alterverse.Characters
         }
     }
 }
-
