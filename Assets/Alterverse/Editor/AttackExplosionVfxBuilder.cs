@@ -20,7 +20,7 @@ namespace Alterverse.Editor
     {
         private const string Source="Assets/Epic Toon FX",Output="Assets/Alterverse/Resources/CombatVfx/AttackExplosions";
         private const string LegacyOutput="Assets/Alterverse/Resources/CombatVfx/PlanetAttackSparks";
-        private const string Version="Native attack explosions 1";
+        private const string Version="Native attack explosions 2";
         private static bool building;
         public int callbackOrder=>-420;
         static AttackExplosionVfxBuilder()
@@ -45,38 +45,105 @@ namespace Alterverse.Editor
         {try{Build();}catch(Exception e){throw new BuildFailedException("Planet attack explosions: "+e.Message);}}
         private static string Normal(string s)=>new string(s.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
         private static string Family(AttackExplosionVfx.Kind kind)=>kind==AttackExplosionVfx.Kind.FluxNuke?"nukeverticalexplosion":"fireballexplosion";
+        private static bool Allowed(string path,bool includeDemo=false)
+        {
+            if(string.IsNullOrEmpty(path))return false;
+            path=path.Replace((char)92,'/');
+            return path.StartsWith(Source+"/",StringComparison.OrdinalIgnoreCase)&&
+                (includeDemo||!Normal(path).Contains("demo"))&&
+                !path.Split('/').Any(p=>Normal(p).StartsWith("2d",StringComparison.Ordinal));
+        }
+        private static bool ImpactRole(string text)
+        {
+            // White is a palette name, not a 'hit' role.
+            text=Normal(text).Replace("white","");
+            return text.Contains("explos")||text.Contains("impact")||text.Contains("hit");
+        }
 
         internal static int SourceRank(string path,AttackExplosionVfx.Kind kind)
         {
-            if(string.IsNullOrEmpty(path))return -1;
+            if(!Allowed(path))return -1;
             path=path.Replace((char)92,'/');
             string normalized=Normal(path),family=Family(kind);
-            if(!path.StartsWith(Source+"/",StringComparison.OrdinalIgnoreCase)||normalized.Contains("demo")||
-                path.Split('/').Any(p=>Normal(p).StartsWith("2d",StringComparison.Ordinal)))return -1;
             string name=Normal(Path.GetFileNameWithoutExtension(path));
+            var parts=path.Split('/');
+            if(kind==AttackExplosionVfx.Kind.MeteorFireball)
+            {
+                // The package also uses ExplosionFireball*, FireballHit* and
+                // Explosions/Fireball/<colour> layouts, not only FireballExplosion*.
+                if(!normalized.Contains("fireball")||name.Contains("muzzle")||name.Contains("flash")||
+                    name.Contains("trail")||name.Contains("projectile")||name.Contains("missile"))return -1;
+                bool namedImpact=ImpactRole(name);
+                bool movingFolder=parts.Take(parts.Length-1).Any(p=>Normal(p).Contains("missile")||Normal(p).Contains("projectile"));
+                if(!namedImpact&&(movingFolder||!parts.Take(parts.Length-1).Any(ImpactRole)))return -1;
+                if(name=="fireballexplosionfire"||name=="explosionfireballfire")return 0;
+                if(name=="fireballexplosion"||name=="explosionfireball")return 1;
+                return namedImpact&&name.Contains("fireball")?2:3;
+            }
             if(name==family+"fire")return 0;
             if(name==family)return 1;
             if(name.StartsWith(family,StringComparison.Ordinal))return 2;
-            var parts=path.Split('/');
             for(int i=0;i<parts.Length-1;i++)
                 if(Normal(parts[i]).StartsWith(family,StringComparison.Ordinal))return 3;
             return -1;
+        }
+
+        private static string ReferencedFireballImpact(string[] all)
+        {
+            // Demo missile wrappers are inspected as metadata only. Their scripts,
+            // moving projectiles and audio are never instantiated into the result.
+            var owners=all.Where(p=>Allowed(p,true)&&Normal(p).Contains("fireball"))
+                .OrderBy(p=>Allowed(p)?0:1)
+                .ThenBy(p=>Normal(Path.GetFileNameWithoutExtension(p)).Replace("fireball","").Contains("fire")?0:1)
+                .ThenBy(p=>p,StringComparer.Ordinal);
+            foreach(string ownerPath in owners)
+            {
+                var owner=AssetDatabase.LoadAssetAtPath<GameObject>(ownerPath);
+                if(owner==null)continue;
+                foreach(var component in owner.GetComponentsInChildren<MonoBehaviour>(true))
+                {
+                    if(component==null)continue;
+                    var property=new SerializedObject(component).GetIterator();
+                    while(property.NextVisible(true))
+                    {
+                        if(property.propertyType!=SerializedPropertyType.ObjectReference||
+                            !(ImpactRole(property.name)||Normal(property.name).Contains("collision")))continue;
+                        var target=property.objectReferenceValue as GameObject??(property.objectReferenceValue as Component)?.gameObject;
+                        string path=target!=null?AssetDatabase.GetAssetPath(target):null;
+                        if(!Allowed(path)||path==ownerPath)continue;
+                        // Require a separate native prefab root: never mistake a
+                        // projectile's own child/renderer for a complete impact.
+                        var prefab=AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                        if(prefab==target&&prefab.GetComponentsInChildren<ParticleSystem>(true).Length>0)return path;
+                    }
+                }
+            }
+            return null;
         }
 
         internal static string FindSource(AttackExplosionVfx.Kind kind)
         {
             var all=AssetDatabase.FindAssets("t:Prefab",new[]{Source}).Select(AssetDatabase.GUIDToAssetPath).ToArray();
             var ranked=all.Where(p=>SourceRank(p,kind)>=0).OrderBy(p=>SourceRank(p,kind))
-                .ThenBy(p=>Normal(p).Contains("loop")?1:0).ThenBy(p=>p,StringComparer.Ordinal);
+                .ThenBy(p=>Normal(p).Contains("loop")?1:0)
+                .ThenBy(p=>Normal(Path.GetFileNameWithoutExtension(p)).Replace("fireball","").Contains("fire")?0:1)
+                .ThenBy(p=>p,StringComparer.Ordinal);
             foreach(string path in ranked)
             {
                 var prefab=AssetDatabase.LoadAssetAtPath<GameObject>(path);
                 if(prefab!=null&&prefab.GetComponentsInChildren<ParticleSystem>(true).Length>0)return path;
             }
+            if(kind==AttackExplosionVfx.Kind.MeteorFireball)
+            {
+                string referenced=ReferencedFireballImpact(all);
+                if(referenced!=null)return referenced;
+            }
             string hint=kind==AttackExplosionVfx.Kind.FluxNuke?"nuke":"fireball";
-            string candidates=string.Join(", ",all.Where(p=>Normal(p).Contains(hint)).Take(16));
+            string candidates=string.Join(", ",all.Where(p=>Allowed(p)&&Normal(p).Contains(hint)).OrderBy(p=>p,StringComparer.Ordinal).Take(32));
+            string demos=string.Join(", ",all.Where(p=>Allowed(p,true)&&!Allowed(p)&&Normal(p).Contains(hint)).OrderBy(p=>p,StringComparer.Ordinal).Take(6));
             throw new FileNotFoundException("No native 3D "+Family(kind)+" particle prefab found under "+Source+
-                ". Related imported prefabs: "+(candidates.Length>0?candidates:"<none>")+".");
+                ". Native imported candidates: "+(candidates.Length>0?candidates:"<none>")+
+                ". Demo reference sources inspected: "+(demos.Length>0?demos:"<none>")+".");
         }
 
         [MenuItem("DIMENSIONS FRONT/VFX/Prepare attack explosions only")]

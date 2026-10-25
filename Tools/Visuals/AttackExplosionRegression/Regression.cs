@@ -20,8 +20,60 @@ static class Regression
         native.AddComponent<DemoController>();native.AddComponent<AudioSource>();native.AddComponent<Collider>();native.SetActive(false);
         return native;
     }
+    static void FireballSourceDiscovery()
+    {
+        const AttackExplosionVfx.Kind kind=AttackExplosionVfx.Kind.MeteorFireball;
+        var impact=Native("Fireball impact");
+        string[] aliases={
+            "Assets/Epic Toon FX/Prefabs/Combat/Explosions/Fireball/ExplosionFireballFire.prefab",
+            "Assets/Epic Toon FX/Prefabs/Combat/Explosions/FireballExplosion/ExplosionFireballBlue.prefab",
+            "Assets/Epic Toon FX/Prefabs/Combat/Impacts/Fireball/FireballHitFire.prefab",
+            "Assets/Epic Toon FX/Prefabs/Combat/Explosions/Fireball/Orange.prefab",
+            "Assets/Epic Toon FX/Prefabs/Combat/Explosions/Fireball/FireballFire.prefab"};
+        foreach(string alias in aliases)
+        {
+            AssetDatabase.Assets[alias]=impact;
+            Check(AttackExplosionVfxBuilder.FindSource(kind)==alias,"reordered names and split family/category folders resolve: "+alias);
+            AssetDatabase.Assets.Remove(alias);
+        }
+        foreach(string invalid in new[]{
+            "Assets/Epic Toon FX/Prefabs/Combat/Projectiles/Fireball/FireballWhite.prefab",
+            "Assets/Epic Toon FX/Prefabs/Combat/Muzzleflash/Fireball/FireballFlashFire.prefab",
+            "Assets/Epic Toon FX/Prefabs/Combat/Explosions/Fireball/FireballTrail.prefab"})
+            Check(AttackExplosionVfxBuilder.SourceRank(invalid,kind)<0,"moving shot, White suffix, muzzle and trail are not impacts");
+
+        const string shotPath="Assets/Epic Toon FX/Demo/Missile Prefabs/Fireball/FireBallFireOBJ.prefab";
+        const string effectPath="Assets/Epic Toon FX/Prefabs/Combat/Explosions/Shared/ExplosionFire.prefab";
+        var wrapper=new GameObject("FireBallFireOBJ");var controller=wrapper.AddComponent<DemoController>();
+        AssetDatabase.Assets[shotPath]=wrapper;AssetDatabase.Assets[effectPath]=impact;
+        controller.References["explosionPrefab"]=impact;
+        Check(AttackExplosionVfxBuilder.FindSource(kind)==effectPath,"demo Fireball wrapper resolves its separate native impact, despite generic impact filename");
+        controller.References.Clear();controller.ObjectReferences["hitEffect"]=impact.GetComponent<ParticleSystem>();
+        Check(AttackExplosionVfxBuilder.FindSource(kind)==effectPath,"component reference resolves the native impact prefab root");
+        controller.ObjectReferences.Clear();controller.References["effectOnCollision"]=impact;
+        Check(AttackExplosionVfxBuilder.FindSource(kind)==effectPath,"collision effect reference is recognized");
+        controller.References.Clear();controller.References["muzzleFlash"]=impact;
+        bool refused=false;try{AttackExplosionVfxBuilder.FindSource(kind);}catch(System.IO.FileNotFoundException){refused=true;}
+        Check(refused,"muzzle reference alone cannot become Fireball explosion");
+        controller.References.Clear();controller.References["explosionPrefab"]=wrapper;
+        refused=false;try{AttackExplosionVfxBuilder.FindSource(kind);}catch(System.IO.FileNotFoundException){refused=true;}
+        Check(refused,"self-reference cannot import the moving demo projectile");
+        const string twoD="Assets/Epic Toon FX/Prefabs/2D/Shared/Impact.prefab";
+        AssetDatabase.Assets[twoD]=impact;AssetDatabase.Assets.Remove(effectPath);
+        controller.References["explosionPrefab"]=impact;
+        refused=false;try{AttackExplosionVfxBuilder.FindSource(kind);}catch(System.IO.FileNotFoundException){refused=true;}
+        Check(refused,"referenced 2D effect cannot be substituted");
+        AssetDatabase.Assets.Remove(twoD);AssetDatabase.Assets[effectPath]=impact;
+        AttackExplosionVfxBuilder.BuildOne(kind);
+        var prefab=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Alterverse/Resources/"+AttackExplosionVfx.ResourcePath(kind)+".prefab");
+        Check(prefab.GetComponent<AttackExplosionVfx>().sourcePath==effectPath,"build records actual referenced impact source");
+        Check(prefab.GetComponentsInChildren<DemoController>(true).Length==0&&prefab.GetComponentsInChildren<AudioSource>(true).Length==0,"neither demo controller nor its sounds enter prepared effect");
+        Check(wrapper.GetComponent<DemoController>()==controller&&!wrapper.Destroyed,"discovery does not mutate or instantiate the demo wrapper");
+        AssetDatabase.Assets.Clear();
+    }
     static void Main()
     {
+        FireballSourceDiscovery();
         var nuke=Native("NukeVerticalExplosionFire");var fireball=Native("FireballExplosionFire");
         var kinds=new[]{AttackExplosionVfx.Kind.FluxNuke,AttackExplosionVfx.Kind.MeteorFireball};
         string[] families={"NukeVerticalExplosion","FireballExplosion"};
@@ -50,7 +102,7 @@ static class Regression
                 AssetDatabase.Assets[invalid]=native;
             }
             bool diagnosed=false;try{AttackExplosionVfxBuilder.FindSource(kind);}
-            catch(System.IO.FileNotFoundException e){diagnosed=e.Message.Contains("Related imported prefabs:");}
+            catch(System.IO.FileNotFoundException e){diagnosed=e.Message.Contains("Native imported candidates:")&&e.Message.Contains("Demo reference sources inspected:");}
             Check(diagnosed,"missing family reports imported candidates");
             AssetDatabase.Assets[sources[index]]=new GameObject("Non-particle decoy");
             AssetDatabase.Assets[familyRoot+"/Orange.prefab"]=native;
