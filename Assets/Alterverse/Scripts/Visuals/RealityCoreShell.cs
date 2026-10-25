@@ -7,7 +7,7 @@ Transform root;Material metal,secondary,energy;
 Alterverse.Combat.Health health;Alterverse.Combat.RealityCore core;Color energyColor;float hitUntil;
 void Update(){if(energy==null)return;bool vulnerable=core!=null&&core.IsVulnerable;float hit=Time.unscaledTime<hitUntil?1:0;Color color=Color.Lerp(energyColor,Color.white,hit*.82f);float pulse=vulnerable?1.55f+.22f*Mathf.Sin(Time.time*3.4f):.30f;energy.SetColor("_EmissionColor",color*pulse);}
 void OnHit(float damage,float absorbed,GameObject source){if(damage>0)hitUntil=Time.unscaledTime+.18f;}
-public void Build(bool zero){if(root!=null)return;EnsureSolidCollision();health=GetComponent<Alterverse.Combat.Health>();core=GetComponent<Alterverse.Combat.RealityCore>();if(health!=null)health.Damaged+=OnHit;root=new GameObject("DF_RealityCoreProduction").transform;root.SetParent(transform,false);root.localScale=Vector3.one*1.10f;Color e=zero?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;energyColor=e;metal=Mat(Color.Lerp(StylizedArtDirection.Ink,zero?StylizedArtDirection.ZeroDark:StylizedArtDirection.LumenDark,.55f),.74f,.34f);secondary=Mat(Color.Lerp(Color.gray,zero?StylizedArtDirection.ZeroMid:StylizedArtDirection.LumenMid,.35f),.62f,.48f);energy=Mat(Color.Lerp(e,Color.white,.04f),.10f,.76f,true);BuildBase();BuildFrame(zero);BuildChronosphere(zero);HorizontalRing("CoreHalo",1.42f,.035f,1.73f,energy);}
+public void Build(bool zero){if(root!=null)return;EnsureSolidCollision();health=GetComponent<Alterverse.Combat.Health>();core=GetComponent<Alterverse.Combat.RealityCore>();if(health!=null)health.Damaged+=OnHit;root=new GameObject("DF_RealityCoreProduction").transform;root.SetParent(transform,false);root.localScale=Vector3.one*1.10f;Color e=zero?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;energyColor=e;metal=Mat(Color.Lerp(StylizedArtDirection.Ink,zero?StylizedArtDirection.ZeroDark:StylizedArtDirection.LumenDark,.55f),.74f,.34f);secondary=Mat(Color.Lerp(Color.gray,zero?StylizedArtDirection.ZeroMid:StylizedArtDirection.LumenMid,.35f),.62f,.48f);energy=Mat(Color.Lerp(e,Color.white,.04f),.10f,.76f,true);StructureSurfaceMaterials.Apply(metal,StructureFinish.Metal);StructureSurfaceMaterials.Apply(secondary,StructureFinish.Deck);BuildBase();BuildFrame(zero);BuildChronosphere(zero);HorizontalRing("CoreHalo",1.42f,.035f,1.73f,energy);}
 void EnsureSolidCollision()
 {
     // The production shell reaches roughly 1.55 m from the core centre after its
@@ -34,3 +34,4 @@ void OnDestroy(){if(health!=null)health.Damaged-=OnHit;var owned=new System.Coll
 
 }
 }
+
