@@ -161,6 +161,7 @@ namespace Alterverse.Match
 
             Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Explosion,transform.position,.6f);
             PrototypeVfx.Burst(transform.position, warning, radius * .55f, 10);
+            PlanetAttackSparksVfx.TryPlay(transform.position);
             telegraphing=false;
             flashUntil=Time.time+.18f;
             nextPulse=Time.time+Mathf.Max(.5f,interval);

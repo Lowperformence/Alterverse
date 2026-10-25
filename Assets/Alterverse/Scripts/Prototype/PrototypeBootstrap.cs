@@ -174,6 +174,7 @@ if(!serverOnly)new GameObject("AV_MatchOpening").AddComponent<MatchOpening>();
 
 stage="Hot Zone monster and Magic Aura preparation";
 HotZoneTank.PrepareForMatch(world.transform);
+PlanetAttackSparksVfx.Prepare(world.transform);
 if(serverOnly)HotZoneTank.FinishMatchPreparation(true);
 
 completed=true;
