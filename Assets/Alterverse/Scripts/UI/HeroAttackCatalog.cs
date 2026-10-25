@@ -65,6 +65,7 @@ namespace Alterverse.UI
             if(hero==HeroId.VoidKnight&&slot==3)return $"{spec.Power:0} DMG + {VoidKnightBalance.UltimateLifeDrain:0} LIFE DRAIN / TARGET";
             if(hero==HeroId.VoidKnight&&slot==1)return "80% FRONTAL REDUCTION / 0.65s";
             if(hero==HeroId.Elyra&&slot==2)return $"{HeroAbilityKit.PhaseFoldShield:0} SHIELD / {HeroAbilityKit.PhaseFoldShieldSeconds:0.##}s";
+            if(hero==HeroId.Timmy&&slot==2)return $"{TimmyBalance.JetShield:0} SHIELD / {TimmyBalance.JetShieldSeconds:0.#}s";
             if(hero==HeroId.Nyra&&slot==0)return $"{spec.Power:0} DMG + {HeroAbilityKit.SivraPrismShieldAbsorb:0} SHIELD ABSORB";
             if(hero==HeroId.Kaelon&&slot==1)return $"{spec.Power:0} SHIELD / 4s";
             if(hero==HeroId.Kaelon&&slot==3)return $"{spec.Power:0} DMG + 50 SELF HEAL";
@@ -112,7 +113,7 @@ namespace Alterverse.UI
             {
                 0=>"A stronger single-target claw swipe with short melee reach.",
                 1=>$"Place a stardust burst; damages enemies in the circle and slows them by {(1f-TimmyBalance.DustSlow)*100:0}% for {TimmyBalance.DustSlowSeconds:0.#}s.",
-                2=>$"Jet-assisted dash up to {TimmyBalance.JetRange:0.#}m in the chosen direction.",
+                2=>$"Jet-assisted dash up to {TimmyBalance.JetRange:0.#}m in the chosen direction. Gain {TimmyBalance.JetShield:0} shield for {TimmyBalance.JetShieldSeconds:0.#}s.",
                 _=>$"Leap toward one enemy selected inside the {TimmyBalance.ScratchRange:0.#}m aim field. Follow and root it for {TimmyBalance.ScratchHoldSeconds:0.#}s if it stays inside the original field; leaving the field avoids the hit. Deal {TimmyBalance.ScratchDamage:0} damage in {TimmyBalance.ScratchTicks} ticks. Timmy can move and attack; the target can counterattack."
             },
             HeroId.Veyr=>slot switch

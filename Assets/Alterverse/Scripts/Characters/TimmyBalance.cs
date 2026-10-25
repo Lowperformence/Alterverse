@@ -16,6 +16,7 @@ namespace Alterverse.Characters
         public const float DustSlow = .8f, DustSlowSeconds = 2f;
         public const float DustVfxSeconds = 2f;
         public const float JetRange = 4.5f, JetCooldown = 13f, JetDashSeconds = .16f;
+        public const float JetShield = 60f, JetShieldSeconds = 3f;
         public const float ScratchRange = 9f, ScratchCooldown = 52f, ScratchDamage = 54f, ScratchWindup = .2f;
         public const float ScratchLeapSeconds = .4f, ScratchHoldSeconds = 2f, ScratchContactRange = 1.35f;
         public const float ScratchStandOff = .75f;

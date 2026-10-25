@@ -30,6 +30,7 @@ namespace Alterverse.Characters
                 Vector3 from=transform.position;
                 Vector3 end=GameplayCollision.ClampToRoundedArena(from+direction*aim.castRange,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight);
                 if(!locomotion.BeginDash(end,TimmyBalance.JetDashSeconds))return false;
+                self.AddShield(TimmyBalance.JetShield,TimmyBalance.JetShieldSeconds,false);
                 HeroCombatAudio.Cast(gameObject,slot);
                 HeroSkillVfx.Dash(gameObject,from,locomotion.DashDestination,2,TimmyBalance.JetDashSeconds);
                 return true;
