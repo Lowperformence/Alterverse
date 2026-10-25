@@ -20,7 +20,8 @@ static class Regression
     {
         var m=new Material(new Shader()){name="NativeDetail"};m.SetColor("_Color",new Color(.3f,.8f,.2f));AssetDatabase.Assets["Assets/Epic Toon FX/Materials/NativeDetail.mat"]=m;
         var paths=new[]{SelectedAbilityVfxBuilder.SmokeSource,"Assets/Epic Toon FX/Prefabs/Combat/Explosions/Spiky/ExplosionSpikyBlood.prefab","Assets/Epic Toon FX/Prefabs/Combat/Lightning/LightningStrikePurple.prefab","Assets/Epic Toon FX/Prefabs/Combat/Magic/Circle Simple/MagicCircleSimpleYellow.prefab",SelectedAbilityVfxBuilder.FireSource,"Assets/Epic Toon FX/Prefabs/Status/StunningCirclingStars.prefab"};
-        var sources=paths.Select(p=>Native(p,m)).ToArray();Native("Assets/Epic Toon FX/Prefabs/2D Alternate/LightningStrikePurple.prefab",m);
+        var sources=paths.Select(p=>Native(p,m)).ToArray();
+        sources[0].GetComponent<ParticleSystemRenderer>().sharedMaterials=new Material[]{m,null};Native("Assets/Epic Toon FX/Prefabs/2D Alternate/LightningStrikePurple.prefab",m);
         var sound=new AudioClip{name="NativeStunningSound"};AssetDatabase.Assets["Assets/Epic Toon FX/Sound/etfx_stun.wav"]=sound;sources[5].GetComponent<DemoController>().ObjectReferences["stunningSound"]=sound;
         SelectedAbilityVfxBuilder.Build();var library=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Alterverse/Resources/CombatVfx/SelectedAbilities/Library.prefab").GetComponent<SelectedAbilityVfx>();
         var entries=new[]{library.smoke,library.blood,library.strike,library.circle,library.fire,library.stars};
@@ -31,6 +32,14 @@ static class Regression
             Check(e.prefab.GetComponentsInChildren<ParticleSystem>(true).All(p=>p.main.maxParticles==321),"native particle detail retained "+i);
             Check(!sources[i].activeSelf&&sources[i].GetComponent<Collider>()!=null,"purchased source is unmodified "+i);
         }
+        Check(library.smoke.prefab.GetComponentsInChildren<Renderer>(true).Single().sharedMaterials[1]==null,"unused empty native material slot is preserved instead of aborting import");
+        var driver=new GameObject("NonRenderingDriver").AddComponent<ParticleSystemRenderer>();driver.renderMode=ParticleSystemRenderMode.None;driver.sharedMaterials=new Material[]{null};
+        BomberNukeBuilder.ConvertRendererMaterials(driver,new Shader(),new System.Collections.Generic.Dictionary<Material,Material>(),"Assets/Prepared","Assets/Epic Toon FX/NativeDriver.prefab");
+        Check(driver.sharedMaterials[0]==null,"RenderMode.None driver does not require a particle surface");
+        var visible=new GameObject("VisibleLayer").AddComponent<ParticleSystemRenderer>();visible.sharedMaterials=new Material[]{null};bool diagnosed=false;
+        try{BomberNukeBuilder.ConvertRendererMaterials(visible,new Shader(),new System.Collections.Generic.Dictionary<Material,Material>(),"Assets/Prepared","Assets/Epic Toon FX/RealVisible.prefab");}
+        catch(InvalidOperationException ex){diagnosed=ex.Message.Contains("RealVisible.prefab")&&ex.Message.Contains("VisibleLayer")&&ex.Message.Contains("material 0")&&!ex.Message.Contains("Nuke Cone");}
+        Check(diagnosed,"genuine missing visible material reports actual source, renderer and slot");
         int saves=AssetDatabase.Saves;SelectedAbilityVfxBuilder.Build();Check(AssetDatabase.Saves==saves,"native preparation does not repeat without changes");
         Resources.Prefab=library.gameObject;Reset();Check(ReferenceEquals(SelectedAbilityVfx.StarsClip(),sound),"full native stunning sound reference retained");
         var actor=new GameObject("Timmy");actor.AddComponent<Health>();var victim=new GameObject("Victim");var hp=victim.AddComponent<Health>();var state=victim.AddComponent<HeroCombatStatus>();state.Rooted=true;

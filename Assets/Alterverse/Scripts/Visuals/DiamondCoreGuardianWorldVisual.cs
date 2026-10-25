@@ -50,6 +50,28 @@ namespace Alterverse.Visuals
             manager.SyncGuardians();
         }
 
+        public static void SetReservedVisibility(HotZoneTank tank,bool visible)
+        {
+            if(!ArenaVariantRuntime.IsDiamondCore)return;
+            var manager=GameObject.Find("DF_PSRJ1719_DiamondGuardianWorldVisual")?.GetComponent<DiamondCoreGuardianWorldVisual>();
+            if(manager!=null&&manager.visuals.TryGetValue(tank,out var state)&&state.root!=null)state.root.SetActive(visible);
+        }
+
+        public static bool TryGetBounds(HotZoneTank tank,out Bounds bounds)
+        {
+            bounds=default;
+            if(!ArenaVariantRuntime.IsDiamondCore)return false;
+            var manager=GameObject.Find("DF_PSRJ1719_DiamondGuardianWorldVisual")?.GetComponent<DiamondCoreGuardianWorldVisual>();
+            if(manager==null||!manager.visuals.TryGetValue(tank,out var state)||state.root==null)return false;
+            bool found=false;
+            foreach(var renderer in state.root.GetComponentsInChildren<Renderer>(true))
+            {
+                if(!renderer.enabled)continue;
+                if(!found){bounds=renderer.bounds;found=true;}else bounds.Encapsulate(renderer.bounds);
+            }
+            return found;
+        }
+
         void Update()
         {
             if(!ArenaVariantRuntime.IsDiamondCore)
@@ -91,7 +113,7 @@ namespace Alterverse.Visuals
             foreach(KeyValuePair<HotZoneTank,VisualState> pair in visuals)
             {
                 HotZoneTank tank=pair.Key;
-                if(tank==null||!tank.isActiveAndEnabled||tank.TankHealth==null||tank.TankHealth.IsDead)
+                if(tank==null||!tank.IsReservedReward&&(!tank.isActiveAndEnabled||tank.TankHealth==null||tank.TankHealth.IsDead))
                     stale.Add(tank);
             }
             for(int i=0;i<stale.Count;i++)RemoveVisual(stale[i]);
@@ -105,6 +127,7 @@ namespace Alterverse.Visuals
                 HotZoneTank tank=pair.Key;
                 VisualState state=pair.Value;
                 if(tank==null||state==null||state.root==null)continue;
+                if(tank.IsReservedReward){state.root.SetActive(false);continue;}
 
                 // SyncGuardians already hides legacy meshes at the bounded scan interval.
                 // Repeated hierarchy-array allocations here previously happened every frame.
@@ -242,6 +265,7 @@ namespace Alterverse.Visuals
         void OnDestroy(){ClearAll();}
     }
 }
+
 
 
 

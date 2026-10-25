@@ -56,7 +56,7 @@ namespace Alterverse.Editor
             if (original == null) throw new FileNotFoundException("Purchased 3D NukeConeExplosionFire prefab missing: " + Source);
             var shader = Shader.Find("DimensionsFront/BomberNukeParticles");
             if (shader == null) throw new InvalidOperationException("BomberNukeParticles shader is missing.");
-            string signature = BomberNukeVfx.ImportVersion + ":" + AssetDatabase.GetAssetDependencyHash(Source) + ":" +
+            string signature = MaterialImportVersion + ":" + BomberNukeVfx.ImportVersion + ":" + AssetDatabase.GetAssetDependencyHash(Source) + ":" +
                 AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(shader));
             var existing = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
             var previous = existing != null ? existing.GetComponent<BomberNukeVfx>() : null;
@@ -117,11 +117,7 @@ namespace Alterverse.Editor
                     renderer.receiveShadows = false;
                     renderer.lightProbeUsage = LightProbeUsage.Off;
                     renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
-                    var converted = renderer.sharedMaterials;
-                    for (int i = 0; i < converted.Length; i++) converted[i] = ConvertMaterial(converted[i], shader, materials);
-                    renderer.sharedMaterials = converted;
-                    if (renderer is ParticleSystemRenderer particle && particle.trailMaterial != null)
-                        particle.trailMaterial = ConvertMaterial(particle.trailMaterial, shader, materials);
+                    ConvertRendererMaterials(renderer, shader, materials, Output, Source);
                 }
 
                 float horizontalRadius = Measure(root, systems, autoPlay);
@@ -147,9 +143,57 @@ namespace Alterverse.Editor
             }
         }
 
+        internal const string MaterialImportVersion = "Renderer material slots 2";
+
+        // Unity 6 stores the optional trail material in sharedMaterials[1]. A null
+        // unused trail slot is valid; a missing visible particle material is not.
+        internal static void ConvertRendererMaterials(Renderer renderer, Shader shader,
+            Dictionary<Material, Material> cache, string output = Output, string sourcePath = null)
+        {
+            var particle = renderer as ParticleSystemRenderer;
+            var system = particle != null ? particle.GetComponent<ParticleSystem>() : null;
+            bool trails = system != null && system.trails.enabled;
+            var sourceTrail = particle != null ? particle.trailMaterial : null;
+            var materials = renderer.sharedMaterials;
+            if (renderer.enabled)
+            {
+                if (particle != null)
+                {
+                    if (particle.renderMode != ParticleSystemRenderMode.None &&
+                        (materials.Length == 0 || materials[0] == null))
+                        throw MissingMaterial(renderer, "particle material 0", sourcePath);
+                    if (trails && particle.trailMaterial == null)
+                        throw MissingMaterial(renderer, "enabled trail material 1", sourcePath);
+                }
+                else
+                {
+                    var filter = renderer.GetComponent<MeshFilter>();
+                    if (filter != null && filter.sharedMesh != null && filter.sharedMesh.subMeshCount > 0)
+                    {
+                        if (materials.Length == 0) throw MissingMaterial(renderer, "mesh material 0", sourcePath);
+                        for (int i = 0; i < materials.Length; i++)
+                            if (materials[i] == null) throw MissingMaterial(renderer, "mesh material " + i, sourcePath);
+                    }
+                }
+            }
+            for (int i = 0; i < materials.Length; i++)
+                if (materials[i] != null) materials[i] = ConvertMaterial(materials[i], shader, cache, output);
+            renderer.sharedMaterials = materials;
+            if (particle != null && sourceTrail != null)
+                particle.trailMaterial = ConvertMaterial(sourceTrail, shader, cache, output);
+        }
+
+        private static InvalidOperationException MissingMaterial(Renderer renderer, string role, string sourcePath)
+        {
+            string path = renderer.gameObject.name;
+            for (var parent = renderer.transform.parent; parent != null; parent = parent.parent)
+                path = parent.gameObject.name + "/" + path;
+            return new InvalidOperationException("Native VFX '" + (sourcePath ?? "<unknown source>") + "' renderer '" + path + "' is missing its " + role + ".");
+        }
+
         internal static Material ConvertMaterial(Material source, Shader shader, Dictionary<Material, Material> cache, string output = Output)
         {
-            if (source == null) throw new InvalidOperationException("Nuke Cone contains a missing material.");
+            if (source == null) throw new InvalidOperationException("Native VFX contains a missing material.");
             if (cache.TryGetValue(source, out var converted)) return converted;
             string path = output + "/Materials/" + AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(source)) + ".mat";
             converted = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -238,3 +282,4 @@ namespace Alterverse.Editor
     }
 }
 #endif
+

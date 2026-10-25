@@ -50,7 +50,7 @@ namespace Alterverse.Editor
             var shader=Shader.Find("DimensionsFront/SmallBulletParticles");if(shader==null)throw new InvalidOperationException("The existing URP particle footprint shader is missing.");
             var assets=new Object[]{small.projectile,small.muzzle,small.impact,small.status,large.projectile,large.muzzle,large.impact,
                 small.castClip,small.impactClip,small.windupClip,large.castClip,large.impactClip,large.windupClip,shader};
-            string signature=Version+":"+string.Join(":",assets.Where(a=>a!=null).Select(a=>AssetDatabase.GetAssetPath(a)+"="+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(a))));
+            string signature=BomberNukeBuilder.MaterialImportVersion+":"+Version+":"+string.Join(":",assets.Where(a=>a!=null).Select(a=>AssetDatabase.GetAssetPath(a)+"="+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(a))));
             var existing=AssetDatabase.LoadAssetAtPath<GameObject>(Output+"/Library.prefab");
             if(existing!=null&&existing.GetComponent<SivraNovaVfx>()?.sourceSignature==signature)return;
             building=true;var preview=EditorSceneManager.NewPreviewScene();GameObject root=null;
@@ -224,10 +224,7 @@ namespace Alterverse.Editor
                 }
                 foreach(var renderer in root.GetComponentsInChildren<Renderer>(true))
                 {
-                    var materials=renderer.sharedMaterials;
-                    for(int i=0;i<materials.Length;i++)materials[i]=BomberNukeBuilder.ConvertMaterial(materials[i],shader,cache,Output);
-                    renderer.sharedMaterials=materials;
-                    if(renderer is ParticleSystemRenderer ps&&ps.trailMaterial!=null)ps.trailMaterial=BomberNukeBuilder.ConvertMaterial(ps.trailMaterial,shader,cache,Output);
+                    BomberNukeBuilder.ConvertRendererMaterials(renderer,shader,cache,Output,AssetDatabase.GetAssetPath(source));
                 }
                 float radius=BomberNukeBuilder.Measure(root,systems,play,"Sivra "+name);root.SetActive(false);
                 for(int i=0;i<systems.Length;i++)
@@ -244,3 +241,4 @@ namespace Alterverse.Editor
     }
 }
 #endif
+

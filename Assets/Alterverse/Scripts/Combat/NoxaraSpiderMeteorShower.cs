@@ -30,8 +30,10 @@ namespace Alterverse.Combat
         {
             owner=GetComponent<HotZoneTank>();
             self=GetComponent<Health>();
-            nextAttack=Time.time+3f;
+            ResetForSpawn();
         }
+
+        public void ResetForSpawn(){nextAttack=Time.time+3f;nextScan=0f;enemyNearby=false;}
 
         private void Update()
         {
@@ -278,4 +280,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 

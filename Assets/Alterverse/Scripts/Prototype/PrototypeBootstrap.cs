@@ -46,6 +46,7 @@ private System.Collections.IEnumerator Start(){if(!buildOnStart)yield break;yiel
 private void LateUpdate()
 {
 if(pendingArenaCamera==null||Time.frameCount<revealArenaFrame)return;
+if(!HotZoneTank.FinishMatchPreparation())return;
 // Terrain, lighting and the panorama are built in Start; planet themes run in
 // Update. Reveal only after the next frame has run those initialization steps.
 if(pendingArenaWorld!=null&&pendingArenaWorld.activeInHierarchy)
@@ -171,6 +172,10 @@ new GameObject("AV_MatchTelemetry").AddComponent<MatchTelemetry>();
 new GameObject("AV_MatchScoreboard").AddComponent<MatchScoreboard>();
 if(!serverOnly)new GameObject("AV_MatchOpening").AddComponent<MatchOpening>();
 
+stage="Hot Zone monster and Magic Aura preparation";
+HotZoneTank.PrepareForMatch(world.transform);
+if(serverOnly)HotZoneTank.FinishMatchPreparation(true);
+
 completed=true;
 if(!serverOnly)
 {
@@ -268,4 +273,5 @@ DefenseTrench.Spawn(team,ArenaLayout.DefensePosition(team,false,flank),flank==0?
 }
 private static void CreateCentralHealing(){GameObject heal=new GameObject("DF_CentralHealingPickup");heal.transform.position=new Vector3(0,.12f,0);heal.AddComponent<CentralHealingPickup>();}private static void CreateBaseCore(Vector3 p,Color c,string n,bool zero,int team){GameObject g=new GameObject(n);g.layer=GameplayCollision.Structures;g.transform.position=p;CapsuleCollider body=g.AddComponent<CapsuleCollider>();body.radius=.9f;body.height=2.6f;body.center=Vector3.up*1.3f;Health h=g.AddComponent<Health>();h.Configure(5000,true);g.AddComponent<RealityCore>().Initialize(team);g.AddComponent<RealityCoreShell>().Build(zero);g.AddComponent<ProductionBaseEnvironment>().Build(zero);}private static void CreateGround(string n,Vector3 p,Vector3 s,Color c){GameObject g=new GameObject(n);g.layer=GameplayCollision.Ground;g.transform.position=p;Mesh mesh=GameplayCollision.CreateRoundedPrismMesh(Vector3.zero,s.x,s.y,s.z,4f,8);MeshCollider floor=g.AddComponent<MeshCollider>();floor.sharedMesh=mesh;floor.convex=true;g.AddComponent<GameplayCollisionMeshOwner>().Own(mesh);}
 }}
+
 

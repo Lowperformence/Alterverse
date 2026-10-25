@@ -43,7 +43,7 @@ namespace Alterverse.Editor
             var traveler=AssetDatabase.LoadAssetAtPath<GameObject>(TravelerSource);
             if(ione==null||traveler==null)throw new FileNotFoundException("Selected native ultimate source missing: "+(ione==null?IoneSource+" ":"")+(traveler==null?TravelerSource:""));
             var shader=Shader.Find("DimensionsFront/BomberNukeParticles");if(shader==null)throw new InvalidOperationException("Existing URP circular-footprint particle shader is missing.");
-            string signature=Version+":"+IoneSource+"="+AssetDatabase.GetAssetDependencyHash(IoneSource)+":"+
+            string signature=BomberNukeBuilder.MaterialImportVersion+":"+Version+":"+IoneSource+"="+AssetDatabase.GetAssetDependencyHash(IoneSource)+":"+
                 TravelerSource+"="+AssetDatabase.GetAssetDependencyHash(TravelerSource)+":"+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(shader));
             var old=AssetDatabase.LoadAssetAtPath<GameObject>(Output+"/Library.prefab");
             if(old!=null&&old.GetComponent<UltimateLightningVfx>()?.sourceSignature==signature)return;
@@ -88,10 +88,7 @@ namespace Alterverse.Editor
                 {
                     renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
                     renderer.lightProbeUsage=LightProbeUsage.Off;renderer.reflectionProbeUsage=ReflectionProbeUsage.Off;
-                    var materials=renderer.sharedMaterials;
-                    for(int i=0;i<materials.Length;i++)materials[i]=BomberNukeBuilder.ConvertMaterial(materials[i],shader,cache,Output);
-                    renderer.sharedMaterials=materials;
-                    if(renderer is ParticleSystemRenderer ps&&ps.trailMaterial!=null)ps.trailMaterial=BomberNukeBuilder.ConvertMaterial(ps.trailMaterial,shader,cache,Output);
+                    BomberNukeBuilder.ConvertRendererMaterials(renderer,shader,cache,Output,sourcePath);
                 }
                 float radius=BomberNukeBuilder.Measure(root,systems,autoPlay,name);root.SetActive(false);
                 foreach(var system in systems)system.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -103,3 +100,4 @@ namespace Alterverse.Editor
     }
 }
 #endif
+

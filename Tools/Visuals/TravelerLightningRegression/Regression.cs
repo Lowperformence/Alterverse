@@ -19,6 +19,7 @@ static class Regression
     {
         var m=new Material(new Shader()){name="NativeLightningYellow"};m.SetColor("_Color",new Color(1,.8f,.1f));AssetDatabase.Assets["Assets/Epic Toon FX/Materials/NativeLightningYellow.mat"]=m;
         var missile=Native(TravelerLightningBuilder.ProjectileSource,m);
+        missile.GetComponent<ParticleSystemRenderer>().sharedMaterials=new Material[]{m,null};
         var muzzle=Native("Assets/Epic Toon FX/Prefabs/Combat/LightningReferencedMuzzleYellow.prefab",m);
         var hit=Native("Assets/Epic Toon FX/Prefabs/Combat/LightningReferencedHitYellow.prefab",m);
         var nova=Native(TravelerLightningBuilder.NovaSource,m);
@@ -36,6 +37,7 @@ static class Regression
             Check(part.prefab.GetComponentsInChildren<AudioSource>(true).Length==0&&part.prefab.GetComponentsInChildren<Collider>(true).Length==0&&part.prefab.GetComponentsInChildren<DemoController>(true).Length==0,"visual cannot play duplicate audio or change gameplay");
             Check(part.prefab.GetComponentsInChildren<ParticleSystem>(true).All(p=>p.main.maxParticles==321),"full native particle detail retained");
         }
+        Check(data.lightning.projectile.prefab.GetComponentsInChildren<Renderer>(true).Single().sharedMaterials[1]==null,"unused empty lightning material slot cannot abort complete-chain preparation");
         Check(data.lightning.projectile.prefab.GetComponentsInChildren<ParticleSystem>(true).All(p=>p.main.loop),"native flight loops are retained");
         Check(ReferenceEquals(data.lightning.castClip,cast)&&ReferenceEquals(data.lightning.impactClip,impact),"complete native clip references are used without copies/trimming");
         int saves=AssetDatabase.Saves;TravelerLightningBuilder.Build();Check(AssetDatabase.Saves==saves,"source preparation is idempotent");

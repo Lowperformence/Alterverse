@@ -48,7 +48,7 @@ namespace Alterverse.Editor
             for(int i=0;i<sources.Length;i++)if(sources[i]==null)throw new FileNotFoundException("Selected native source missing: "+paths[i]);
             var sound=StarsSound(sources[SelectedAbilityVfx.Stars]);
             var shader=Shader.Find("DimensionsFront/SelectedAbilityParticles");if(shader==null)throw new InvalidOperationException("Selected ability URP shader missing.");
-            string signature=Version+":"+string.Join(":",paths.Select(p=>p+"="+AssetDatabase.GetAssetDependencyHash(p)))+":"+
+            string signature=BomberNukeBuilder.MaterialImportVersion+":"+Version+":"+string.Join(":",paths.Select(p=>p+"="+AssetDatabase.GetAssetDependencyHash(p)))+":"+
                 (sound!=null?AssetDatabase.GetAssetPath(sound)+"="+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(sound)):"no-stars-audio")+":"+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(shader));
             var old=AssetDatabase.LoadAssetAtPath<GameObject>(Output+"/Library.prefab");if(old!=null&&old.GetComponent<SelectedAbilityVfx>()?.sourceSignature==signature)return;
             building=true;var preview=EditorSceneManager.NewPreviewScene();GameObject root=null;
@@ -97,8 +97,7 @@ namespace Alterverse.Editor
                 foreach(var r in root.GetComponentsInChildren<Renderer>(true))
                 {
                     r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;r.lightProbeUsage=LightProbeUsage.Off;r.reflectionProbeUsage=ReflectionProbeUsage.Off;
-                    var materials=r.sharedMaterials;for(int i=0;i<materials.Length;i++)materials[i]=BomberNukeBuilder.ConvertMaterial(materials[i],shader,cache,Output);r.sharedMaterials=materials;
-                    if(r is ParticleSystemRenderer p&&p.trailMaterial!=null)p.trailMaterial=BomberNukeBuilder.ConvertMaterial(p.trailMaterial,shader,cache,Output);
+                    BomberNukeBuilder.ConvertRendererMaterials(r,shader,cache,Output,path);
                 }
                 float radius=BomberNukeBuilder.Measure(root,systems,play,"Selected "+path);root.SetActive(false);
                 for(int i=0;i<systems.Length;i++)
@@ -115,3 +114,4 @@ namespace Alterverse.Editor
     }
 }
 #endif
+

@@ -52,7 +52,7 @@ namespace Alterverse.Editor
             if(projectile==null||muzzle==null||impact==null)
                 throw new InvalidOperationException("Missing Small Bullet parts: "+(projectile==null?"projectile ":"")+(muzzle==null?"muzzle ":"")+(impact==null?"impact ":"")+". Bullet candidates: "+string.Join(", ",bulletParts));
             var shader=Shader.Find("DimensionsFront/SmallBulletParticles");if(shader==null)throw new InvalidOperationException("Small Bullet shader missing.");
-            string signature=Version+":"+string.Join(":",new[]{projectile,muzzle,impact}.Select(p=>AssetDatabase.GetAssetPath(p)+":"+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(p))))+
+            string signature=BomberNukeBuilder.MaterialImportVersion+":"+Version+":"+string.Join(":",new[]{projectile,muzzle,impact}.Select(p=>AssetDatabase.GetAssetPath(p)+":"+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(p))))+
                 ":"+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(shader));
             var old=AssetDatabase.LoadAssetAtPath<GameObject>(Output+"/Library.prefab");
             if(old!=null&&old.GetComponent<SmallBulletVfx>()?.sourceSignature==signature)return;
@@ -146,10 +146,7 @@ namespace Alterverse.Editor
                 }
                 foreach(var renderer in root.GetComponentsInChildren<Renderer>(true))
                 {
-                    var materials=renderer.sharedMaterials;
-                    for(int i=0;i<materials.Length;i++)materials[i]=BomberNukeBuilder.ConvertMaterial(materials[i],shader,cache,Output);
-                    renderer.sharedMaterials=materials;
-                    if(renderer is ParticleSystemRenderer ps&&ps.trailMaterial!=null)ps.trailMaterial=BomberNukeBuilder.ConvertMaterial(ps.trailMaterial,shader,cache,Output);
+                    BomberNukeBuilder.ConvertRendererMaterials(renderer,shader,cache,Output,AssetDatabase.GetAssetPath(source));
                 }
                 radius=BomberNukeBuilder.Measure(root,systems,autoPlay);
                 root.SetActive(false);
@@ -168,3 +165,4 @@ namespace Alterverse.Editor
     }
 }
 #endif
+

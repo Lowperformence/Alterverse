@@ -233,7 +233,7 @@ namespace Alterverse.Multiplayer
                 if(entities.TryGetValue(id,out CoopWorldEntityKey entity)&&entity!=null)
                 {
                     entities.Remove(id);
-                    Destroy(entity.gameObject);
+                    if(entity.Key==id&&!HotZoneTank.ReturnToRewardPool(entity.gameObject))Destroy(entity.gameObject);
                 }
             }
         }
@@ -256,5 +256,6 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 
 

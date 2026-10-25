@@ -42,7 +42,7 @@ namespace Alterverse.Editor
             var target=AssetDatabase.LoadAssetAtPath<GameObject>(TargetSource);var area=AssetDatabase.LoadAssetAtPath<GameObject>(AreaSource);
             if(target==null||area==null)throw new FileNotFoundException("Selected native healing source missing: "+(target==null?TargetSource+" ":"")+(area==null?AreaSource:""));
             var shader=Shader.Find("DimensionsFront/BomberNukeParticles");if(shader==null)throw new InvalidOperationException("Existing URP circular-footprint particle shader is missing.");
-            string signature=Version+":"+TargetSource+"="+AssetDatabase.GetAssetDependencyHash(TargetSource)+":"+
+            string signature=BomberNukeBuilder.MaterialImportVersion+":"+Version+":"+TargetSource+"="+AssetDatabase.GetAssetDependencyHash(TargetSource)+":"+
                 AreaSource+"="+AssetDatabase.GetAssetDependencyHash(AreaSource)+":"+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(shader));
             var previous=AssetDatabase.LoadAssetAtPath<GameObject>(Output+"/Library.prefab");
             if(previous!=null&&previous.GetComponent<ThalaHealingVfx>()?.sourceSignature==signature)return;
@@ -89,10 +89,7 @@ namespace Alterverse.Editor
                 {
                     renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
                     renderer.lightProbeUsage=LightProbeUsage.Off;renderer.reflectionProbeUsage=ReflectionProbeUsage.Off;
-                    var materials=renderer.sharedMaterials;
-                    for(int i=0;i<materials.Length;i++)materials[i]=BomberNukeBuilder.ConvertMaterial(materials[i],shader,cache,Output);
-                    renderer.sharedMaterials=materials;
-                    if(renderer is ParticleSystemRenderer ps&&ps.trailMaterial!=null)ps.trailMaterial=BomberNukeBuilder.ConvertMaterial(ps.trailMaterial,shader,cache,Output);
+                    BomberNukeBuilder.ConvertRendererMaterials(renderer,shader,cache,Output,sourcePath);
                 }
                 float radius=BomberNukeBuilder.Measure(root,systems,autoPlay,name);root.SetActive(false);
                 foreach(var system in systems)system.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -104,3 +101,4 @@ namespace Alterverse.Editor
     }
 }
 #endif
+

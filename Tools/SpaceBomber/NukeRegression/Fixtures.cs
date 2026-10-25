@@ -83,8 +83,10 @@ namespace UnityEngine
         public Material[] sharedMaterials=Array.Empty<Material>();public Bounds bounds=>new(){center=transform.position,extents=new(6,50,4)};
         public MaterialPropertyBlock Block;public void GetPropertyBlock(MaterialPropertyBlock block){}public void SetPropertyBlock(MaterialPropertyBlock block)=>Block=block;
     }
-    public sealed class MeshRenderer:Renderer {}public sealed class MeshFilter:Component {}
-    public class ParticleSystemRenderer:Renderer {public Material trailMaterial;}
+    public class Mesh:Object {public int subMeshCount=1;}
+    public sealed class MeshRenderer:Renderer {}public sealed class MeshFilter:Component {public Mesh sharedMesh;}
+    public enum ParticleSystemRenderMode {Billboard,None,Mesh}
+    public class ParticleSystemRenderer:Renderer {public Material trailMaterial;public ParticleSystemRenderMode renderMode;public Mesh mesh;}
     public enum ParticleSystemStopBehavior {StopEmittingAndClear,StopEmitting}
     public enum ParticleSystemStopAction {None,Destroy}
     public enum ParticleSystemScalingMode {Hierarchy,Local}
@@ -104,7 +106,7 @@ namespace UnityEngine
             public ParticleSystemSimulationSpace simulationSpace=ParticleSystemSimulationSpace.World;public ParticleSystemCullingMode cullingMode;
             public MainModule Copy()=>(MainModule)MemberwiseClone();
         }
-        public MainModule main=new();public Module collision=new(),trigger=new(),lights=new(),subEmitters=new();
+        public MainModule main=new();public Module trails=new(){enabled=false},collision=new(),trigger=new(),lights=new(),subEmitters=new();
         public bool useAutoRandomSeed=true,Playing,LongFuture,StoppedEmission;public uint randomSeed;public float Age;
         public int particleCount=>Playing&&Age<.3f?1:0;public bool isPlaying=>Playing;
         public bool IsAlive(bool children)=>Playing&&(Age<.3f||LongFuture&&!StoppedEmission&&Age<main.duration);

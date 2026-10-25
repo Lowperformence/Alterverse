@@ -91,7 +91,7 @@ namespace Alterverse.Editor
             if(cast==null||hit==null)throw new FileNotFoundException("Traveler requires complete package shot/impact audio. Missing "+(cast==null?"cast ":"")+(hit==null?"impact ":"")+". Actual imported clips: "+string.Join(", ",clips));
             var shader=Shader.Find("DimensionsFront/SmallBulletParticles");if(shader==null)throw new InvalidOperationException("Existing URP projectile footprint shader is missing.");
             var assets=new Object[]{projectile,muzzle,impact,nova,cast,hit,windup,shader};
-            string signature=Version+":"+string.Join(":",assets.Where(a=>a!=null).Select(a=>AssetDatabase.GetAssetPath(a)+"="+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(a))));
+            string signature=BomberNukeBuilder.MaterialImportVersion+":"+Version+":"+string.Join(":",assets.Where(a=>a!=null).Select(a=>AssetDatabase.GetAssetPath(a)+"="+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(a))));
             var old=AssetDatabase.LoadAssetAtPath<GameObject>(Output+"/Library.prefab");if(old!=null&&old.GetComponent<TravelerLightningVfx>()?.sourceSignature==signature)return;
             building=true;var preview=EditorSceneManager.NewPreviewScene();GameObject root=null;
             try
@@ -128,10 +128,7 @@ namespace Alterverse.Editor
                 }
                 foreach(var renderer in root.GetComponentsInChildren<Renderer>(true))
                 {
-                    var materials=renderer.sharedMaterials;
-                    for(int i=0;i<materials.Length;i++)materials[i]=BomberNukeBuilder.ConvertMaterial(materials[i],shader,cache,Output);
-                    renderer.sharedMaterials=materials;
-                    if(renderer is ParticleSystemRenderer ps&&ps.trailMaterial!=null)ps.trailMaterial=BomberNukeBuilder.ConvertMaterial(ps.trailMaterial,shader,cache,Output);
+                    BomberNukeBuilder.ConvertRendererMaterials(renderer,shader,cache,Output,AssetDatabase.GetAssetPath(source));
                 }
                 float radius=BomberNukeBuilder.Measure(root,systems,play,"Traveler "+name);root.SetActive(false);
                 for(int i=0;i<systems.Length;i++)
@@ -148,3 +145,4 @@ namespace Alterverse.Editor
     }
 }
 #endif
+

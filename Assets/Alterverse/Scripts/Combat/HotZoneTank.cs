@@ -9,7 +9,7 @@ namespace Alterverse.Combat
 {
     /// <summary>Roaming reward spawned by either of the two scheduled Hot Zones.</summary>
     [RequireComponent(typeof(Health),typeof(TeamMember))]
-    public sealed class HotZoneTank:MonoBehaviour
+    public sealed partial class HotZoneTank:MonoBehaviour
     {
         private const float MaxHp=476f;
         private const float Damage=10f;
@@ -101,7 +101,7 @@ namespace Alterverse.Combat
 
         private static int coopSpawnSerial;
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetRegistry(){active.Clear();coopSpawnSerial=0;}
+        private static void ResetRegistry(){active.Clear();coopSpawnSerial=0;ResetPreparedRewards();}
         private void OnEnable(){if(!active.Contains(this))active.Add(this);}
         private void OnDisable(){active.Remove(this);shotPending=false;shotTarget=null;}
 
@@ -157,6 +157,25 @@ namespace Alterverse.Combat
                     break;
                 }
             }
+            var ready=TakePreparedReward(team);
+            GameObject go=ready!=null?ready.gameObject:CreateReward(team,spawn,GameObject.Find("DF_MatchWorld")?.transform,false).gameObject;
+            var tank=go.GetComponent<HotZoneTank>();
+            if(ready!=null)tank.ActivatePreparedReward(spawn);
+            if(Alterverse.Multiplayer.CoopAuthority.Active)
+            {
+                // Include team so an authoritative snapshot can reconstruct a missing replica.
+                // Configure after art creation so death also hides the complete visual hierarchy.
+                int occurrence=zoneOccurrence>=0?zoneOccurrence:coopSpawnSerial++;
+                string worldKey=Alterverse.Multiplayer.HotZoneRewardKey.Create(occurrence,team);
+                (go.GetComponent<Alterverse.Multiplayer.CoopWorldEntityKey>()??go.AddComponent<Alterverse.Multiplayer.CoopWorldEntityKey>()).Configure(worldKey);
+            }
+            tank.spawnAuraPending=replica;
+            if(!replica)tank.PlaySpawnAura();
+            return true;
+        }
+
+        private static HotZoneTank CreateReward(int team,Vector3 spawn,Transform world,bool reusable)
+        {
             GameObject go=GameObject.CreatePrimitive(PrimitiveType.Capsule);
             bool skeleton=ArenaVariantRuntime.IsMars,alien=ArenaVariantRuntime.IsGreenPlanet,spider=ArenaVariantRuntime.IsNoxara,bear=ArenaVariantRuntime.IsKryon;
             go.name=ArenaVariantRuntime.IsExoplanet?"DF_"+(team==0?"Zero":"Lumen")+ExoplanetArenaProfile.MonsterName(ArenaVariantRuntime.Current):ArenaVariantRuntime.IsGJ504b?(team==0?"DF_ZeroGJ504bSandBeast":"DF_LumenGJ504bSandBeast"):bear?(team==0?"DF_ZeroKryonFrostBear":"DF_LumenKryonFrostBear"):
@@ -166,21 +185,13 @@ namespace Alterverse.Combat
                 (team==0?"DF_ZeroHotZoneTank":"DF_LumenHotZoneTank");
             go.transform.position=spawn;
             go.transform.localScale=new Vector3(1.15f,.9f,1.35f);
-            GameObject world=GameObject.Find("DF_MatchWorld");if(world!=null)go.transform.SetParent(world.transform,true);
+            if(world!=null)go.transform.SetParent(world,true);
 
             Renderer baseRenderer=go.GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;
-            Health hp=go.AddComponent<Health>();hp.Configure(MaxHp,true);
+            Health hp=go.AddComponent<Health>();hp.Configure(MaxHp,!reusable);
             TeamMember member=go.AddComponent<TeamMember>();member.Initialize(team);
             go.AddComponent<HotZoneTank>().Initialize(team,spawn,skeleton,alien,spider,bear);
-            if(Alterverse.Multiplayer.CoopAuthority.Active)
-            {
-                // Include team so an authoritative snapshot can reconstruct a missing replica.
-                // Configure after art creation so death also hides the complete visual hierarchy.
-                int occurrence=zoneOccurrence>=0?zoneOccurrence:coopSpawnSerial++;
-                string worldKey=Alterverse.Multiplayer.HotZoneRewardKey.Create(occurrence,team);
-                go.AddComponent<Alterverse.Multiplayer.CoopWorldEntityKey>().Configure(worldKey);
-            }
-            return true;
+            return go.GetComponent<HotZoneTank>();
         }
 
         private ReferenceMonsterRig referenceRig;
@@ -256,6 +267,7 @@ namespace Alterverse.Combat
 
         private void Update()
         {
+            if(health!=null&&health.IsDead&&pooledReward){ReturnToRewardPool(gameObject);return;}
             if(Time.timeScale<=0f||health==null||health.IsDead)return;
             TrackRootMovement(Time.deltaTime);
             if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)
@@ -1527,6 +1539,7 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 
 
