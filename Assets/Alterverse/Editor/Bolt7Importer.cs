@@ -15,7 +15,7 @@ namespace Alterverse.Editor
     // FBX settings are deterministic and applied on first import after pulling the branch.
     public sealed class Bolt7ModelImporter:AssetPostprocessor
     {
-        public override uint GetVersion()=>1;
+        public override uint GetVersion()=>2;
 
         private void OnPreprocessModel()
         {
@@ -48,6 +48,9 @@ namespace Alterverse.Editor
             var importer=(TextureImporter)assetImporter;importer.mipmapEnabled=!assetPath.Contains("/Icons/");
             importer.maxTextureSize=assetPath.Contains("/Icons/")?512:2048;
             if(assetPath.Contains("_Normal_"))importer.textureType=TextureImporterType.NormalMap;
+            // A cached local preset can leave these PNGs imported as cubemaps.
+            // Their colour, normal and icon materials all require 2D textures.
+            importer.textureShape=TextureImporterShape.Texture2D;
         }
     }
 
