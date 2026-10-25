@@ -11,7 +11,9 @@ namespace Alterverse.Visuals
     {public HeroPresentationBuffer(float delay){}public void Clear(){}public void Push(Vector3 p,Quaternion q,float t,bool reset){}public void PushRemote(Vector3 p,Quaternion q,float sample,float now,bool reset){}public bool Evaluate(float now,out Vector3 p,out Quaternion q){p=default;q=default;return false;}}
     public static class LunarSurfaceField {public static Vector3 Surface(float x,float z)=>new(x,2,z);}
     public static class DiamondCoreGuardianWorldVisual
-    {public static void SetReservedVisibility(Alterverse.Combat.HotZoneTank t,bool visible){}public static bool TryGetBounds(Alterverse.Combat.HotZoneTank t,out Bounds b){b=default;return false;}}
+    {public static void UploadPreparedGeometry(Alterverse.Combat.HotZoneTank t,ISet<Mesh> uploaded=null){}public static void SetReservedVisibility(Alterverse.Combat.HotZoneTank t,bool visible){}public static bool TryGetBounds(Alterverse.Combat.HotZoneTank t,out Bounds b){b=default;return false;}}
+    public static class AuthoredHotZoneArt
+    {public static int Uploads;public static void UploadPreparedGeometry(Transform root,ISet<Mesh> uploaded=null){Uploads++;}}
 }
 namespace Alterverse.Combat
 {
@@ -46,3 +48,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

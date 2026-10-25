@@ -48,6 +48,10 @@ namespace Alterverse.Combat {
   public static void Reset()=>active.Clear();
   // Rendering/AI initialization is a fixture; spawn decisions and identity are production code.
   void Initialize(int team,Vector3 p,bool s,bool a,bool spider,bool bear){health=GetComponent<Health>();}
+  static HotZoneTank TakePreparedReward(int team)=>null;
+  void ActivatePreparedReward(Vector3 spawn){}
+  bool spawnAuraPending;void PlaySpawnAura(){}
+  public static bool ReturnToRewardPool(GameObject actor)=>false;
  }
 }
 namespace Alterverse.Match {
@@ -91,6 +95,10 @@ class Regression {
   sync.Receive(Pose(first));var replica=sync.Find(first);Check(replica!=null&&HotZoneTank.Active.Count==1,"missing resolve event recovered by snapshot");
   Check(replica.GetComponent<TeamMember>().Team==0&&replica.transform.position.x==12,"snapshot restores team and live pose");
   sync.Receive(Pose(first,120,false,14));Check(HotZoneTank.Active.Count==1&&replica.GetComponent<Health>().Current==120&&replica.transform.position.x==14,"repeated snapshot moves/damages same replica");
+  replica.Configure(HotZoneRewardKey.Create(50,0));
+  sync.Receive(Pose(first,1,false,30));
+  Check(replica.GetComponent<Health>().Current==120&&replica.transform.position.x==14,"late old-occurrence pose/health cannot mutate a reused actor");
+  replica.Configure(first);sync=new GameObject().AddComponent<CoopWorldStateSync>();sync.Receive(Pose(first,120,false,14));
   sync.Receive(Pose(first,0,true));Check(replica.GetComponent<Health>().IsDead&&replica.Hidden,"authoritative death hides replica");
   string second=HotZoneRewardKey.Create(1,1);sync.Receive(Pose(second));sync.Receive(Pose(HotZoneRewardKey.Create(2,0)));
   Check(sync.Find(second)?.GetComponent<TeamMember>().Team==1&&HotZoneTank.Active.Count==3,"client cache cap cannot suppress real host reward");
@@ -106,3 +114,4 @@ class Regression {
   Console.WriteLine($"PASS {checks} reward lifecycle/result checks; production spawn, snapshot receive and result capture. Native art/physics/NGO are fixtures.");
  }
 }
+

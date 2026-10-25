@@ -98,6 +98,19 @@ namespace Alterverse.Visuals
             }
         }
 
+        internal static void UploadPreparedGeometry(Transform host,ISet<Mesh> uploaded=null)
+        {
+#if !UNITY_SERVER
+            if(host==null)return;
+            if(uploaded==null)uploaded=new HashSet<Mesh>();
+            foreach(var filter in host.GetComponentsInChildren<MeshFilter>(true))
+                if(filter.sharedMesh!=null&&uploaded.Add(filter.sharedMesh))filter.sharedMesh.UploadMeshData(false);
+            foreach(var renderer in host.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                if(renderer.sharedMesh!=null&&uploaded.Add(renderer.sharedMesh))renderer.sharedMesh.UploadMeshData(false);
+            // Keep CPU-readable meshes for the existing visual/animation systems.
+#endif
+        }
+
         static string Classify(string name)
         {
             if(name=="Cube"||name=="DF_SharedBeveledMachineBox")return "Box";
@@ -174,4 +187,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

@@ -43,12 +43,14 @@ static class Regression
         Check(HotZoneTank.Active.Count==0&&Health.Active.Count==0,"preparation never advertises actors to gameplay or network registries");
         Check(!HotZoneTank.FinishMatchPreparation(),"loading remains visible while detail managers finish");
         Time.unscaledTime=1;Check(HotZoneTank.FinishMatchPreparation(),"loading completes after detail warmup");
+        Check(AuthoredHotZoneArt.Uploads==4,"geometry upload completes under the loading surface for both winning teams");
         var reserved=world.GetComponentsInChildren<HotZoneTank>(true);
         Check(reserved.All(t=>!t.gameObject.activeInHierarchy&&t.IsReservedReward),"all complete actors stay inactive before objective resolution");
         int loads=Resources.Loads,objects=GameObject.All.Count;
         Check(HotZoneTank.Spawn(0,0)&&HotZoneTank.Spawn(0,1),"same team can win two objectives");
         Check(HotZoneTank.Active.Count==2&&!HotZoneTank.Spawn(1,2),"host retains two-living-monster cap");
         Check(HotZoneTank.Constructions==4&&GameObject.All.Count==objects&&Resources.Loads==loads,"spawn does no actor construction, instantiation or resource loading");
+        Check(AuthoredHotZoneArt.Uploads==4,"warm spawn adds no mesh upload step");
         Check(HotZoneTank.Active.All(t=>t.TankHealth.Current==476&&!t.TankHealth.DestroyOnDeath),"prepared actors spawn with full original health");
         Check(HotZoneTank.Active.Select(t=>t.GetComponent<CoopWorldEntityKey>().Key).Distinct().Count()==2,"occurrences retain distinct network identities");
         Check(reserved.All(t=>t.gameObject.GetComponentsInChildren<CoopWorldEntityKey>(true).Length==1),"reuse does not add duplicate identity components");
@@ -83,3 +85,4 @@ static class Regression
         Console.WriteLine($"PASS {checks} Hot Zone reserve/authority/network identity/spawn location/aura source/material/lifecycle checks. Controlled substitutes; Unity rendering and device profiling remain separate.");
     }
 }
+

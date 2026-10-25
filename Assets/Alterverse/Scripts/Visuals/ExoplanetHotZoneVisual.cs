@@ -171,6 +171,7 @@ namespace Alterverse.Visuals
             Mesh mesh=new(){name="DF_ExoplanetSmoothBody",vertices=vertices,normals=normals,uv=uv,triangles=triangles.ToArray()};
             mesh.RecalculateBounds();mesh.RecalculateTangents();return mesh;
         }
+        void OnEnable(){lastPosition=transform.position;phase=stride=0f;}
         void LateUpdate()
         {
             Vector3 delta=transform.position-lastPosition;delta.y=0;lastPosition=transform.position;
@@ -187,4 +188,5 @@ namespace Alterverse.Visuals
         {foreach(Mesh mesh in meshes)if(mesh!=null)Destroy(mesh);foreach(Material material in materials)if(material!=null)Destroy(material);}
     }
 }
+
 

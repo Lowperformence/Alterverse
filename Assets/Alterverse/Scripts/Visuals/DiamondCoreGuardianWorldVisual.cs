@@ -50,6 +50,14 @@ namespace Alterverse.Visuals
             manager.SyncGuardians();
         }
 
+        public static void UploadPreparedGeometry(HotZoneTank tank,ISet<Mesh> uploaded=null)
+        {
+            var host=GameObject.Find("DF_PSRJ1719_DiamondGuardianWorldVisual");
+            var manager=host!=null?host.GetComponent<DiamondCoreGuardianWorldVisual>():null;
+            if(manager!=null&&manager.visuals.TryGetValue(tank,out VisualState state)&&state.root!=null)
+                AuthoredHotZoneArt.UploadPreparedGeometry(state.root.transform,uploaded);
+        }
+
         public static void SetReservedVisibility(HotZoneTank tank,bool visible)
         {
             if(!ArenaVariantRuntime.IsDiamondCore)return;
@@ -265,6 +273,7 @@ namespace Alterverse.Visuals
         void OnDestroy(){ClearAll();}
     }
 }
+
 
 
 

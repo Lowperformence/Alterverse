@@ -52,10 +52,13 @@ namespace Alterverse.Combat
         {
             if(preparationFinished||preparedWorld==null)return true;
             if(!immediately&&Time.unscaledTime<preparationReadyAt)return false;
+            var uploadedGeometry=new HashSet<Mesh>();
             foreach(var tank in preparedRewards)
             {
                 if(tank==null)continue;
                 tank.spawnAuraRadius=tank.MeasureSpawnAuraRadius();
+                AuthoredHotZoneArt.UploadPreparedGeometry(tank.transform,uploadedGeometry);
+                DiamondCoreGuardianWorldVisual.UploadPreparedGeometry(tank,uploadedGeometry);
                 // Cache the complete post-detail hierarchy before first spawn.
                 if(CoopAuthority.Active)
                     tank.gameObject.AddComponent<CoopWorldEntityKey>().Configure("RESERVED_HOTZONE");
@@ -132,3 +135,4 @@ namespace Alterverse.Combat
         }
     }
 }
+
