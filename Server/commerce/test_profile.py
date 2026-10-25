@@ -86,7 +86,7 @@ class ProfileTests(unittest.TestCase):
             with self.subTest(entries=entries), self.assertRaises(ValueError):
                 self.ledger.save_profile('a',entries,preserved['profileRevision'])
 
-    def test_exoplanet_purchase_costs_900_and_restores_account_unlock(self):
+    def test_exoplanet_purchase_costs_600_and_restores_account_unlock(self):
         for arena in ('Wasp76b', 'Trappist1e'):
             with self.subTest(arena=arena):
                 account='buyer-'+arena
@@ -95,7 +95,7 @@ class ProfileTests(unittest.TestCase):
                 # Exercise the same combined earned/Google-paid wallet used by the client.
                 self.ledger.fulfill(account,'dimensions_shards_500','token-'+arena,
                                     dict(self.valid,obfuscatedExternalAccountId=account))
-                self.ledger.save_profile(account,[number('DF_Shards',400)],0)
+                self.ledger.save_profile(account,[number('DF_Shards',100)],0)
                 if arena=='Wasp76b':
                     before=self.ledger.wallet(account)
                     with self.assertRaisesRegex(ValueError,'not released'):
@@ -118,11 +118,11 @@ class ProfileTests(unittest.TestCase):
                 saved=restarted.save_profile(account,[],duplicate['profileRevision'])
                 self.assertEqual(profile_value(saved,key),1)
 
-    def test_exoplanet_purchase_rejects_899_without_changing_account(self):
+    def test_exoplanet_purchase_rejects_599_without_changing_account(self):
         for arena in ('Wasp76b', 'Trappist1e'):
             with self.subTest(arena=arena):
                 account='short-'+arena
-                before=self.ledger.save_profile(account,[number('DF_Shards',899)],0)
+                before=self.ledger.save_profile(account,[number('DF_Shards',599)],0)
                 with self.assertRaises(ValueError):
                     self.ledger.purchase(account,'arena_'+arena,'e'*32,before['profileRevision'])
                 self.assertEqual(Ledger(self.path).wallet(account),before)
@@ -132,7 +132,7 @@ class ProfileTests(unittest.TestCase):
         for arena in ('Wasp76b', 'Trappist1e'):
             with self.subTest(arena=arena):
                 account='retry-'+arena
-                self.ledger.save_profile(account,[number('DF_Shards',1800)],0)
+                self.ledger.save_profile(account,[number('DF_Shards',1200)],0)
                 if arena=='Wasp76b':
                     before=self.ledger.wallet(account)
                     def rejected(_):
@@ -147,7 +147,7 @@ class ProfileTests(unittest.TestCase):
                 with ThreadPoolExecutor(max_workers=8) as pool:
                     list(pool.map(lambda _:self.ledger.purchase(account,'arena_'+arena,'f'*32,1),range(24)))
                 restored=Ledger(self.path).wallet(account)
-                self.assertEqual(profile_value(restored,'DF_Shards'),900)
+                self.assertEqual(profile_value(restored,'DF_Shards'),600)
                 self.assertEqual(profile_value(restored,'DF_ArenaOwned_'+arena),1)
 
     def test_two_devices_cannot_both_save_a_daily_payout(self):
@@ -223,9 +223,9 @@ class ProfileTests(unittest.TestCase):
         for key in ['DF_HeroOwned_Traveler','DF_HeroOwned_Nerok','DF_ArenaOwned_Noxara','DF_WeaponSkinOwnedItem_0_1','DF_BP_BETA01_Premium','DF_BattleItem_2']:
             self.assertEqual(profile_value(result,key),1)
 
-    def test_nerok_unlock_costs_2200_and_survives_retries_and_profile_sync(self):
+    def test_nerok_unlock_costs_1900_and_survives_retries_and_profile_sync(self):
         self.grant()
-        self.ledger.save_profile('a',[number('DF_Shards',1000)],0)
+        self.ledger.save_profile('a',[number('DF_Shards',700)],0)
         bought=self.ledger.purchase('a','hero_nerok','a'*32,1)
         self.assertEqual(bought['balance'],0)
         self.assertEqual(profile_value(bought,'DF_Shards'),0)
@@ -285,4 +285,5 @@ class ProfileHttpTests(unittest.TestCase):
             self.assertEqual(self.request('/wallet/spend',data)['status'],'400 Bad Request')
 
 if __name__=='__main__':unittest.main()
+
 

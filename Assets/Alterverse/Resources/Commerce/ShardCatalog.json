@@ -441,7 +441,7 @@
     },
     {
       "id": "hero_nerok",
-      "price": 2200,
+      "price": 1900,
       "writes": [
         {
           "key": "DF_HeroOwned_Nerok",
@@ -511,7 +511,7 @@
     },
     {
       "id": "arena_GreenPlanet",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_GreenPlanet",
@@ -522,7 +522,7 @@
     },
     {
       "id": "arena_Noxara",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_Noxara",
@@ -533,7 +533,7 @@
     },
     {
       "id": "arena_Earth",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_Earth",
@@ -544,7 +544,7 @@
     },
     {
       "id": "arena_Pyraxis",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_Pyraxis",
@@ -555,7 +555,7 @@
     },
     {
       "id": "arena_Dark00",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_Dark00",
@@ -566,7 +566,7 @@
     },
     {
       "id": "arena_DiamondCore",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_DiamondCore",
@@ -577,7 +577,7 @@
     },
     {
       "id": "arena_Wasp76b",
-      "price": 900,
+      "price": 600,
       "available": false,
       "writes": [
         {
@@ -589,7 +589,7 @@
     },
     {
       "id": "arena_Trappist1e",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_Trappist1e",
@@ -1265,3 +1265,4 @@
     "basePlanId": "monthly"
   }
 }
+

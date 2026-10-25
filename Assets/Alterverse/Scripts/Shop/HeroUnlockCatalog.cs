@@ -9,7 +9,7 @@ namespace Alterverse.Shop
     public static class HeroUnlockCatalog
     {
         public const int TravelerPrice=1500;
-        public const int NerokPrice=2200;
+        public const int NerokPrice=1900;
         public const int TimmyPrice=1900;
         public const int VoidKnightPrice=1600;
         public const string TravelerOwnedKey="DF_HeroOwned_Traveler";
@@ -66,3 +66,4 @@ namespace Alterverse.Shop
         }
     }
 }
+

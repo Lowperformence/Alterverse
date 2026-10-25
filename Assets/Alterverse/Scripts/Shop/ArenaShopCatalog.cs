@@ -30,16 +30,16 @@ namespace Alterverse.Shop
     /// <summary>Premium arenas are persistent shard unlocks; zero-price arenas remain immediately available.</summary>
     public static class ArenaShopCatalog
     {
-        public const int MoorPrice=900;
-        public const int PyraxisPrice=900;
-        public const int PsrPrice=900;
-        public const int NoxaraPrice=900;
-        public const int EarthPrice=900;
-        public const int Dark00Price=900;
-        public const int Wasp76bPrice=900;
+        public const int MoorPrice=600;
+        public const int PyraxisPrice=600;
+        public const int PsrPrice=600;
+        public const int NoxaraPrice=600;
+        public const int EarthPrice=600;
+        public const int Dark00Price=600;
+        public const int Wasp76bPrice=600;
         public const bool Wasp76bPurchasesEnabled=false;
         public static bool PurchaseAvailable(ArenaVariant variant)=>variant!=ArenaVariant.Wasp76b||Wasp76bPurchasesEnabled;
-        public const int Trappist1ePrice=900;
+        public const int Trappist1ePrice=600;
         public static readonly ArenaShopItem[] Items=
         {
             new(ArenaVariant.Moon,"MOON","ORIGINAL BATTLEFIELD",0,new Color(.48f,.58f,.72f)),
@@ -146,4 +146,5 @@ namespace Alterverse.Shop
         }
     }
 }
+
 

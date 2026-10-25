@@ -37,16 +37,16 @@ class LedgerTests(unittest.TestCase):
         ledger.client.transaction.assert_not_called()
         ledger.accounts.document.assert_not_called()
 
-    def test_existing_premium_heroes_still_purchase_at_their_original_prices(self):
+    def test_existing_premium_heroes_still_purchase_at_their_configured_prices(self):
         self.ledger.fulfill('account-a','dimensions_shards_5500','hero-token',self.valid)
-        for index,(sku,price,key) in enumerate((('hero_traveler',1500,'DF_HeroOwned_Traveler'),('hero_nerok',2200,'DF_HeroOwned_Nerok'))):
+        for index,(sku,price,key) in enumerate((('hero_traveler',1500,'DF_HeroOwned_Traveler'),('hero_nerok',1900,'DF_HeroOwned_Nerok'))):
             before=self.ledger.wallet('account-a')
             after=self.ledger.purchase('account-a',sku,f'{index+100:032x}',before['profileRevision'])
             self.assertEqual(after['balance'],before['balance']-price)
             self.assertEqual({e['key']:e.get('number') for e in after['profile']}[key],1)
 
     def test_wasp_purchase_hold_preserves_wallet_and_existing_entitlement(self):
-        self.assertEqual(ITEMS['arena_Wasp76b']['price'],900)
+        self.assertEqual(ITEMS['arena_Wasp76b']['price'],600)
         self.assertIs(ITEMS['arena_Wasp76b']['available'],False)
         for online in (False,True):
             for owned in (False,True):
@@ -185,3 +185,4 @@ class LedgerTests(unittest.TestCase):
     def test_unknown_consumed_token_does_not_credit(self):
         with self.assertRaises(ValueError):self.ledger.fulfill('account-a','dimensions_shards_500','token',dict(self.valid,consumptionState=1))
 if __name__=='__main__':unittest.main()
+
