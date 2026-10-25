@@ -35,7 +35,7 @@ namespace Alterverse.Visuals
             if(SystemInfo.graphicsDeviceType==UnityEngine.Rendering.GraphicsDeviceType.Null){enabled=false;return;}
             prefab??=Resources.Load<GameObject>("Bolt7/BOLT7_animated");
             if(prefab==null){Debug.LogError("DF BOLT-7: model missing at Resources/Bolt7/BOLT7_animated.fbx.",this);enabled=false;return;}
-            var root=new GameObject("DF_Bolt7VisualRoot").transform;root.SetParent(transform,false);
+            var root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);
             root.localPosition=Vector3.down*.98f;root.localScale=Vector3.one*.85f;
             model=Instantiate(prefab,root,false);model.name="BOLT7_AuthoredModel";
             foreach(Animator animator in model.GetComponentsInChildren<Animator>(true))animator.enabled=false;
@@ -45,6 +45,7 @@ namespace Alterverse.Visuals
                 int start=clip.name.LastIndexOf("BOLT7_",System.StringComparison.Ordinal);
                 if(start>=0)clips[clip.name.Substring(start+6)]=clip;
             }
+            if(clips.TryGetValue("Idle",out var idle))idle.SampleAnimation(model,0f);
             foreach(var t in model.GetComponentsInChildren<Transform>(true))
             {
                 if(t.name=="socket_gatling_muzzle")gatling=t;
@@ -75,7 +76,12 @@ namespace Alterverse.Visuals
             var texture=Resources.Load<Texture2D>("Bolt7/BOLT7_BaseColor_2K");
             if(texture!=null){if(m.HasProperty("_BaseMap"))m.SetTexture("_BaseMap",texture);if(m.HasProperty("_MainTex"))m.SetTexture("_MainTex",texture);}
             var normal=Resources.Load<Texture2D>("Bolt7/BOLT7_Normal_2K");
-            if(normal!=null&&m.HasProperty("_BumpMap")){m.SetTexture("_BumpMap",normal);m.EnableKeyword("_NORMALMAP");}
+            if(normal!=null&&m.HasProperty("_BumpMap"))
+            {
+                m.SetTexture("_BumpMap",normal);m.EnableKeyword("_NORMALMAP");
+                if(m.HasProperty("_NormalEncoding"))m.SetFloat("_NormalEncoding",1f);
+                if(m.HasProperty("_BumpScale"))m.SetFloat("_BumpScale",.6f);
+            }
             if(eyes)m.EnableKeyword("_EMISSION");materials[name]=m;return m;
         }
         private void OnDeath(){dead=true;Play("Death");}

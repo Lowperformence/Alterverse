@@ -8,7 +8,7 @@ namespace UnityEngine {
  public class Object{public bool Destroyed;public static void Destroy(Object value){value.Destroyed=true;}}
  public class MonoBehaviour:Object{}
  public class GameObject:Object{public string name;public bool activeSelf=true;public int layer;public Transform transform;public GameObject(string name){this.name=name;transform=new Transform{gameObject=this};}public void SetActive(bool value){activeSelf=value;}public T AddComponent<T>()where T:new()=>new();public T[] GetComponentsInChildren<T>(bool includeInactive=false)=>Array.Empty<T>();}
- public class Transform{public GameObject gameObject;public Quaternion localRotation;public void SetParent(Transform parent,bool world){}public Transform Find(string name)=>new();}
+ public class Transform{public GameObject gameObject;public Quaternion localRotation;public void SetParent(Transform parent,bool world){}public static bool MissingVisualRoot;public Transform Find(string name)=>MissingVisualRoot&&name=="DF_VisualRoot"?null:new();}
  public struct Quaternion{public static Quaternion Euler(float x,float y,float z)=>new();}
  public class Texture:Object{}
  public class RenderTexture:Texture{}
@@ -32,7 +32,7 @@ namespace UnityEngine {
  public static class Debug{public static void LogWarning(object value){Console.WriteLine(value);}}
 }
 namespace UnityEngine.Rendering{public enum ShadowCastingMode{Off}}
-namespace Alterverse.Characters{public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Nerok,Traveler,Timmy,VoidKnight}public class HeroIdentity{public const int HeroCount=10;public void Configure(HeroId hero){}}}
+namespace Alterverse.Characters{public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok,Timmy,VoidKnight,Bolt7}public class HeroIdentity{public const int HeroCount=11;public void Configure(HeroId hero){}}}
 namespace Alterverse.Visuals{public class StylizedHeroVisual{public static int Builds;public void Build(){Builds++;}}}
 namespace Alterverse.Shop{
  public enum UniversalHeroCosmetic{Original,Voidfall,BetaCap}
@@ -58,6 +58,12 @@ public static class Regression{
   showcase.Present(HeroId.Veyr,true);Assert(ReferenceEquals(first,showcase.TestActor),"Recent actor must survive LRU eviction");
   showcase.Present(HeroId.Veyr,true,cosmeticOverride:Alterverse.Shop.UniversalHeroCosmetic.Voidfall);Assert(!ReferenceEquals(first,showcase.TestActor),"Different cosmetics need their own correctly built preview");
   var costume=showcase.TestActor;showcase.Present(HeroId.Veyr,true,cosmeticOverride:Alterverse.Shop.UniversalHeroCosmetic.Voidfall);Assert(ReferenceEquals(costume,showcase.TestActor),"Repeated OnGUI calls must reuse the same preview");
+  UnityEngine.Transform.MissingVisualRoot=true;
+  showcase.Present(HeroId.Bolt7,true);
+  Assert(showcase.TestActor.activeSelf&&showcase.TestNeedsFit,"A dedicated hero without a humanoid visual root must remain visible and reach camera fitting");
+  var bolt=showcase.TestActor;showcase.Present(HeroId.Bolt7,true);
+  Assert(ReferenceEquals(bolt,showcase.TestActor),"Repeated BOLT-7 preview calls must remain cached after a missing optional visual root");
+  UnityEngine.Transform.MissingVisualRoot=false;
   var backdrop=new HeroOriginBackdrop();EngineBoundary.BlockPixels=true;
   Assert(backdrop.SpriteFor(HeroId.Veyr)==null,"First backdrop request must return while CPU work is pending");
   Assert(EngineBoundary.Started.Wait(2000)&&UnityEngine.Texture2D.Created==0,"CPU work runs off the main thread without creating Unity textures");
@@ -70,3 +76,4 @@ public static class Regression{
   Console.WriteLine(checks+" preview cache/background scheduling checks passed (controlled engine, no native frame-time claim).");
  }
 }
+

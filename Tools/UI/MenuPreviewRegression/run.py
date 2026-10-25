@@ -35,7 +35,7 @@ with tempfile.TemporaryDirectory(prefix='df-preview-') as folder:
         method(showcase,'        private static void SetPreviewWeaponVariant(')+
         'private Transform orbitLeft,orbitRight,wingLeft,wingRight;'+
         'private void CreateStage(){stage=new GameObject("stage");}private void UpdateOriginWorld(HeroId hero){}'+
-        'public GameObject TestActor=>actor;public int TestCacheCount=>previews.Count;'+
+        'public GameObject TestActor=>actor;public int TestCacheCount=>previews.Count;public bool TestNeedsFit=>needsFit;'+
         method(showcase,'        public void Present(')+'}}')
     output=folder/'PreviewRegression.dll';response=folder/'compile.rsp'
     response.write_text('\n'.join(['-nologo','-nowarn:0649,0414','-langversion:9','-out:'+str(output),
@@ -43,3 +43,4 @@ with tempfile.TemporaryDirectory(prefix='df-preview-') as folder:
     subprocess.run([str(args.dotnet_root/'dotnet'),str(sdk/'Roslyn/bincore/csc.dll'),'@'+str(response)],check=True)
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))
     subprocess.run([str(args.dotnet_root/'dotnet'),str(output)],check=True)
+

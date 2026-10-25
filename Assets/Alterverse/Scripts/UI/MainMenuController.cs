@@ -36,6 +36,7 @@ namespace Alterverse.UI
         private Page page = Page.Home;
         private bool visible = true, launching, coopLaunching, nameRerollBusy, suspended;
         private bool choosingMatchMode;
+        private Vector2 heroRosterScroll;
         private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1, weaponSkinVariant;
         private int playArenaBrowseIndex=-1,mapShopPageStart;
         private bool battlePassPreviewPremium;
@@ -592,34 +593,47 @@ namespace Alterverse.UI
         }
         private void DrawHeroes()
         {
-            Heading("Heroes",$"{HeroIdentity.HeroCount} heroes. Choose how you fight.");
-            const float rosterWidth=244f;
-            float rowStep=HeroIdentity.HeroCount>10?42f:HeroIdentity.HeroCount>9?46f:HeroIdentity.HeroCount>8?48f:55f;
-            for(int i=0;i<HeroIdentity.HeroCount;i++)
+            const float rosterWidth=244f,rowStep=48f;
+            float portraitX=Left+rosterWidth+16;
+            float portraitWidth=Mathf.Clamp(ContentWidth*.275f,292f,356f);
+            float attacksX=portraitX+portraitWidth+18;
+            float attacksWidth=Right-attacksX;
+            // The heading sits above the hero card so the roster can use the full column.
+            theme.Label(new Rect(portraitX,110,Right-portraitX,52),"Heroes",theme.Title);
+            theme.Label(new Rect(portraitX,166,Right-portraitX,30),$"{HeroIdentity.HeroCount} heroes. Choose how you fight.",theme.Body,true);
+            Rect roster=new Rect(Left,112,rosterWidth,572);
+            float listHeight=Mathf.Max(roster.height,HeroIdentity.HeroCount*rowStep-5f);
+            float rowWidth=rosterWidth-(listHeight>roster.height?20f:0f);
+            heroRosterScroll=GUI.BeginScrollView(roster,heroRosterScroll,new Rect(0,0,rowWidth,listHeight),false,false);
+            try
             {
-                Rect row=new Rect(Left,216+i*rowStep,rosterWidth,rowStep-5f);
-                HeroId rowHero=(HeroId)i;
-                bool chosen=i==selectedHero;
-                bool owned=HeroUnlockInventory.Owned(rowHero);
-                if(theme.Action(row,"",selected:chosen))ChangeHero(i);
-                FrontEndTheme.Fill(new Rect(row.x+5,row.y+10,3,row.height-20),Alterverse.Visuals.StylizedArtDirection.HeroAccent(rowHero));
-                float labelX=rowHero==HeroId.Bolt7?48f:18f;
-                if(rowHero==HeroId.Bolt7&&Alterverse.Visuals.Bolt7Visual.Portrait!=null)
-                    GUI.DrawTexture(new Rect(row.x+10,row.y+5,28,28),Alterverse.Visuals.Bolt7Visual.Portrait,ScaleMode.ScaleToFit,true);
-                theme.Label(new Rect(row.x+labelX,row.y+(rowStep<55f?3f:5f),row.width-labelX-14,rowStep<55f?22f:24f),HeroIdentity.NameFor(rowHero),theme.Body);
-                string subtitle=!HeroUnlockCatalog.Released(rowHero)?"COMING SOON":owned?Roles[i]:$"LOCKED  •  {HeroUnlockCatalog.Price(rowHero):N0} SHARDS";
-                theme.Label(new Rect(row.x+labelX,row.y+(rowStep<55f?25f:31f),row.width-labelX-14,rowStep<55f?17f:18f),subtitle,theme.Small,true);
+                for(int i=0;i<HeroIdentity.HeroCount;i++)
+                {
+                    Rect row=new Rect(0,i*rowStep,rowWidth,rowStep-5f);
+                    HeroId rowHero=(HeroId)i;
+                    bool chosen=i==selectedHero;
+                    bool owned=HeroUnlockInventory.Owned(rowHero);
+                    if(theme.Action(row,"",selected:chosen))ChangeHero(i);
+                    FrontEndTheme.Fill(new Rect(row.x+5,row.y+10,3,row.height-20),Alterverse.Visuals.StylizedArtDirection.HeroAccent(rowHero));
+                    var icon=rowHero==HeroId.Bolt7?Alterverse.Visuals.Bolt7Visual.Portrait:null;
+                    float labelX=icon!=null?48f:18f;
+                    if(icon!=null)
+                    {
+                        Color beforeIcon=GUI.color;GUI.color=Color.white;
+                        GUI.DrawTexture(new Rect(row.x+10,row.y+7,28,28),icon,ScaleMode.ScaleToFit,true);
+                        GUI.color=beforeIcon;
+                    }
+                    theme.Label(new Rect(row.x+labelX,row.y+3f,row.width-labelX-14,22f),HeroIdentity.NameFor(rowHero),theme.Body);
+                    string subtitle=!HeroUnlockCatalog.Released(rowHero)?"COMING SOON":owned?Roles[i]:$"LOCKED  •  {HeroUnlockCatalog.Price(rowHero):N0} SHARDS";
+                    theme.Label(new Rect(row.x+labelX,row.y+24f,row.width-labelX-14,16f),subtitle,theme.Small,true);
+                }
             }
+            finally{GUI.EndScrollView();}
 
             HeroId heroId=(HeroId)selectedHero;
             bool heroOwned=HeroUnlockInventory.Owned(heroId);
             bool heroReleaseLocked=!HeroUnlockCatalog.Released(heroId);
             Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent(heroId);
-            float portraitX=Left+rosterWidth+16;
-            float portraitWidth=Mathf.Clamp(ContentWidth*.275f,292f,356f);
-            float attacksX=portraitX+portraitWidth+18;
-            float attacksWidth=Right-attacksX;
-
             theme.Label(new Rect(portraitX,212,portraitWidth,44),HeroName,theme.Heading);
             theme.FitLabel(new Rect(portraitX,250,portraitWidth,22),Roles[selectedHero]+"  •  "+Strengths[selectedHero],theme.Small,true);
             DrawPortrait(new Rect(portraitX,282,portraitWidth,272));

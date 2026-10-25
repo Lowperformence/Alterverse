@@ -162,8 +162,8 @@ namespace Alterverse.UI
             }
             actor.SetActive(true);
             Transform visual=actor.transform.Find("DF_VisualRoot");
-            orbitLeft=visual.Find("DF_OrbitL"); orbitRight=visual.Find("DF_OrbitR");
-            wingLeft=visual.Find("DF_WingL"); wingRight=visual.Find("DF_WingR");
+            orbitLeft=visual!=null?visual.Find("DF_OrbitL"):null; orbitRight=visual!=null?visual.Find("DF_OrbitR"):null;
+            wingLeft=visual!=null?visual.Find("DF_WingL"):null; wingRight=visual!=null?visual.Find("DF_WingR"):null;
             float facing=hero==HeroId.Nyra?-24:hero==HeroId.Kaelon?-24:-16;
             actor.transform.localRotation=Quaternion.Euler(0,facing,0);
             needsFit = true;
@@ -188,7 +188,8 @@ namespace Alterverse.UI
                 bool body = name == "Hips" || name == "Spine" || name == "Chest" || name == "Head" ||
                     name.StartsWith("UpperArm", System.StringComparison.Ordinal) || name.StartsWith("Hand", System.StringComparison.Ordinal) ||
                     name.StartsWith("Foot", System.StringComparison.Ordinal) || name.StartsWith("Shin", System.StringComparison.Ordinal);
-                bool tip = name == "DF_Muzzle" || name == "DF_SupportGrip" || name == "DF_TankHammerTop" || name == "DF_MageStaffTop";
+                bool tip = name == "DF_Muzzle" || name == "DF_SupportGrip" || name == "DF_TankHammerTop" || name == "DF_MageStaffTop" ||
+                    name == "socket_gatling_muzzle" || name == "socket_grenade_muzzle";
                 if (!body && !tip) continue;
                 Vector3 point = cameraSpace * (joint.position - actor.transform.position);
                 // Discard outliers rather than pointing the portrait camera out of its stage.
