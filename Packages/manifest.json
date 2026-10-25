@@ -52,15 +52,20 @@
     "com.unity.modules.xr": "1.0.0",
     "com.unity.purchasing": "5.4.3",
     "com.google.external-dependency-manager": "1.2.188",
-    "com.google.play.games": "https://github.com/playgameservices/play-games-plugin-for-unity.git?path=/Assets/Public/GooglePlayGames/com.google.play.games#v2.2.1"
+    "com.google.play.games": "https://github.com/playgameservices/play-games-plugin-for-unity.git?path=/Assets/Public/GooglePlayGames/com.google.play.games#v2.2.1",
+    "com.google.play.review": "1.8.4"
   },
   "scopedRegistries": [
     {
       "name": "OpenUPM",
       "url": "https://package.openupm.com",
       "scopes": [
-        "com.google.external-dependency-manager"
+        "com.google.external-dependency-manager",
+        "com.google.play.common",
+        "com.google.play.core",
+        "com.google.play.review"
       ]
     }
   ]
 }
+

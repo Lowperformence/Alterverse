@@ -7,6 +7,22 @@
       "dependencies": {},
       "url": "https://package.openupm.com"
     },
+    "com.google.play.common": {
+      "version": "1.9.2",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://package.openupm.com"
+    },
+    "com.google.play.core": {
+      "version": "1.8.6",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {
+        "com.google.external-dependency-manager": "1.2.185"
+      },
+      "url": "https://package.openupm.com"
+    },
     "com.google.play.games": {
       "version": "https://github.com/playgameservices/play-games-plugin-for-unity.git?path=/Assets/Public/GooglePlayGames/com.google.play.games#v2.2.1",
       "depth": 0,
@@ -15,6 +31,16 @@
         "com.google.external-dependency-manager": "1.2.182"
       },
       "hash": "050198623594baf4d333ab99095ae41244f64335"
+    },
+    "com.google.play.review": {
+      "version": "1.8.4",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.google.play.common": "1.9.2",
+        "com.google.play.core": "1.8.6"
+      },
+      "url": "https://package.openupm.com"
     },
     "com.unity.ai.navigation": {
       "version": "2.0.14",
@@ -632,3 +658,4 @@
     }
   }
 }
+

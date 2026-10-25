@@ -7,32 +7,72 @@ namespace Alterverse.UI
 {
     public sealed partial class MainMenuController
     {
-        // 0 = no completed first match, 1 = waiting for menu, 2 = already offered.
-        private const string ReviewPromptKey = "DF_FirstMatchReviewPrompt_v1";
-        private bool reviewPromptOpen;
+        private bool reviewPromptOpen, reviewRequestBusy, reviewStoreFallback;
         private string reviewPromptAccount;
-        public static bool ReviewPromptVisible => IsVisible && instance.reviewPromptOpen &&
+        private string reviewPromptMessage = "Already left a review? Tap ALREADY RATED.";
+        public static bool ReviewPromptVisible => IsVisible &&
+            (instance.reviewPromptOpen || instance.reviewRequestBusy) &&
             instance.reviewPromptAccount == AccountProfilePrefs.Account;
 
         private void UpdateReviewPrompt()
         {
-            if (reviewPromptOpen && reviewPromptAccount != AccountProfilePrefs.Account)
+            if (reviewPromptOpen && (reviewPromptAccount != AccountProfilePrefs.Account ||
+                ReviewPromptProgress.AlreadyRated))
                 reviewPromptOpen = false;
-            if (reviewPromptOpen || launching || choosingMatchMode || MatchExit.Leaving ||
+            if (reviewPromptOpen || reviewRequestBusy || launching || choosingMatchMode || MatchExit.Leaving ||
                 CoopAuthority.Active || RankedPanel.Visible || !AccountServerBootstrap.CloudProfileReady ||
                 Time.unscaledTime - pageChangedAt < .5f ||
                 Screen.safeArea.width <= 0 || Screen.safeArea.height <= 0)
                 return;
-            if (AccountProfilePrefs.GetInt(ReviewPromptKey, 0) != 1 ||
-                Alterverse.Profile.MatchRewardService.MatchesCompleted < 1)
-                return;
+            int completedMatches = Alterverse.Profile.MatchRewardService.MatchesCompleted;
+            if (!ReviewPromptProgress.ShouldOffer(completedMatches)) return;
 
             reviewPromptAccount = AccountProfilePrefs.Account;
             reviewPromptOpen = true;
-            // Save on display, including dismissal: this is a single invitation, not a nag.
-            AccountProfilePrefs.SetInt(ReviewPromptKey, 2);
-            AccountProfilePrefs.Save();
+            reviewStoreFallback = false;
+            reviewPromptMessage = "Already left a review? Tap ALREADY RATED.";
+            // Consume only this invitation. Dismissal does not mean the player rated.
+            ReviewPromptProgress.MarkOffered(completedMatches);
             GUIUtility.hotControl = 0;
+        }
+
+        private async void RequestStoreReview()
+        {
+            if (reviewRequestBusy) return;
+            string account = reviewPromptAccount;
+            reviewRequestBusy = true;
+            StoreReviewResult result;
+            try { result = await NativeStoreReview.RequestAsync(); }
+            finally { reviewRequestBusy = false; }
+            if (this == null || account != AccountProfilePrefs.Account ||
+                ReviewPromptProgress.AlreadyRated) return;
+
+            // A finished native flow is not proof that the card appeared or a rating
+            // was submitted. Offer an explicit store fallback, never an automatic redirect.
+            reviewStoreFallback = true;
+            reviewPromptMessage = result == StoreReviewResult.FlowFinished
+                ? "If you rated, tap ALREADY RATED. Otherwise, use Google Play."
+                : "You can also leave your review directly on Google Play.";
+            reviewPromptOpen = true;
+        }
+
+        private static void DrawReviewStars(float centerX, float centerY)
+        {
+            // Five gold stars drawn as geometry, independent of font glyph coverage.
+            Color gold = new Color(1f, .79f, .27f);
+            for (int star = 0; star < 5; star++)
+            {
+                Vector2 center = new Vector2(centerX + (star - 2) * 62, centerY);
+                for (int point = 0; point < 10; point++)
+                {
+                    float a = point * Mathf.PI / 5 - Mathf.PI * .5f;
+                    float b = (point + 1) * Mathf.PI / 5 - Mathf.PI * .5f;
+                    float r1 = point % 2 == 0 ? 25 : 11;
+                    float r2 = point % 2 == 0 ? 11 : 25;
+                    CombatGlyphs.Line(center + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r1,
+                        center + new Vector2(Mathf.Cos(b), Mathf.Sin(b)) * r2, 4, gold);
+                }
+            }
         }
 
         private void DrawReviewPrompt()
@@ -41,26 +81,40 @@ namespace Alterverse.UI
             GUI.enabled = true;
             FrontEndTheme.Fill(new Rect(0, 0, menuWidth, MenuHeight), new Color(0, 0, 0, .72f));
             float width = Mathf.Min(760, menuWidth - 64), x = (menuWidth - width) * .5f;
-            theme.Panel(new Rect(x, 164, width, 392));
-            theme.Label(new Rect(x + 32, 190, width - 64, 66),
-                "GALACTIC SUPPORT", theme.Title);
-            theme.Label(new Rect(x + 32, 270, width - 64, 116),
+            theme.Panel(new Rect(x, 82, width, 564));
+            theme.Label(new Rect(x + 32, 106, width - 64, 66), "GALACTIC SUPPORT", theme.Title);
+            DrawReviewStars(menuWidth * .5f, 207);
+            theme.Label(new Rect(x + 32, 249, width - 64, 40), "RATE DIMENSIONS FRONT", theme.Heading);
+            theme.Label(new Rect(x + 32, 299, width - 64, 100),
                 "Thank you for playing! Give us some galactic support by rating DIMENSIONS FRONT 5 stars on Google Play. Your support helps our galaxy grow!",
                 theme.Body);
-            theme.Label(new Rect(x + 32, 394, width - 64, 28),
-                "Thank you for your support!",
-                theme.Small, true);
+            theme.Label(new Rect(x + 32, 403, width - 64, 28),
+                reviewRequestBusy ? "Opening Google Play rating..." : reviewPromptMessage, theme.Small, true);
+
+            if (theme.Action(new Rect(x + 32, 443, width - 64, 58),
+                reviewStoreFallback ? "OPEN GOOGLE PLAY" : "RATE 5 STARS", true,
+                enabled: !reviewRequestBusy))
+            {
+                if (reviewStoreFallback) { reviewPromptOpen = false; NativeStoreReview.OpenStore(); }
+                else RequestStoreReview();
+            }
             float buttonWidth = (width - 80) * .5f;
-            if (theme.Action(new Rect(x + 32, 458, buttonWidth, 58),
-                "RATE NOW", true))
+            if (theme.Action(new Rect(x + 32, 513, buttonWidth, 50), "NOT NOW",
+                enabled: !reviewRequestBusy))
+                reviewPromptOpen = false;
+            if (theme.Action(new Rect(x + 48 + buttonWidth, 513, buttonWidth, 50), "ALREADY RATED",
+                enabled: !reviewRequestBusy))
+            {
+                ReviewPromptProgress.ConfirmAlreadyRated();
+                reviewPromptOpen = false;
+            }
+            if (theme.Action(new Rect(x + 32, 577, width - 64, 42), "RATE ON GOOGLE PLAY",
+                enabled: !reviewRequestBusy))
             {
                 reviewPromptOpen = false;
-                Application.OpenURL("https://play.google.com/store/apps/details?id=" +
-                    System.Uri.EscapeDataString(Application.identifier));
+                NativeStoreReview.OpenStore();
             }
-            if (theme.Action(new Rect(x + 48 + buttonWidth, 458, buttonWidth, 58),
-                "NOT NOW"))
-                reviewPromptOpen = false;
         }
     }
 }
+
