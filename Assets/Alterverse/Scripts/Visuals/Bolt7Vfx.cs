@@ -15,6 +15,7 @@ namespace Alterverse.Visuals
         private bool warned;
         private const float GrenadeVisualScale=.70f;
         private const float BasicVisualScale=1f/3f;
+        private const float AttackSoundVolumeMultiplier=.65f;
         private static readonly Color RamColor=new Color(1f,.68f,.22f,.95f);
         public static void Warm()
         {
@@ -174,7 +175,7 @@ namespace Alterverse.Visuals
             for(int i=0;i<part.sounds.Length;i++)
             {
                 var sound=part.sounds[i];if(sound==null||sound.clip==null||!sound.gameObject.activeInHierarchy)continue;
-                sound.volume=Mathf.Clamp01(part.gains[i]*volume*attenuation);sound.panStereo=pan;
+                sound.volume=Mathf.Clamp01(part.gains[i]*volume*attenuation)*AttackSoundVolumeMultiplier;sound.panStereo=pan;
                 if(part.soundStarted[i]){sound.UnPause();continue;}
                 var trigger=sound.GetComponent<ParticleSystem>();
                 if(trigger!=null&&(!trigger.main.playOnAwake||trigger.main.startDelay.constantMax>0)&&trigger.particleCount==0)continue;
