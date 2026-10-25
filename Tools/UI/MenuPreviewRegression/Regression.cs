@@ -14,7 +14,22 @@ namespace UnityEngine {
  public class RenderTexture:Texture{}
  public class Camera:Object{}
  public class SpriteRenderer:Object{public Sprite sprite;}
- public class Texture2D:Texture{public static int Created;public static Texture2D whiteTexture=new(1,1,TextureFormat.RGBA32,false);public Color32[] Pixels;public TextureWrapMode wrapMode;public FilterMode filterMode;public string name;public Texture2D(int w,int h,TextureFormat format,bool mip){EngineBoundary.MainOnly();Created++;}public void SetPixels32(Color32[] pixels){EngineBoundary.MainOnly();Pixels=pixels;}public void Apply(bool mip,bool discard){EngineBoundary.MainOnly();}}
+ public class Texture2D:Texture{public int width,height;public static int Created,Uploads;public static Texture2D whiteTexture=new(1,1,TextureFormat.RGBA32,false);public Color32[] Pixels;public TextureWrapMode wrapMode;public FilterMode filterMode;public string name;public Texture2D(int w,int h,TextureFormat format,bool mip){EngineBoundary.MainOnly();width=w;height=h;Created++;}public void SetPixels32(Color32[] pixels){EngineBoundary.MainOnly();Uploads++;Pixels=pixels;}public void Apply(bool mip,bool discard){EngineBoundary.MainOnly();}}
+ public static class Resources{
+  public static string Root,MissingHero;public static int LoadCalls;
+  static readonly Dictionary<string,Texture2D> cache=new();
+  public static T Load<T>(string path)where T:class{
+   EngineBoundary.MainOnly();LoadCalls++;string hero=path.Substring(path.LastIndexOf('/')+1);
+   if(hero==MissingHero)return null;
+   if(!cache.TryGetValue(path,out var texture)){
+    byte[] rgb=System.IO.File.ReadAllBytes(System.IO.Path.Combine(Root,hero+".rgb"));
+    texture=new Texture2D(1024,576,TextureFormat.RGBA32,false){name=hero,Pixels=new Color32[1024*576]};
+    for(int i=0;i<texture.Pixels.Length;i++)texture.Pixels[i]=new(){r=rgb[i*3],g=rgb[i*3+1],b=rgb[i*3+2],a=255};
+    cache[path]=texture;
+   }
+   return texture as T;
+  }
+ }
  public enum TextureFormat{RGBA32}public enum TextureWrapMode{Clamp}public enum FilterMode{Bilinear}public enum SpriteMeshType{FullRect}
  public class Sprite:Object{public string name;public Texture texture;public static Sprite Create(Texture2D texture,Rect r,Vector2 pivot,float units,uint extrude,SpriteMeshType mesh){EngineBoundary.MainOnly();return new(){texture=texture};}}
  public struct Vector2{public float x,y;public Vector2(float x,float y){this.x=x;this.y=y;}}
@@ -26,7 +41,7 @@ namespace UnityEngine {
  public static class Mathf{
   public const float PI=(float)Math.PI;public static int Clamp(int n,int a,int b)=>Math.Max(a,Math.Min(b,n));public static float Clamp01(float n)=>Math.Max(0,Math.Min(1,n));public static int RoundToInt(float n)=>(int)Math.Round(n);
   public static float Pow(float n,float e)=>(float)Math.Pow(n,e);public static float Abs(float n)=>Math.Abs(n);public static float Exp(float n)=>(float)Math.Exp(n);public static float Sqrt(float n)=>(float)Math.Sqrt(n);public static float Sin(float n)=>(float)Math.Sin(n);public static float Min(float a,float b)=>Math.Min(a,b);public static float Max(float a,float b)=>Math.Max(a,b);public static float SmoothStep(float a,float b,float t){t=Clamp01(t);return a+(b-a)*t*t*(3-2*t);}
-  public static float PerlinNoise(float x,float y){Interlocked.Increment(ref EngineBoundary.NoiseCalls);if(EngineBoundary.BlockPixels){EngineBoundary.Started.Set();EngineBoundary.Release.Wait();}return .5f+.2f*(float)Math.Sin(x+y);}
+  public static float PerlinNoise(float x,float y)=>throw new Exception("Runtime backdrop must not generate pixels");
  }
  public static class Time{public static float unscaledTime;}
  public class Renderer{public Rendering.ShadowCastingMode shadowCastingMode;public bool receiveShadows;public Material sharedMaterial;public void GetPropertyBlock(MaterialPropertyBlock block){}public void SetPropertyBlock(MaterialPropertyBlock block){}}
@@ -45,15 +60,14 @@ namespace Alterverse.Shop{
  public class CosmeticDefinition{public bool Headwear;}public static class CosmeticCatalog{public static CosmeticDefinition Find(UniversalHeroCosmetic cosmetic)=>null;}
 }
 public static class EngineBoundary{
- public static int MainThread=Thread.CurrentThread.ManagedThreadId,NoiseCalls;
- public static volatile bool BlockPixels;public static ManualResetEventSlim Started=new(),Release=new();
+ public static int MainThread=Thread.CurrentThread.ManagedThreadId;
  public static void MainOnly(){if(Thread.CurrentThread.ManagedThreadId!=MainThread)throw new Exception("Unity graphics object was accessed on a worker");}
 }
 public static class Regression{
  static int checks;static void Assert(bool ok,string reason){checks++;if(!ok)throw new Exception(reason);}
- static void Wait(Func<bool> predicate){for(int i=0;i<3000;i++){if(predicate())return;Thread.Sleep(1);}throw new Exception("Preview fixture timed out");}
  static ulong Fingerprint(UnityEngine.Texture2D texture){ulong hash=14695981039346656037;foreach(var p in texture.Pixels){hash=unchecked((hash^p.r)*1099511628211);hash=unchecked((hash^p.g)*1099511628211);hash=unchecked((hash^p.b)*1099511628211);}return hash;}
- public static void Main(){
+ public static void Main(string[] args){
+  UnityEngine.Resources.Root=args[0];
   EngineBoundary.MainThread=Thread.CurrentThread.ManagedThreadId;
   var showcase=new MenuHeroShowcase();showcase.Present(HeroId.Veyr,true);var first=showcase.TestActor;
   showcase.Present(HeroId.Kaelon,true);Assert(!first.activeSelf,"Switching must deactivate the previous actor");
@@ -68,44 +82,43 @@ public static class Regression{
   var bolt=showcase.TestActor;showcase.Present(HeroId.Bolt7,true);
   Assert(ReferenceEquals(bolt,showcase.TestActor),"Repeated BOLT-7 preview calls must remain cached after a missing optional visual root");
   UnityEngine.Transform.MissingVisualRoot=false;
-  Wait(()=>{showcase.TestPoll();return showcase.BackgroundImage!=null;});
   showcase.TestDispose();
-  int textureCount=UnityEngine.Texture2D.Created;
-  var backdrop=new HeroOriginBackdrop();EngineBoundary.BlockPixels=true;
-  Assert(backdrop.SpriteFor(HeroId.Veyr)==null,"First backdrop request must return while CPU work is pending");
-  Assert(EngineBoundary.Started.Wait(2000)&&UnityEngine.Texture2D.Created==textureCount,"CPU work runs off the main thread without creating Unity textures");
-  EngineBoundary.BlockPixels=false;EngineBoundary.Release.Set();UnityEngine.Sprite ready=null;Wait(()=>{ready=backdrop.SpriteFor(HeroId.Veyr);return ready!=null;});
-  int calls=EngineBoundary.NoiseCalls;Assert(ReferenceEquals(ready,backdrop.SpriteFor(HeroId.Veyr))&&EngineBoundary.NoiseCalls==calls,"Completed background is cached without recalculating its pixels");
-  EngineBoundary.BlockPixels=true;EngineBoundary.Started.Reset();EngineBoundary.Release.Reset();backdrop.SpriteFor(HeroId.Kaelon);Assert(EngineBoundary.Started.Wait(2000),"Second backdrop worker started");
-  backdrop.SpriteFor(HeroId.Nyra);EngineBoundary.BlockPixels=false;EngineBoundary.Release.Set();UnityEngine.Sprite newest=null;Wait(()=>{newest=backdrop.SpriteFor(HeroId.Nyra);return newest!=null;});
-  Assert(newest.name.EndsWith("Nyra")&&UnityEngine.Texture2D.Created==textureCount+2,"A rapid switch must discard the canceled background and install only the requested hero");
-  backdrop.Dispose();Assert(ready.Destroyed&&newest.Destroyed&&backdrop.SpriteFor(HeroId.Veyr)==null,"Disposal destroys cached sprites and cannot restart workers");
   var worlds=new HeroOriginBackdrop();var fingerprints=new HashSet<ulong>();var colours=new HashSet<UnityEngine.Color>();
   foreach(HeroId hero in Enum.GetValues<HeroId>()){
-   UnityEngine.Sprite world=null;Wait(()=>{world=worlds.SpriteFor(hero);return world!=null;});
+   var world=worlds.SpriteFor(hero);
+   Assert(world!=null,"Every hero must have finished artwork on its FIRST request, without polling or CPU preparation");
    Assert(world.name=="DF_OriginWorld_"+hero,"Every roster entry must receive its own named world");
-   Assert(fingerprints.Add(Fingerprint((UnityEngine.Texture2D)world.texture)),"Every hero needs distinct artwork, including Timmy, Void Knight and BOLT-7");
-   Assert(colours.Add(HeroOriginBackdrop.BaseColorFor(hero)),"Every hero needs a distinct immediate background colour");
+   Assert(fingerprints.Add(Fingerprint((UnityEngine.Texture2D)world.texture)),"Every hero needs distinct imported artwork");
+   Assert(colours.Add(HeroOriginBackdrop.BaseColorFor(hero)),"Every hero needs a distinct fallback colour");
+   int loads=UnityEngine.Resources.LoadCalls;
+   Assert(ReferenceEquals(world,worlds.SpriteFor(hero))&&loads==UnityEngine.Resources.LoadCalls,"Repeated requests must reuse the cached sprite without loading again");
   }
-  ulong original=Fingerprint((UnityEngine.Texture2D)worlds.SpriteFor(HeroId.Bolt7).texture);
-  worlds.Dispose();worlds=new HeroOriginBackdrop();UnityEngine.Sprite rebuilt=null;
-  Wait(()=>{rebuilt=worlds.SpriteFor(HeroId.Bolt7);return rebuilt!=null;});
-  Assert(Fingerprint((UnityEngine.Texture2D)rebuilt.texture)==original,"Reopening a world must reproduce the same pixels and colours");worlds.Dispose();
-  var view=new MenuHeroShowcase();view.Present(HeroId.Veyr,true);
-  Wait(()=>{view.TestPoll();return view.BackgroundImage!=null;});var oldWorld=view.BackgroundImage;
-  EngineBoundary.BlockPixels=true;EngineBoundary.Started.Reset();EngineBoundary.Release.Reset();view.Present(HeroId.Bolt7,true);
-  Assert(EngineBoundary.Started.Wait(2000)&&view.BackgroundImage==null,"A new hero must never display the previous hero's world while preparing");
+  var ready=worlds.SpriteFor(HeroId.Veyr);var imported=ready.texture;
+  ulong original=Fingerprint((UnityEngine.Texture2D)imported);
+  worlds.Dispose();worlds.Dispose();
+  Assert(ready.Destroyed&&!imported.Destroyed&&worlds.SpriteFor(HeroId.Veyr)==null,"Disposal must destroy only owned sprites, never imported/shared textures");
+  worlds=new HeroOriginBackdrop();var rebuilt=worlds.SpriteFor(HeroId.Veyr);
+  Assert(ReferenceEquals(rebuilt.texture,imported)&&Fingerprint((UnityEngine.Texture2D)rebuilt.texture)==original,"Reopening a world must reuse the same imported image and colours");worlds.Dispose();
+  var view=new MenuHeroShowcase();view.Present(HeroId.Veyr,true);var oldWorld=view.BackgroundImage;
+  Assert(oldWorld!=null,"The preview must show finished art immediately on first presentation");
+  UnityEngine.Resources.MissingHero="Bolt7";view.Present(HeroId.Bolt7,true);
+  Assert(view.BackgroundImage==null,"A missing imported image must never leave the previous hero's world visible");
+  int missingLoads=UnityEngine.Resources.LoadCalls;view.TestPoll();
+  Assert(UnityEngine.Resources.LoadCalls==missingLoads,"A missing asset must not trigger work every frame");
   UnityEngine.GUI.color=new UnityEngine.Color(.2f,.5f,.8f,.7f);view.DrawPreview(new UnityEngine.Rect(0,0,200,300));
-  Assert(UnityEngine.GUI.Draws.Count==1&&UnityEngine.GUI.Draws[0].colour.Equals(HeroOriginBackdrop.BaseColorFor(HeroId.Bolt7)),"Pending artwork must use the selected hero's own palette");
+  Assert(UnityEngine.GUI.Draws.Count==1&&UnityEngine.GUI.Draws[0].colour.Equals(HeroOriginBackdrop.BaseColorFor(HeroId.Bolt7)),"Missing artwork must use the selected hero's own palette");
+  UnityEngine.Resources.MissingHero=null;
   view.Present(HeroId.Veyr,true);Assert(ReferenceEquals(oldWorld,view.BackgroundImage),"Switching to a cached hero must restore its own world immediately");
-  view.Present(HeroId.Nyra,true);Assert(view.BackgroundImage==null,"Rapid switching must also clear cached worlds from other heroes");
-  EngineBoundary.BlockPixels=false;EngineBoundary.Release.Set();Wait(()=>{view.TestPoll();return view.BackgroundImage!=null;});
-  Assert(((UnityEngine.Texture2D)view.BackgroundImage).name=="DF_OriginWorldTexture_Nyra","Only the latest selected hero may supply completed artwork");
+  foreach(HeroId hero in new[]{HeroId.Nyra,HeroId.Elyra,HeroId.Timmy,HeroId.VoidKnight,HeroId.Nerok,HeroId.Veyr}){
+   view.Present(hero,true);
+   Assert(((UnityEngine.Texture2D)view.BackgroundImage).name==hero.ToString(),"Rapid switching must show the current hero's imported image on the same call");
+  }
+  TimeAdvance(view);
   var inherited=new UnityEngine.Color(.2f,.5f,.8f,.7f);UnityEngine.GUI.color=inherited;view.DrawPreview(new UnityEngine.Rect(0,0,200,300));
   Assert(UnityEngine.GUI.Draws[1].colour.Equals(new UnityEngine.Color(1,1,1,.7f))&&UnityEngine.GUI.color.Equals(inherited),"Other GUI controls must not recolour the background, and their tint must be restored");
+  Assert(UnityEngine.Texture2D.Uploads==0,"Selecting heroes must never generate or upload pixel arrays");
   view.TestDispose();
-  Console.WriteLine(checks+" preview cache/background scheduling checks passed (controlled engine, no native frame-time claim).");
+  Console.WriteLine(checks+" preview/imported-background checks passed (controlled engine, no native frame-time claim).");
  }
+ static void TimeAdvance(MenuHeroShowcase view){var image=view.BackgroundImage;UnityEngine.Time.unscaledTime+=3;view.TestPoll();Assert(ReferenceEquals(image,view.BackgroundImage),"The picture must stay the same after the former three-second preparation interval");}
 }
-
-

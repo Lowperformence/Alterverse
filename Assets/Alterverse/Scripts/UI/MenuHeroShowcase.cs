@@ -70,7 +70,7 @@ namespace Alterverse.UI
             GUI.BeginGroup(rect);
             Rect local=new Rect(0f,0f,rect.width,rect.height);
             Color oldColor=GUI.color;
-            // Use the selected world's palette immediately, even while its artwork is preparing.
+            // A missing imported asset still uses only the selected hero's palette.
             GUI.color=hasSelection?HeroOriginBackdrop.BaseColorFor(selected):new Color(.010f,.014f,.024f,1f);
             GUI.DrawTexture(local,Texture2D.whiteTexture,ScaleMode.StretchToFill,false);
             GUI.color=new Color(1f,1f,1f,oldColor.a);
@@ -95,7 +95,7 @@ namespace Alterverse.UI
         public void Present(HeroId hero, bool visible, bool? skinOverride=null,bool? weaponOverride=null,
             Alterverse.Shop.UniversalHeroCosmetic? cosmeticOverride=null,int? weaponVariantOverride=null)
         {
-            if (!visible) { if (stage != null) stage.SetActive(false); originBackdrop?.CancelPending(); return; }
+            if (!visible) { if (stage != null) stage.SetActive(false); return; }
             if (stage == null) CreateStage();
             stage.SetActive(true);
 
@@ -175,8 +175,7 @@ namespace Alterverse.UI
             if(originWorld==null)return;
             originBackdrop??=new HeroOriginBackdrop();
             var sprite=originBackdrop.SpriteFor(hero);
-            // A pending request must clear the previous hero's world. Keeping it here
-            // made the same hero appear to change colour when asynchronous work finished.
+            // A missing asset must never leave another hero's world behind.
             originWorld.sprite=sprite;
         }
         private void FitPreviewBounds()
@@ -305,7 +304,7 @@ namespace Alterverse.UI
                 needsFit = false;
             }
         }
-        private void OnDisable() { Alterverse.Profile.ProfileTransaction.Committed-=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged-=InvalidateLoadout; originBackdrop?.CancelPending(); if (stage != null) stage.SetActive(false); }
+        private void OnDisable() { Alterverse.Profile.ProfileTransaction.Committed-=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged-=InvalidateLoadout; if (stage != null) stage.SetActive(false); }
         private void OnDestroy()
         {
             if (previewCamera != null) previewCamera.targetTexture = null;

@@ -1,7 +1,7 @@
-"""Exercise production preview selection/cache and async backdrop with controlled engine objects.
+"""Exercise production preview selection/cache and immediate imported hero artwork.
 
-Pixel fixture uses a smaller buffer and deterministic math substitutes. This does not
-measure Unity/Android frame time, native Perlin noise or GPU upload latency.
+Tests read the actual committed PNGs and use controlled engine objects. This does
+not measure Unity/Android disk, texture decompression or GPU latency.
 """
 import argparse
 import json
@@ -9,6 +9,8 @@ import re
 from pathlib import Path
 import subprocess
 import tempfile
+import hashlib
+from PIL import Image
 
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--dotnet-root',type=Path,required=True)
@@ -27,8 +29,8 @@ runtime=sorted((args.dotnet_root/'shared/Microsoft.NETCore.App').iterdir())[-1]
 with tempfile.TemporaryDirectory(prefix='df-preview-') as folder:
     folder=Path(folder)
     backdrop=(source/'HeroOriginBackdrop.cs').read_text()
-    assert 'private const int Width = 2048;' in backdrop and 'private const int Height = 1152;' in backdrop
-    (folder/'Backdrop.cs').write_text(backdrop.replace('Width = 2048','Width = 64').replace('Height = 1152','Height = 36'))
+    assert not any(code in backdrop for code in ['Task.Run','BuildPixels(','SetPixels32(','PerlinNoise('])
+    (folder/'Backdrop.cs').write_text(backdrop)
     showcase=(source/'MenuHeroShowcase.cs').read_text()
     fields=showcase[showcase.index('        private const int PreviewLayer'):showcase.index('        // Older local skin scripts')]
     (folder/'Selection.cs').write_text('using UnityEngine;using Alterverse.Characters;using Alterverse.Visuals;namespace Alterverse.UI {public sealed class MenuHeroShowcase:MonoBehaviour {'+fields+
@@ -52,6 +54,26 @@ with tempfile.TemporaryDirectory(prefix='df-preview-') as folder:
         *['-r:'+str(p) for p in runtime.glob('*.dll')],str(folder/'Regression.cs'),str(folder/'Backdrop.cs'),str(folder/'Selection.cs')]))
     subprocess.run([str(args.dotnet_root/'dotnet'),str(sdk/'Roslyn/bincore/csc.dll'),'@'+str(response)],check=True)
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))
-    subprocess.run([str(args.dotnet_root/'dotnet'),str(output)],check=True)
+    assets=root/'Assets/Alterverse/Resources/UI/HeroOriginBackdrops'
+    heroes=[h.strip().split('=')[0].strip() for h in hero_enum.split('{')[1].split('}')[0].split(',')]
+    hashes=set();guids=set()
+    for hero in heroes:
+        png=assets/(hero+'.png')
+        with Image.open(png) as image:
+            image.load()
+            assert image.size==(1024,576) and image.mode=='RGB'
+            rgb=image.tobytes()
+        digest=hashlib.sha256(rgb).hexdigest()
+        assert digest not in hashes,hero+' duplicates another hero backdrop'
+        hashes.add(digest)
+        (folder/(hero+'.rgb')).write_bytes(rgb)
+        meta=png.with_suffix('.png.meta').read_text()
+        assert all(setting in meta for setting in ['enableMipMap: 0','isReadable: 0','npotScale: 0','maxTextureSize: 1024','alphaSource: 0'])
+        guid=re.search(r'^guid: (\w+)',meta,re.M).group(1)
+        assert guid not in guids
+        guids.add(guid)
+    assert len(list(assets.glob('*.png')))==len(heroes)
+    print(f'{len(heroes)} imported PNGs verified: complete, distinct, correct resolution and Unity import settings.',flush=True)
+    subprocess.run([str(args.dotnet_root/'dotnet'),str(output),str(folder)],check=True)
 
 
