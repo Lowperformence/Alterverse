@@ -55,7 +55,7 @@ namespace Alterverse.Characters
                     new("Void Resonance",0,30,0),
                     new("Rift Sweep",7,24,3.4f,0,.28f),
                     new("Null Guard",12,0,0),
-                    new("Rift Lunge",9,16,4f,0,.18f),
+                    new("Rift Lunge",9,22,4f,0,.18f),
                     new("Eventide Cleave",40,42,3.8f,0,.65f)),
                 HeroId.Timmy=>new HeroAbilityLoadout(
                     new("Light Paws",0,0,0),
