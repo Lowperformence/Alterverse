@@ -12,10 +12,12 @@ namespace Alterverse.Shop
         public const int NerokPrice=1900;
         public const int TimmyPrice=1900;
         public const int VoidKnightPrice=1600;
+        public const int Bolt7Price=1800;
         public const string TravelerOwnedKey="DF_HeroOwned_Traveler";
         public const string NerokOwnedKey="DF_HeroOwned_Nerok";
         public const string TimmyOwnedKey="DF_HeroOwned_Timmy";
         public const string VoidKnightOwnedKey="DF_HeroOwned_VoidKnight";
+        public const string Bolt7OwnedKey="DF_HeroOwned_Bolt7";
         // Listed for preview, but purchase and deployment remain blocked until release.
         public const bool TimmyReleased=false;
         public const bool VoidKnightReleased=false;
@@ -30,13 +32,14 @@ namespace Alterverse.Shop
             HeroId.Nerok=>NerokPrice,
             HeroId.Timmy=>TimmyPrice,
             HeroId.VoidKnight=>VoidKnightPrice,
+            HeroId.Bolt7=>Bolt7Price,
             _=>0
         };
-        public static bool Purchasable(HeroId hero)=>hero==HeroId.Traveler||hero==HeroId.Nerok||hero==HeroId.Timmy||hero==HeroId.VoidKnight;
+        public static bool Purchasable(HeroId hero)=>hero==HeroId.Traveler||hero==HeroId.Nerok||hero==HeroId.Timmy||hero==HeroId.VoidKnight||hero==HeroId.Bolt7;
         public static string OwnedKey(HeroId hero)=>hero==HeroId.Traveler?TravelerOwnedKey:
-            hero==HeroId.Nerok?NerokOwnedKey:hero==HeroId.Timmy?TimmyOwnedKey:hero==HeroId.VoidKnight?VoidKnightOwnedKey:null;
+            hero==HeroId.Nerok?NerokOwnedKey:hero==HeroId.Timmy?TimmyOwnedKey:hero==HeroId.VoidKnight?VoidKnightOwnedKey:hero==HeroId.Bolt7?Bolt7OwnedKey:null;
         public static string PurchaseSku(HeroId hero)=>hero==HeroId.Traveler?"hero_traveler":
-            hero==HeroId.Nerok?"hero_nerok":hero==HeroId.Timmy?"hero_timmy":hero==HeroId.VoidKnight?"hero_void_knight":null;
+            hero==HeroId.Nerok?"hero_nerok":hero==HeroId.Timmy?"hero_timmy":hero==HeroId.VoidKnight?"hero_void_knight":hero==HeroId.Bolt7?"hero_bolt7":null;
     }
 
     public static class HeroUnlockInventory

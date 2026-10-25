@@ -762,7 +762,7 @@ namespace Alterverse.UI
             float w=ContentWidth*.54f,x=Left+w+32,rw=ContentWidth-w-32;
             theme.Panel(new Rect(Left,270,w,394));
             FrontEndTheme.Fill(new Rect(Left,270,5,394),Alterverse.Visuals.StylizedArtDirection.HeroAccent(hero));
-            float tabWidth=(w-68f)/4f;
+            float tabWidth=(w-76f)/5f;
             if(theme.Action(new Rect(Left+22,282,tabWidth,32),"TRAVELER",selected:hero==HeroId.Traveler))
                 selectedHero=(int)HeroId.Traveler;
             if(theme.Action(new Rect(Left+30+tabWidth,282,tabWidth,32),"NEROK ABYSS",selected:hero==HeroId.Nerok))
@@ -771,15 +771,18 @@ namespace Alterverse.UI
                 selectedHero=(int)HeroId.Timmy;
             if(theme.Action(new Rect(Left+46+tabWidth*3,282,tabWidth,32),"VOID KNIGHT",selected:hero==HeroId.VoidKnight))
                 selectedHero=(int)HeroId.VoidKnight;
+            if(theme.Action(new Rect(Left+54+tabWidth*4,282,tabWidth,32),"BOLT-7",selected:hero==HeroId.Bolt7))
+                selectedHero=(int)HeroId.Bolt7;
             DrawPortrait(new Rect(Left+22,320,w-44,280));
-            theme.Center(new Rect(Left+22,614,w-44,34),hero==HeroId.VoidKnight?"PREMIUM HERO  •  ARMORED SKIRMISHER":hero==HeroId.Timmy?"PREMIUM HERO  •  FELINE ASSASSIN":hero==HeroId.Nerok?
+            theme.Center(new Rect(Left+22,614,w-44,34),hero==HeroId.Bolt7?"PREMIUM HERO  •  COMPACT MECH":hero==HeroId.VoidKnight?"PREMIUM HERO  •  ARMORED SKIRMISHER":hero==HeroId.Timmy?"PREMIUM HERO  •  FELINE ASSASSIN":hero==HeroId.Nerok?
                 "PREMIUM HERO  •  TIDAL BRUISER":"PREMIUM HERO  •  TEMPORAL SKIRMISHER");
 
             theme.Label(new Rect(x,276,rw,58),HeroIdentity.NameFor(hero).ToUpperInvariant(),theme.Title);
-            theme.Label(new Rect(x,342,rw,28),hero==HeroId.VoidKnight?"GREATSWORD / PARRY / LIFE DRAIN":hero==HeroId.Timmy?"JETPACK / CLAWS / SINGLE TARGET":hero==HeroId.Nerok?
+            theme.Label(new Rect(x,342,rw,28),hero==HeroId.Bolt7?"GATLING / GRENADES / SHIELD BREAK":hero==HeroId.VoidKnight?"GREATSWORD / PARRY / LIFE DRAIN":hero==HeroId.Timmy?"JETPACK / CLAWS / SINGLE TARGET":hero==HeroId.Nerok?
                 "ANCHOR / PULL / AREA CONTROL":"TIME / LIGHT / MOBILITY  •  NO COMBAT POWER ADVANTAGE",theme.Small,true);
             theme.Label(new Rect(x,384,rw,92),
-                hero==HeroId.VoidKnight?
+                hero==HeroId.Bolt7?
+                "A compact combat mech with a rapid-fire Gatling, two short-range grenades and Piston Ram. Null Field strips current enemy shields from its area.":hero==HeroId.VoidKnight?
                 "An armored swordsman from an unknown galaxy. Control distance with a two-handed greatsword, parry incoming strikes and drain enemy health with Eventide Cleave. Coming soon.":hero==HeroId.Timmy?
                 "A small cat astronaut with suit claws and a twin-nozzle jetpack. Pounce into range, scratch one enemy and slip away. Coming soon.":hero==HeroId.Nerok?
                 "A shark bruiser with a heavy anchor. Hook enemies, protect yourself and draw opponents into an abyssal vortex.":

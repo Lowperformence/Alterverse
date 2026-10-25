@@ -1,6 +1,6 @@
 # BOLT-7 playable test hero
 
-Pull `codex/epic-toon-replacement-20261024`, let Unity finish importing, and choose **BOLT-7** in HEROES. He is available without a purchase. The exact authored mesh, rig and poses are loaded from `Assets/Alterverse/Resources/Bolt7/Model.bytes`. Textures, portrait and five ability icons are loaded from PNG byte resources in `Bolt7/Raw`. Original PNG/FBX authoring files are preserved under `ArtSource/Heroes/Bolt7`.
+Pull `codex/epic-toon-replacement-20261024`, let Unity finish importing, and choose **BOLT-7** in HEROES. Unlock him in STORE for **1,800 shards**. Preview remains available while locked; human selection/deployment requires ownership. Bots can draw BOLT-7 regardless of human ownership. The exact authored mesh, rig and poses are loaded from `Assets/Alterverse/Resources/Bolt7/Model.bytes`. Textures, portrait and five ability icons are loaded from PNG byte resources in `Bolt7/Raw`. Original PNG/FBX authoring files are preserved under `ArtSource/Heroes/Bolt7`.
 
 ## Controls and baseline
 
@@ -87,3 +87,24 @@ Manual and tap AOE poses carry an explicit world point through the existing host
 `python Tools/AI/BotRosterRegression/run.py --dotnet-root /path/to/dotnet8`
 
 Offline, co-op, online and dedicated bot slots draw from every HeroId, including paid heroes, without consulting human ownership or release gates. New rounds draw again while preserving remaining humans' chosen heroes. Bots avoid teammates' already selected heroes. Online draws use the match id and team as a deterministic seed; clients keep the authoritative roster. Human purchase/selection rules and ranked full-human requirements remain unchanged.
+
+
+### Death-body rig compatibility
+
+BOLT-7's authored 19-bone mech rig uses Pelvis, a rigid Chest and two weapon arms. The death-body builder now maps it to 13 independent passive bodies and 12 joints rather than requiring the humanoid Hips/Spine/Forearm/Hand layout. All original skin bones, Gatling barrel/ram details and grenade drum stay on private copied transforms. The gameplay skeleton is never driven by corpse physics. Existing humanoid/procedural ragdolls keep 16 bodies/15 joints, isolated physics, renderer-local fade and bounded lifetime/scene cleanup.
+
+`python Tools/Visuals/HeroDeathRegression/run.py --dotnet-root /path/to/dotnet8`
+
+The fixture compiles the real corpse builder with the shipped BOLT model and checks complete skin/weapon copies, joints, physics-scene routing, live-skeleton isolation, fade and cleanup. Native PhysX collapse must be checked in Unity using **DIMENSIONS FRONT > Checks > Hero death bodies (Play Mode)**. That check now understands the mech layout too.
+
+### BOLT-7 purchase and server rollout
+
+BOLT-7 is a released shard hero at **1,800 shards**, SKU `hero_bolt7`, permanent account key `DF_HeroOwned_Bolt7`. The Heroes screen and the dedicated BOLT-7 store tab use the normal price/owned/pending/insufficient-funds paths. The unlock is atomic with the earned-shard debit offline, or uses the existing durable server purchase operation online. Selection rechecks ownership after account changes. Bots do not consult this gate.
+
+`python Tools/Shop/Bolt7PurchaseRegression/run.py --dotnet-root /path/to/dotnet8`
+
+`cd Server/commerce` then `python -m unittest test_bolt7 test_ledger test_profile test_void_knight test_purchase_restoration`
+
+Client checks exercise the real wallet, inventory, journal, selection, account cache and commerce coroutines. Server checks cover the actual SQLite and Firestore adapters (strict transactional Firestore fixture), earned-only/paid-only/mixed purchases, retries, parallel attempts, account isolation, ownership restoration and server-controlled pricing through HTTP.
+
+**Rollout requirement:** rebuild/redeploy the existing account/commerce service with the updated shared `Assets/Alterverse/Resources/Commerce/ShardCatalog.json`. Its Dockerfile copies this catalog into the server image; an older running image does not know `hero_bolt7`. Preserve the existing authentication, Firestore storage and billing configuration. This is the persistent account service, separate from the ephemeral Edgegap match server. No production account deployment or real shard payment was performed by these source/fixture checks.

@@ -475,6 +475,17 @@
       ]
     },
     {
+      "id": "hero_bolt7",
+      "price": 1800,
+      "writes": [
+        {
+          "key": "DF_HeroOwned_Bolt7",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
       "id": "battlepass_beta01",
       "price": 1000,
       "writes": [
