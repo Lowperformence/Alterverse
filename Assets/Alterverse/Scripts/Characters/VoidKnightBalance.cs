@@ -2,7 +2,7 @@ namespace Alterverse.Characters
 {
     public static class VoidKnightBalance
     {
-        public const float RawHealth=290f,BasicDamage=18f,BasicRange=3.1f,BasicInterval=1.2f,BasicWindup=.28f;
+        public const float RawHealth=290f,BasicDamage=20f,BasicRange=3.1f,BasicInterval=1.2f,BasicWindup=.28f;
         public const float BonusHealth=40f;
         public const int PassiveHits=3;
         public const float PassiveShield=30f,PassiveSeconds=2f;
