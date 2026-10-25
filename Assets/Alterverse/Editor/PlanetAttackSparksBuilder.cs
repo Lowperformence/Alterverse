@@ -19,7 +19,7 @@ namespace Alterverse.Editor
     public sealed class PlanetAttackSparksBuilder:IPreprocessBuildWithReport
     {
         private const string Source="Assets/Epic Toon FX",Output="Assets/Alterverse/Resources/CombatVfx/PlanetAttackSparks";
-        private const string Version="Native planet attack Sparks 1";
+        private const string Version="Native planet attack Sparks 2";
         private static bool building;
         public int callbackOrder=>-420;
         static PlanetAttackSparksBuilder()
@@ -36,18 +36,44 @@ namespace Alterverse.Editor
         {try{Build();}catch(Exception e){throw new BuildFailedException("Planet attack Sparks: "+e.Message);}}
         private static string Normal(string s)=>new string(s.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
 
+        internal static int SparksRank(string path)
+        {
+            if(string.IsNullOrEmpty(path))return -1;
+            path=path.Replace((char)92,'/');
+            string normalized=Normal(path);
+            if(!path.StartsWith(Source+"/",StringComparison.OrdinalIgnoreCase)||normalized.Contains("2dalternate")||normalized.Contains("demo")||normalized.Contains("sparkle"))return -1;
+            string name=Normal(Path.GetFileNameWithoutExtension(path));
+            if(name=="sparks")return 0;
+            if(name=="spark")return 1;
+            // Package variants can use generic colour/style filenames inside a
+            // Sparks family folder. Do not require the plural word in the filename.
+            var parts=path.Split('/');
+            for(int i=0;i<parts.Length-1;i++)
+                if(Normal(parts[i]).StartsWith("spark",StringComparison.Ordinal))return 2;
+            return name.Contains("spark")?3:-1;
+        }
+
+        internal static string FindSparksSource()
+        {
+            var all=AssetDatabase.FindAssets("t:Prefab",new[]{Source}).Select(AssetDatabase.GUIDToAssetPath).ToArray();
+            var ranked=all.Where(p=>SparksRank(p)>=0).OrderBy(SparksRank)
+                .ThenBy(p=>Normal(p).Contains("loop")?1:0).ThenBy(p=>p,StringComparer.Ordinal);
+            foreach(string path in ranked)
+            {
+                var prefab=AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if(prefab!=null&&prefab.GetComponentsInChildren<ParticleSystem>(true).Length>0)return path;
+            }
+            string candidates=string.Join(", ",all.Where(p=>Normal(p).Contains("spark")).Take(16));
+            throw new FileNotFoundException("No native Sparks/Spark particle prefab found under "+Source+
+                ". Spark-related imported prefabs: "+(candidates.Length>0?candidates:"<none>")+". Expected the Environment Sparks family, not Interactive Sparkle.");
+        }
+
         [MenuItem("DIMENSIONS FRONT/VFX/Prepare planet attack Sparks only")]
         public static void Build()
         {
             if(building)return;
             if(EditorApplication.isPlaying)throw new InvalidOperationException("Exit Play Mode first.");
-            var paths=AssetDatabase.FindAssets("t:Prefab",new[]{Source}).Select(AssetDatabase.GUIDToAssetPath)
-                .Where(p=>p.StartsWith(Source+"/",StringComparison.OrdinalIgnoreCase)&&!Normal(p).Contains("2dalternate")&&!Normal(p).Contains("demo"))
-                .Where(p=>Normal(Path.GetFileNameWithoutExtension(p)).Contains("sparks"))
-                .OrderBy(p=>Normal(Path.GetFileNameWithoutExtension(p))=="sparks"?0:1)
-                .ThenBy(p=>Normal(p).Contains("loop")?1:0).ThenBy(p=>p,StringComparer.Ordinal).ToArray();
-            if(paths.Length==0)throw new FileNotFoundException("Sparks prefab not found under "+Source+". Import the purchased Epic Toon FX Sparks effect.");
-            string path=paths[0];var original=AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            string path=FindSparksSource();var original=AssetDatabase.LoadAssetAtPath<GameObject>(path);
             var shader=Shader.Find("DimensionsFront/BomberNukeParticles");
             if(original==null||shader==null)throw new InvalidOperationException("Native Sparks source or URP particle shader missing.");
             string signature=Version+":"+BomberNukeBuilder.MaterialImportVersion+":"+path+"="+AssetDatabase.GetAssetDependencyHash(path)+":"+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(shader));
@@ -92,3 +118,4 @@ namespace Alterverse.Editor
     }
 }
 #endif
+

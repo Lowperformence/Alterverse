@@ -19,6 +19,36 @@ static class Regression
         native.AddComponent<DemoController>();native.AddComponent<AudioSource>();native.AddComponent<Collider>();native.SetActive(false);
         AssetDatabase.Assets[path]=native;
         AssetDatabase.Assets["Assets/Epic Toon FX/Prefabs/2D Alternate/Sparks.prefab"]=new GameObject("2D Sparks");
+        Check(PlanetAttackSparksBuilder.FindSparksSource()==path,"plural exact source still wins");
+        AssetDatabase.Assets.Remove(path);
+        string[] aliases={
+            "Assets/Epic Toon FX/Prefabs/Environment/Spark/Spark.prefab",
+            "Assets/Epic Toon FX/Prefabs/Environment/Sparks/Yellow.prefab",
+            "Assets/Epic Toon FX/Prefabs/Environment/Spark/Burst/Orange.prefab",
+            "Assets/Epic Toon FX/Prefabs/Environment/SparksBurst/Yellow.prefab",
+            "Assets/Epic Toon FX/Prefabs/Environment/ElectricSparkYellow.prefab",
+            "Assets/Epic Toon FX/Prefabs/Environment/SparkBurstYellow.prefab"};
+        AssetDatabase.Assets["Assets/Epic Toon FX/Prefabs/Sparks.prefab"]=new GameObject("Non-particle decoy");
+        foreach(string alias in aliases)
+        {
+            AssetDatabase.Assets[alias]=native;
+            Check(PlanetAttackSparksBuilder.FindSparksSource()==alias,"singular/family-folder/variant source discovered: "+alias);
+            AssetDatabase.Assets.Remove(alias);
+        }
+        foreach(string invalid in new[]{
+            "Assets/Epic Toon FX/Prefabs/Interactive/Sparkle/SparkleYellow.prefab",
+            "Assets/Epic Toon FX/Prefabs/2D Alternate/Spark.prefab",
+            "Assets/Epic Toon FX/Demo/Environment/Spark.prefab",
+            "Assets/OtherVfx/Environment/Spark.prefab"})
+        {
+            Check(PlanetAttackSparksBuilder.SparksRank(invalid)<0,"unrelated sparkle, 2D, demo and other-package sources excluded");
+            AssetDatabase.Assets[invalid]=native;
+        }
+        bool diagnosed=false;
+        try{PlanetAttackSparksBuilder.FindSparksSource();}
+        catch(System.IO.FileNotFoundException e){diagnosed=e.Message.Contains("SparkleYellow.prefab")&&e.Message.Contains("Spark-related imported prefabs");}
+        Check(diagnosed,"real missing source reports imported candidates instead of assuming package was not bought");
+        AssetDatabase.Assets[path]=native;
         PlanetAttackSparksBuilder.Build();
         var prefab=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Alterverse/Resources/CombatVfx/PlanetAttackSparks/Sparks.prefab");
         var definition=prefab.GetComponent<PlanetAttackSparksVfx>();
@@ -56,3 +86,4 @@ static class Regression
         Console.WriteLine($"PASS {checks} native planet Sparks source/additive-hook/scale/audio-exclusion/pool/lifecycle checks. Controlled fixtures; Unity appearance and device acceptance remain separate.");
     }
 }
+

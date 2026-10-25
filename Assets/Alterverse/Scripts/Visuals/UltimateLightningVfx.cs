@@ -8,7 +8,7 @@ namespace Alterverse.Visuals
     {
         public const int Ione=0,Traveler=1;
         public const string ResourcePath="CombatVfx/UltimateLightning/Library";
-        private const float VisualSizeMultiplier=2f;
+        private const float VisualSizeMultiplier=3f; // Ione and Traveler: previous 2x enlarged another 50 percent.
         [Serializable] public sealed class Entry
         {
             public GameObject prefab;
@@ -85,3 +85,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
