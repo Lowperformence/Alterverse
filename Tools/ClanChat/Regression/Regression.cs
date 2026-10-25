@@ -12,7 +12,8 @@ namespace Alterverse.Shop {
  public class PaidShardCommerce {
   public class Snapshot {public string accountHash;}
   public static PaidShardCommerce Instance=new();public bool Ready=true;public string AccountHash="owner";public int SessionVersion;
-  public Task<bool> FlushProfileAsync()=>Task.FromResult(true);public bool TryBeginSocialSpend()=>true;
+  public int Flushes;public bool SaveSucceeds=true;
+  public Task<bool> FlushProfileAsync(){Flushes++;return Task.FromResult(SaveSucceeds);}public bool TryBeginSocialSpend()=>true;
   public void EndSocialSpend(int s,Snapshot w,Alterverse.Profile.AccountProfilePrefs.Entry[] e){}public void Refresh(){}
  }
  public static class AvatarShopCatalog {public class Item {public int AvatarId;}public static Item[] Items=Array.Empty<Item>();}
@@ -61,6 +62,15 @@ public static class Fixture {
   UnityEngine.Networking.UnityWebRequest.Handler=r=>{r.responseCode=503;r.result=UnityEngine.Networking.UnityWebRequest.Result.ConnectionError;r.downloadHandler.text="{\"fulfilled\":false,\"message\":\"Clan service temporarily unavailable. Please retry.\"}";return new UnityEngine.Networking.UnityWebRequestAsyncOperation();};
   request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/chat/read",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
   Assert(service.Chat==null&&service.ChatStatus.Contains("temporarily unavailable"),"A chat failure must explain the blocked composer instead of showing Connecting forever");
+  Alterverse.Profile.AccountProfilePrefs.Dirty=true;
+  Alterverse.Shop.PaidShardCommerce.Instance.SaveSucceeds=false;
+  int flushes=Alterverse.Shop.PaidShardCommerce.Instance.Flushes,reads=0;
+  UnityEngine.Networking.UnityWebRequest.Handler=r=>{reads++;r.downloadHandler.text="{\"fulfilled\":true,\"social\":{\"clanId\":\"private\",\"messages\":[]}}";return new UnityEngine.Networking.UnityWebRequestAsyncOperation();};
+  request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/chat/read",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
+  Assert(reads==1&&Alterverse.Shop.PaidShardCommerce.Instance.Flushes==flushes,"Reading chat must not wait for an unrelated pending profile save");
+  request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/levels",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
+  Assert(reads==1&&Alterverse.Shop.PaidShardCommerce.Instance.Flushes==flushes+1,"Player rankings must still save current progression before reading");
+  Alterverse.Profile.AccountProfilePrefs.Dirty=false;Alterverse.Shop.PaidShardCommerce.Instance.SaveSucceeds=true;
   var menu=new Alterverse.UI.MainMenuController();var flags=System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance;var ui=menu.GetType();
   var consent=ui.GetMethod("DrawClanConsent",flags);
   Alterverse.UI.FrontEndTheme.Click=(r,l)=>r.width==900&&l=="";

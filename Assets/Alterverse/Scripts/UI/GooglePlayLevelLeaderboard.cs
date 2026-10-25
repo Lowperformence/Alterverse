@@ -199,7 +199,16 @@ namespace Alterverse.Online
                 Fail("New wins are waiting. Tap SYNC WINS to finish synchronization.");
             }
             catch(Exception e){if(requestGeneration==generation)Fail("Win sync unavailable ("+e.GetType().Name+"). Retry SYNC WINS.");}
-            finally{if(requestGeneration==generation)submitting=false;}
+            finally
+            {
+                if(requestGeneration==generation)
+                {
+                    submitting=false;
+                    // Browsing must remain available when saving/submitting/readback fails.
+                    // SameScoreAccount cancels the request if the linked account changed.
+                    if(openAfterAuthentication&&SameScoreAccount(player,account))FinishPendingOpen();
+                }
+            }
 #else
             await Task.CompletedTask;
             Unsupported();
@@ -263,7 +272,7 @@ namespace Alterverse.Online
         }
 
         private static void Unsupported(){state=ConnectionState.Unsupported;status="Google Play leaderboard is available in the Android build.";}
-        private static void Fail(string message){openAfterAuthentication=verifyRequested=false;state=ConnectionState.Error;status=message;Debug.LogWarning("DIMENSIONS FRONT: "+message);}
+        private static void Fail(string message){verifyRequested=false;state=ConnectionState.Error;status=message;Debug.LogWarning("DIMENSIONS FRONT: "+message);}
     }
 }
 

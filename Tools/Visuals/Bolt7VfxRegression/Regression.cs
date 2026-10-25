@@ -36,8 +36,12 @@ class Regression {
   var novaMaterial=lib.lightningNova.GetComponentsInChildren<Renderer>(true).Single().sharedMaterials[0];var grenadeMaterial=lib.explosion.GetComponentsInChildren<Renderer>(true).Single().sharedMaterials[0];
   Check(novaMaterial.shader.name=="DimensionsFront/BomberNukeParticles"&&grenadeMaterial.shader.name=="DimensionsFront/SelectedAbilityParticles","Nova clip shader does not overwrite shared materials of other stages");
   Resources.Prefabs["Bolt7/Vfx/Library"]=lib.gameObject;var actor=new GameObject("Bolt7");
+  // An active source variant must never enable native particles/audio at the origin during warmup.
+  lib.explosion.SetActive(true);int enabledClones=UnityEngine.Object.EnabledClones;
+  Bolt7Vfx.Warm();Check(UnityEngine.Object.EnabledClones==enabledClones&&Parts.Length==0,"Warmup cannot activate an explosion or emit a gameplay effect");
+  lib.explosion.SetActive(false);
   Bolt7Vfx.Grenade(actor,new Vector3(0,0,4),.45f);Near(Last(0).transform.localScale.x,1.75f,"muzzle reduced 30 percent from 2.5");Near(Last(1).transform.localScale.x,1.75f,"projectile reduced 30 percent");Tick(.02f);
-  var flying=Last(1).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null);Check(flying.isPlaying&&flying.loop,"native projectile flight audio starts");Near(flying.volume,.7f,"low authored gain raised and SFX gain applied");
+  var flying=Last(1).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null);Check(flying.isPlaying&&flying.loop,"native projectile flight audio starts");Near(flying.volume,.7f*.65f,"existing 35 percent sound reduction remains applied");
   Alterverse.Profile.PlayerProfile.SfxVolume=0;Tick(.03f);Near(flying.volume,0,"SFX mute respected");Alterverse.Profile.PlayerProfile.SfxVolume=1;
   Bolt7Vfx.Area(actor,new Vector3(0,0,4),0);Near(Last(2).transform.localScale.x,1.75f,"detonation reduced 30 percent");Tick(.04f);Check(Last(2).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null).isPlaying,"detonation audio plays independently of hit count");
   Tick(.5f);Check(!flying.isPlaying,"flight loop stops at impact");

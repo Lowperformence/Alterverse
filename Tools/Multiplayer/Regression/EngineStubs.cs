@@ -133,6 +133,7 @@ namespace Alterverse.Characters
 }
 namespace Alterverse.Visuals
 {
+ public sealed class Bolt7Visual:Component {public float SampledAt=float.NaN;public void ReceivePresentationSnapshot(Vector3 p,Quaternion q,bool reset,bool forced,float sampledAt=float.NaN){SampledAt=sampledAt;}}
  public sealed class HeroVisualMotion:Component {public Vector3 PresentedPosition;public float SampledAt;public void ReceivePresentationSnapshot(Vector3 p,Quaternion q,bool reset,bool forced,float sampledAt=float.NaN){SampledAt=sampledAt;}}
 }
 namespace Alterverse.Multiplayer

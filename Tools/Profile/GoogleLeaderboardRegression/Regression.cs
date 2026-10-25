@@ -82,7 +82,11 @@ public static class Regression {
   native=Reset();Alterverse.Profile.AccountServerBootstrap.Instance.GooglePlayAccountReady=false;GooglePlayLevelLeaderboard.ShowLeaderboard();
   Assert(native.Reports==0&&native.Opens==1,"Native browsing remains possible without uploading an unlinked cloud profile");
   native=Reset();GooglePlayLevelLeaderboard.ShowLeaderboard();native.SubmitCallback(false);await Wait(()=>!GooglePlayLevelLeaderboard.IsBusy);
-  Assert(native.Opens==0&&GooglePlayLevelLeaderboard.State==GooglePlayLevelLeaderboard.ConnectionState.Error,"A failed upload is visible and leaves the native UI closed");
+  Assert(native.Opens==1&&GooglePlayLevelLeaderboard.State==GooglePlayLevelLeaderboard.ConnectionState.Error,"A failed upload stays visible while the requested ranking still opens");
+  native=Reset();GooglePlayLevelLeaderboard.ShowLeaderboard();native.SubmitCallback(true);await Wait(()=>native.LoadCallback!=null);native.LoadCallback(new LeaderboardScoreData{Valid=false});await Wait(()=>!GooglePlayLevelLeaderboard.IsBusy);
+  Assert(native.Opens==1&&GooglePlayLevelLeaderboard.State==GooglePlayLevelLeaderboard.ConnectionState.Error,"Failed readback must not swallow a ranking-open request");
+  native=Reset();Alterverse.Profile.AccountProfilePrefs.Dirty=true;Alterverse.Shop.PaidShardCommerce.Instance.Save=()=>Task.FromResult(false);GooglePlayLevelLeaderboard.ShowLeaderboard();await Wait(()=>!GooglePlayLevelLeaderboard.IsBusy);
+  Assert(native.Reports==0&&native.Opens==1,"A failed cloud save blocks stale score submission while preserving native browsing");
   native=Reset();Alterverse.Profile.AccountProfilePrefs.Dirty=true;Alterverse.Shop.PaidShardCommerce.Instance.Save=()=>Task.FromResult(false);GooglePlayLevelLeaderboard.AuthenticateAndSync(true);await Wait(()=>!GooglePlayLevelLeaderboard.IsBusy);
   Assert(native.Reports==0&&GooglePlayLevelLeaderboard.State==GooglePlayLevelLeaderboard.ConnectionState.Error,"A failed account save cannot upload stale wins");
   Console.WriteLine(checks+" Google leaderboard sequencing/account/readback checks passed (controlled native services).");

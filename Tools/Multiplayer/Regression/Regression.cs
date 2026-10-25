@@ -106,7 +106,7 @@ static class Regression
   {
    var s=Actor(i);s.transform.position=new Vector3(i*2,0,i*.5f);server.Slot(s);
    serverBoard.Seed(s.GetComponent<Health>(),i*2,i,i+1);
-   var c=Actor(i);c.gameObject.AddComponent<Alterverse.Visuals.HeroVisualMotion>();client.Slot(c);clientActors[i]=c;clientBoard.Registered.Add(c.GetComponent<Health>());
+   var c=Actor(i);c.gameObject.AddComponent<Alterverse.Visuals.HeroVisualMotion>();c.gameObject.AddComponent<Alterverse.Visuals.Bolt7Visual>();client.Slot(c);clientActors[i]=c;clientBoard.Registered.Add(c.GetComponent<Health>());
   }
   CoopAuthority.LocalHasServerAuthority=true;MatchScoreboard.Instance=serverBoard;server.Broadcast(serverManager);
   Check((int)server.Messages.Sent[^1].Values[1]==8,"A complete 4v4 roster is serialized");
@@ -120,6 +120,7 @@ static class Regression
   CoopAuthority.LocalHasServerAuthority=false;MatchScoreboard.Instance=clientBoard;client.ReceiveSnapshot(0,server.Messages.Sent[^1].Values);
   for(int i=1;i<8;i++)
   {
+   Check(clientActors[i].GetComponent<Alterverse.Visuals.Bolt7Visual>().SampledAt==snapshotTime,"BOLT-7 receives source-timed snapshots through the actual transport");
    Check(clientActors[i].GetComponent<Alterverse.Visuals.HeroVisualMotion>().SampledAt==snapshotTime,"hero source timestamp reaches renderer through actual transport");
    Check(clientBoard.Read(clientActors[i].GetComponent<Health>())==(i*2,i,i+1),"Full-roster live score for slot "+i);
    Position(clientActors[i].transform.position,new Vector3(i*2,0,i*.5f),"Full-roster remote pose for slot "+i);

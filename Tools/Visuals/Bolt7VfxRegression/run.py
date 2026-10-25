@@ -9,6 +9,8 @@ def block(s,token):
  return s[a:i]
 fixture=(root/'Tools/SpaceBomber/NukeRegression/Fixtures.cs').read_text();math=(root/'Tools/Aiming/Regression/EngineStubs.cs').read_text()
 for token in ['public struct Vector3','public struct Quaternion','public static class Mathf']:fixture=fixture.replace(block(fixture,token),block(math,token))
+fixture=fixture.replace('public string name;', 'public static int EnabledClones;public string name;',1)
+fixture=fixture.replace('g.transform.SetParent(parent,false);return g;', 'g.transform.SetParent(parent,false);if(g.activeInHierarchy)EnabledClones++;return g;')
 fixture=fixture.replace('public static float Max(float a,float b)=>Math.Max(a,b);','public static float Max(params float[] v)=>v.Max();')
 fixture=fixture.replace('public Quaternion rotation;','public Quaternion rotation;public Vector3 forward=Vector3.forward;')
 fixture=fixture.replace('public static float time;','public static float time,timeScale=1;')

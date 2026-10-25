@@ -52,6 +52,7 @@ if(!HotZoneTank.FinishMatchPreparation())return;
 if(pendingArenaWorld!=null&&pendingArenaWorld.activeInHierarchy)
 {
 MatchInsertionTransport.PrepareForReveal(pendingArenaWorld);
+CoopMatchStateSync.MarkLocalArenaReady();
 pendingArenaCamera.cullingMask=~(1<<MenuShowcaseLayer);
 MatchEntryCurtain.Reveal();
 OnlineMatchLoadingScreen.Complete();
@@ -101,6 +102,9 @@ else ArenaVariantRuntime.BeginMatch();
 if(!serverOnly){MatchEntryCurtain.Begin();WingMatchRewardBonus.BeginMatch(selected);}
 var existing=new System.Collections.Generic.HashSet<GameObject>(gameObject.scene.GetRootGameObjects());
 GameObject world=new GameObject("DF_MatchWorld");
+// Own the pause before any actor's first Update, including on a dedicated server.
+var opening=new GameObject("AV_MatchOpening").AddComponent<MatchOpening>();
+opening.transform.SetParent(world.transform,false);
 bool completed=false;
 string stage="arena and base guards";
 try
@@ -174,7 +178,6 @@ new GameObject("AV_MatchTelemetry").AddComponent<MatchTelemetry>();
 new GameObject("AV_MatchScoreboard").AddComponent<MatchScoreboard>();
 if(!serverOnly)
 {
-var opening=new GameObject("AV_MatchOpening").AddComponent<MatchOpening>();
 new GameObject("DF_MatchInsertion").AddComponent<MatchInsertionTransport>().Prepare(opening);
 }
 

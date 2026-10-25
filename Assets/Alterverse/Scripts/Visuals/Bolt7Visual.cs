@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Combat;
+using Alterverse.Multiplayer;
 using UnityEngine;
 
 namespace Alterverse.Visuals
@@ -17,6 +18,22 @@ namespace Alterverse.Visuals
         private Transform gatling,launcher;
         private Health health;
         private Vector3 previous;
+        private Transform visualRoot;
+        private Vector3 basePosition;
+        private CoopHeroSlot replicaSlot;
+        private readonly HeroPresentationBuffer presentation=new();
+        private float displayedSpeed;
+        private bool RemoteReplica=>replicaSlot!=null&&CoopAuthority.Active&&
+            !CoopAuthority.LocalHasServerAuthority&&!replicaSlot.IsLocalHuman;
+        public void ReceivePresentationSnapshot(Vector3 position,Quaternion rotation,bool discontinuity,bool forcedMoving,float sampledAt=float.NaN)
+        {
+            replicaSlot??=GetComponent<CoopHeroSlot>();
+            if(!RemoteReplica)return;
+            bool reset=discontinuity||!presentation.Ready;
+            if(float.IsNaN(sampledAt))presentation.Push(position,rotation,Time.unscaledTime,reset);
+            else presentation.PushRemote(position,rotation,sampledAt,Time.unscaledTime,reset);
+            if(reset){previous=position;displayedSpeed=walkTime=0;}
+        }
         private string action;
         private float actionStarted,actionUntil,fireUntil,walkTime;
         private bool dead;
@@ -34,6 +51,7 @@ namespace Alterverse.Visuals
             if(SystemInfo.graphicsDeviceType==UnityEngine.Rendering.GraphicsDeviceType.Null){enabled=false;return;}
             var root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);root.gameObject.layer=gameObject.layer;
             root.localPosition=Vector3.down*.98f;root.localScale=Vector3.one*.85f;
+            visualRoot=root;basePosition=root.localPosition;replicaSlot=GetComponent<CoopHeroSlot>();
             rig=Bolt7Model.Create(root);
             if(rig==null){enabled=false;return;}
             model=rig.Root;
@@ -76,9 +94,11 @@ namespace Alterverse.Visuals
         {
             // The authored Spawn clip deliberately drops the root from above. Match entry
             // and respawn use the grounded pose immediately, including before the next render.
-            action=null;actionUntil=fireUntil=walkTime=0;previous=transform.position;
+            action=null;actionUntil=fireUntil=walkTime=displayedSpeed=0;previous=transform.position;
+            presentation.Clear();
+            if(visualRoot!=null){visualRoot.localPosition=basePosition;visualRoot.localRotation=Quaternion.identity;}
             if(clips.TryGetValue("Idle",out var idle))rig.Sample(idle,0f);
-            Play("Idle");
+            // Idle is the fallback pose, not an action that locks out the first walk cycle.
         }
         private void OnDeath(){dead=true;Play("Death");}
         private void OnHealth(float current,float max){if(health.IsDead&&!dead){OnDeath();return;}if(dead&&current>0){dead=false;GroundedIdle();}}
@@ -93,11 +113,19 @@ namespace Alterverse.Visuals
         private void LateUpdate()
         {
             if(model==null)return;
-            float now=health==null?Time.unscaledTime:Time.time;float dt=Mathf.Max(.001f,health==null?Time.unscaledDeltaTime:Time.deltaTime);Vector3 delta=transform.position-previous;delta.y=0;previous=transform.position;
+            float now=health==null?Time.unscaledTime:Time.time;float dt=Mathf.Max(.001f,health==null?Time.unscaledDeltaTime:Time.deltaTime);
+            Vector3 presented=transform.position;Quaternion rotation=transform.rotation;
+            if(RemoteReplica&&presentation.Ready)presentation.Evaluate(Time.unscaledTime,out presented,out rotation);
+            visualRoot.localPosition=basePosition+transform.InverseTransformVector(presented-transform.position);
+            visualRoot.rotation=rotation;
+            Vector3 delta=presented-previous;delta.y=0;previous=presented;
+            float speed=delta.magnitude/dt;
+            // Snapshot gaps must not alternate Walk and Idle every render frame.
+            displayedSpeed=RemoteReplica?Mathf.Lerp(displayedSpeed,speed,1f-Mathf.Exp(-12f*dt)):speed;
             string name;float time;
             if(dead){name="Death";time=Mathf.Min(now-actionStarted,clips.TryGetValue("Death",out var d)?d.length:0);}
             else if(action!=null&&now<actionUntil){name=action;time=now-actionStarted;}
-            else {name=Time.time<fireUntil?"Fire_Loop":delta.sqrMagnitude/(dt*dt)>.15f?"Walk":"Idle";walkTime+=dt;time=walkTime;}
+            else {name=Time.time<fireUntil?"Fire_Loop":displayedSpeed*displayedSpeed>.15f?"Walk":"Idle";walkTime+=dt;time=walkTime;}
             if(clips.TryGetValue(name,out var clip)&&clip.length>0)rig.Sample(clip,dead?time:time%clip.length);
         }
     }

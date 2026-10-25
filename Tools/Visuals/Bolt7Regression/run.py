@@ -3,9 +3,11 @@ The fixture reads real shipped resources. It does not run Unity's native rendere
 """
 import argparse,json,re,subprocess,tempfile
 from pathlib import Path
-p=argparse.ArgumentParser();p.add_argument('--dotnet-root',type=Path,required=True);a=p.parse_args();sdk=a.dotnet_root.resolve();here=Path(__file__).resolve().parent;root=here.parents[2];src=root/'Assets/Alterverse/Scripts'
+p=argparse.ArgumentParser();p.add_argument('--dotnet-root',type=Path,required=True);p.add_argument('--presentation-only',action='store_true');a=p.parse_args();sdk=a.dotnet_root.resolve();here=Path(__file__).resolve().parent;root=here.parents[2];src=root/'Assets/Alterverse/Scripts'
 s=(root/'Tools/Aiming/Regression/EngineStubs.cs').read_text().split('namespace UnityEngine.InputSystem')[0]
 s=s.replace('public Vector3 position,forward=', 'public Vector3 localPosition;public Quaternion localRotation=Quaternion.identity;public Vector3 position,forward=')
+s=s.replace('public Vector3 InverseTransformPoint(', 'public Vector3 InverseTransformVector(Vector3 p)=>Quaternion.Inverse(rotation)*p;public Vector3 InverseTransformPoint(')
+s=s.replace('public static float Atan2(', 'public static float Exp(float f)=>(float)System.Math.Exp(f);public static float Atan2(')
 s=s.replace('public static Vector3 Cross(', 'public static Vector3 Scale(Vector3 a,Vector3 b)=>new(a.x*b.x,a.y*b.y,a.z*b.z);public static Vector3 Cross(')
 s=s.replace('public static Quaternion Euler(', 'public static Quaternion Slerp(Quaternion a,Quaternion b,float t){var q=System.Numerics.Quaternion.Slerp(new(a.x,a.y,a.z,a.w),new(b.x,b.y,b.z,b.w),t);return new(){x=q.X,y=q.Y,z=q.Z,w=q.W};}public Quaternion(float a,float b,float c,float d){x=a;y=b;z=c;w=d;}public static Quaternion Euler(')
 s=s.replace('public Bounds(Vector3 p){center=p;}', 'public Bounds(Vector3 p){center=p;}public Bounds(Vector3 p,Vector3 size){center=p;}')
@@ -38,9 +40,28 @@ namespace Alterverse.Characters{public enum HeroId{Bolt7}}
 namespace Alterverse.Combat{public class Health:UnityEngine.MonoBehaviour{public bool IsDead;public void Die(){IsDead=true;Died?.Invoke();}public void Restore(){IsDead=false;Changed?.Invoke(280,280);}public event System.Action Died;public event System.Action<float,float> Changed;}}
 namespace Alterverse.Visuals{public static class Bolt7Vfx{public static void Warm(){}}public static class RuntimeShaderLibrary{public static UnityEngine.Material Create(UnityEngine.Color c,bool u,float m,float s,UnityEngine.Color e)=>new(new UnityEngine.Shader());}}
 '''
+s+='''
+namespace Alterverse.Multiplayer{public class CoopHeroSlot:UnityEngine.Component{public bool IsLocalHuman;}public static class CoopAuthority{public static bool Active,LocalHasServerAuthority;}}
+'''
+production=['Bolt7Assets.cs','Bolt7Model.cs','Bolt7Visual.cs','HeroPresentationBuffer.cs']
+if a.presentation_only:
+ production=['Bolt7Visual.cs','HeroPresentationBuffer.cs']
+ s+='''
+namespace Alterverse.Visuals {
+ public static class Bolt7Assets{public static UnityEngine.Texture2D Texture(string name,bool normal=false)=>null;}
+ internal class Bolt7Model{
+  internal class Clip{public string name;public float length=1;}
+  public UnityEngine.GameObject Root;public string LastClip;public float LastTime;
+  public Clip[] Clips=new[]{new Clip{name="Idle"},new Clip{name="Walk"},new Clip{name="Death"},new Clip{name="Fire_Loop"},new Clip{name="Grenade"},new Clip{name="Heavy_Ram"},new Clip{name="Ultimate"}};
+  public string[] MaterialNames=System.Array.Empty<string>();
+  public static Bolt7Model Create(UnityEngine.Transform root)=>new(){Root=root.gameObject};
+  public void Sample(Clip clip,float time){LastClip=clip.name;LastTime=time;}
+ }
+}
+'''
 refs=next((sdk/'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'));csc=next((sdk/'sdk').glob('*/Roslyn/bincore/csc.dll'))
 with tempfile.TemporaryDirectory(prefix='bolt7-visual-') as folder:
  folder=Path(folder);(folder/'Fixture.cs').write_text(s);out=folder/'Regression.dll'
- subprocess.run([str(sdk/'dotnet'),str(csc),'-nologo','-nowarn:0649,0067','-langversion:9','-out:'+str(out),*['-r:'+str(f) for f in refs.glob('*.dll')],str(folder/'Fixture.cs'),str(here/'Regression.cs'),*[str(src/'Visuals'/f) for f in ['Bolt7Assets.cs','Bolt7Model.cs','Bolt7Visual.cs']]],check=True)
+ subprocess.run([str(sdk/'dotnet'),str(csc),'-nologo','-nowarn:0649,0067','-langversion:9','-out:'+str(out),*['-r:'+str(f) for f in refs.glob('*.dll')],str(folder/'Fixture.cs'),str(here/('PresentationRegression.cs' if a.presentation_only else 'Regression.cs')),*[str(src/'Visuals'/f) for f in production]],check=True)
  out.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':'8.0.0'}}}))
  subprocess.run([str(sdk/'dotnet'),str(out),str(root/'Assets/Alterverse/Resources')],check=True)

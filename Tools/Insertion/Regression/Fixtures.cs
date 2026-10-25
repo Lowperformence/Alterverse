@@ -5,6 +5,7 @@ using System.Linq;
 namespace UnityEngine {
  public class Object {
   public string name;
+  public static T FindAnyObjectByType<T>() where T:Component => FindObjectsByType<T>(FindObjectsSortMode.None).FirstOrDefault();
   public static T[] FindObjectsByType<T>(FindObjectsSortMode mode) where T:Component => GameObject.All.Where(g=>g.activeInHierarchy).SelectMany(g=>g.components).OfType<T>().ToArray();
   public static void Destroy(Object obj){}
   public static GameObject Instantiate(GameObject original,Transform parent,bool world){
@@ -100,8 +101,8 @@ namespace UnityEngine {
 
  public enum RuntimeInitializeLoadType{SubsystemRegistration}
  public class RuntimeInitializeOnLoadMethodAttribute:Attribute{public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType value){}}
- public static class Time {public static float unscaledDeltaTime=.1f,timeScale=1,deltaTime;}
- public static class Debug {public static void LogWarning(string text){}}
+ public static class Time {public static float unscaledDeltaTime=.1f,timeScale=1,deltaTime,unscaledTime;}
+ public static class Debug {public static void LogWarning(string text){}public static void LogError(string text){}}
  public class AudioClip:Object{public float length=14f;public bool LoadAudioData()=>true;}
  public static class Resources {
   public static int Loads;public static readonly Dictionary<string,Object> Assets=new();
@@ -120,8 +121,39 @@ namespace UnityEngine {
 namespace UnityEngine.Rendering{public enum ShadowCastingMode{On,Off}}
 namespace Alterverse.Characters {public class HeroIdentity:UnityEngine.MonoBehaviour{}public class HeroLocomotion:UnityEngine.Component{public bool OwnsMovementFrame;}}
 namespace Alterverse.Combat {public class TeamMember:UnityEngine.MonoBehaviour{public int Team;}}
-namespace Unity.Netcode {public class NetworkManager{public static NetworkManager Singleton;public bool IsServer,IsClient,IsListening;}}
-namespace Alterverse.Multiplayer {public static class CoopAuthority{public static bool Active,LocalHasServerAuthority;}}
+namespace Unity.Netcode {
+ public enum NetworkDelivery{ReliableSequenced,UnreliableSequenced}
+ public struct FastBufferWriter:System.IDisposable {public readonly System.Collections.Generic.List<object> Data;public FastBufferWriter(int size,Unity.Collections.Allocator a){Data=new();}public void WriteValueSafe<T>(T v)=>Data.Add(v);public void Dispose(){}}
+ public struct FastBufferReader {private System.Collections.Generic.Queue<object> data;public FastBufferReader(params object[] values){data=new(values);}public bool TryBeginRead(int bytes)=>data.Count>0;public void ReadValueSafe<T>(out T value){value=(T)data.Dequeue();}}
+ public class CustomMessagingManager {
+  public readonly System.Collections.Generic.Dictionary<string,System.Action<ulong,FastBufferReader>> Handlers=new();
+  public readonly System.Collections.Generic.List<(string Name,ulong Peer,object[] Data)> Sent=new();
+  public void RegisterNamedMessageHandler(string name,System.Action<ulong,FastBufferReader> handler)=>Handlers[name]=handler;
+  public void UnregisterNamedMessageHandler(string name)=>Handlers.Remove(name);
+  public void SendNamedMessage(string name,ulong peer,FastBufferWriter writer,NetworkDelivery delivery)=>Sent.Add((name,peer,writer.Data.ToArray()));
+ }
+ public class NetworkManager{public static NetworkManager Singleton;public const ulong ServerClientId=0;public ulong LocalClientId;public bool IsServer,IsClient,IsListening;public System.Collections.Generic.List<ulong> ConnectedClientsIds=new();public CustomMessagingManager CustomMessagingManager=new();public void DisconnectClient(ulong peer)=>ConnectedClientsIds.Remove(peer);}
+}
+namespace Unity.Collections {public enum Allocator{Temp}public struct FixedString128Bytes{private string text;public FixedString128Bytes(string text){this.text=text;}public override string ToString()=>text;}}
+
+namespace Alterverse.Multiplayer {
+ public sealed class PlannedPlayer{public string PlayerId;public bool IsBot;}
+ public sealed class PlannedSession{public PlannedPlayer[] Slots;}
+ public sealed class CoopMatchPlan{public PlannedSession Session;}
+ public static class CoopAuthority{public static bool Active,LocalHasServerAuthority;public static CoopMatchPlan ActivePlan;}
+ public class CoopHeroSlot:UnityEngine.Component{public bool IsLocalHuman;public string PlayerId;}
+ public static class CoopPlanHandshake{public static uint Fingerprint(CoopMatchPlan plan)=>17;}
+ public static class MatchNetworkProtocol {public static bool Authorized(ulong peer,string id)=>id=="p"+peer;public static bool ReadRound(ref Unity.Netcode.FastBufferReader reader){if(!reader.TryBeginRead(4))return false;reader.ReadValueSafe(out uint round);return round==17;}}
+ public static class SnapshotCadence{public static bool IsDue(float now,float interval,ref float next){if(now<next)return false;next=now+interval;return true;}}
+ public static class DedicatedServerNetworkRuntime{public static bool Requested;}
+ public sealed class RankedMatchReporter{public static RankedMatchReporter Instance;public bool Registered;public string MatchId;public int Voids;public System.Threading.Tasks.Task VoidAsync(string id){Voids++;return System.Threading.Tasks.Task.CompletedTask;}}
+ public static class EdgegapDedicatedServerLifecycle{public static bool Stopped;public static void StopAbortedMatch()=>Stopped=true;}
+}
+namespace Alterverse.Match {
+ public class DimensionsFront:UnityEngine.Component{public float TimeRemaining=300,ZeroControl,LumenControl;public bool IsOvertime,IsSuddenDeath,HasEnded;public int Winner;public void ApplyNetworkState(float a,float b,float c,bool d,bool e,bool f,int g){}}
+ public static class MatchExit{public static System.Threading.Tasks.Task ReturnToMenuAsync(string message)=>System.Threading.Tasks.Task.CompletedTask;}
+}
+
 namespace Alterverse.Profile {public static class PlayerProfile {public static float MasterVolume=1,SfxVolume=1;}}
 namespace Alterverse.UI {public static class MainMenuController{public static bool IsVisible;}public static class MatchEntryCurtain{public static bool AwaitingArena;}}
 namespace Alterverse.Visuals {public static class StylizedArtDirection{public static readonly UnityEngine.Color ZeroEnergy=new(.76f,.24f,1f),LumenEnergy=new(.18f,.92f,1f);}}

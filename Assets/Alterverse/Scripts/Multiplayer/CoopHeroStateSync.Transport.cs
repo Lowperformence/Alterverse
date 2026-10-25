@@ -263,6 +263,8 @@ namespace Alterverse.Multiplayer
                 if(!localOwner)actor.transform.rotation=Quaternion.Euler(0,yaw,0);
                 if(!localOwner)actor.GetComponent<HeroVisualMotion>()?.ReceivePresentationSnapshot(hostPosition,
                     Quaternion.Euler(0,yaw,0),dead||respawning||errorSqr>9f,forcedMoving,sampledAt);
+                if(!localOwner)actor.GetComponent<Bolt7Visual>()?.ReceivePresentationSnapshot(hostPosition,
+                    Quaternion.Euler(0,yaw,0),dead||respawning||errorSqr>9f,forcedMoving,sampledAt);
 
                 health.ApplyNetworkSnapshot(current,shield,dead);
                 MatchScoreboard.Instance?.ApplyNetworkScore(health,kills,deaths,assists);

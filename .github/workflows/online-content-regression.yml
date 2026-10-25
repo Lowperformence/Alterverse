@@ -1,0 +1,27 @@
+name: Online content, clan chat and leaderboards
+on:
+  push:
+    branches: ['codex/epic-toon-replacement-20261024', 'dev/vertical-slice']
+    paths: ['Assets/Alterverse/Scripts/**', 'Tools/Insertion/**', 'Tools/Multiplayer/**', 'Tools/Visuals/Bolt7Regression/**', 'Tools/Visuals/Bolt7VfxRegression/**', 'Tools/ClanChat/**', 'Tools/Profile/GoogleLeaderboardRegression/**', 'Server/commerce/**', '.github/workflows/online-content-regression.yml']
+  pull_request:
+    paths: ['Assets/Alterverse/Scripts/**', 'Tools/Insertion/**', 'Tools/Multiplayer/**', 'Tools/Visuals/Bolt7Regression/**', 'Tools/Visuals/Bolt7VfxRegression/**', 'Tools/ClanChat/**', 'Tools/Profile/GoogleLeaderboardRegression/**', 'Server/commerce/**', '.github/workflows/online-content-regression.yml']
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python -m unittest discover -s Tools/ClanChat -p 'test_*.py' -q
+      - run: python Tools/Insertion/Regression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Visuals/Bolt7Regression/run.py --dotnet-root "$DOTNET_ROOT" --presentation-only
+      - run: python Tools/Visuals/Bolt7VfxRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Multiplayer/Regression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Multiplayer/WorldMotionRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Ranked/Regression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/ClanChat/Regression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Profile/GoogleLeaderboardRegression/run.py --dotnet-root "$DOTNET_ROOT"

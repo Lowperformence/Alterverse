@@ -13,6 +13,7 @@ namespace Alterverse.Visuals
         private readonly List<Part> active=new(32);
         private readonly Dictionary<GameObject,Queue<Part>> pool=new();
         private bool warned;
+        private Transform inactiveRoot;
         private const float GrenadeVisualScale=.70f;
         private const float BasicVisualScale=1f/3f;
         private const float AttackSoundVolumeMultiplier=.65f;
@@ -31,7 +32,14 @@ namespace Alterverse.Visuals
         private Part Take(GameObject source)
         {
             if(pool.TryGetValue(source,out var q)&&q.Count>0)return q.Dequeue();
-            var go=Instantiate(source,transform,false);go.SetActive(false);
+            // An active clone plays native particles/audio during Instantiate, before
+            // SetActive(false) can run. Stage under an inactive parent even during warmup.
+            if(inactiveRoot==null)
+            {
+                var staging=new GameObject("Inactive effect staging");staging.SetActive(false);
+                staging.transform.SetParent(transform,false);inactiveRoot=staging.transform;
+            }
+            var go=Instantiate(source,inactiveRoot,false);go.SetActive(false);go.transform.SetParent(transform,false);
             var selected=go.AddComponent<AudioSource>();selected.playOnAwake=false;selected.spatialBlend=0;selected.volume=1f;
             var sounds=go.GetComponentsInChildren<AudioSource>(true);var gains=new float[sounds.Length];var originalClips=new AudioClip[sounds.Length];
             for(int i=0;i<sounds.Length;i++){gains[i]=Mathf.Max(.5f,sounds[i].volume);originalClips[i]=sounds[i].clip;sounds[i].playOnAwake=false;}

@@ -40,6 +40,10 @@ private IEnumerator Start()
     // A headless dedicated server has no usable front-end and must never wait for menu visibility.
     if(!IsServerOnly())while(Alterverse.UI.MainMenuController.IsVisible||Alterverse.UI.MatchEntryCurtain.AwaitingArena)yield return null;
 
+    // A verified roster is not a loaded arena. Keep the server paused until every
+    // human has revealed their world, otherwise the insertion finishes behind loading.
+    while(CoopAuthority.Active&&!CoopMatchStateSync.OpeningReady)yield return null;
+
     MatchClock.Set(PauseReason.Opening,true);ownsPause=true;
 
     SetPhase("REALITY COLLIDE",messageSeconds);

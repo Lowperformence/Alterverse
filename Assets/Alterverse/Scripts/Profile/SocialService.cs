@@ -166,7 +166,8 @@ namespace Alterverse.Profile
             // Publish the latest saved name/XP before ranking reads. A failed flush never
             // sends stale local progression as an ad-hoc score or mutates the profile.
             var commerce=PaidShardCommerce.Instance;
-            if(commerce!=null&&commerce.Ready&&AccountProfilePrefs.Dirty)
+            bool needsProfile=route=="/social/state"||route=="/social/levels"||route=="/social/clan-levels"||route=="/social/clan/create";
+            if(needsProfile&&commerce!=null&&commerce.Ready&&AccountProfilePrefs.Dirty)
             {
                 var save=commerce.FlushProfileAsync();
                 while(!save.IsCompleted)yield return null;
@@ -188,7 +189,9 @@ namespace Alterverse.Profile
             if(string.IsNullOrEmpty(credential))
             {
                 if(clanSpending)commerce?.EndSocialSpend(clanSpendSession,null,null);
-                clanSpending=false;Status="Sign in to reconnect.";Busy=false;yield break;
+                clanSpending=false;Status="Sign in to reconnect.";
+                if(route.StartsWith("/social/chat/",StringComparison.Ordinal))ClearChat(Status);
+                Busy=false;yield break;
             }
             request.SetRequestHeader("Content-Type","application/json");
             request.SetRequestHeader("Authorization","Bearer "+credential);

@@ -62,4 +62,22 @@ class FirestoreSetupTests(unittest.TestCase):
         self.assertFalse(any(call.args[0][:3]==['gcloud','run','deploy'] for call in run.call_args_list))
 
 
+    def test_standalone_node_uses_its_actual_default_firestore_project(self):
+        self.assertEqual(setup.settings(self.service,'run-project','node'),('run-project','dimensions-front'))
+
+    def test_node_chat_repair_only_creates_the_required_message_index(self):
+        with patch('sys.argv',['setup','--project','run-project','--backend','node','--chat-index-only','--execute']),patch.object(setup,'run_json',side_effect=[self.service,[],[]]),patch.object(setup.subprocess,'run') as run,redirect_stdout(io.StringIO()):
+            with self.assertRaisesRegex(SystemExit,'still in progress'):setup.main()
+        self.assertEqual(len(run.call_args_list),1)
+        command=run.call_args.args[0]
+        self.assertIn('--collection-group=dimensions-front-social-message',command)
+        self.assertIn('--project=run-project',command)
+        self.assertFalse(any('ttls' in call.args[0] or 'deploy' in call.args[0] for call in run.call_args_list))
+
+    def test_node_index_repair_cannot_accidentally_deploy_python_backend(self):
+        with patch('sys.argv',['setup','--backend','node','--execute','--deploy']),patch.object(setup,'run_json') as read,redirect_stdout(io.StringIO()):
+            with self.assertRaises(SystemExit):setup.main()
+        read.assert_not_called()
+
+
 if __name__=='__main__':unittest.main()
