@@ -8,7 +8,7 @@ namespace Alterverse.Visuals
     {
         public enum Kind { FluxNuke, MeteorFireball }
         public static string ResourcePath(Kind kind)=>"CombatVfx/AttackExplosions/"+kind;
-        public static float SizeMultiplier(Kind kind)=>kind==Kind.FluxNuke?4f:3f;
+        public static float SizeMultiplier(Kind kind)=>kind==Kind.FluxNuke?4f/3f:3f; // Flux: one third of the previous 4x size.
         private static readonly List<AttackExplosionVfx>[] pools={new(8),new(32)};
         public string sourcePath,sourceSignature;
         public float emissionSeconds=.1f;
