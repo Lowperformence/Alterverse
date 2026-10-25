@@ -45,8 +45,10 @@ namespace Alterverse.UI
                 faces[i].anchorMin=faces[i].anchorMax=new Vector2(0,1);
                 faces[i].pivot=new Vector2(.5f,.5f);
                 var image=go.GetComponent<RawImage>();
-                Texture2D heroIcon=hero==HeroId.Bolt7?Resources.Load<Texture2D>("Bolt7/Icons/"+i):hero==HeroId.Nerok?Resources.Load<Texture2D>("CyberShark/Icons/"+i):
+                Texture2D heroIcon=hero==HeroId.Bolt7?Alterverse.Visuals.Bolt7Assets.Icon(i):hero==HeroId.Nerok?Resources.Load<Texture2D>("CyberShark/Icons/"+i):
                     hero==HeroId.Timmy?Resources.Load<Texture2D>("AndromedaTimmy/Icons/"+i):hero==HeroId.VoidKnight?Resources.Load<Texture2D>("VoidKnight/Icons/"+i):null;
+                // BOLT-7 must never silently display another hero's atlas row.
+                if(hero==HeroId.Bolt7&&i!=2&&heroIcon==null)image.enabled=false;
                 Texture2D art=heroIcon!=null?heroIcon:atlas;
                 image.texture=art;
                 image.raycastTarget=false;
@@ -104,7 +106,7 @@ namespace Alterverse.UI
 
         internal static Color Accent(HeroId hero)=>hero switch
         {
-            HeroId.VoidKnight=>new Color(.62f,.18f,1f),HeroId.Veyr=>new Color(.72f,.24f,1),HeroId.Kaelon=>new Color(1,.64f,.16f),
+            HeroId.Bolt7=>new Color(1f,.72f,.25f),HeroId.VoidKnight=>new Color(.62f,.18f,1f),HeroId.Veyr=>new Color(.72f,.24f,1),HeroId.Kaelon=>new Color(1,.64f,.16f),
             HeroId.Nyra=>new Color(.12f,.78f,1),HeroId.Elyra=>new Color(.53f,.34f,1),
             HeroId.Mira=>new Color(.14f,1,.57f),HeroId.Rook=>new Color(1,.3f,.08f),
             HeroId.Traveler=>new Color(.16f,.82f,1f),HeroId.Nerok=>new Color(.04f,.72f,1f),HeroId.Timmy=>new Color(.30f,.85f,1f),_=>Color.white

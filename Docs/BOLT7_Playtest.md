@@ -1,6 +1,6 @@
 # BOLT-7 playable test hero
 
-Pull `codex/epic-toon-replacement-20261024`, let Unity finish importing, and choose **BOLT-7** in HEROES. He is available without a purchase. The rigged FBX, textures, portrait and four ability icons are included under `Assets/Alterverse/Resources/Bolt7`.
+Pull `codex/epic-toon-replacement-20261024`, let Unity finish importing, and choose **BOLT-7** in HEROES. He is available without a purchase. The exact authored mesh, rig and poses are loaded from `Assets/Alterverse/Resources/Bolt7/Model.bytes`. Textures, portrait and four ability icons are loaded from PNG byte resources in `Bolt7/Raw`. Original PNG/FBX authoring files are preserved under `ArtSource/Heroes/Bolt7`.
 
 ## Controls and baseline
 
@@ -23,7 +23,7 @@ Your licensed Epic Toon FX package must be present at `Assets/Epic Toon FX`, as 
 
 Native effect roots use exactly **2.5x** visual scale, once. Gameplay AOE sizes are independent of particle scale. Nullfeld plays Lightning Orb at impact and starts Star Fog 0.18s later. Damage is resolved on game authority, never by particle collision or the fog.
 
-The FBX contains a 19-bone rig, named muzzle sockets and 15 authored clips. BOLT-7 samples its own clips and does not pass through humanoid retargeting. LOD0 has 76,642 triangles; lower LOD authoring assets remain in the delivered model package. FBX import, material appearance, clip axes and the locally imported licensed effects still need native Unity playtesting.
+The runtime model contains the complete 19-bone rig, named muzzle sockets and 15 authored clips, sampled from Blender at 30 FPS. Its explicit Unity coordinates and bind matrices avoid FBX import scale and generic clip sampling. BOLT-7 does not pass through humanoid retargeting. LOD0 has 76,642 triangles; lower LOD authoring assets remain in the delivered model package. Material appearance, native PNG decoding, GPU skinning and the locally imported licensed effects still need native Unity playtesting.
 
 ## Checks to perform in Unity
 
@@ -42,3 +42,12 @@ The FBX contains a 19-bone rig, named muzzle sockets and 15 authored clips. BOLT
 `python Tools/Combat/Bolt7Regression/run.py --dotnet-root /path/to/dotnet8`
 
 These compile production Health, BOLT-7 combat, balance and kit code against deterministic Unity fixtures. They cover 207 assertions in total, including shields of arbitrary current size, immediate new shield activation, recharge, authority, cover, falloff and ram direction. They are not Unity rendering, asset-import or network-transport tests. A separate C# 9 syntax parse included the editor paths; a Unity editor/build is unavailable in the integration environment.
+
+
+### BOLT-7 presentation regression
+
+`python Tools/Visuals/Bolt7Regression/run.py --dotnet-root /path/to/dotnet8`
+
+This compiles the production mesh, pose and texture loaders against controlled engine fixtures and reads the actual shipped data. 303 checks cover all clip endpoints/midpoints, the full geometry, named sockets, the four correct icons, portrait, texture maps, caching and construction without an FBX resource. It is not a native Unity render test.
+
+`Tools/Bolt7/validate_runtime.py` compares the shipped rig skinning with Blender across 45 poses: 2,795,085 vertex comparisons passed, maximum positional error under 0.000002m. The geometry retains all 76,642 triangles; 62,113 runtime vertices include normal/UV seams. Original authoring assets remain available outside the Unity Resources folders, so they are not duplicated in player builds.
