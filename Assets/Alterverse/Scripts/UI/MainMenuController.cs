@@ -254,6 +254,7 @@ namespace Alterverse.UI
         {
             theme.Panel(rect);
             ShardShopVisualOverlay.DrawWallet(rect,PlayerWallet.Balance);
+            if(GUI.Button(rect,GUIContent.none,GUIStyle.none))OpenShardStore();
         }
         private static int NavigationIcon(Page target) => target switch
         {
