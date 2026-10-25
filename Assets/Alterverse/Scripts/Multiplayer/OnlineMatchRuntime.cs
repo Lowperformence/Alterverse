@@ -56,6 +56,7 @@ namespace Alterverse.Multiplayer
 
             if (!serverOnly)
             {
+                Alterverse.UI.MatchEntryCurtain.Begin();
                 Alterverse.UI.OnlineMatchLoadingScreen.Begin(plan);
                 bootstrap.StartCoroutine(BuildClientAfterLoadingFrame(bootstrap, plan, restarting));
                 return true; // As with restart, the coroutine owns build failure recovery.
@@ -94,3 +95,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+

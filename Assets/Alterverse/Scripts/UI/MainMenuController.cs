@@ -1557,6 +1557,7 @@ namespace Alterverse.UI
             }
 
             bool restarting=GameObject.Find("DF_MatchWorld")!=null;
+            MatchEntryCurtain.Begin();
             Alterverse.Prototype.PrototypeBootstrap.PrepareTransitionFrame();
             launching=false;visible=false;MatchClock.Set(PauseReason.Result,false);MatchClock.Set(PauseReason.Menu,false);
             // Hide before building: a failed build can synchronously restore this menu.
@@ -1567,5 +1568,6 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 

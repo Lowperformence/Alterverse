@@ -7,7 +7,7 @@ namespace Alterverse.UI
     internal static class MatchLoadingPresentation
     {
         public static bool Draw(FrontEndTheme theme, string stage, string detail,
-            string context = null, bool canReturnToMenu = false)
+            string context = null, bool canReturnToMenu = false, float opacity = 1f)
         {
             Matrix4x4 oldMatrix = GUI.matrix;
             Color oldColor = GUI.color;
@@ -16,9 +16,9 @@ namespace Alterverse.UI
             try
             {
                 GUI.matrix = Matrix4x4.identity;
-                GUI.color = Color.white;
+                GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(opacity));
                 GUI.enabled = true;
-                GUI.depth = -9000;
+                GUI.depth = -10000;
                 // Cover the complete screen, including the area outside the mobile safe area.
                 FrontEndTheme.Fill(new Rect(0, 0, Screen.width, Screen.height), new Color(.008f, .014f, .025f, 1f));
                 Rect safe = Screen.safeArea;
@@ -49,3 +49,4 @@ namespace Alterverse.UI
         }
     }
 }
+

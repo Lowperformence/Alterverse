@@ -12,7 +12,7 @@ static class Regression {
  static void Call(object target,string method)=>target.GetType().GetMethod(method,BindingFlags.Instance|BindingFlags.NonPublic).Invoke(target,null);
  static OnlineMatchPlan Reset(bool server=false){
   typeof(OnlineMatchLoadingScreen).GetMethod("Reset",BindingFlags.Static|BindingFlags.NonPublic).Invoke(null,null);
-  GameObject.All.Clear();MatchExit.Leaving=false;MatchExit.Error=null;Time.frameCount=0;
+  MatchEntryCurtain.Cancel();MainMenuController.IsVisible=false;MatchClock.InBackground=false;GameObject.All.Clear();MatchExit.Leaving=false;MatchExit.Error=null;Time.frameCount=0;
   FrontEndTheme.Labels.Clear();FrontEndTheme.Actions.Clear();FrontEndTheme.Click=false;Screen.safeArea=new Rect(20,0,1560,720);
   ArenaVariantRuntime.ShuffleEnabled=false;ArenaVariantRuntime.Selected="Moon";
   EdgegapOnlineFlow.Instance=new();EdgegapMatchmakerClient.Instance=new();
@@ -92,7 +92,31 @@ static class Regression {
   Screen.safeArea=new Rect(0,0,0,0);FrontEndTheme.Click=true;
   Check(!MatchLoadingPresentation.Draw(new FrontEndTheme(),"test","test",canReturnToMenu:true)&&FrontEndTheme.Actions.Count==0,"Invalid safe area cannot create invisible actions");
   Check(GUI.depth==42&&!GUI.enabled&&GUI.color.a==.4f&&GUI.matrix.value==18,"Invalid safe area still restores GUI state");
+  Reset();MatchEntryCurtain.Begin();
+  var curtain=GameObject.All.Find(g=>g.name=="DF_MatchEntryCurtain");
+  Check(MatchEntryCurtain.AwaitingArena&&MatchEntryCurtain.IsVisible,"Independent curtain survives the menu handoff");
+  // Invoke the actual component, not a substitute for the curtain lifecycle.
+  var curtainInstance=(MatchEntryCurtain)typeof(MatchEntryCurtain).GetField("instance",BindingFlags.Static|BindingFlags.NonPublic).GetValue(null);
+  Call(curtainInstance,"Update");
+  Check(MatchEntryCurtain.AwaitingArena,"Time alone must never expose an unready arena");
+  MatchEntryCurtain.Reveal();
+  Check(!MatchEntryCurtain.AwaitingArena&&MatchEntryCurtain.IsVisible,"Reveal retains opaque cover for first rendered arena frame");
+  Call(curtainInstance,"Update");
+  Check(MatchEntryCurtain.IsVisible,"Same-frame update cannot remove loading cover");
+  Time.frameCount=3;MatchClock.InBackground=true;
+  for(int i=0;i<10;i++)Call(curtainInstance,"Update");
+  Check(MatchEntryCurtain.IsVisible,"Backgrounding cannot consume the transition");
+  MatchClock.InBackground=false;
+  for(int i=0;i<5;i++)Call(curtainInstance,"Update");
+  Check(!MatchEntryCurtain.IsVisible,"Foreground dissolve completes");
+  MatchEntryCurtain.Begin();OnlineMatchLoadingScreen.Cancel();
+  Check(!MatchEntryCurtain.IsVisible,"Cancelled online plan also clears persistent curtain");
+  MatchEntryCurtain.Begin();MainMenuController.IsVisible=true;
+  curtainInstance=(MatchEntryCurtain)typeof(MatchEntryCurtain).GetField("instance",BindingFlags.Static|BindingFlags.NonPublic).GetValue(null);
+  Call(curtainInstance,"Update");
+  Check(!MatchEntryCurtain.IsVisible,"Recovery menu cannot be trapped beneath a loading curtain");
   Console.WriteLine("PASS: "+checks+" online/offline loading checks (controlled engine/network fixtures, no native rendering)");
  }
 }
+
 

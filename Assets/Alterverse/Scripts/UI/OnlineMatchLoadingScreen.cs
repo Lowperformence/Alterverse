@@ -33,7 +33,7 @@ namespace Alterverse.UI
 
         public static void Begin(OnlineMatchPlan plan) { Ensure(); buildingPlan = plan; }
         public static void Complete() { buildingPlan = null; }
-        public static void Cancel() { buildingPlan = null; }
+        public static void Cancel() { buildingPlan = null; MatchEntryCurtain.Cancel(); }
 
         private void Update()
         {
@@ -55,4 +55,5 @@ namespace Alterverse.UI
         private void OnDestroy() { if (instance == this) { instance = null; buildingPlan = null; } }
     }
 }
+
 

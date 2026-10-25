@@ -1,0 +1,30 @@
+{
+  "TurbineLoop": {
+    "seconds": 3.0,
+    "peak_dbfs": -3.35,
+    "rms_dbfs": -13.97,
+    "loop": true,
+    "loop_edge_delta": 0.007096
+  },
+  "BayRelease": {
+    "seconds": 0.6999773242630386,
+    "peak_dbfs": -2.5,
+    "rms_dbfs": -19.79,
+    "loop": false,
+    "loop_edge_delta": 0.0
+  },
+  "CargoHydraulics": {
+    "seconds": 0.6899773242630386,
+    "peak_dbfs": -3.48,
+    "rms_dbfs": -16.72,
+    "loop": false,
+    "loop_edge_delta": 0.0
+  },
+  "Departure": {
+    "seconds": 0.6999773242630386,
+    "peak_dbfs": -2.5,
+    "rms_dbfs": -13.22,
+    "loop": false,
+    "loop_edge_delta": 0.0
+  }
+}

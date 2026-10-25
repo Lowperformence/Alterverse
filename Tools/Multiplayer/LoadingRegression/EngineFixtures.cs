@@ -28,8 +28,8 @@ namespace UnityEngine {
  public struct Color{public float a;public Color(float r,float g,float b,float a){this.a=a;}public static Color white=>new(1,1,1,1);}
  public struct Rect{public float x,y,width,height;public float yMax=>y+height;public Rect(float x,float y,float w,float h){this.x=x;this.y=y;width=w;height=h;}}
  public static class Screen{public static int width=1600,height=720;public static Rect safeArea=new(20,0,1560,720);}
- public static class Time{public static float unscaledTime;public static int frameCount;}
- public static class Mathf{public static float Min(float a,float b)=>Math.Min(a,b);public static float PingPong(float a,float n)=>n-Math.Abs(a%(2*n)-n);}
+ public static class Time{public static float unscaledTime,unscaledDeltaTime=.1f;public static int frameCount;}
+ public static class Mathf{public static float Max(float a,float b)=>Math.Max(a,b);public static float Clamp01(float a)=>Math.Clamp(a,0,1);public static float Min(float a,float b)=>Math.Min(a,b);public static float PingPong(float a,float n)=>n-Math.Abs(a%(2*n)-n);}
  public static class GUI{public static Matrix4x4 matrix;public static Color color;public static bool enabled;public static int depth;}
 }
 namespace Unity.Netcode{public class NetworkManager{public static NetworkManager Singleton;public bool IsServer,IsListening,IsConnectedClient;}}
@@ -38,7 +38,7 @@ namespace Alterverse.Match{
  public class MatchPlayerSlot{public int Hero;}
  public class MatchSession{public bool IsFull=true;public MatchPlayerSlot[] Slots={new(){Hero=3}};}
  public enum PauseReason{Menu,Result}
- public static class MatchClock{public static void Set(PauseReason p,bool b){}}
+ public static class MatchClock{public static bool InBackground;public static void Set(PauseReason p,bool b){}}
  public static class ArenaVariantRuntime{public static string Current="Moon",Selected="Moon";public static bool ShuffleEnabled;}
  public static class MatchExit{public static bool Leaving;public static string Error;public static Task ReturnToMenuAsync(string message=null){Leaving=true;Error=message;Alterverse.UI.OnlineMatchLoadingScreen.Cancel();return Task.CompletedTask;}}
 }
@@ -81,3 +81,7 @@ namespace Alterverse.Prototype{
  }
 }
 
+
+
+namespace Alterverse.Combat { public static class HotZoneTank { public static bool FinishMatchPreparation()=>true; } }
+namespace Alterverse.Visuals { public static class MatchInsertionTransport { public static void PrepareForReveal(UnityEngine.GameObject world){} } }

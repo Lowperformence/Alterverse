@@ -13,6 +13,8 @@ namespace Alterverse.CameraSystem
 
         private UnityEngine.Camera gameplayCamera;
         private Vector3 lastTargetPosition;
+        private float insertionFraming;
+        private Vector3 ActiveOffset => offset * Mathf.Lerp(1f, 1.45f, insertionFraming);
         private Alterverse.Characters.HeroLocomotion locomotion;
 
         private void Awake()
@@ -28,26 +30,34 @@ namespace Alterverse.CameraSystem
             SnapToTarget();
         }
 
+        /// <summary>Presentation only: widen the spawn view for the cargo lander, then return continuously.</summary>
+        public void SetInsertionFraming(float weight)
+        {
+            insertionFraming = Mathf.Clamp01(weight);
+            SnapToTarget();
+        }
+
         private void LateUpdate()
         {
             if (target == null) return;
 
             if((target.position-lastTargetPosition).sqrMagnitude>144f){SnapToTarget();return;}
             lastTargetPosition=target.position;
-            Vector3 desiredPosition = target.position + offset;
+            Vector3 desiredPosition = target.position + ActiveOffset;
             float blend = 1f - Mathf.Exp(-(locomotion!=null&&locomotion.OwnsMovementFrame?Mathf.Max(24,followSharpness):followSharpness) * Time.deltaTime);
             transform.position = Vector3.Lerp(transform.position, desiredPosition, blend);
             // Following position must not steer camera-relative input by changing camera yaw.
-            transform.rotation=Quaternion.LookRotation(lookOffset-offset,Vector3.up);
+            transform.rotation=Quaternion.LookRotation(lookOffset-ActiveOffset,Vector3.up);
         }
 
         private void SnapToTarget()
         {
             if (target == null) return;
             lastTargetPosition=target.position;
-            transform.position = target.position + offset;
+            transform.position = target.position + ActiveOffset;
             // Following position must not steer camera-relative input by changing camera yaw.
-            transform.rotation=Quaternion.LookRotation(lookOffset-offset,Vector3.up);
+            transform.rotation=Quaternion.LookRotation(lookOffset-ActiveOffset,Vector3.up);
         }
     }
 }
+
