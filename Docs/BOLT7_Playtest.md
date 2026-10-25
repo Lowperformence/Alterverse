@@ -50,4 +50,9 @@ These compile production Health, BOLT-7 combat, balance and kit code against det
 
 This compiles the production mesh, pose and texture loaders against controlled engine fixtures and reads the actual shipped data. 303 checks cover all clip endpoints/midpoints, the full geometry, named sockets, the four correct icons, portrait, texture maps, caching and construction without an FBX resource. It is not a native Unity render test.
 
-`Tools/Bolt7/validate_runtime.py` compares the shipped rig skinning with Blender across 45 poses: 2,795,085 vertex comparisons passed, maximum positional error under 0.000002m. The geometry retains all 76,642 triangles; 62,113 runtime vertices include normal/UV seams. Original authoring assets remain available outside the Unity Resources folders, so they are not duplicated in player builds.
+`Tools/Bolt7/validate_runtime.py` compares the shipped rig skinning with Blender across 45 poses: 2,795,085 vertex comparisons passed, maximum positional error under 0.000002m. The geometry retains all 76,642 triangles; 62,113 runtime vertices include normal/UV seams. Original authoring assets remain available under ArtSource. The legacy imported Resources files are retained during this migration so local Unity-generated metadata does not block a pull; rendering uses Model.bytes and Raw PNG resources. Retaining those legacy resources temporarily increases player-build content.
+
+
+### Pull compatibility
+
+If GitHub Desktop reports that the nine legacy BOLT-7 PNG/FBX `.meta` files would be overwritten, close Unity and the error dialog, fetch origin, then pull the current branch head. The compatibility commit restores the original tracked files and metadata unchanged, so locally generated importer settings do not need to be discarded or stashed. The new runtime model and raw icons remain in use. Avoid stashing/discarding the project's thousands of unrelated local imports to resolve this migration.
