@@ -89,7 +89,31 @@ public static class Fixture {
   Assert(!buy&&!(bool)ui.GetField("shardShop",flags).GetValue(menu),"Unreleased content must remain locked");
   buy=(bool)purchase.Invoke(menu,new object[]{new Rect(0,0,200,50),"EQUIP",0,true,true,false});
   Assert(buy&&!(bool)ui.GetField("shardShop",flags).GetValue(menu),"Owned equipment must never redirect for insufficient funds");
-  Console.WriteLine("Chat UI compile, consent, age gate, avatar ownership, navigation and failure-state checks passed.");
+  CheckRankingRefresh(service);
+  Console.WriteLine("Chat UI, ownership, navigation, failure states and ranking refresh checks passed.");
+ }
+ static void CheckRankingRefresh(Alterverse.Profile.SocialService service){
+  var flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+  var menu=new Alterverse.UI.MainMenuController();var ui=menu.GetType();
+  var draw=ui.GetMethod("DrawRankingTabs",flags);
+  var busy=service.GetType().GetProperty("Busy");
+  Alterverse.UI.FrontEndTheme.Click=null;
+  ui.GetField("rankingTab",flags).SetValue(menu,1);
+  busy.SetValue(service,true);draw.Invoke(menu,null);
+  Assert((int)ui.GetField("requestedRankingTab",flags).GetValue(menu)==-1,"Busy service must defer the ranking request rather than lose it");
+  busy.SetValue(service,false);draw.Invoke(menu,null);
+  Assert(service.Busy&&(int)ui.GetField("requestedRankingTab",flags).GetValue(menu)==1,"Deferred player ranking must load once the service is idle");
+  busy.SetValue(service,false);draw.Invoke(menu,null);
+  Assert(!service.Busy,"IMGUI redraws must not resend the same ranking request");
+  Alterverse.Profile.AccountProfilePrefs.Revision++;draw.Invoke(menu,null);
+  Assert(service.Busy,"A newly saved profile must refresh level standings");
+  busy.SetValue(service,false);
+  Alterverse.Shop.PaidShardCommerce.Instance.AccountHash="other-player";draw.Invoke(menu,null);
+  Assert(service.Busy,"A changed account must not keep another account's ranking request state");
+  busy.SetValue(service,false);
+  ui.GetField("rankingTab",flags).SetValue(menu,2);draw.Invoke(menu,null);
+  Assert(service.Busy&&(int)ui.GetField("requestedRankingTab",flags).GetValue(menu)==2,"Clan rankings must load independently from player levels");
+  busy.SetValue(service,false);UnityEngine.Time.unscaledTime+=31f;draw.Invoke(menu,null);
+  Assert(service.Busy,"Visible rankings must periodically refresh without a manual tap");
  }
 }
-

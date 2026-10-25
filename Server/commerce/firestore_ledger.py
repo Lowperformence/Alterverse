@@ -6,6 +6,7 @@ changing protocol semantics.
 """
 import hashlib
 import json
+import secrets
 from datetime import datetime, timezone
 
 from google.cloud import firestore
@@ -32,6 +33,20 @@ class FirestoreLedger:
         self.accounts = self.client.collection(prefix + "-accounts")
         self.purchases = self.client.collection(prefix + "-purchase-tokens")
         self.name_claims = self.client.collection(prefix + "-player-names")
+        self.players = self.client.collection(prefix + "-social-player")
+
+    def _public_player(self, tx, account, profile):
+        # Read the old stable ID before any writes. Save the public projection in
+        # the same transaction as the profile: an interrupted HTTP response must
+        # not leave a saved player absent from rankings or clan level totals.
+        from social import public_values
+        ref = self.players.document(account)
+        snapshot = ref.get(transaction=tx)
+        old = snapshot.to_dict() if snapshot.exists else {}
+        name, name_search, xp, level, avatar = public_values(profile, account)
+        row = dict(account=account, player_id=old.get("player_id") or secrets.token_hex(10),
+                   name=name, name_search=name_search, xp=xp, level=level, avatar=avatar)
+        return ref, row if row != old else None
 
     def _reserve_name(self, tx, account, data, preferred=None):
         old = profile_name(data['profile'])
@@ -114,9 +129,12 @@ class FirestoreLedger:
             if changed:
                 data['profileRevision'] += int(bool(data['profile']))
                 data['profile'] = clean
+            player_ref, player = self._public_player(tx, account, data['profile'])
             self._write_name_claim(tx, account, claim, previous)
             if not snap.exists or changed:
                 tx.set(ref, data)
+            if player is not None:
+                tx.set(player_ref, player)
             return data
 
         return self._snapshot(account, load(transaction))
@@ -214,13 +232,16 @@ class FirestoreLedger:
                     if "Owned" in write["key"] or write["key"] == "DF_BP_BETA01_Premium":
                         by_key[write["key"]] = write
             profile = sorted(by_key.values(), key=lambda e: e["key"])
-            self._write_name_claim(tx, account, claim, previous)
-            if json.dumps(profile, separators=(",", ":"), sort_keys=True) != json.dumps(data["profile"], separators=(",", ":"), sort_keys=True):
+            changed = json.dumps(profile, separators=(",", ":"), sort_keys=True) != json.dumps(data["profile"], separators=(",", ":"), sort_keys=True)
+            if changed:
                 data["profile"] = profile
                 data["profileRevision"] += 1
+            player_ref, player = self._public_player(tx, account, data["profile"])
+            self._write_name_claim(tx, account, claim, previous)
+            if changed or not snap.exists:
                 tx.set(account_ref, data)
-            elif not snap.exists:
-                tx.set(account_ref, data)
+            if player is not None:
+                tx.set(player_ref, player)
             return data
 
         return self._snapshot(account, save(transaction))

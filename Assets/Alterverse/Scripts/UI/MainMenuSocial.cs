@@ -8,6 +8,10 @@ namespace Alterverse.UI
     public sealed partial class MainMenuController
     {
         int rankingTab,clanTab,memberOffset;
+        int requestedRankingTab=-1;
+        string rankingAccount;
+        long rankingProfileRevision=-1;
+        float rankingRefreshAt;
         string socialIdentity,lastClanIdentity;
         bool clanApplications,clanOpen=true,founderTermsAccepted;
         int clanDetailTab,clanIconIndex,clanDescriptionIndex;
@@ -42,7 +46,7 @@ namespace Alterverse.UI
             if(theme.Action(new Rect(Right-150,670,150,36),"REFRESH",enabled:service!=null&&!service.Busy))
             {
                 if(page==Page.Leaderboard&&rankingTab>0)
-                    service.Load(rankingTab==1?"/social/levels":"/social/clan-levels",new SocialService.Request{offset=RankingOffset()});
+                    LoadRankingPage(service,RankingOffset());
                 else if(service.State==null)service.Load("/social/state");
                 else if(page==Page.Clans&&clanTab==0)
                     service.Load("/social/clans",new SocialService.Request{query=clanQuery,offset=service.Clans?.offset??0});
@@ -50,6 +54,16 @@ namespace Alterverse.UI
             }
         }
         int RankingOffset()=>rankingTab==1?SocialService.Instance?.Levels?.offset??0:SocialService.Instance?.ClanLevels?.offset??0;
+        void LoadRankingPage(SocialService service,int offset)
+        {
+            if(service.Busy)return;
+            requestedRankingTab=rankingTab;
+            rankingAccount=PaidShardCommerce.Instance?.AccountHash;
+            rankingProfileRevision=AccountProfilePrefs.Revision;
+            rankingRefreshAt=Time.unscaledTime+30f;
+            service.Load(rankingTab==1?"/social/levels":"/social/clan-levels",
+                new SocialService.Request{offset=offset});
+        }
         void SocialAction(string route,string playerId=null,string clanId=null,string role=null)
         {
             SocialService.Instance?.Load(route,new SocialService.Request{playerId=playerId,clanId=clanId,role=role});
@@ -89,16 +103,23 @@ namespace Alterverse.UI
                 if(theme.Action(new Rect(Left+i*210,202,198,36),tabs[i],selected:rankingTab==i))
                 {
                     rankingTab=i;
-                    if(i>0)SocialService.Instance?.Load(i==1?"/social/levels":"/social/clan-levels");
+                    requestedRankingTab=-1;
                 }
             }
             if(rankingTab==0)return false;
             if(!SocialReady()){SocialFooter();return true;}
             var service=SocialService.Instance;
+            // A tab click during another request used to be silently dropped.
+            // Retry once idle, refresh saved progress and keep visible lists current.
+            bool changed=requestedRankingTab!=rankingTab||rankingAccount!=PaidShardCommerce.Instance?.AccountHash;
+            if(!service.Busy&&(changed||rankingProfileRevision!=AccountProfilePrefs.Revision||
+                Time.unscaledTime>=rankingRefreshAt))
+                LoadRankingPage(service,changed?0:RankingOffset());
             var result=rankingTab==1?service.Levels:service.ClanLevels;
             if(result==null)
             {
-                theme.Label(new Rect(Left,268,ContentWidth,36),"Tap REFRESH to load the global ranking.",theme.Body,true);
+                theme.Label(new Rect(Left,268,ContentWidth,36),service.Busy?
+                    "Loading the global ranking…":"Tap REFRESH to load the global ranking.",theme.Body,true);
                 SocialFooter();return true;
             }
             theme.FitLabel(new Rect(Left,256,ContentWidth,32),rankingTab==1?
@@ -129,7 +150,7 @@ namespace Alterverse.UI
                     theme.FitLabel(new Rect(Right-350,y,330,34),$"TOTAL {c.totalLevel:N0}  /  {c.memberCount}/50 MEMBERS",theme.Small);
                 }
             }
-            DrawSocialPager(result.offset,count,offset=>service.Load(rankingTab==1?"/social/levels":"/social/clan-levels",new SocialService.Request{offset=offset}),result.total);
+            DrawSocialPager(result.offset,count,offset=>LoadRankingPage(service,offset),result.total);
             SocialFooter();return true;
         }
 
@@ -300,5 +321,3 @@ namespace Alterverse.UI
         }
     }
 }
-
-
