@@ -40,7 +40,7 @@ namespace Alterverse.Visuals
             sound=gameObject.AddComponent<InsertionTransportAudio>();sound.Prepare();
             for(int team=0;team<2;team++)
             {
-                var ship=new GameObject(team==0?"ATLAS / Zero insertion":"ATLAS / Lumen insertion");
+                var ship=new GameObject(team==0?"R35 / Zero insertion":"R35 / Lumen insertion");
                 ship.transform.SetParent(transform,false);
                 var model=ship.AddComponent<InsertionTransportModel>();model.Build(team);
                 ship.SetActive(false);
@@ -119,7 +119,8 @@ namespace Alterverse.Visuals
                 float arrive=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress));
                 float uncover=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress-2f));
                 float depart=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress-3f));
-                Vector3 hover=new Vector3(0,1.8f,0);
+                // A slight camera-side offset keeps the raised hull over the projected spawn position.
+                Vector3 hover=new Vector3(0,1.8f,-2f);
                 Vector3 approach=c.heading*new Vector3(0,9f,-16f);
                 Vector3 release=c.heading*new Vector3(0,2.3f,2.8f);
                 Vector3 departure=c.heading*new Vector3(0,13f,22f);
@@ -128,7 +129,7 @@ namespace Alterverse.Visuals
                 c.model.transform.position=c.spawn+offset;
                 c.model.transform.rotation=c.heading*Quaternion.Euler(Mathf.Lerp(-9f,0,arrive)-12f*depart,0,0);
                 float doors=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress-1f));
-                c.model.Pose(doors,progress<1f?.95f:progress<3f?.68f:1f);
+                c.model.Pose(doors,progress);
             }
         }
 

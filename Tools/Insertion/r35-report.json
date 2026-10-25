@@ -1,0 +1,21 @@
+{
+  "source": "CGPitbull DropShip R35, Unity Asset Store 121438; owner-supplied export",
+  "source_package_sha256": "5c4e0c1397c840dcbd4bcd6eabc58496c641274e10ec07f075df3cda950e9bfd",
+  "albedo_variant": "Diffuse5",
+  "texture_sizes": {
+    "Albedo": 2048,
+    "Normal": 2048,
+    "Emission": 512,
+    "MetallicSmoothness": 1024
+  },
+  "material_pipeline": "URP/Lit",
+  "android_texture_format": "ASTC 6x6",
+  "original_assets_modified": false,
+  "maps": {
+    "Albedo": "498732600b59e59dce2b5beb734586d3",
+    "Normal": "9c4d842017fc8687f64387c2ceb09e3c",
+    "Emission": "deac5bf2215d52bc565c21d0bbbc2cbd",
+    "MetallicSmoothness": "4abfbc0a6547e0ef2a13f206a5f41161"
+  },
+  "runtime_prefab": "Assets/Alterverse/Resources/InsertionTransport/R35.prefab"
+}

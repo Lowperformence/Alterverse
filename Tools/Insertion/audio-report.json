@@ -1,30 +1,10 @@
 {
-  "TurbineLoop": {
-    "seconds": 3.0,
-    "peak_dbfs": -3.35,
-    "rms_dbfs": -13.97,
-    "loop": true,
-    "loop_edge_delta": 0.007096
-  },
-  "BayRelease": {
-    "seconds": 0.6999773242630386,
-    "peak_dbfs": -2.5,
-    "rms_dbfs": -19.79,
-    "loop": false,
-    "loop_edge_delta": 0.0
-  },
-  "CargoHydraulics": {
-    "seconds": 0.6899773242630386,
-    "peak_dbfs": -3.48,
-    "rms_dbfs": -16.72,
-    "loop": false,
-    "loop_edge_delta": 0.0
-  },
-  "Departure": {
-    "seconds": 0.6999773242630386,
-    "peak_dbfs": -2.5,
-    "rms_dbfs": -13.22,
-    "loop": false,
-    "loop_edge_delta": 0.0
-  }
+  "title": "SpaceShip Land.wav",
+  "author": "thepodcastdoctor",
+  "license": "CC0 1.0",
+  "source": "https://freesound.org/people/thepodcastdoctor/sounds/534692/",
+  "source_sha256": "3d11f0adb071719d1153b02c2df97a2a68864cffcef684247af350c38c9b5b6d",
+  "runtime_file": "Assets/Alterverse/Resources/Audio/SFX/InsertionTransport/R35Arrival.wav",
+  "runtime_sha256": "087859a35383727c534425f8d8cfa685c69179506595df023695d17eaa40d809",
+  "conversion": "44.1 kHz stereo PCM16; original duration, playback speed and pitch preserved"
 }

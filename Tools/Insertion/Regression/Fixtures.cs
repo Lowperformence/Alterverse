@@ -7,6 +7,16 @@ namespace UnityEngine {
   public string name;
   public static T[] FindObjectsByType<T>(FindObjectsSortMode mode) where T:Component => GameObject.All.Where(g=>g.activeInHierarchy).SelectMany(g=>g.components).OfType<T>().ToArray();
   public static void Destroy(Object obj){}
+  public static GameObject Instantiate(GameObject original,Transform parent,bool world){
+   GameObject Copy(GameObject source,Transform target){
+    var copy=new GameObject(source.name);copy.transform.SetParent(target,false);copy.transform.localPosition=source.transform.localPosition;
+    copy.transform.localRotation=source.transform.localRotation;copy.transform.localScale=source.transform.localScale;copy.SetActive(source.activeSelf);
+    if(source.GetComponent<Renderer>() is Renderer r)copy.AddComponent<MeshRenderer>().sharedMaterial=r.sharedMaterial;
+    foreach(var child in GameObject.All.ToArray().Where(g=>g.transform.parent==source.transform))Copy(child,copy.transform);
+    return copy;
+   }
+   return Copy(original,parent);
+  }
  }
  public class Component:Object {
   public GameObject gameObject;public Transform transform=>gameObject.transform;
@@ -30,6 +40,7 @@ namespace UnityEngine {
   public Vector3 position{get=>parent==null?localPosition:parent.TransformPoint(localPosition);set=>localPosition=value;}
   public Quaternion rotation{get=>localRotation;set=>localRotation=value;}
   public void SetParent(Transform p,bool world=true){parent=p;}
+  public Transform Find(string name)=>GameObject.All.FirstOrDefault(g=>g.transform.parent==this&&g.name==name)?.transform;
   public bool IsChildOf(Transform p){for(var t=parent;t!=null;t=t.parent)if(t==p)return true;return false;}
   public Vector3 TransformPoint(Vector3 v){var q=localRotation*new Vector3(v.x*localScale.x,v.y*localScale.y,v.z*localScale.z)+localPosition;return parent==null?q:parent.TransformPoint(q);}
  }
@@ -91,10 +102,14 @@ namespace UnityEngine {
  public class RuntimeInitializeOnLoadMethodAttribute:Attribute{public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType value){}}
  public static class Time {public static float unscaledDeltaTime=.1f,timeScale=1,deltaTime;}
  public static class Debug {public static void LogWarning(string text){}}
- public class AudioClip:Object{public bool LoadAudioData()=>true;}
- public static class Resources {public static int Loads;public static T Load<T>(string path)where T:Object,new(){Loads++;return new T{name=path};}}
+ public class AudioClip:Object{public float length=14f;public bool LoadAudioData()=>true;}
+ public static class Resources {
+  public static int Loads;public static readonly Dictionary<string,Object> Assets=new();
+  public static T Load<T>(string path)where T:Object{Loads++;if(Assets.TryGetValue(path,out var asset))return asset as T;
+   return typeof(T)==typeof(AudioClip)?new AudioClip{name=path} as T:null;}
+ }
  public class AudioSource:Component {
-  public bool playOnAwake,loop;public float spatialBlend,volume,pitch,dopplerLevel;public int priority,plays;public AudioClip clip;
+  public bool playOnAwake,loop;public float spatialBlend,volume,pitch,dopplerLevel,time;public int priority,plays;public AudioClip clip;
   public bool isPlaying,paused;private bool resumable;public readonly List<string> cues=new();
   public void Play(){plays++;isPlaying=true;resumable=true;}public void PlayOneShot(AudioClip clip,float gain){cues.Add(clip.name);isPlaying=true;resumable=true;}
   public void Pause(){paused=true;isPlaying=false;}public void UnPause(){if(paused){paused=false;isPlaying=resumable;}}

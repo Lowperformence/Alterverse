@@ -34,6 +34,12 @@ static class Regression {
   typeof(MatchOpening).GetField("phaseElapsed",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(opening,elapsed);
  }
  static void Main(string[] args){
+  var template=new GameObject("R35 template");template.AddComponent<MeshRenderer>();
+  foreach(string name in new[]{"Dropship_Hatch","Dropship_R35-Engine1","Dropship_R35-Engine2"}){
+   var child=new GameObject(name);child.transform.SetParent(template.transform,false);child.AddComponent<MeshRenderer>();
+  }
+  var zero=new Material(Shader.Find("URP"));var lumen=new Material(Shader.Find("URP"));
+  Resources.Assets["InsertionTransport/R35"]=template;Resources.Assets["InsertionTransport/R35_Zero"]=zero;Resources.Assets["InsertionTransport/R35_Lumen"]=lumen;
   var cameraObject=new GameObject("Camera");UnityEngine.Camera.main=cameraObject.AddComponent<UnityEngine.Camera>();
   var camera=cameraObject.AddComponent<MobaCamera>();var target=new GameObject("Local target");camera.SetTarget(target.transform);
   Vector3 normalCamera=camera.transform.position;
@@ -104,40 +110,50 @@ static class Regression {
   serverRoutine.MoveNext();Check(server.PhaseCode==4,"Dedicated server never waits on visual loading");
   Call(server,"OnDisable");MainMenuController.IsVisible=false;MatchEntryCurtain.AwaitingArena=false;CoopAuthority.Active=false;
   Unity.Netcode.NetworkManager.Singleton=null;
-  // Actual audio controller, controlled clip/source substitutes.
-  var audio=new GameObject("Audio").AddComponent<InsertionTransportAudio>();audio.Prepare();
+  // The selected real recording replaces all four original synthetic cues.
+  var audio=new GameObject("Audio").AddComponent<InsertionTransportAudio>();audio.Prepare();audio.Prepare();
   var voices=audio.GetComponentsInChildren<AudioSource>();int loads=Resources.Loads;
-  audio.Advance(.1f);Check(voices.Length==2&&voices[0].plays==1,"One cinematic mix starts one prepared engine loop");
+  audio.Advance(.1f);Check(voices.Length==1&&voices[0].plays==1&&!voices[0].loop,"Exactly one unlooped recording; Prepare is idempotent");
+  Check(voices[0].clip.name.EndsWith("R35Arrival")&&voices[0].pitch==1f,"Selected recording retains its original pitch");
   audio.Advance(1f);audio.Advance(1.2f);audio.Advance(2f);audio.Advance(.8f);audio.Advance(2f);
-  Check(voices[1].cues.Count==2,"Bay release and hydraulics play once despite corrected phases");
+  Check(voices[0].plays==1&&voices[0].cues.Count==0,"Network corrections do not replay the approach or add synthetic cues");
   PlayerProfile.MasterVolume=.5f;PlayerProfile.SfxVolume=0;audio.Advance(2.5f);
-  Check(voices.All(v=>v.volume==0),"Live SFX mute reaches both voices");
+  Check(voices[0].volume==0,"Live SFX mute reaches the recording");
   PlayerProfile.SfxVolume=.6f;audio.Advance(2.5f);
-  Check(voices[0].volume>0&&voices[0].volume<.3f,"Engine respects master and SFX gains");
+  Check(voices[0].volume>0&&voices[0].volume<.3f,"Recording respects master and SFX gains");
   MatchClock.Set(PauseReason.Background,true);audio.Advance(2.5f);
-  Check(voices.All(v=>v.paused),"Background pauses engine and mechanisms");
+  Check(voices[0].paused,"Background pauses the recording");
   MatchClock.Set(PauseReason.Background,false);audio.Advance(3f);
-  Check(voices.All(v=>!v.paused)&&voices[0].plays==1&&voices[1].cues.Count==3,"Resume keeps loop position and departure plays once");
+  Check(!voices[0].paused&&voices[0].plays==1&&voices[0].pitch==1f,"Resume keeps the original recording and pitch");
   Check(Resources.Loads==loads,"Flight does not load audio assets");
-  audio.Advance(4f);Check(voices.All(v=>!v.isPlaying),"All lander audio stops at GO");
+  audio.Advance(3.9f);Check(voices[0].volume<.02f,"Departure fades continuously before GO");
+  audio.Advance(4f);Check(!voices[0].isPlaying,"Recording stops at GO");
   var lateAudio=new GameObject("Late audio").AddComponent<InsertionTransportAudio>();lateAudio.Prepare();lateAudio.Advance(2.4f);
-  Check(lateAudio.GetComponentsInChildren<AudioSource>()[1].cues.Count==0,"Late client does not replay old bay-release cues");
-  Call(lateAudio,"OnDisable");Check(lateAudio.GetComponentsInChildren<AudioSource>().All(v=>!v.isPlaying),"Exit stops transport sound");
+  Check(lateAudio.GetComponentsInChildren<AudioSource>()[0].time>3f,"Late client seeks past the earlier approach");
+  Call(lateAudio,"OnDisable");Check(!lateAudio.GetComponentsInChildren<AudioSource>()[0].isPlaying,"Exit stops the recording");
   PlayerProfile.MasterVolume=PlayerProfile.SfxVolume=1;
-  var model=new GameObject("Preview").AddComponent<InsertionTransportModel>();model.Build(0);model.Pose(0,1);
-  var parts=model.GetComponentsInChildren<MeshFilter>();int triangles=0;
-  foreach(var part in parts){
-   var m=part.sharedMesh;triangles+=m.triangles.Count/3;
-   Check(m.triangles.All(n=>n>=0&&n<m.vertices.Count),"Mesh indices valid");
-   for(int i=0;i<m.triangles.Count;i+=3){
-    var a=m.vertices[m.triangles[i]];var b=m.vertices[m.triangles[i+1]];var c=m.vertices[m.triangles[i+2]];
-    var ab=new System.Numerics.Vector3(b.x-a.x,b.y-a.y,b.z-a.z);var ac=new System.Numerics.Vector3(c.x-a.x,c.y-a.y,c.z-a.z);
-    Check(System.Numerics.Vector3.Cross(ab,ac).LengthSquared()>1e-10,"No degenerate triangles");
-   }
-  }
-  Check(triangles<2500,"Mobile geometry budget below 2500 triangles per ship");
-  var data=parts.Select(part=>new{ name=part.gameObject.name,vertices=part.sharedMesh.vertices.Select(v=>{var p=part.transform.TransformPoint(v);return new[]{p.x,p.y,p.z};}),triangles=part.sharedMesh.triangles,color=new[]{part.GetComponent<Renderer>().sharedMaterial.color.r,part.GetComponent<Renderer>().sharedMaterial.color.g,part.GetComponent<Renderer>().sharedMaterial.color.b}});
-  if(args.Length>0)File.WriteAllText(args[0],JsonSerializer.Serialize(data));
-  Console.WriteLine($"PASS: {checks} insertion/geometry checks; {triangles} triangles and {parts.Length} mesh parts per ship (managed fixtures; no native rendering).");
+  // Exercise the real R35 adapter with a controlled imported-prefab hierarchy.
+  var r35=new GameObject("R35 runtime").AddComponent<InsertionTransportModel>();r35.Build(1);
+  Check(r35.transform.Find("R35 / DIMENSIONS FRONT")!=null,"Imported resource prefab replaces the old procedural model");
+  Check(r35.GetComponentsInChildren<Renderer>(true).All(r=>ReferenceEquals(r.sharedMaterial,lumen)),"Lumen uses a shared separate game material");
+  Transform imported=r35.transform.Find("R35 / DIMENSIONS FRONT");
+  Check(Math.Abs(imported.localScale.x-1.05f)<.001f,"R35 fits the spawn at a uniform scale");
+  int r35Meshes=Mesh.Created,r35Materials=Material.Created,preparedLoads=Resources.Loads,preparedObjects=GameObject.All.Count;
+  r35.Build(1);r35.Pose(1f,1.5f);
+  var engine=imported.Find("Dropship_R35-Engine1");var hatch=imported.Find("Dropship_Hatch");
+  Vector3 nozzle=engine.localRotation*new Vector3(0f,0f,-1f);
+  Check(nozzle.y<-.95f,"Hover rotates the actual engine nozzles downward");
+  Check((hatch.localRotation*new Vector3(0f,0f,-1f)).y<-.7f,"Cargo hatch opens during delivery");
+  r35.Pose(1f,4f);
+  Check(Math.Abs((engine.localRotation*new Vector3(0f,0f,-1f)).y)<.001f,"Departure restores forward thrust");
+  Check(Math.Abs((hatch.localRotation*new Vector3(0f,0f,-1f)).y)<.001f,"Hatch closes for departure");
+  Check(Mesh.Created==r35Meshes&&Material.Created==r35Materials&&Resources.Loads==preparedLoads&&GameObject.All.Count==preparedObjects,"R35 poses allocate no meshes/materials/objects and load no resources");
+  var zeroShip=new GameObject("Zero runtime").AddComponent<InsertionTransportModel>();zeroShip.Build(0);
+  Check(zeroShip.GetComponentsInChildren<Renderer>(true).All(r=>ReferenceEquals(r.sharedMaterial,zero)),"Zero has its own shared team material");
+  Check(template.GetComponent<Renderer>().sharedMaterial==null&&template.transform.localScale.x==1f,"Imported source prefab remains untouched");
+  Resources.Assets.Remove("InsertionTransport/R35");
+  bool missingFailed=false;try{new GameObject("Missing model").AddComponent<InsertionTransportModel>().Build(0);}catch(InvalidOperationException){missingFailed=true;}
+  Check(missingFailed,"A missing R35 reports a preparation failure instead of silently restoring the old aircraft");
+  Console.WriteLine($"PASS: {checks} insertion/R35/audio/opening checks (managed fixtures; no native rendering).");
  }
 }

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 308c71e2f7725ee99dde39c2d8f71f3d
+guid: 6d82ec4b1f874bac9c83268c1c0020c5
 AudioImporter:
   externalObjects: {}
   serializedVersion: 7
@@ -12,12 +12,12 @@ AudioImporter:
     quality: 1
     conversionMode: 0
   platformSettingOverrides: {}
-  forceToMono: 1
+  forceToMono: 0
   normalize: 0
   preloadAudioData: 1
   loadInBackground: 0
   ambisonic: 0
   3D: 0
-  userData: Original ATLAS sound design; PCM preload for match insertion.
+  userData: SpaceShip Land by thepodcastdoctor; CC0; selected R35 recording.
   assetBundleName:
   assetBundleVariant:

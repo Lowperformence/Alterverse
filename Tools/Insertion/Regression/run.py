@@ -1,9 +1,8 @@
-"""Compile actual transport/model sources and exercise lifecycle and generated geometry with managed fixtures."""
+"""Compile actual R35/transport sources and exercise lifecycle, audio and opening with managed fixtures."""
 import argparse,json,subprocess,tempfile
 from pathlib import Path
 p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('--dotnet-root',type=Path,required=True)
-p.add_argument('--geometry-json',type=Path)
 a=p.parse_args();here=Path(__file__).resolve().parent;root=here.parents[2]
 sdk=sorted((a.dotnet_root/'sdk').iterdir())[-1]
 runtime=sorted((a.dotnet_root/'shared/Microsoft.NETCore.App').iterdir())[-1]
@@ -13,4 +12,4 @@ with tempfile.TemporaryDirectory(prefix='df-insertion-') as temp:
  rsp.write_text('\n'.join(['-nologo','-target:exe','-langversion:9','-out:'+str(output),*['-r:'+str(f) for f in runtime.glob('*.dll')],*map(str,files)]))
  subprocess.run([str(a.dotnet_root/'dotnet'),str(sdk/'Roslyn/bincore/csc.dll'),'@'+str(rsp)],check=True)
  output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))
- subprocess.run([str(a.dotnet_root/'dotnet'),str(output),*([str(a.geometry_json)] if a.geometry_json else [])],check=True)
+ subprocess.run([str(a.dotnet_root/'dotnet'),str(output)],check=True)
