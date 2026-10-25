@@ -97,7 +97,7 @@ namespace Alterverse.UI
             HeroId.Bolt7=>slot switch
             {
                 0=>"Short grenade arc; small area explosion. 35 damage at the centre, falling to 15 at the edge.",
-                1=>"Brief windup, then a 2m forward ram and 1m strike. 40 damage and a small knockback; walls stop movement.",
+                1=>"Brief windup and 2m rush; hit every enemy in the full marked 3m, 70 degree cone for 40 damage and knockback. Cover blocks it.",
                 2=>"Second short grenade: 25 damage in 1.1m and 0.8m outward knockback. 4m throw range; cover blocks it.",
                 _=>"After a 0.9s warning, remove every personal shield and overshield in the enemy area once. Lightning Orb and Lightning Nova, then Star Fog. New shields work immediately. No health damage."
             },

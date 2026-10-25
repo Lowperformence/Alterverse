@@ -50,9 +50,16 @@ class Regression {
   Check(Last(3).GetComponentsInChildren<AudioSource>(true).Count(a=>a.clip!=null)==1&&Last(3).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null).clip.name=="UserNullfield","user Nullfeld sound replaces native Orb audio once");
   Check(Last(6).GetComponentsInChildren<AudioSource>(true).All(a=>a.clip==null)&&Last(4).GetComponentsInChildren<AudioSource>(true).All(a=>a.clip==null),"Nova and Fog do not duplicate the user's detonation sound");Tick(.7f);Check(Last(4).activeSelf,"Star Fog follows detonation");
   Check(lib.bulletMuzzle!=null&&lib.bulletProjectile!=null&&lib.bulletImpact!=null,"complete native Gatling bullet chain resolved");
-  Bolt7Vfx.Basic(actor,new Vector3(0,0,4),.1f);Near(Last(8).transform.localScale.x,2.5f,"native Gatling bullet uses requested 250 percent base scale");Tick(.72f);
+  Bolt7Vfx.Basic(actor,new Vector3(0,0,4),.1f);Near(Last(8).transform.localScale.x,2.5f/3f,"Gatling projectile reduced to one third of previous size");Near(Last(7).transform.localScale.x,2.5f/3f,"Gatling muzzle reduced to one third");Tick(.72f);
   Check(Last(7).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null).isPlaying,"Gatling plays the package's shot sound");var bulletSound=Last(8).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null);Check(bulletSound.isPlaying,"Gatling flight sound follows the projectile");
-  Bolt7Vfx.BasicImpact(actor,new Vector3(0,0,4));Tick(.73f);Check(Last(9).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null).isPlaying,"confirmed basic hit plays native impact sound");Tick(.85f);Check(!bulletSound.isPlaying,"Gatling flight loop stops at arrival");
+  Bolt7Vfx.BasicImpact(actor,new Vector3(0,0,4));Near(Last(9).transform.localScale.x,2.5f/3f,"Gatling impact reduced to one third");Tick(.73f);Check(Last(9).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null).isPlaying,"confirmed basic hit plays native impact sound");Tick(.85f);Check(!bulletSound.isPlaying,"Gatling flight loop stops at arrival");
+  Near(HeroVfxPool.RamOrigin.z,0,"ram sweep stays anchored to original cone, not dash endpoint");Near(HeroVfxPool.RamSize.z,3,"ram sweep reaches exactly the melee cone range");
+  foreach(int slot in new[]{0,2})foreach(float range in new[]{0f,.1f,4f}){
+   actor.transform.position=new Vector3(5,1,7);Vector3 point=new Vector3(5,0,7+range);float start=Time.time,seconds=slot==0?.45f:.55f;
+   Bolt7Vfx.Grenade(actor,point,seconds,slot);var grenade=Last(1);actor.transform.position+=Vector3.right*3;
+   Tick(start+seconds*.999f);Check(Vector3.Distance(grenade.transform.position,point)<.01f,"grenade visual arrives at original near/self/far point while owner moves");
+   Bolt7Vfx.Area(actor,point,slot);Check(Vector3.Distance(Last(2).transform.position,point)<.0001f,"detonation visual uses same grenade destination");Tick(start+seconds+.01f);
+  }
   Console.WriteLine("PASS "+checks+" BOLT-7 native VFX/audio/scale/chain contracts. Controlled fixtures; native rendering/listening remain separate.");
  }
 }

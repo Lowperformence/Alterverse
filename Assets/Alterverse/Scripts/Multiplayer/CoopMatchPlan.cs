@@ -58,30 +58,26 @@ namespace Alterverse.Multiplayer
                 if(!session.TryAssign(i,HumanSlot(ordered[i],i==0)))
                     throw new InvalidOperationException($"Could not assign co-op human slot {i}.");
 
-            HeroId[] pool={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,HeroId.Mira,HeroId.Nerok,HeroId.Rook};
-            int allySlot=ordered.Count;
-            for(int i=0;i<pool.Length&&allySlot<MatchSession.TeamSize;i++)
+            int allySlot=ordered.Count,cursor=0;
+            var alliedOrder=BotHeroPool.Shuffled(session.SessionId,0);
+            while(allySlot<MatchSession.TeamSize)
             {
-                HeroId hero=pool[i];
-                if(humanHeroes.Contains(hero))continue;
-                if(!session.TryAssign(allySlot,BotSlot($"ally-{allySlot}",hero,0)))
-                    throw new InvalidOperationException("Could not assign allied co-op bot.");
+                HeroId hero=BotHeroPool.Next(alliedOrder,humanHeroes,ref cursor);humanHeroes.Add(hero);
+                if(!session.TryAssign(allySlot,BotSlot($"ally-{allySlot}",hero,0)))throw new InvalidOperationException("Could not assign allied co-op bot.");
                 allySlot++;
             }
-            if(allySlot!=MatchSession.TeamSize)
-                throw new InvalidOperationException($"Co-op roster could not fill Team Zero to {MatchSession.TeamSize} members.");
-
-            HeroId[] enemyHeroes={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,
-                !string.IsNullOrEmpty(matchId)&&(matchId[0]&1)==0?HeroId.Nerok:HeroId.Rook};
-            for(int i=0;i<enemyHeroes.Length;i++)
-                if(!session.TryAssign(MatchSession.TeamSize+i,BotSlot($"enemy-{i}",enemyHeroes[i],1)))
-                    throw new InvalidOperationException("Could not assign enemy co-op bot.");
+            var enemies=BotHeroPool.Shuffled(session.SessionId,1);var enemyUsed=new HashSet<HeroId>();cursor=0;
+            for(int i=0;i<MatchSession.TeamSize;i++)
+            {
+                var hero=BotHeroPool.Next(enemies,enemyUsed,ref cursor);enemyUsed.Add(hero);
+                if(!session.TryAssign(MatchSession.TeamSize+i,BotSlot($"enemy-{i}",hero,1)))throw new InvalidOperationException("Could not assign enemy co-op bot.");
+            }
 
             if(!session.IsFull)throw new InvalidOperationException($"Co-op match plan must fill all {MatchSession.MaxPlayers} match slots.");
 
             return new CoopMatchPlan
             {
-                MatchId=matchId,
+                MatchId=session.SessionId,
                 Arena=arena,
                 Difficulty=difficulty,
                 Session=session,
@@ -89,7 +85,7 @@ namespace Alterverse.Multiplayer
             };
         }
 
-        // Preserve teams/heroes while assigning a fresh receipt namespace to each round.
+        // Preserve human teams/heroes; draw fresh full-catalog bots for the new round.
         public static CoopMatchPlan NextRound(CoopMatchPlan previous, string id, int humanMask)
         {
             if (previous?.Session == null || !previous.Session.IsFull || string.IsNullOrEmpty(id) || id == previous.MatchId)
@@ -98,14 +94,22 @@ namespace Alterverse.Multiplayer
             next.MatchId = id; next.Arena = previous.Arena;
             next.Difficulty = previous is OnlineMatchPlan ? BotDifficultySettings.OnlineDifficulty : previous.Difficulty;
             next.Session = new MatchSession(id, previous.Session.Mode);
+            var used=new[]{new HashSet<HeroId>(),new HashSet<HeroId>()};
+            for(int i=0;i<previous.Session.Slots.Length;i++)
+            {
+                var humanSlot=previous.Session.Slots[i];
+                if(!humanSlot.IsBot&&(humanMask&(1<<i))!=0)used[humanSlot.Team].Add(humanSlot.Hero);
+            }
+            var botOrder=new[]{BotHeroPool.Shuffled(id,0),BotHeroPool.Shuffled(id,1)};var cursors=new int[2];
             for (int i = 0; i < MatchSession.MaxPlayers; i++)
             {
                 MatchPlayerSlot old = previous.Session.Slots[i];
                 bool human = !old.IsBot && (humanMask & (1 << i)) != 0;
+                HeroId hero=human?old.Hero:BotHeroPool.Next(botOrder[old.Team],used[old.Team],ref cursors[old.Team]);used[old.Team].Add(hero);
                 var slot = new MatchPlayerSlot {
                     PlayerId = human || old.IsBot ? old.PlayerId : "round-bot-" + i,
-                    DisplayName = human || old.IsBot ? old.DisplayName : old.Hero.ToString(),
-                    Team = old.Team, Hero = old.Hero, BattleItem = BattleItemType.None, IsLocal = human && old.IsLocal,
+                    DisplayName = human || old.IsBot ? old.DisplayName : hero.ToString(),
+                    Team = old.Team, Hero = hero, BattleItem = BattleItemType.None, IsLocal = human && old.IsLocal,
                     IsBot = !human, Ready = true, Connected = true, IsHost = human && old.IsHost
                 };
                 if (!next.Session.TryAssign(i, slot)) throw new InvalidOperationException("Invalid next-round roster.");

@@ -4,18 +4,19 @@ using UnityEngine;
 using Alterverse.Characters;
 using Alterverse.Combat;
 using Alterverse.Multiplayer;
-class Bolt7Regression {
+partial class Bolt7Regression {
  static int checks;
  static void Check(bool yes,string why){checks++;if(!yes)throw new Exception(why);}
  static void Near(float a,float b,string why)=>Check(Math.Abs(a-b)<.001f,why+" actual="+a+" expected="+b);
  static Health Hero(HeroId id,int team,Vector3 point){var g=new GameObject(id.ToString());g.transform.position=point;g.AddComponent<HeroIdentity>().Hero=id;g.AddComponent<TeamMember>().Team=team;g.AddComponent<HeroLocomotion>();var h=g.AddComponent<Health>();h.Configure(360);return h;}
  static void Set(Health h,string f,float n)=>typeof(Health).GetField(f,BindingFlags.Instance|BindingFlags.NonPublic).SetValue(h,n);
  static void Main(){
+  AreaAimCases();
   Clock.Reset();
   Near(Bolt7Balance.BasicInterval,HeroCombatProfile.StatsFor(HeroId.Nyra).AttackInterval/3,"three times Sivra rate");Near(Bolt7Balance.BasicDamage,5,"gatling damage");
   Check(Bolt7Balance.BasicRange<HeroCombatProfile.StatsFor(HeroId.Nyra).AttackRange,"limited basic range");Near(Bolt7Balance.FxScale,2.5f,"native FX scale");
   Check((int)HeroId.Bolt7==10 && (int)HeroId.VoidKnight==9,"stable network hero IDs");
-  var kit=HeroAbilityKit.LoadoutFor(HeroId.Bolt7);Check(Bolt7Balance.HasAbility(2)&&kit.E.Name=="Impulsgranate","complete five-attack kit includes a second grenade");Near(Bolt7Balance.Health,280,"reduced HP");Near(Bolt7Balance.Shield,40,"40 rechargeable base shield");Near(kit.Ultimate.Power,0,"no ultimate HP damage");
+  var kit=HeroAbilityKit.LoadoutFor(HeroId.Bolt7);Check(Bolt7Balance.HasAbility(2)&&kit.E.Name=="Impulse Grenade","complete five-attack kit includes a second grenade");Near(Bolt7Balance.Health,280,"reduced HP");Near(Bolt7Balance.Shield,40,"40 rechargeable base shield");Near(kit.Ultimate.Power,0,"no ultimate HP damage");Check(kit.Q.Name=="Frag Arc"&&kit.W.Name=="Piston Ram"&&kit.Ultimate.Name=="Null Field","English ability labels");
   var actor=Hero(HeroId.Bolt7,0,Vector3.zero);var enemy=Hero(HeroId.Nyra,1,new Vector3(0,0,1));var ally=Hero(HeroId.Nyra,0,new Vector3(.1f,0,1));var far=Hero(HeroId.Nyra,1,new Vector3(0,0,4));
   Set(enemy,"shield",1000000);Set(enemy,"shieldUntil",100);enemy.AddShield(1,1,false);
   float health=enemy.Current,own=actor.Shield,friendly=ally.Shield;
@@ -29,6 +30,12 @@ class Bolt7Regression {
   Near(Bolt7Combat.GrenadeDamage(0),35,"grenade core");Near(Bolt7Combat.GrenadeDamage(.6f),35,"grenade core edge");Near(Bolt7Combat.GrenadeDamage(1),25,"grenade falloff");Near(Bolt7Combat.GrenadeDamage(1.4f),15,"grenade outer edge");
   enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,1.4f);Check(Bolt7Combat.Grenade(actor.gameObject,Vector3.zero)==1,"grenade single hit at radius boundary");Near(enemy.Shield,45,"grenade edge damage resolves once");enemy.transform.position=new Vector3(0,0,1.401f);Near(Bolt7Combat.Grenade(actor.gameObject,Vector3.zero),0,"outside small area");
   enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,.9f);Check(Bolt7Combat.Ram(actor.gameObject,Vector3.forward)==1,"ram front contact");Near(enemy.Shield,20,"ram damage");Near(enemy.GetComponent<HeroLocomotion>().LastMove.z,1.7f,"ram knockback");enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,-.9f);Near(Bolt7Combat.Ram(actor.gameObject,Vector3.forward),0,"ram rear exclusion");
+  enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,2.7f);
+  var wide=Hero(HeroId.Nyra,1,new Vector3(1.25f,0,2.2f));
+  var outside=Hero(HeroId.Nyra,1,new Vector3(2.5f,0,1));
+  actor.transform.position=new Vector3(0,0,2);
+  Check(Bolt7Combat.Ram(actor.gameObject,Vector3.zero,Vector3.forward)==2,"full preview cone hits multiple targets from pre-dash origin");Near(enemy.Shield,20,"far cone damage");Near(wide.Shield,20,"wide cone damage");Near(outside.Shield,60,"outside cone protected");Near(far.Shield,60,"dash must not extend cone beyond original range");
+  wide.gameObject.SetActive(false);outside.gameObject.SetActive(false);actor.transform.position=Vector3.zero;
   enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,1f);
   Check(Bolt7Combat.Impulse(actor.gameObject,Vector3.zero)==1,"impulse grenade area hit");Near(enemy.Shield,35,"impulse grenade damage once");Near(enemy.GetComponent<HeroLocomotion>().LastMove.z,1.8f,"outward grenade knockback");
   enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,1.11f);Near(Bolt7Combat.Impulse(actor.gameObject,Vector3.zero),0,"impulse outside small radius");

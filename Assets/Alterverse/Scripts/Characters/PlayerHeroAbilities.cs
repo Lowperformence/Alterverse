@@ -56,7 +56,7 @@ namespace Alterverse.Characters
             HeroId h = identity.Hero;
             if(h==HeroId.Bolt7)return slot switch {
                 0=>"Grenade: 35 centre / 15 edge damage, 1.4m radius, 5m range.",
-                1=>"Dash 2m, then ram enemies in front for 40 damage and 0.8m knockback.",
+                1=>"Rush 2m and hit every enemy in the marked 3m, 70 degree cone for 40 damage and 0.8m knockback.",
                 2=>"Impulse grenade: 25 area damage in 1.1m, 4m throw range, 0.8m outward knockback. Walls block it.",
                 3=>"After 0.9s, remove all enemy shields in 3m. No health damage. New shields work immediately; normal shield recharge applies.",
                 _=>""

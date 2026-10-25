@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,PressureWave,GravityEight,AnchorStrikeZero,Laser,EchoSickle,Mist,Claw,TimmyGrenade,TexturedQuad,Count }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,PressureWave,GravityEight,AnchorStrikeZero,Laser,EchoSickle,Mist,Claw,TimmyGrenade,TexturedQuad,RamSweep,Count }
     internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift,Tether,Lob,RadialPulse,LaserBeam,Sustained,AttachedJet }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     [DefaultExecutionOrder(1600)]
@@ -549,6 +549,12 @@ namespace Alterverse.Visuals
                         }
                     }
                     break;
+                case HeroFxShape.RamSweep:
+                    // The ram's full 70-degree contact cone, with a broad feathered melee crescent.
+                    float halfRam=Bolt7Balance.RamAngle*.5f*Mathf.Deg2Rad;
+                    FeatherBand(-halfRam,halfRam,.12f,.60f,1f,32,true);
+                    FeatherBand(-halfRam,halfRam,.76f,.91f,1f,32,true);
+                    break;
                 case HeroFxShape.PressureWave:
                     // Hollow feathered band, with no vertices beyond the requested radius.
                     FeatherBand(0,Mathf.PI*2,.86f,.95f,1f,64);break;
@@ -684,4 +690,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

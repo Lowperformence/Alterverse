@@ -26,9 +26,9 @@ namespace Alterverse.Editor{public static class UltimateLightningBuilder{public 
 namespace Alterverse.Visuals {
  public static class HeroVfxEvents{public static float ReplayElapsed;}
  public sealed class Bolt7Visual:UnityEngine.MonoBehaviour{public UnityEngine.Vector3 Gatling=>transform.position;public UnityEngine.Vector3 Launcher=>transform.position;public void Shot(){}public void Skill(int slot){}}
- internal enum HeroFxShape{Halo,Streak,PressureWave,ContactStar,Spark}
+ internal enum HeroFxShape{Halo,Streak,PressureWave,ContactStar,Spark,RamSweep}
  internal enum HeroFxMotion{AttachedJet,Hold,RadialPulse,Contract,Drift}
- internal static class HeroVfxPool{public static int Emits,Traces;public static void Trace(UnityEngine.Vector3 a,UnityEngine.Vector3 b,UnityEngine.Color c,float w,float d){Traces++;}public static void Emit(HeroFxShape s,UnityEngine.Vector3 a,UnityEngine.Vector3 b,UnityEngine.Vector3 z,UnityEngine.Color c,float d,HeroFxMotion m=HeroFxMotion.Hold,UnityEngine.Quaternion r=default,UnityEngine.GameObject owner=null,bool warning=false,UnityEngine.Transform follow=null,bool cancelOnOwnerDeath=false){Emits++;}}
+ internal static class HeroVfxPool{public static int Emits,Traces;public static UnityEngine.Vector3 RamOrigin,RamSize;public static void Trace(UnityEngine.Vector3 a,UnityEngine.Vector3 b,UnityEngine.Color c,float w,float d){Traces++;}public static void Emit(HeroFxShape s,UnityEngine.Vector3 a,UnityEngine.Vector3 b,UnityEngine.Vector3 z,UnityEngine.Color c,float d,HeroFxMotion m=HeroFxMotion.Hold,UnityEngine.Quaternion r=default,UnityEngine.GameObject owner=null,bool warning=false,UnityEngine.Transform follow=null,bool cancelOnOwnerDeath=false){Emits++;if(s==HeroFxShape.RamSweep){RamOrigin=a;RamSize=z;}}}
 }
 '''
 importer=(src/'Editor/Bolt7Importer.cs').read_text();a1=importer.index('    // FBX');b1=importer.index('    [InitializeOnLoad]');importer=importer[:a1]+importer[b1:]

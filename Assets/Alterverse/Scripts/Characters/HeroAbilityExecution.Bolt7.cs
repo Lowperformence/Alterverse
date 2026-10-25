@@ -14,7 +14,10 @@ namespace Alterverse.Characters
             HeroCombatAudio.Windup(gameObject,slot+1);
             if(slot==1)
             {
-                Vector3 direction=aim.CastDirection(transform.position);
+                // Cone capture may carry a target point off-centre. Preserve the shown
+                // wedge direction instead of rotating the whole damage area toward it.
+                Vector3 direction=AimGeometry.Direction(aim.Direction);
+                locomotion.FaceAction(direction,Bolt7Balance.RamWindup+.25f);
                 StartCoroutine(ResolveBolt7Ram(direction,life));return true;
             }
             AbilitySpec spec=kit.Spec(slot);
@@ -45,8 +48,8 @@ namespace Alterverse.Characters
                 HeroSkillVfx.Dash(gameObject,from,locomotion.DashDestination,1,.15f);
             yield return new WaitForSeconds(.15f);
             if(token!=life||self.IsDead||!HeroCombatStatus.CanAct(gameObject))yield break;
-            int hits=Bolt7Combat.Ram(gameObject,direction);
-            HeroSkillVfx.Area(gameObject,transform.position,Bolt7Balance.RamReach,.2f,false,false,1);
+            int hits=Bolt7Combat.Ram(gameObject,from,direction);
+            HeroSkillVfx.Area(gameObject,from,Bolt7Balance.RamRange,.32f,false,false,1);
             if(hits>0)HeroCombatAudio.Impact(gameObject,1,transform.position);
         }
     }

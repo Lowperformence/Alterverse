@@ -109,8 +109,8 @@ namespace Alterverse.Characters
             AimSpec aimSpec = AimingSettings.Current.For(hero, slot);
             AimPose attackAim = aimed ?? new AimPose(target != null ? target.transform.position - transform.position : movement,
                 target != null ? target.transform.position : transform.position, null, target != null);
-            bool usesDelivery = aimSpec.aimType == AimType.Melee || aimSpec.aimType == AimType.Projectile ||
-                aimSpec.aimType == AimType.Beam || aimSpec.aimType == AimType.Homing;
+            bool usesDelivery = hero != HeroId.Bolt7 && (aimSpec.aimType == AimType.Melee || aimSpec.aimType == AimType.Projectile ||
+                aimSpec.aimType == AimType.Beam || aimSpec.aimType == AimType.Homing);
             if (usesDelivery && !HeroAttackDelivery.For(gameObject).HasCapacity(hero == HeroId.Nyra && slot == 3 ? SightlineBreakShots : 1)) return false;
             bool mobility = (hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) || (hero == HeroId.Elyra && slot == 2) || (hero == HeroId.Traveler && slot == 1);
             if(hero==HeroId.Bolt7){if(!TryCastBolt7(slot,attackAim))return false;}

@@ -52,7 +52,7 @@ namespace Alterverse.Visuals
             }
             health=GetComponent<Health>();previous=transform.position;
             if(health!=null){health.Died+=OnDeath;health.Changed+=OnHealth;}
-            if(health!=null)Bolt7Vfx.Warm();Play(health!=null?"Spawn":"Idle");
+            if(health!=null)Bolt7Vfx.Warm();GroundedIdle();
         }
         private static Material MaterialFor(string name)
         {
@@ -72,8 +72,16 @@ namespace Alterverse.Visuals
             }
             if(eyes)m.EnableKeyword("_EMISSION");materials[name]=m;return m;
         }
+        private void GroundedIdle()
+        {
+            // The authored Spawn clip deliberately drops the root from above. Match entry
+            // and respawn use the grounded pose immediately, including before the next render.
+            action=null;actionUntil=fireUntil=walkTime=0;previous=transform.position;
+            if(clips.TryGetValue("Idle",out var idle))rig.Sample(idle,0f);
+            Play("Idle");
+        }
         private void OnDeath(){dead=true;Play("Death");}
-        private void OnHealth(float current,float max){if(health.IsDead&&!dead){OnDeath();return;}if(dead&&current>0){dead=false;Play("Spawn");}}
+        private void OnHealth(float current,float max){if(health.IsDead&&!dead){OnDeath();return;}if(dead&&current>0){dead=false;GroundedIdle();}}
         private void OnDestroy(){if(health!=null){health.Died-=OnDeath;health.Changed-=OnHealth;}}
         public void Shot(){fireUntil=Time.time+.28f;}
         public void Skill(int slot)=>Play(slot==0?"Grenade":slot==1?"Heavy_Ram":slot==2?"Grenade":"Ultimate");

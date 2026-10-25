@@ -14,6 +14,7 @@ namespace Alterverse.Visuals
         private readonly Dictionary<GameObject,Queue<Part>> pool=new();
         private bool warned;
         private const float GrenadeVisualScale=.70f;
+        private const float BasicVisualScale=1f/3f;
         private static readonly Color RamColor=new Color(1f,.68f,.22f,.95f);
         public static void Warm()
         {
@@ -69,13 +70,13 @@ namespace Alterverse.Visuals
             if(library!=null&&library.bulletProjectile!=null)
             {
                 Quaternion face=Quaternion.LookRotation(to-from);
-                if(elapsed<.12f)Spawn(library.bulletMuzzle,from,from,.15f,elapsed,owner:actor,visualScale:1f,rotation:face);
-                Spawn(library.bulletProjectile,from,to,Mathf.Max(.04f,seconds),elapsed,owner:actor,visualScale:1f,rotation:face,travel:true);
+                if(elapsed<.12f)Spawn(library.bulletMuzzle,from,from,.15f,elapsed,owner:actor,visualScale:BasicVisualScale,rotation:face);
+                Spawn(library.bulletProjectile,from,to,Mathf.Max(.04f,seconds),elapsed,owner:actor,visualScale:BasicVisualScale,rotation:face,travel:true);
             }
-            else HeroVfxPool.Trace(from,to,new Color(1,.72f,.25f),.018f,.085f);
+            else HeroVfxPool.Trace(from,to,new Color(1,.72f,.25f),.018f*BasicVisualScale,.085f);
         }
         public static void BasicImpact(GameObject actor,Vector3 point)
-        {Warm();if(library!=null)Spawn(library.bulletImpact,point,point,.4f,HeroVfxEvents.ReplayElapsed,owner:actor,visualScale:1f);}
+        {Warm();if(library!=null)Spawn(library.bulletImpact,point,point,.4f,HeroVfxEvents.ReplayElapsed,owner:actor,visualScale:BasicVisualScale);}
         public static void Cast(GameObject actor,int slot)
         {
             actor.GetComponent<Bolt7Visual>()?.Skill(slot);
@@ -100,7 +101,12 @@ namespace Alterverse.Visuals
         }
         private static void RamImpact(GameObject actor,Vector3 point)
         {
-            Vector3 forward=Forward(actor),contact=point+forward*.35f,ground=new Vector3(contact.x,.07f,contact.z);
+            Vector3 forward=Forward(actor),contact=actor.transform.position+forward*.35f,ground=new Vector3(contact.x,.07f,contact.z);
+            Vector3 cone=new Vector3(point.x,.09f,point.z);
+            // RadialPulse bypasses the decorative 1.5 enlargement: 3m and 70 degrees
+            // match the same origin/direction used for every authoritative melee hit.
+            HeroVfxPool.Emit(HeroFxShape.RamSweep,cone,cone,Vector3.one*Bolt7Balance.RamRange,RamColor,.32f,
+                HeroFxMotion.RadialPulse,Quaternion.LookRotation(forward),actor);
             HeroVfxPool.Emit(HeroFxShape.PressureWave,ground,ground,Vector3.one*.65f,RamColor,.32f,
                 HeroFxMotion.RadialPulse,Quaternion.identity,actor);
             HeroVfxPool.Emit(HeroFxShape.ContactStar,contact,contact,Vector3.one*.34f,new Color(1f,.91f,.62f),.18f,

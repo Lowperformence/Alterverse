@@ -35,7 +35,7 @@ namespace UnityEngine {
 namespace UnityEngine.Rendering{public enum IndexFormat{UInt16,UInt32}public enum GraphicsDeviceType{Null,Vulkan}}
 namespace UnityEngine{public static class SystemInfo{public static Rendering.GraphicsDeviceType graphicsDeviceType=Rendering.GraphicsDeviceType.Vulkan;}}
 namespace Alterverse.Characters{public enum HeroId{Bolt7}}
-namespace Alterverse.Combat{public class Health:UnityEngine.MonoBehaviour{public bool IsDead;public event System.Action Died;public event System.Action<float,float> Changed;}}
+namespace Alterverse.Combat{public class Health:UnityEngine.MonoBehaviour{public bool IsDead;public void Die(){IsDead=true;Died?.Invoke();}public void Restore(){IsDead=false;Changed?.Invoke(280,280);}public event System.Action Died;public event System.Action<float,float> Changed;}}
 namespace Alterverse.Visuals{public static class Bolt7Vfx{public static void Warm(){}}public static class RuntimeShaderLibrary{public static UnityEngine.Material Create(UnityEngine.Color c,bool u,float m,float s,UnityEngine.Color e)=>new(new UnityEngine.Shader());}}
 '''
 refs=next((sdk/'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'));csc=next((sdk/'sdk').glob('*/Roslyn/bincore/csc.dll'))

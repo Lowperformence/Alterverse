@@ -25,7 +25,7 @@ namespace Alterverse.Multiplayer
             public BattleItemType BattleItem;
         }
 
-        private static readonly HeroId[] BotPool =
+        private static readonly HeroId[] HumanConflictPool =
         {
             HeroId.Veyr, HeroId.Kaelon, HeroId.Nyra, HeroId.Elyra, HeroId.Mira, HeroId.Nerok, HeroId.Rook
         };
@@ -114,7 +114,7 @@ namespace Alterverse.Multiplayer
 
             return new OnlineMatchPlan
             {
-                MatchId = string.IsNullOrEmpty(matchId) ? Guid.NewGuid().ToString("N") : matchId,
+                MatchId = session.SessionId,
                 Arena = arena,
                 Difficulty = BotDifficultySettings.OnlineDifficulty,
                 Session = session,
@@ -186,7 +186,7 @@ namespace Alterverse.Multiplayer
                     HeroId hero = member.Hero;
                     if (!usedHeroes.Add(hero) && mode != SessionMode.OnlineRanked)
                     {
-                        hero = PickBotHero(usedHeroes, ref replacementCursor);
+                        hero = PickHumanReplacement(usedHeroes, ref replacementCursor);
                         usedHeroes.Add(hero);
                     }
 
@@ -217,7 +217,7 @@ namespace Alterverse.Multiplayer
 
             return new OnlineMatchPlan
             {
-                MatchId = string.IsNullOrWhiteSpace(matchId) ? Guid.NewGuid().ToString("N") : matchId,
+                MatchId = session.SessionId,
                 Arena = arena,
                 Difficulty = BotDifficultySettings.OnlineDifficulty,
                 Session = session,
@@ -300,12 +300,12 @@ namespace Alterverse.Multiplayer
                 if (existing != null) used.Add(existing.Hero);
             }
 
-            int poolCursor = 0;
+            int poolCursor = 0;var order=BotHeroPool.Shuffled(session.SessionId,team);
             for (int slot = start; slot < end; slot++)
             {
                 if (session.Slots[slot] != null) continue;
 
-                HeroId hero = PickBotHero(used, ref poolCursor);
+                HeroId hero = BotHeroPool.Next(order,used,ref poolCursor);
                 used.Add(hero);
                 string id = $"online-bot-t{team}-{slot}";
                 if (!session.TryAssign(slot, BotSlot(id, hero, team)))
@@ -313,16 +313,16 @@ namespace Alterverse.Multiplayer
             }
         }
 
-        private static HeroId PickBotHero(HashSet<HeroId> used, ref int cursor)
+        private static HeroId PickHumanReplacement(HashSet<HeroId> used, ref int cursor)
         {
-            for (int attempt = 0; attempt < BotPool.Length; attempt++)
+            for (int attempt = 0; attempt < HumanConflictPool.Length; attempt++)
             {
-                HeroId candidate = BotPool[cursor % BotPool.Length];
+                HeroId candidate = HumanConflictPool[cursor % HumanConflictPool.Length];
                 cursor++;
                 if (!used.Contains(candidate)) return candidate;
             }
 
-            HeroId fallback = BotPool[cursor % BotPool.Length];
+            HeroId fallback = HumanConflictPool[cursor % HumanConflictPool.Length];
             cursor++;
             return fallback;
         }
