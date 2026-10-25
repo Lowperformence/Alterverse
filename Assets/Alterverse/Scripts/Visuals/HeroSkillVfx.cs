@@ -493,6 +493,8 @@ namespace Alterverse.Visuals
                 ThalaHealingVfx.TryArea(Ground(center),radius,HeroVfxEvents.ReplayElapsed))return;
             if(!warning&&slot==2&&hero==HeroId.Traveler&&TravelerLightningVfx.ResolveArea(actor,Ground(center),radius,
                 ()=>Alterverse.Audio.HeroCombatAudio.PlayLightningGroundImpact(actor,center),HeroVfxEvents.ReplayElapsed))return;
+            if(!warning&&slot==3&&hero==HeroId.Elyra&&
+                AttackExplosionVfx.TryMeteor(Ground(center),Accent(actor),HeroVfxEvents.ReplayElapsed,radius))return;
             if(!warning&&slot==3&&(hero==HeroId.Elyra||hero==HeroId.Traveler)&&
                 UltimateLightningVfx.TryPlay(hero==HeroId.Elyra?UltimateLightningVfx.Ione:UltimateLightningVfx.Traveler,
                     Ground(center),radius,HeroVfxEvents.ReplayElapsed))return;

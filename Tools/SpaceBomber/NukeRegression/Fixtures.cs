@@ -75,7 +75,7 @@ namespace UnityEngine
     public class HideInInspector:Attribute {}public class RuntimeInitializeOnLoadMethodAttribute:Attribute {public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType t){}}
     public enum RuntimeInitializeLoadType {SubsystemRegistration}
     public static class Debug {public static int Warnings;public static void Log(object value){}public static void LogWarning(object value){Warnings++;}public static void LogError(object value){throw new Exception(value.ToString());}}
-    public static class Resources {public static GameObject Prefab;public static T Load<T>(string path)where T:class=>Prefab as T;}
+    public static class Resources {public static GameObject Prefab;public static readonly Dictionary<string,GameObject> Prefabs=new();public static T Load<T>(string path)where T:class=>(Prefabs.TryGetValue(path,out var prefab)?prefab:Prefab) as T;}
     public sealed class MaterialPropertyBlock {public readonly Dictionary<string,Vector4> Vectors=new();public void SetVector(string key,Vector4 value)=>Vectors[key]=value;}
     public class Renderer:Component
     {
@@ -158,6 +158,7 @@ namespace UnityEditor
         public static string[] FindAssets(string query,string[] roots)=>Assets.Where(a=>(query.Contains("t:AudioClip")?a.Value is UnityEngine.AudioClip:a.Value is UnityEngine.GameObject)&&roots.Any(r=>a.Key.StartsWith(r,StringComparison.Ordinal))).Select(a=>a.Key).ToArray();
         public static string GUIDToAssetPath(string guid)=>guid;public static bool IsValidFolder(string path)=>true;
         public static string GetAssetDependencyHash(string path)=>Dependency;
+        public static bool DeleteAsset(string path){foreach(var key in Assets.Keys.Where(k=>k==path||k.StartsWith(path+"/",StringComparison.Ordinal)).ToArray())Assets.Remove(key);return true;}
         public static void CreateAsset(UnityEngine.Object value,string path)=>Assets[path]=value;
         public static void Refresh(){}public static void SaveAssets(){Saves++;}
     }

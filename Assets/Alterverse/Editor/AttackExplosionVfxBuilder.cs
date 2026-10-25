@@ -16,74 +16,94 @@ using Object=UnityEngine.Object;
 namespace Alterverse.Editor
 {
     [InitializeOnLoad]
-    public sealed class PlanetAttackSparksBuilder:IPreprocessBuildWithReport
+    public sealed class AttackExplosionVfxBuilder:IPreprocessBuildWithReport
     {
-        private const string Source="Assets/Epic Toon FX",Output="Assets/Alterverse/Resources/CombatVfx/PlanetAttackSparks";
-        private const string Version="Native planet attack Sparks 2";
+        private const string Source="Assets/Epic Toon FX",Output="Assets/Alterverse/Resources/CombatVfx/AttackExplosions";
+        private const string LegacyOutput="Assets/Alterverse/Resources/CombatVfx/PlanetAttackSparks";
+        private const string Version="Native attack explosions 1";
         private static bool building;
         public int callbackOrder=>-420;
-        static PlanetAttackSparksBuilder()
+        static AttackExplosionVfxBuilder()
         {
             EditorApplication.delayCall+=Auto;
             EditorApplication.playModeStateChanged+=s=>{if(s==PlayModeStateChange.ExitingEditMode)Auto();};
         }
+        private static void RemoveLegacySparks()
+        {
+            // Only our generated copy is obsolete. Never delete the purchased package.
+            if(AssetDatabase.IsValidFolder(LegacyOutput))AssetDatabase.DeleteAsset(LegacyOutput);
+        }
         private static void Auto()
         {
-            if(building||EditorApplication.isPlaying||EditorApplication.isCompiling||!AssetDatabase.IsValidFolder(Source))return;
-            try{Build();}catch(Exception e){Debug.LogError("DIMENSIONS FRONT VFX: planet attack Sparks import: "+e.Message);}
+            if(building||EditorApplication.isPlaying||EditorApplication.isCompiling)return;
+            RemoveLegacySparks();
+            if(!AssetDatabase.IsValidFolder(Source))return;
+            foreach(AttackExplosionVfx.Kind kind in Enum.GetValues(typeof(AttackExplosionVfx.Kind)))
+                try{BuildOne(kind);}catch(Exception e){Debug.LogError("DIMENSIONS FRONT VFX: planet "+kind+" import: "+e.Message);}
         }
         public void OnPreprocessBuild(BuildReport report)
-        {try{Build();}catch(Exception e){throw new BuildFailedException("Planet attack Sparks: "+e.Message);}}
+        {try{Build();}catch(Exception e){throw new BuildFailedException("Planet attack explosions: "+e.Message);}}
         private static string Normal(string s)=>new string(s.ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
+        private static string Family(AttackExplosionVfx.Kind kind)=>kind==AttackExplosionVfx.Kind.FluxNuke?"nukeverticalexplosion":"fireballexplosion";
 
-        internal static int SparksRank(string path)
+        internal static int SourceRank(string path,AttackExplosionVfx.Kind kind)
         {
             if(string.IsNullOrEmpty(path))return -1;
             path=path.Replace((char)92,'/');
-            string normalized=Normal(path);
-            if(!path.StartsWith(Source+"/",StringComparison.OrdinalIgnoreCase)||normalized.Contains("2dalternate")||normalized.Contains("demo")||normalized.Contains("sparkle"))return -1;
+            string normalized=Normal(path),family=Family(kind);
+            if(!path.StartsWith(Source+"/",StringComparison.OrdinalIgnoreCase)||normalized.Contains("demo")||
+                path.Split('/').Any(p=>Normal(p).StartsWith("2d",StringComparison.Ordinal)))return -1;
             string name=Normal(Path.GetFileNameWithoutExtension(path));
-            if(name=="sparks")return 0;
-            if(name=="spark")return 1;
-            // Package variants can use generic colour/style filenames inside a
-            // Sparks family folder. Do not require the plural word in the filename.
+            if(name==family+"fire")return 0;
+            if(name==family)return 1;
+            if(name.StartsWith(family,StringComparison.Ordinal))return 2;
             var parts=path.Split('/');
             for(int i=0;i<parts.Length-1;i++)
-                if(Normal(parts[i]).StartsWith("spark",StringComparison.Ordinal))return 2;
-            return name.Contains("spark")?3:-1;
+                if(Normal(parts[i]).StartsWith(family,StringComparison.Ordinal))return 3;
+            return -1;
         }
 
-        internal static string FindSparksSource()
+        internal static string FindSource(AttackExplosionVfx.Kind kind)
         {
             var all=AssetDatabase.FindAssets("t:Prefab",new[]{Source}).Select(AssetDatabase.GUIDToAssetPath).ToArray();
-            var ranked=all.Where(p=>SparksRank(p)>=0).OrderBy(SparksRank)
+            var ranked=all.Where(p=>SourceRank(p,kind)>=0).OrderBy(p=>SourceRank(p,kind))
                 .ThenBy(p=>Normal(p).Contains("loop")?1:0).ThenBy(p=>p,StringComparer.Ordinal);
             foreach(string path in ranked)
             {
                 var prefab=AssetDatabase.LoadAssetAtPath<GameObject>(path);
                 if(prefab!=null&&prefab.GetComponentsInChildren<ParticleSystem>(true).Length>0)return path;
             }
-            string candidates=string.Join(", ",all.Where(p=>Normal(p).Contains("spark")).Take(16));
-            throw new FileNotFoundException("No native Sparks/Spark particle prefab found under "+Source+
-                ". Spark-related imported prefabs: "+(candidates.Length>0?candidates:"<none>")+". Expected the Environment Sparks family, not Interactive Sparkle.");
+            string hint=kind==AttackExplosionVfx.Kind.FluxNuke?"nuke":"fireball";
+            string candidates=string.Join(", ",all.Where(p=>Normal(p).Contains(hint)).Take(16));
+            throw new FileNotFoundException("No native 3D "+Family(kind)+" particle prefab found under "+Source+
+                ". Related imported prefabs: "+(candidates.Length>0?candidates:"<none>")+".");
         }
 
-        [MenuItem("DIMENSIONS FRONT/VFX/Prepare planet attack Sparks only")]
+        [MenuItem("DIMENSIONS FRONT/VFX/Prepare attack explosions only")]
         public static void Build()
         {
             if(building)return;
             if(EditorApplication.isPlaying)throw new InvalidOperationException("Exit Play Mode first.");
-            string path=FindSparksSource();var original=AssetDatabase.LoadAssetAtPath<GameObject>(path);
-            var shader=Shader.Find("DimensionsFront/BomberNukeParticles");
-            if(original==null||shader==null)throw new InvalidOperationException("Native Sparks source or URP particle shader missing.");
+            RemoveLegacySparks();
+            foreach(AttackExplosionVfx.Kind kind in Enum.GetValues(typeof(AttackExplosionVfx.Kind)))BuildOne(kind);
+        }
+
+        internal static void BuildOne(AttackExplosionVfx.Kind kind)
+        {
+            if(building)return;
+            string path=FindSource(kind),output=Output+"/"+kind;
+            var original=AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            var shader=Shader.Find("DimensionsFront/AttackExplosionParticles");
+            if(original==null||shader==null)throw new InvalidOperationException("Native planet explosion source or URP particle shader missing.");
             string signature=Version+":"+BomberNukeBuilder.MaterialImportVersion+":"+path+"="+AssetDatabase.GetAssetDependencyHash(path)+":"+AssetDatabase.GetAssetDependencyHash(AssetDatabase.GetAssetPath(shader));
-            var previous=AssetDatabase.LoadAssetAtPath<GameObject>(Output+"/Sparks.prefab");
-            if(previous!=null&&previous.GetComponent<PlanetAttackSparksVfx>()?.sourceSignature==signature)return;
+            string prefabPath=Output+"/"+kind+".prefab";
+            var previous=AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if(previous!=null&&previous.GetComponent<AttackExplosionVfx>()?.sourceSignature==signature)return;
             building=true;var preview=EditorSceneManager.NewPreviewScene();GameObject root=null;
             try
             {
-                Directory.CreateDirectory(Output+"/Materials");AssetDatabase.Refresh();
-                root=new GameObject("DF_PlanetAttackSparks");SceneManager.MoveGameObjectToScene(root,preview);
+                Directory.CreateDirectory(output+"/Materials");AssetDatabase.Refresh();
+                root=new GameObject("DF_AttackExplosion_"+kind);SceneManager.MoveGameObjectToScene(root,preview);
                 var native=Object.Instantiate(original,root.transform,false);native.SetActive(true);
                 foreach(var t in native.GetComponentsInChildren<Transform>(true))
                 {GameObjectUtility.RemoveMonoBehavioursWithMissingScript(t.gameObject);t.gameObject.layer=0;t.gameObject.tag="Untagged";}
@@ -106,16 +126,15 @@ namespace Alterverse.Editor
                 {
                     renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
                     renderer.lightProbeUsage=LightProbeUsage.Off;renderer.reflectionProbeUsage=ReflectionProbeUsage.Off;
-                    BomberNukeBuilder.ConvertRendererMaterials(renderer,shader,cache,Output,path);
+                    BomberNukeBuilder.ConvertRendererMaterials(renderer,shader,cache,output,path);
                 }
-                var data=root.AddComponent<PlanetAttackSparksVfx>();data.sourcePath=path;data.sourceSignature=signature;data.emissionSeconds=Mathf.Max(.1f,emission+.05f);
+                var data=root.AddComponent<AttackExplosionVfx>();data.sourcePath=path;data.sourceSignature=signature;data.emissionSeconds=Mathf.Max(.1f,emission+.05f);
                 root.SetActive(false);
-                if(PrefabUtility.SaveAsPrefabAsset(root,Output+"/Sparks.prefab")==null)throw new IOException("Could not save prepared native Sparks.");
-                AssetDatabase.SaveAssets();Debug.Log("DIMENSIONS FRONT VFX: planet attack Sparks PREPARED; "+path+"; runtime scale="+PlanetAttackSparksVfx.SizeMultiplier+".");
+                if(PrefabUtility.SaveAsPrefabAsset(root,prefabPath)==null)throw new IOException("Could not save prepared native "+kind+" explosion.");
+                AssetDatabase.SaveAssets();Debug.Log("DIMENSIONS FRONT VFX: planet "+kind+" PREPARED; "+path+"; runtime scale="+AttackExplosionVfx.SizeMultiplier(kind)+".");
             }
             finally{if(root!=null)Object.DestroyImmediate(root);EditorSceneManager.ClosePreviewScene(preview);building=false;}
         }
     }
 }
 #endif
-
