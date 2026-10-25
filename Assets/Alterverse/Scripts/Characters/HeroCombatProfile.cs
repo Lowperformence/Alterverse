@@ -23,6 +23,7 @@ namespace Alterverse.Characters
 
         public static HeroCombatStats StatsFor(HeroId id)=>id switch
         {
+            HeroId.Bolt7=>new HeroCombatStats(Bolt7Balance.BasicRange,Bolt7Balance.BasicInterval,Bolt7Balance.MoveSpeed/GlobalMoveSpeedMultiplier,.45f,0f),
             // Melee movement is role-specific rather than a blanket buff. Zhaev already owns a long
             // gap-close, Auren has ranged control and tank durability, while Brakk has no true dash
             // and therefore needs enough foot speed to eventually punish a perfectly kiting carry.
@@ -53,3 +54,4 @@ namespace Alterverse.Characters
         }
     }
 }
+

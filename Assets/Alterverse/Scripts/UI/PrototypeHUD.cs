@@ -228,6 +228,7 @@ namespace Alterverse.UI
         }
         private bool BeginPress(int slot,Vector2 screen)
         {
+            if(identity!=null&&identity.Hero==HeroId.Bolt7&&slot==2)return false;
             if(slot==4)
             {
                 if(attack==null||!attack.isActiveAndEnabled||health==null||health.IsDead||Time.timeScale<=0f||!HeroCombatStatus.CanAct(health.gameObject))return false;
@@ -391,3 +392,4 @@ namespace Alterverse.UI
         }
     }
 }
+

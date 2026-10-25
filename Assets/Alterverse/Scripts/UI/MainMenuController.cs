@@ -21,7 +21,7 @@ namespace Alterverse.UI
         private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "BATTLE PASS", "PROFILE", "CLANS", "DAILY", "RANKING", "SETTINGS" };
         private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.BattlePass, Page.Profile, Page.Clans, Page.Quests, Page.Leaderboard, Page.Settings };
         private static readonly int[] HomeNavigation={0,1,2,3,5};
-        private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER", "TIDAL BRUISER", "FELINE ASSASSIN", "VOID DUELIST" };
+        private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER", "TIDAL BRUISER", "FELINE ASSASSIN", "VOID DUELIST", "MECH / SHIELD BREAKER" };
         private static readonly string[] RoleDescriptions = {
             "Close the distance. Isolate a vulnerable target, strike, then disengage.",
             "Hold the front. Shield your team and interrupt enemies at close range.",
@@ -31,8 +31,8 @@ namespace Alterverse.UI
             "Win the long fight. Trade at close range with heavy strikes and sustain.",
             "Slip between seconds. Reposition through rifts, control space and strike with chronolight.",
             "Hook an enemy with your anchor. Shield yourself and control fights with a water vortex.",
-            "A small cat astronaut. Jet into range, scratch one enemy, then slip away.", "A two-handed greatsword duelist from an unknown galaxy. Longer melee reach, measured damage and timely frontal parries." };
-        private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL", "PULL / AREA CONTROL", "MOBILITY / SINGLE TARGET", "MELEE REACH / PARRY" };
+            "A small cat astronaut. Jet into range, scratch one enemy, then slip away.", "A two-handed greatsword duelist from an unknown galaxy. Longer melee reach, measured damage and timely frontal parries.", "Compact mech: rapid Gatling fire, short grenade arcs and a shield-breaking electrical ultimate." };
+        private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL", "PULL / AREA CONTROL", "MOBILITY / SINGLE TARGET", "MELEE REACH / PARRY", "GATLING / GRENADES / SHIELD BREAK" };
         private Page page = Page.Home;
         private bool visible = true, launching, coopLaunching, nameRerollBusy, suspended;
         private bool choosingMatchMode;
@@ -594,7 +594,7 @@ namespace Alterverse.UI
         {
             Heading("Heroes",$"{HeroIdentity.HeroCount} heroes. Choose how you fight.");
             const float rosterWidth=244f;
-            float rowStep=HeroIdentity.HeroCount>9?46f:HeroIdentity.HeroCount>8?48f:55f;
+            float rowStep=HeroIdentity.HeroCount>10?42f:HeroIdentity.HeroCount>9?46f:HeroIdentity.HeroCount>8?48f:55f;
             for(int i=0;i<HeroIdentity.HeroCount;i++)
             {
                 Rect row=new Rect(Left,216+i*rowStep,rosterWidth,rowStep-5f);
@@ -603,9 +603,12 @@ namespace Alterverse.UI
                 bool owned=HeroUnlockInventory.Owned(rowHero);
                 if(theme.Action(row,"",selected:chosen))ChangeHero(i);
                 FrontEndTheme.Fill(new Rect(row.x+5,row.y+10,3,row.height-20),Alterverse.Visuals.StylizedArtDirection.HeroAccent(rowHero));
-                theme.Label(new Rect(row.x+18,row.y+(rowStep<55f?3f:5f),row.width-32,rowStep<55f?22f:24f),HeroIdentity.NameFor(rowHero),theme.Body);
+                float labelX=rowHero==HeroId.Bolt7?48f:18f;
+                if(rowHero==HeroId.Bolt7&&Alterverse.Visuals.Bolt7Visual.Portrait!=null)
+                    GUI.DrawTexture(new Rect(row.x+10,row.y+5,28,28),Alterverse.Visuals.Bolt7Visual.Portrait,ScaleMode.ScaleToFit,true);
+                theme.Label(new Rect(row.x+labelX,row.y+(rowStep<55f?3f:5f),row.width-labelX-14,rowStep<55f?22f:24f),HeroIdentity.NameFor(rowHero),theme.Body);
                 string subtitle=!HeroUnlockCatalog.Released(rowHero)?"COMING SOON":owned?Roles[i]:$"LOCKED  •  {HeroUnlockCatalog.Price(rowHero):N0} SHARDS";
-                theme.Label(new Rect(row.x+18,row.y+(rowStep<55f?25f:31f),row.width-32,rowStep<55f?17f:18f),subtitle,theme.Small,true);
+                theme.Label(new Rect(row.x+labelX,row.y+(rowStep<55f?25f:31f),row.width-labelX-14,rowStep<55f?17f:18f),subtitle,theme.Small,true);
             }
 
             HeroId heroId=(HeroId)selectedHero;
@@ -1568,6 +1571,7 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 
 

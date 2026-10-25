@@ -8,6 +8,7 @@ namespace Alterverse.Combat
     {
         private float HeroBaseShieldCapacity => GetComponent<Alterverse.Characters.HeroIdentity>()?.Hero switch
         {
+            Alterverse.Characters.HeroId.Bolt7 => Alterverse.Characters.Bolt7Balance.Shield,
             Alterverse.Characters.HeroId.VoidKnight => 90f,
             Alterverse.Characters.HeroId.Nerok => 120f,
             Alterverse.Characters.HeroId.Veyr => 100f,
@@ -90,6 +91,19 @@ namespace Alterverse.Combat
             if (playAudio && shield > previousShield)
                 Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Shield, transform.position, .3f);
             Changed?.Invoke(Current, maxHealth);
+        }
+
+        // A one-time removal of the currently active pools, never a shield-blocking debuff.
+        // AddShield remains immediately usable, and the base shield recharges normally.
+        public float RemoveAllShields(GameObject source)
+        {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState||IsDead||
+                IsFriendlySource(source)||(DamageGate!=null&&!DamageGate()))return 0;
+            RefreshHeroBaseShield();float removed=Shield;
+            shield=shieldUntil=0;heroBaseShield=0;
+            if(removed>0&&heroBaseShieldEnabled)heroBaseShieldRechargeAt=Time.time+HeroBaseShieldRechargeDelay;
+            if(removed>0){Changed?.Invoke(Current,maxHealth);Damaged?.Invoke(0,removed,source);}
+            return removed;
         }
 
         private void ClearTransient()
@@ -344,4 +358,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 

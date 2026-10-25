@@ -109,6 +109,7 @@ namespace Alterverse.Combat
 
         private static AimType Classify(HeroId hero, int slot, AbilitySpec ability)
         {
+            if(hero==HeroId.Bolt7)return slot==1?AimType.Dash:AimType.Area;
             if(hero==HeroId.VoidKnight)return slot==1?AimType.Self:slot==2?AimType.Dash:slot==3?AimType.AreaCone:AimType.Melee;
             if (hero == HeroId.Timmy && (slot == 2 || slot == 3)) return AimType.Dash;
             if ((hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) ||
@@ -123,3 +124,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

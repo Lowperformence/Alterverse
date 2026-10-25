@@ -19,7 +19,7 @@ namespace Alterverse.Audio
         static readonly string[] Actions={"Basic","Q","W","E","R"};
         // Timmy has selected Q/W/R recordings; basic/E share the existing fast-cut bank.
         // Keep his gameplay/network identity intact and preserve every existing cue index.
-        static int RecordingHero(int hero,int action)=>hero==(int)HeroId.Timmy&&action!=1&&action!=2&&action!=4?(int)HeroId.Veyr:hero;
+        static int RecordingHero(int hero,int action)=>hero==(int)HeroId.Bolt7?(action==0?(int)HeroId.Nyra:action==1?(int)HeroId.Rook:action==2?(int)HeroId.Kaelon:(int)HeroId.Traveler):hero==(int)HeroId.Timmy&&action!=1&&action!=2&&action!=4?(int)HeroId.Veyr:hero;
         // User-selected recordings are complete cues. Play them once at ability release,
         // not over the former synthesized preparation/impact layers (or once per AoE victim).
         public static bool UsesSelectedRecording(int hero,int action)=>RecordingHero(hero,action) switch
@@ -158,3 +158,4 @@ namespace Alterverse.Audio
         public static void Impact(GameObject actor,int slot,Vector3 point)=>Play(actor,slot+1,true,point);
     }
 }
+

@@ -31,6 +31,9 @@ namespace Alterverse.UI
         {
             HeroAbilityLoadout kit=HeroAbilityKit.LoadoutFor(hero);
             HeroCombatStats stats=HeroCombatProfile.StatsFor(hero);
+            if(hero==HeroId.Bolt7)return new[]{
+                new HeroAttackCard("BASIC","Gatling",$"5 DMG / SHOT | {stats.AttackInterval:0.###}s | RANGE {stats.AttackRange:0.#}","Three times Sivra's base fire rate. Short-to-medium range."),
+                Ability(hero,"Q / MEDIUM",0,kit.Q),Ability(hero,"W / HEAVY",1,kit.W),Ability(hero,"ULTIMATE",3,kit.Ultimate)};
             return new[]
             {
                 new HeroAttackCard("BASIC",hero==HeroId.VoidKnight?"Greatsword":hero==HeroId.Timmy?"Claw":"Basic Attack",
@@ -58,6 +61,7 @@ namespace Alterverse.UI
 
         private static string Primary(HeroId hero,int slot,AbilitySpec spec)
         {
+            if(hero==HeroId.Bolt7&&slot==3)return "ALL CURRENT SHIELDS -> 0 / NO HP DAMAGE";
             if(hero==HeroId.VoidKnight&&slot==3)return $"{spec.Power:0} DMG + {VoidKnightBalance.UltimateLifeDrain:0} LIFE DRAIN / TARGET";
             if(hero==HeroId.VoidKnight&&slot==1)return "50% FRONTAL REDUCTION / 0.65s";
             if(hero==HeroId.Elyra&&slot==2)return $"{HeroAbilityKit.PhaseFoldShield:0} SHIELD / {HeroAbilityKit.PhaseFoldShieldSeconds:0.##}s";
@@ -89,6 +93,12 @@ namespace Alterverse.UI
 
         private static string Effect(HeroId hero,int slot)=>hero switch
         {
+            HeroId.Bolt7=>slot switch
+            {
+                0=>"Short grenade arc; small area explosion. 35 damage at the centre, falling to 15 at the edge.",
+                1=>"Brief windup, then a 2m forward ram and 1m strike. 40 damage and a small knockback; walls stop movement.",
+                _=>"After a 0.9s warning, remove every personal shield and overshield in the enemy area once. Lightning Orb, then Star Fog. New shields work immediately. No health damage."
+            },
             HeroId.VoidKnight=>slot switch
             {
                 0=>"A wide greatsword cut; its direction stays fixed through the readable windup.",
@@ -163,3 +173,4 @@ namespace Alterverse.UI
         };
     }
 }
+

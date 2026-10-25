@@ -1,0 +1,35 @@
+using System;
+using System.Reflection;
+using UnityEngine;
+using Alterverse.Characters;
+using Alterverse.Combat;
+using Alterverse.Multiplayer;
+class Bolt7Regression {
+ static int checks;
+ static void Check(bool yes,string why){checks++;if(!yes)throw new Exception(why);}
+ static void Near(float a,float b,string why)=>Check(Math.Abs(a-b)<.001f,why+" actual="+a+" expected="+b);
+ static Health Hero(HeroId id,int team,Vector3 point){var g=new GameObject(id.ToString());g.transform.position=point;g.AddComponent<HeroIdentity>().Hero=id;g.AddComponent<TeamMember>().Team=team;g.AddComponent<HeroLocomotion>();var h=g.AddComponent<Health>();h.Configure(360);return h;}
+ static void Set(Health h,string f,float n)=>typeof(Health).GetField(f,BindingFlags.Instance|BindingFlags.NonPublic).SetValue(h,n);
+ static void Main(){
+  Clock.Reset();
+  Near(Bolt7Balance.BasicInterval,HeroCombatProfile.StatsFor(HeroId.Nyra).AttackInterval/3,"three times Sivra rate");Near(Bolt7Balance.BasicDamage,5,"gatling damage");
+  Check(Bolt7Balance.BasicRange<HeroCombatProfile.StatsFor(HeroId.Nyra).AttackRange,"limited basic range");Near(Bolt7Balance.FxScale,2.5f,"native FX scale");
+  Check((int)HeroId.Bolt7==10 && (int)HeroId.VoidKnight==9,"stable network hero IDs");
+  var kit=HeroAbilityKit.LoadoutFor(HeroId.Bolt7);Check(!Bolt7Balance.HasAbility(2)&&kit.E.Name=="","only requested attacks");Near(kit.Ultimate.Power,0,"no ultimate HP damage");
+  var actor=Hero(HeroId.Bolt7,0,Vector3.zero);var enemy=Hero(HeroId.Nyra,1,new Vector3(0,0,1));var ally=Hero(HeroId.Nyra,0,new Vector3(.1f,0,1));var far=Hero(HeroId.Nyra,1,new Vector3(0,0,4));
+  Set(enemy,"shield",1000000);Set(enemy,"shieldUntil",100);enemy.AddShield(1,1,false);
+  float health=enemy.Current,own=actor.Shield,friendly=ally.Shield;
+  Check(Bolt7Combat.Nullfield(actor.gameObject,Vector3.zero)==1,"one enemy in ultimate area");Near(enemy.Shield,0,"both pools cleared without damage cap");Near(enemy.Current,health,"ultimate preserves HP");Near(actor.Shield,own,"self protected");Near(ally.Shield,friendly,"ally protected");Near(far.Shield,60,"outside radius protected");
+  enemy.AddShield(25,4,false);Near(enemy.TemporaryShield,25,"new shield activation works immediately after nullfield");Near(enemy.HeroBaseShield,0,"new ability shield is independent of empty base shield");Near(enemy.RemoveAllShields(actor.gameObject),25,"second cast removes only current shield");
+  Near(enemy.HeroBaseShieldRechargeRemaining,11.25f,"normal recharge delay");Time.time=11.249f;GameObject.Invoke(enemy,"Update");Near(enemy.Shield,0,"no early recharge");Time.time=11.25f;GameObject.Invoke(enemy,"Update");Near(enemy.Shield,60,"shield recovers normally");
+  CoopAuthority.CanSimulateHostGameplay=false;Check(Bolt7Combat.Nullfield(actor.gameObject,Vector3.zero)==0,"replica cannot resolve");Near(enemy.Shield,60,"replica preserves shields");CoopAuthority.CanSimulateHostGameplay=true;
+  CoopAuthority.CanMutateAuthoritativeState=false;Near(enemy.RemoveAllShields(actor.gameObject),0,"health authority boundary");CoopAuthority.CanMutateAuthoritativeState=true;
+  enemy.DamageGate=()=>false;Check(Bolt7Combat.Nullfield(actor.gameObject,Vector3.zero)==0,"protected target");Near(enemy.Shield,60,"damage gate respected");enemy.DamageGate=null;
+  var wall=new GameObject("cover");wall.transform.position=new Vector3(0,.45f,.5f);wall.transform.localScale=new Vector3(.2f,2,.1f);wall.AddComponent<Collider>();Check(Bolt7Combat.Nullfield(actor.gameObject,Vector3.zero)==0,"cover blocks ultimate");wall.SetActive(false);
+  Near(Bolt7Combat.GrenadeDamage(0),35,"grenade core");Near(Bolt7Combat.GrenadeDamage(.6f),35,"grenade core edge");Near(Bolt7Combat.GrenadeDamage(1),25,"grenade falloff");Near(Bolt7Combat.GrenadeDamage(1.4f),15,"grenade outer edge");
+  enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,1.4f);Check(Bolt7Combat.Grenade(actor.gameObject,Vector3.zero)==1,"grenade single hit at radius boundary");Near(enemy.Shield,45,"grenade edge damage resolves once");enemy.transform.position=new Vector3(0,0,1.401f);Near(Bolt7Combat.Grenade(actor.gameObject,Vector3.zero),0,"outside small area");
+  enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,.9f);Check(Bolt7Combat.Ram(actor.gameObject,Vector3.forward)==1,"ram front contact");Near(enemy.Shield,20,"ram damage");Near(enemy.GetComponent<HeroLocomotion>().LastMove.z,1.7f,"ram knockback");enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,-.9f);Near(Bolt7Combat.Ram(actor.gameObject,Vector3.forward),0,"ram rear exclusion");
+  actor.TakeDamage(10000);Near(Bolt7Combat.Nullfield(actor.gameObject,Vector3.zero),0,"dead caster cannot resolve");
+  Console.WriteLine("PASS "+checks+" BOLT-7 assertions: production balance, health, AOE resolution, falloff, cover, authority, team protection, shield recharge and ram. Unity rendering/import not tested.");
+ }
+}

@@ -35,7 +35,7 @@ namespace Alterverse.Combat
             pending = new Pending[Mathf.Clamp(AimingSettings.Current.deliveryCapacity, 8, 64)];
         }
         private void OnEnable() { if (self != null) { self.Died -= Cancel; self.Died += Cancel; } }
-        public static bool IsRanged(HeroId hero)=>hero==HeroId.Nyra||hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler;
+        public static bool IsRanged(HeroId hero)=>hero==HeroId.Bolt7||hero==HeroId.Nyra||hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler;
         public static float Windup(HeroId hero,int slot=-1)
         {
             if(slot<0)
@@ -44,7 +44,7 @@ namespace Alterverse.Combat
                 // Contact still happens exactly at ReleaseAt, so damage and the IK strike stay synced.
                 return hero switch
                 {
-                    HeroId.VoidKnight=>VoidKnightBalance.BasicWindup,HeroId.Veyr=>.16f,HeroId.Kaelon=>.22f,HeroId.Nyra=>.08f,
+                    HeroId.Bolt7=>Bolt7Balance.BasicWindup,HeroId.VoidKnight=>VoidKnightBalance.BasicWindup,HeroId.Veyr=>.16f,HeroId.Kaelon=>.22f,HeroId.Nyra=>.08f,
                     HeroId.Elyra=>.14f,HeroId.Mira=>.12f,HeroId.Rook=>.18f,HeroId.Traveler=>.10f,
                     HeroId.Nerok=>.20f,_=>.16f
                 };
@@ -410,4 +410,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 

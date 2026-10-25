@@ -300,7 +300,7 @@ namespace Alterverse.Visuals
             HeroVfxPool.Emit(HeroFxShape.Rift,p-facing*Vector3.forward*.015f,p,new Vector3(size*.55f,size*.9f,.9f),DarkCore,life,HeroFxMotion.Contract,facing,actor);
         }
         public static void CancelWarnings(GameObject actor)
-        {using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelWarnings,actor);HeroVfxPool.CancelWarnings(actor);}
+        {using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelWarnings,actor);HeroVfxPool.CancelWarnings(actor);Bolt7Vfx.CancelOwner(actor);}
         public static void CancelProjectiles(GameObject actor)
         {using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelProjectiles,actor);HeroVfxPool.CancelProjectiles(actor);}
         public static void Cast(GameObject actor,int slot,float windup=-1f)
@@ -314,6 +314,7 @@ namespace Alterverse.Visuals
             }
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Cast,actor,slot:slot,duration:Mathf.Max(0,windup));
             if(actor==null)return;
+            if(Hero(actor)==HeroId.Bolt7){Bolt7Vfx.Cast(actor,slot);return;}
             if(Hero(actor)==HeroId.Nyra&&(slot==2||slot==3)&&SivraNovaVfx.Cast(actor,slot,Muzzle(actor),windup,HeroVfxEvents.ReplayElapsed))return;
             if(Hero(actor)==HeroId.Traveler&&(slot==0||slot==2)&&TravelerLightningVfx.Cast(actor,slot))return;
             PolishCast(actor,slot);
@@ -487,6 +488,7 @@ namespace Alterverse.Visuals
         public static void Area(GameObject actor,Vector3 center,float radius,float duration,bool warning,bool beneficial=false,int slot=-1)
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Area,actor,center,slot,duration,radius,flag:warning,secondary:beneficial);
+            if(actor!=null&&Hero(actor)==HeroId.Bolt7&&!warning){Bolt7Vfx.Area(actor,center,slot);return;}
             if(actor==null)return;
             HeroId hero=Hero(actor);
             if(!warning&&beneficial&&slot==3&&hero==HeroId.Mira&&
@@ -678,6 +680,7 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Spell,actor,impact,slot,duration:travelTime,target:target!=null?target.gameObject:null);
             if(actor==null)return;HeroId h=Hero(actor);
+            if(h==HeroId.Bolt7){if(slot==0)Bolt7Vfx.Grenade(actor,impact,travelTime);return;}
             if(h==HeroId.Nyra&&(slot==2||slot==3)&&SivraNovaVfx.Launch(actor,slot,Muzzle(actor),impact+Vector3.up*.25f,
                 travelTime,target,HeroVfxPool.CurrentDelivery,HeroVfxEvents.ReplayElapsed))return;
             if(h==HeroId.Traveler&&(slot==0||slot==2)&&TravelerLightningVfx.Launch(actor,slot,Muzzle(actor),impact+Vector3.up*.35f,
@@ -820,6 +823,7 @@ namespace Alterverse.Visuals
         public static void Impact(GameObject actor,Health target,int slot)
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Impact,actor,slot:slot,target:target!=null?target.gameObject:null);
+            if(actor!=null&&Hero(actor)==HeroId.Bolt7)return;
             if(actor==null||target==null)return;
             if(slot<0&&Hero(actor)==HeroId.Nyra&&SmallBulletVfx.ConfirmHit(actor,target.transform.position+Vector3.up*.35f))return;
             if(Hero(actor)==HeroId.Nyra&&(slot==2||slot==3)&&SivraNovaVfx.ConfirmHit(actor,target,slot,HeroVfxEvents.ReplayElapsed))return;
@@ -1000,7 +1004,7 @@ namespace Alterverse.Visuals
         public static void Basic(GameObject actor,Vector3 impact,float travelTime=0,Transform target=null,bool animate=true)
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Basic,actor,impact,slot:-1,duration:travelTime,target:target!=null?target.gameObject:null,flag:animate);
-            if(actor==null)return;if(animate)actor.GetComponent<HeroVisualMotion>()?.PulseAttack(false);
+            if(actor==null)return;if(Hero(actor)==HeroId.Bolt7){Bolt7Vfx.Basic(actor,impact);return;}if(animate)actor.GetComponent<HeroVisualMotion>()?.PulseAttack(false);
             if(Hero(actor)==HeroId.Nyra&&SmallBulletVfx.Launch(actor,Muzzle(actor),impact+Vector3.up*.25f,travelTime,target,
                 HeroVfxPool.CurrentDelivery,HeroVfxEvents.ReplayElapsed))return;
             PolishRelease(actor,impact,-1,travelTime,target);
@@ -1057,4 +1061,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

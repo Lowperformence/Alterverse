@@ -102,6 +102,7 @@ namespace Alterverse.Characters
         private bool TryCastCore(int slot, Health target, Vector3 movement, AimPose? aimed)
         {
             if (!isActiveAndEnabled || !Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay || slot < 0 || slot > 3 || Time.timeScale <= 0 || self.IsDead || !HeroCombatStatus.CanAct(gameObject) || Remaining(slot) > 0) return false;
+            if(identity.Hero==HeroId.Bolt7&&!Bolt7Balance.HasAbility(slot))return false;
             if(identity.Hero==HeroId.VoidKnight&&voidPending)return false;
             AbilitySpec spec = kit.Spec(slot); HeroId hero = identity.Hero;
             float presentationWindup=spec.Windup;
@@ -112,7 +113,8 @@ namespace Alterverse.Characters
                 aimSpec.aimType == AimType.Beam || aimSpec.aimType == AimType.Homing;
             if (usesDelivery && !HeroAttackDelivery.For(gameObject).HasCapacity(hero == HeroId.Nyra && slot == 3 ? SightlineBreakShots : 1)) return false;
             bool mobility = (hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) || (hero == HeroId.Elyra && slot == 2) || (hero == HeroId.Traveler && slot == 1);
-            if(hero==HeroId.VoidKnight&&(slot==1||slot==2||slot==3)){if(!TryCastVoidKnight(slot,attackAim))return false;}
+            if(hero==HeroId.Bolt7){if(!TryCastBolt7(slot,attackAim))return false;}
+            else if(hero==HeroId.VoidKnight&&(slot==1||slot==2||slot==3)){if(!TryCastVoidKnight(slot,attackAim))return false;}
             else if (hero == HeroId.Timmy && (slot == 2 || slot == 3))
             {
                 if(!TryCastTimmy(slot,target,attackAim,aimed.HasValue && attackAim.AllowDashTargetCapture))return false;
@@ -349,3 +351,4 @@ namespace Alterverse.Characters
         }
     }
 }
+
