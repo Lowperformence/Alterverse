@@ -15,6 +15,8 @@ namespace Alterverse.Editor
     // FBX settings are deterministic and applied on first import after pulling the branch.
     public sealed class Bolt7ModelImporter:AssetPostprocessor
     {
+        public override uint GetVersion()=>1;
+
         private void OnPreprocessModel()
         {
             if(!assetPath.EndsWith("/Bolt7/BOLT7_animated.fbx",StringComparison.Ordinal))return;
@@ -23,6 +25,10 @@ namespace Alterverse.Editor
             importer.importAnimation=true;importer.importCameras=false;importer.importLights=false;
             importer.importBlendShapes=false;importer.optimizeGameObjects=false;
             importer.materialImportMode=ModelImporterMaterialImportMode.ImportStandard;
+            // The FBX embeds the same three PNGs shipped beside it. External material
+            // import extracts those images again and can restart the refresh loop.
+            // Keep materials in the FBX so import never rewrites the source textures.
+            importer.materialLocation=ModelImporterMaterialLocation.InPrefab;
         }
         private void OnPreprocessAnimation()
         {
