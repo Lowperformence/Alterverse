@@ -55,6 +55,24 @@ namespace Alterverse.Combat
             }
             return hits;
         }
+        public static int Impulse(GameObject actor,Vector3 center)
+        {
+            if(!CanResolve(actor))return 0;int hits=0;
+            for(int i=Health.Active.Count-1;i>=0;i--)
+            {
+                Health target=Health.Active[i];
+                if(!HeroCombatRules.Enemy(actor,target)||HeroCombatRules.Distance(center,target.transform.position)>Bolt7Balance.ImpulseRadius||!Visible(actor,target,center))continue;
+                float before=target.Current+target.Shield;
+                HeroCombatRules.Damage(actor,target,Bolt7Balance.ImpulseDamage);
+                if(target.Current+target.Shield>=before)continue;
+                hits++;
+                Vector3 outward=target.transform.position-center;outward.y=0;
+                if(outward.sqrMagnitude<.0001f)outward=actor.transform.forward;
+                target.GetComponent<HeroLocomotion>()?.BeginForcedMove(target.transform.position+
+                    AimGeometry.Direction(outward)*Bolt7Balance.ImpulseKnockback,.14f);
+            }
+            return hits;
+        }
         public static int Ram(GameObject actor,Vector3 direction)
         {
             if(!CanResolve(actor))return 0;int hits=0;

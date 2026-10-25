@@ -41,14 +41,13 @@ namespace Alterverse.UI
                 var go=new GameObject(i==4?"Basic attack":"Ability "+i,typeof(RectTransform),typeof(CanvasRenderer),typeof(RawImage));
                 go.transform.SetParent(root.transform,false);
                 faces[i]=go.GetComponent<RectTransform>();
-                if(hero==HeroId.Bolt7&&i==2)go.SetActive(false);
                 faces[i].anchorMin=faces[i].anchorMax=new Vector2(0,1);
                 faces[i].pivot=new Vector2(.5f,.5f);
                 var image=go.GetComponent<RawImage>();
                 Texture2D heroIcon=hero==HeroId.Bolt7?Alterverse.Visuals.Bolt7Assets.Icon(i):hero==HeroId.Nerok?Resources.Load<Texture2D>("CyberShark/Icons/"+i):
                     hero==HeroId.Timmy?Resources.Load<Texture2D>("AndromedaTimmy/Icons/"+i):hero==HeroId.VoidKnight?Resources.Load<Texture2D>("VoidKnight/Icons/"+i):null;
                 // BOLT-7 must never silently display another hero's atlas row.
-                if(hero==HeroId.Bolt7&&i!=2&&heroIcon==null)image.enabled=false;
+                if(hero==HeroId.Bolt7&&heroIcon==null)image.enabled=false;
                 Texture2D art=heroIcon!=null?heroIcon:atlas;
                 image.texture=art;
                 image.raycastTarget=false;

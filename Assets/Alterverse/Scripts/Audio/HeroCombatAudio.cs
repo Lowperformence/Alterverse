@@ -99,6 +99,7 @@ namespace Alterverse.Audio
         {
             if(actor==null||action<0||action>4)return;
             var identity=actor.GetComponent<HeroIdentity>();if(identity==null)return;
+            if(identity.Hero==HeroId.Bolt7)return; // Native stages own BOLT-7 shot/ability audio, once per effect rather than per victim.
             int hero=RecordingHero((int)identity.Hero,action);
             bool lightningAudio=UsesLightningAudio(hero,action);
             if(lightningAudio&&action==3)
@@ -158,4 +159,5 @@ namespace Alterverse.Audio
         public static void Impact(GameObject actor,int slot,Vector3 point)=>Play(actor,slot+1,true,point);
     }
 }
+
 

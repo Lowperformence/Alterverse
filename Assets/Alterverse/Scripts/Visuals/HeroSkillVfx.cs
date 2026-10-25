@@ -680,7 +680,7 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Spell,actor,impact,slot,duration:travelTime,target:target!=null?target.gameObject:null);
             if(actor==null)return;HeroId h=Hero(actor);
-            if(h==HeroId.Bolt7){if(slot==0)Bolt7Vfx.Grenade(actor,impact,travelTime);return;}
+            if(h==HeroId.Bolt7){if(slot==0||slot==2)Bolt7Vfx.Grenade(actor,impact,travelTime,slot);return;}
             if(h==HeroId.Nyra&&(slot==2||slot==3)&&SivraNovaVfx.Launch(actor,slot,Muzzle(actor),impact+Vector3.up*.25f,
                 travelTime,target,HeroVfxPool.CurrentDelivery,HeroVfxEvents.ReplayElapsed))return;
             if(h==HeroId.Traveler&&(slot==0||slot==2)&&TravelerLightningVfx.Launch(actor,slot,Muzzle(actor),impact+Vector3.up*.35f,
@@ -823,7 +823,7 @@ namespace Alterverse.Visuals
         public static void Impact(GameObject actor,Health target,int slot)
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Impact,actor,slot:slot,target:target!=null?target.gameObject:null);
-            if(actor!=null&&Hero(actor)==HeroId.Bolt7)return;
+            if(actor!=null&&Hero(actor)==HeroId.Bolt7){if(slot<0&&target!=null)Bolt7Vfx.BasicImpact(actor,target.transform.position);return;}
             if(actor==null||target==null)return;
             if(slot<0&&Hero(actor)==HeroId.Nyra&&SmallBulletVfx.ConfirmHit(actor,target.transform.position+Vector3.up*.35f))return;
             if(Hero(actor)==HeroId.Nyra&&(slot==2||slot==3)&&SivraNovaVfx.ConfirmHit(actor,target,slot,HeroVfxEvents.ReplayElapsed))return;
@@ -1004,7 +1004,7 @@ namespace Alterverse.Visuals
         public static void Basic(GameObject actor,Vector3 impact,float travelTime=0,Transform target=null,bool animate=true)
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Basic,actor,impact,slot:-1,duration:travelTime,target:target!=null?target.gameObject:null,flag:animate);
-            if(actor==null)return;if(Hero(actor)==HeroId.Bolt7){Bolt7Vfx.Basic(actor,impact);return;}if(animate)actor.GetComponent<HeroVisualMotion>()?.PulseAttack(false);
+            if(actor==null)return;if(Hero(actor)==HeroId.Bolt7){Bolt7Vfx.Basic(actor,impact,travelTime);return;}if(animate)actor.GetComponent<HeroVisualMotion>()?.PulseAttack(false);
             if(Hero(actor)==HeroId.Nyra&&SmallBulletVfx.Launch(actor,Muzzle(actor),impact+Vector3.up*.25f,travelTime,target,
                 HeroVfxPool.CurrentDelivery,HeroVfxEvents.ReplayElapsed))return;
             PolishRelease(actor,impact,-1,travelTime,target);
@@ -1025,6 +1025,7 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Dash,actor,to,slot,duration,origin:from);
             if(actor==null)return;Color c=Accent(actor);HeroId h=Hero(actor);
+            if(h==HeroId.Bolt7){Bolt7Vfx.RamDash(actor,from,to,duration);return;}
             PolishDash(actor,from,to);
             if(h==HeroId.Timmy){TimmyEffect(actor,slot==3?3:2,from,to,0,duration);return;}
             Quaternion face=Face(from,to);float distance=Vector3.Distance(from,to);

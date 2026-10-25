@@ -26,6 +26,6 @@ namespace Alterverse.Visuals
             if(missing.Add(name))Debug.LogError("DF BOLT-7: missing/invalid PNG data at Resources/Bolt7/Raw/"+name+".bytes");
             return null;
         }
-        internal static Texture2D Icon(int slot)=>slot==2?null:Texture("Icons/"+slot);
+        internal static Texture2D Icon(int slot)=>Texture("Icons/"+slot);
     }
 }

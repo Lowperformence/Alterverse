@@ -30,7 +30,13 @@ gameObject.AddComponent<Alterverse.Visuals.TahlaHealerVisualPolish>();
 }
 private void Start()
 {
-if(hero==HeroId.Bolt7)return;
+if(hero==HeroId.Bolt7)
+{
+// Keep the shared player range-preview UI while the mech owns its dedicated animation rig.
+if(GetComponent<PlayerHeroAbilities>()!=null&&GetComponent<Alterverse.UI.AbilityRangePreviewOverlay>()==null)
+gameObject.AddComponent<Alterverse.UI.AbilityRangePreviewOverlay>();
+return;
+}
 if(hero==HeroId.VoidKnight&&GetComponent<VoidKnightState>()==null)gameObject.AddComponent<VoidKnightState>();
 // Configure is intentionally called before several combat/visual components are added by the runtime roster.
 // Install the universal attack-presentation layer in Start so it can resolve Health, TeamMember,

@@ -76,7 +76,7 @@ namespace Alterverse.Visuals
         private void OnHealth(float current,float max){if(health.IsDead&&!dead){OnDeath();return;}if(dead&&current>0){dead=false;Play("Spawn");}}
         private void OnDestroy(){if(health!=null){health.Died-=OnDeath;health.Changed-=OnHealth;}}
         public void Shot(){fireUntil=Time.time+.28f;}
-        public void Skill(int slot)=>Play(slot==0?"Grenade":slot==1?"Heavy_Ram":"Ultimate");
+        public void Skill(int slot)=>Play(slot==0?"Grenade":slot==1?"Heavy_Ram":slot==2?"Grenade":"Ultimate");
         private void Play(string name)
         {
             if(!clips.TryGetValue(name,out var clip))return;

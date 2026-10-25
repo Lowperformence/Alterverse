@@ -33,7 +33,7 @@ namespace Alterverse.UI
             HeroCombatStats stats=HeroCombatProfile.StatsFor(hero);
             if(hero==HeroId.Bolt7)return new[]{
                 new HeroAttackCard("BASIC","Gatling",$"5 DMG / SHOT | {stats.AttackInterval:0.###}s | RANGE {stats.AttackRange:0.#}","Three times Sivra's base fire rate. Short-to-medium range."),
-                Ability(hero,"Q / MEDIUM",0,kit.Q),Ability(hero,"W / HEAVY",1,kit.W),Ability(hero,"ULTIMATE",3,kit.Ultimate)};
+                Ability(hero,"Q / MEDIUM",0,kit.Q),Ability(hero,"W / HEAVY",1,kit.W),Ability(hero,"E / GRENADE",2,kit.E),Ability(hero,"ULTIMATE",3,kit.Ultimate)};
             return new[]
             {
                 new HeroAttackCard("BASIC",hero==HeroId.VoidKnight?"Greatsword":hero==HeroId.Timmy?"Claw":"Basic Attack",
@@ -98,7 +98,8 @@ namespace Alterverse.UI
             {
                 0=>"Short grenade arc; small area explosion. 35 damage at the centre, falling to 15 at the edge.",
                 1=>"Brief windup, then a 2m forward ram and 1m strike. 40 damage and a small knockback; walls stop movement.",
-                _=>"After a 0.9s warning, remove every personal shield and overshield in the enemy area once. Lightning Orb, then Star Fog. New shields work immediately. No health damage."
+                2=>"Second short grenade: 25 damage in 1.1m and 0.8m outward knockback. 4m throw range; cover blocks it.",
+                _=>"After a 0.9s warning, remove every personal shield and overshield in the enemy area once. Lightning Orb and Lightning Nova, then Star Fog. New shields work immediately. No health damage."
             },
             HeroId.VoidKnight=>slot switch
             {

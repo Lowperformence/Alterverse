@@ -23,7 +23,7 @@ namespace Alterverse.Characters
             // Ground VFX do not inherit the height of the actor's capsule centre.
             point.y=0;
             HeroSkillVfx.Area(gameObject,point,spec.Radius,spec.Windup,true,false,slot);
-            if(slot==0)HeroSkillVfx.Spell(gameObject,point,slot,spec.Windup);
+            if(slot==0||slot==2)HeroSkillVfx.Spell(gameObject,point,slot,spec.Windup);
             StartCoroutine(ResolveBolt7Area(slot,point,life));return true;
         }
         private IEnumerator ResolveBolt7Area(int slot,Vector3 point,int token)
@@ -31,7 +31,7 @@ namespace Alterverse.Characters
             yield return new WaitForSeconds(kit.Spec(slot).Windup);
             if(token!=life||self.IsDead||!HeroCombatStatus.CanAct(gameObject))yield break;
             HeroCombatAudio.Cast(gameObject,slot);
-            int hits=slot==3?Bolt7Combat.Nullfield(gameObject,point):Bolt7Combat.Grenade(gameObject,point);
+            int hits=slot==3?Bolt7Combat.Nullfield(gameObject,point):slot==2?Bolt7Combat.Impulse(gameObject,point):Bolt7Combat.Grenade(gameObject,point);
             HeroSkillVfx.Area(gameObject,point,kit.Spec(slot).Radius,.3f,false,false,slot);
             if(hits>0)HeroCombatAudio.Impact(gameObject,slot,point);
         }
@@ -40,7 +40,9 @@ namespace Alterverse.Characters
             yield return new WaitForSeconds(Bolt7Balance.RamWindup);
             if(token!=life||self.IsDead||!HeroCombatStatus.CanAct(gameObject))yield break;
             HeroCombatAudio.Cast(gameObject,1);
-            locomotion.BeginDash(transform.position+direction*Bolt7Balance.RamDash,.15f);
+            Vector3 from=transform.position;
+            if(locomotion.BeginDash(from+direction*Bolt7Balance.RamDash,.15f))
+                HeroSkillVfx.Dash(gameObject,from,locomotion.DashDestination,1,.15f);
             yield return new WaitForSeconds(.15f);
             if(token!=life||self.IsDead||!HeroCombatStatus.CanAct(gameObject))yield break;
             int hits=Bolt7Combat.Ram(gameObject,direction);

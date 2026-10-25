@@ -103,6 +103,7 @@ namespace Alterverse.AI
             if(coordinated&&h==HeroId.Elyra&&controlledTarget==target&&!followUp)return;
             if(h==HeroId.VoidKnight&&safeEngage&&distance>3.1f&&distance<5.5f&&TryCast(2,target))return;
             if(h==HeroId.Bolt7&&distance<=Bolt7Balance.RamRange&&TryCast(1,target))return;
+            if(h==HeroId.Bolt7&&distance<=Bolt7Balance.ImpulseRange&&TryCast(2,target))return;
             if (TryCast(0,target)) return;
             if ((h == HeroId.Veyr || h == HeroId.Elyra || h == HeroId.Timmy) && TryCast(1,target)) return;
             if(h==HeroId.Timmy&&safeEngage&&distance>TimmyBalance.ClawRange&&distance<6f)TryCast(2,target);

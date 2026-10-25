@@ -49,7 +49,7 @@ namespace Alterverse.Characters
                     new("Compact frame",0,0,0),
                     new("Splitterbogen",Bolt7Balance.GrenadeCooldown,Bolt7Balance.GrenadeDamage,Bolt7Balance.GrenadeRange,Bolt7Balance.GrenadeRadius,Bolt7Balance.GrenadeWindup),
                     new("Kolbenramme",Bolt7Balance.RamCooldown,Bolt7Balance.RamDamage,Bolt7Balance.RamRange,0,Bolt7Balance.RamWindup),
-                    new("",0,0,0),
+                    new("Impulsgranate",Bolt7Balance.ImpulseCooldown,Bolt7Balance.ImpulseDamage,Bolt7Balance.ImpulseRange,Bolt7Balance.ImpulseRadius,Bolt7Balance.ImpulseWindup),
                     new("Nullfeld",Bolt7Balance.UltimateCooldown,0,Bolt7Balance.UltimateRange,Bolt7Balance.UltimateRadius,Bolt7Balance.UltimateWindup)),
                 HeroId.VoidKnight=>new HeroAbilityLoadout(
                     new("Void Resonance",0,30,0),

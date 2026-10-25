@@ -616,14 +616,7 @@ namespace Alterverse.UI
                     bool owned=HeroUnlockInventory.Owned(rowHero);
                     if(theme.Action(row,"",selected:chosen))ChangeHero(i);
                     FrontEndTheme.Fill(new Rect(row.x+5,row.y+10,3,row.height-20),Alterverse.Visuals.StylizedArtDirection.HeroAccent(rowHero));
-                    var icon=rowHero==HeroId.Bolt7?Alterverse.Visuals.Bolt7Visual.Portrait:null;
-                    float labelX=icon!=null?48f:18f;
-                    if(icon!=null)
-                    {
-                        Color beforeIcon=GUI.color;GUI.color=Color.white;
-                        GUI.DrawTexture(new Rect(row.x+10,row.y+7,28,28),icon,ScaleMode.ScaleToFit,true);
-                        GUI.color=beforeIcon;
-                    }
+                    const float labelX=18f;
                     theme.Label(new Rect(row.x+labelX,row.y+3f,row.width-labelX-14,22f),HeroIdentity.NameFor(rowHero),theme.Body);
                     string subtitle=!HeroUnlockCatalog.Released(rowHero)?"COMING SOON":owned?Roles[i]:$"LOCKED  •  {HeroUnlockCatalog.Price(rowHero):N0} SHARDS";
                     theme.Label(new Rect(row.x+labelX,row.y+24f,row.width-labelX-14,16f),subtitle,theme.Small,true);

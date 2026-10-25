@@ -15,7 +15,7 @@ class Bolt7Regression {
   Near(Bolt7Balance.BasicInterval,HeroCombatProfile.StatsFor(HeroId.Nyra).AttackInterval/3,"three times Sivra rate");Near(Bolt7Balance.BasicDamage,5,"gatling damage");
   Check(Bolt7Balance.BasicRange<HeroCombatProfile.StatsFor(HeroId.Nyra).AttackRange,"limited basic range");Near(Bolt7Balance.FxScale,2.5f,"native FX scale");
   Check((int)HeroId.Bolt7==10 && (int)HeroId.VoidKnight==9,"stable network hero IDs");
-  var kit=HeroAbilityKit.LoadoutFor(HeroId.Bolt7);Check(!Bolt7Balance.HasAbility(2)&&kit.E.Name=="","only requested attacks");Near(kit.Ultimate.Power,0,"no ultimate HP damage");
+  var kit=HeroAbilityKit.LoadoutFor(HeroId.Bolt7);Check(Bolt7Balance.HasAbility(2)&&kit.E.Name=="Impulsgranate","complete five-attack kit includes a second grenade");Near(Bolt7Balance.Health,280,"reduced HP");Near(Bolt7Balance.Shield,40,"40 rechargeable base shield");Near(kit.Ultimate.Power,0,"no ultimate HP damage");
   var actor=Hero(HeroId.Bolt7,0,Vector3.zero);var enemy=Hero(HeroId.Nyra,1,new Vector3(0,0,1));var ally=Hero(HeroId.Nyra,0,new Vector3(.1f,0,1));var far=Hero(HeroId.Nyra,1,new Vector3(0,0,4));
   Set(enemy,"shield",1000000);Set(enemy,"shieldUntil",100);enemy.AddShield(1,1,false);
   float health=enemy.Current,own=actor.Shield,friendly=ally.Shield;
@@ -29,6 +29,10 @@ class Bolt7Regression {
   Near(Bolt7Combat.GrenadeDamage(0),35,"grenade core");Near(Bolt7Combat.GrenadeDamage(.6f),35,"grenade core edge");Near(Bolt7Combat.GrenadeDamage(1),25,"grenade falloff");Near(Bolt7Combat.GrenadeDamage(1.4f),15,"grenade outer edge");
   enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,1.4f);Check(Bolt7Combat.Grenade(actor.gameObject,Vector3.zero)==1,"grenade single hit at radius boundary");Near(enemy.Shield,45,"grenade edge damage resolves once");enemy.transform.position=new Vector3(0,0,1.401f);Near(Bolt7Combat.Grenade(actor.gameObject,Vector3.zero),0,"outside small area");
   enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,.9f);Check(Bolt7Combat.Ram(actor.gameObject,Vector3.forward)==1,"ram front contact");Near(enemy.Shield,20,"ram damage");Near(enemy.GetComponent<HeroLocomotion>().LastMove.z,1.7f,"ram knockback");enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,-.9f);Near(Bolt7Combat.Ram(actor.gameObject,Vector3.forward),0,"ram rear exclusion");
+  enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,1f);
+  Check(Bolt7Combat.Impulse(actor.gameObject,Vector3.zero)==1,"impulse grenade area hit");Near(enemy.Shield,35,"impulse grenade damage once");Near(enemy.GetComponent<HeroLocomotion>().LastMove.z,1.8f,"outward grenade knockback");
+  enemy.RestoreFull();enemy.transform.position=new Vector3(0,0,1.11f);Near(Bolt7Combat.Impulse(actor.gameObject,Vector3.zero),0,"impulse outside small radius");
+  enemy.transform.position=new Vector3(0,0,1);enemy.DamageGate=()=>false;Near(Bolt7Combat.Impulse(actor.gameObject,Vector3.zero),0,"protected enemy not hit or pushed");enemy.DamageGate=null;
   actor.TakeDamage(10000);Near(Bolt7Combat.Nullfield(actor.gameObject,Vector3.zero),0,"dead caster cannot resolve");
   Console.WriteLine("PASS "+checks+" BOLT-7 assertions: production balance, health, AOE resolution, falloff, cover, authority, team protection, shield recharge and ram. Unity rendering/import not tested.");
  }

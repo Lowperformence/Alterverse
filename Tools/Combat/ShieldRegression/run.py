@@ -62,7 +62,7 @@ class ShieldRegression {
     Alterverse.Characters.HeroId.Nerok=>90,Alterverse.Characters.HeroId.Rook=>80,
     Alterverse.Characters.HeroId.Veyr=>70,Alterverse.Characters.HeroId.Kaelon=>70,
     Alterverse.Characters.HeroId.VoidKnight=>60,Alterverse.Characters.HeroId.Nyra=>30,_=>50};
-   float expected=id==Alterverse.Characters.HeroId.Bolt7?60:previous+30;
+   float expected=id==Alterverse.Characters.HeroId.Bolt7?40:previous+30;
    var x=Hero(id);
    Near(x.HeroBaseShieldMax,expected,"hero capacity "+id);Near(x.Shield,expected,"spawn shield "+id);
    x.TakeDamage(10);Near(x.HeroBaseShield,expected-10,"damage absorption "+id);
@@ -101,7 +101,7 @@ class ShieldRegression {
   h.TakeDamage(20);Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=false;Refresh(h,111.25f);Near(h.Shield,60,"client cannot authoritatively regenerate shield");
   Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=true;Refresh(h,111.25f);Near(h.Shield,80,"host applies due recharge");
   var neutral=new UnityEngine.GameObject().AddComponent<Alterverse.Combat.Health>();neutral.Configure(200);Near(neutral.HeroBaseShieldMax,0,"non-hero does not acquire a base shield");
-  System.Console.WriteLine("PASS "+checks+" production Health shield assertions: all existing heroes/bots +30 shield and BOLT-7 60 shield, 11.25s delay, Phase Fold unchanged, absorption, deadline/reset, snapshots, death/respawn and authority. Unity/network transport not tested.");
+  System.Console.WriteLine("PASS "+checks+" production Health shield assertions: all existing heroes/bots +30 shield and BOLT-7 40 shield, 11.25s delay, Phase Fold unchanged, absorption, deadline/reset, snapshots, death/respawn and authority. Unity/network transport not tested.");
  }
 }
 '''
