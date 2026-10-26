@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "vertices": 6584,
+  "triangles": 12816,
+  "newGeometryHasHeadOrWeapons": false,
+  "bodyAndWeaponResourceReplaced": false,
+  "existingAppearanceCodeIdenticalAfterRemovingAdditiveArmorMethod": true,
+  "checks": [
+    "finite geometry",
+    "normal lengths",
+    "noncollapsed triangles",
+    "indices",
+    "armor-only bone bindings",
+    "exact preservation of original appearance code"
+  ],
+  "unityPlayMode": "not run"
+}

@@ -1,0 +1,54 @@
+name: Hero asset provenance and replacements
+on:
+  push:
+    branches: ['art/hero-parts-redesign-20261011']
+    paths: ['Tools/HeroConcepts/close_audio_gaps.py', 'Tools/HeroConcepts/inspect_asset_gaps.py', '.github/workflows/hero-asset-provenance.yml']
+permissions:
+  contents: write
+concurrency:
+  group: hero-asset-provenance-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  provenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install asset processing tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python -m pip install numpy==2.2.6 pillow==11.3.0
+      - name: Replace unverified audio and validate imports
+        run: python Tools/HeroConcepts/close_audio_gaps.py
+      - name: Inspect actual image metadata and direct MP3 source matches
+        run: python Tools/HeroConcepts/inspect_asset_gaps.py
+      - name: Save provenance review files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hero-asset-provenance-review
+          path: |
+            Docs/HeroAssets
+            Assets/Alterverse/Scripts/Visuals
+            Assets/Alterverse/Editor
+            Tools/Audio
+            ArtSource/Audio/Combat/sources.json
+          if-no-files-found: warn
+      - name: Commit validated replacement assets
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Assets/Alterverse/Resources/Audio ArtSource/Audio/Nerok/BasicHit.mp3 ArtSource/Audio/Combat/Explosion.wav Docs/HeroAssets Docs/SelectedAudioSources.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Replace nine unverified audio inputs and record source hashes and image inspection'
+            git fetch origin '${{ github.ref_name }}'
+            git rebase 'origin/${{ github.ref_name }}'
+            git push origin HEAD:'${{ github.ref_name }}'
+          fi

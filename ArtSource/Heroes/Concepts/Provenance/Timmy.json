@@ -1,0 +1,93 @@
+{
+  "hero": "Andromeda Timmy",
+  "heroId": "Timmy",
+  "key": "Timmy",
+  "asOf": "2026-10-12",
+  "concept": {
+    "file": "ArtSource/Heroes/Concepts/Timmy-concept-v1.png",
+    "sha256": "91397017dbce61249aad23cffaf1e8964a89c8933d8370d88c6c6be59f2959e2",
+    "gitBlob": "ffc4c0a9a964a83d003e9d1f14dcf59ea86a4e39",
+    "promptRecord": "Tools/HeroConcepts/prompts.json#Timmy",
+    "generator": "OpenAI built-in image_gen",
+    "AI_generated": true,
+    "embeddedC2PA": true,
+    "C2PASignatureValidated": false,
+    "status": "original final PNG and exact final-generation/edit prompts archived"
+  },
+  "retainedInputs": [
+    {
+      "file": "ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy.blend",
+      "sha256": "4075a06f8cc92ef4a202e162fbd81ed89afd16044d401515f3aa4956172762c9",
+      "revision": "a605c0635eaccd57dc48e0e60a6a344170153a1e",
+      "role": "procedurally generated costume/body geometry and original project costume/rig"
+    },
+    {
+      "file": "Tools/AndromedaTimmy/build_timmy.py",
+      "role": "existing project authoring generator"
+    }
+  ],
+  "licenses": [
+    {
+      "id": "OpenAI-output",
+      "role": "new AI concept images and code-assisted design work",
+      "license": "OpenAI Europe Terms of Use; not a CC0 declaration",
+      "source": "https://openai.com/policies/eu-terms-of-use/",
+      "termsUpdated": "2026-01-16",
+      "checked": "2026-10-12",
+      "status": "Content clauses verified; output rights subject to terms and applicable law"
+    },
+    {
+      "id": "locomotion-CC0",
+      "role": "shared movement animation bank",
+      "license": "CC0-1.0",
+      "evidence": [
+        "ArtSource/Animations/Locomotion/License-KayKit.txt",
+        "ArtSource/Animations/Locomotion/License-Quaternius.txt",
+        "ArtSource/Animations/Locomotion/README.md"
+      ],
+      "status": "original provider notices already preserved"
+    },
+    {
+      "id": "combat-Quaternius",
+      "role": "combat animation source bank",
+      "license": "CC0-1.0 declared for free Standard packages",
+      "evidence": "ArtSource/Animations/README.md",
+      "status": "source mapping documented; separate Mixamo idle must not be labeled CC0"
+    },
+    {
+      "id": "hero-audio",
+      "role": "basic/ability/death effects",
+      "evidence": [
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/Combat/sources.json",
+        "ArtSource/Audio/HeroSelections/manifest.json"
+      ],
+      "status": "mixed: some preserved CC0 notices; selected recordings have unresolved source/license evidence"
+    }
+  ],
+  "implementation": {
+    "fullConceptModel": "modeled and Blender/FBX validated; Unity not run",
+    "previousValidatedReplacement": null,
+    "previousValidation": null,
+    "revision": "hero-component-plans-20261012-v3",
+    "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
+    "nativeSource": "ArtSource/Heroes/ConceptModels/Timmy-model.blend",
+    "model": "Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx",
+    "modelSha256": "5e61241902d711b009d14f22d8420a821d83f90c47c7c9730326a0224d93138a"
+  },
+  "openEvidence": [
+    "historical user-supplied design-reference image sources were not recovered",
+    "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
+    "unresolved selected-audio source and license records",
+    "Unity editor and device visual verification"
+  ],
+  "releaseFlagChanged": false,
+  "componentPlan": {
+    "concept": "ArtSource/Heroes/BuildPlans/Timmy/Timmy-component-concept.png",
+    "provenance": "ArtSource/Heroes/BuildPlans/Timmy/provenance.json",
+    "assembly": "ArtSource/Heroes/BuildPlans/Timmy/assembly.json",
+    "validation": "ArtSource/Heroes/BuildPlans/Timmy/validation.json",
+    "rights": "ArtSource/Heroes/BuildPlans/RIGHTS.md",
+    "scope": "Sivra, Ione, Zhaev and Timmy only; five delegated heroes excluded"
+  }
+}

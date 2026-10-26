@@ -1,0 +1,993 @@
+{
+  "revision": "hero-component-plans-20261012-v3",
+  "hero": "Timmy",
+  "checks": {
+    "source": "ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy.blend",
+    "shippingModel": "Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx",
+    "removedComponents": [],
+    "preservedVertices": 8584,
+    "preservedPositionsExact": true,
+    "rigExact": true,
+    "originalActionsExact": [],
+    "socketsExact": true,
+    "newVertices": 2640,
+    "newTriangles": 4888,
+    "newParts": [
+      {
+        "name": "cyan comet chest badge",
+        "first": 0,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "comet badge three tails",
+        "first": 266,
+        "vertices": 14,
+        "triangles": 24,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "comet badge three tails",
+        "first": 280,
+        "vertices": 14,
+        "triangles": 24,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "comet badge three tails",
+        "first": 294,
+        "vertices": 14,
+        "triangles": 24,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "chest telemetry casing",
+        "first": 308,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "blue telemetry display",
+        "first": 321,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "telemetry two gold buttons",
+        "first": 334,
+        "vertices": 114,
+        "triangles": 224,
+        "bone": 3,
+        "material": 4
+      },
+      {
+        "name": "telemetry two gold buttons",
+        "first": 448,
+        "vertices": 114,
+        "triangles": 224,
+        "bone": 3,
+        "material": 4
+      },
+      {
+        "name": "cyan domed visor gasket",
+        "first": 562,
+        "vertices": 520,
+        "triangles": 1024,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "white forearm layered edge",
+        "first": 1082,
+        "vertices": 18,
+        "triangles": 32,
+        "bone": 6,
+        "material": 1
+      },
+      {
+        "name": "white knee enamel layer",
+        "first": 1100,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 15,
+        "material": 1
+      },
+      {
+        "name": "jetpack cyan exhaust grille",
+        "first": 1113,
+        "vertices": 20,
+        "triangles": 36,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "jetpack cyan exhaust grille",
+        "first": 1133,
+        "vertices": 20,
+        "triangles": 36,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "jetpack cyan exhaust grille",
+        "first": 1153,
+        "vertices": 20,
+        "triangles": 36,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "white forearm layered edge",
+        "first": 1173,
+        "vertices": 18,
+        "triangles": 32,
+        "bone": 10,
+        "material": 1
+      },
+      {
+        "name": "white knee enamel layer",
+        "first": 1191,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 18,
+        "material": 1
+      },
+      {
+        "name": "jetpack cyan exhaust grille",
+        "first": 1204,
+        "vertices": 20,
+        "triangles": 36,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "jetpack cyan exhaust grille",
+        "first": 1224,
+        "vertices": 20,
+        "triangles": 36,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "jetpack cyan exhaust grille",
+        "first": 1244,
+        "vertices": 20,
+        "triangles": 36,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "Timmy UpperArmL separate formed guard",
+        "first": 1264,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 5,
+        "material": 1
+      },
+      {
+        "name": "Timmy UpperArmL inset service panel",
+        "first": 1283,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 5,
+        "material": 0
+      },
+      {
+        "name": "Timmy UpperArmL protected luminous channel",
+        "first": 1296,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 5,
+        "material": 3
+      },
+      {
+        "name": "Timmy UpperArmL countersunk fastener",
+        "first": 1308,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Timmy UpperArmL countersunk fastener",
+        "first": 1342,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Timmy UpperArmL inset vent",
+        "first": 1376,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Timmy UpperArmL inset vent",
+        "first": 1386,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Timmy UpperArmL inset vent",
+        "first": 1396,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Timmy ForearmL separate formed guard",
+        "first": 1406,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 6,
+        "material": 1
+      },
+      {
+        "name": "Timmy ForearmL inset service panel",
+        "first": 1425,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 6,
+        "material": 0
+      },
+      {
+        "name": "Timmy ForearmL protected luminous channel",
+        "first": 1438,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 6,
+        "material": 3
+      },
+      {
+        "name": "Timmy ForearmL countersunk fastener",
+        "first": 1450,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 6,
+        "material": 2
+      },
+      {
+        "name": "Timmy ForearmL countersunk fastener",
+        "first": 1484,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 6,
+        "material": 2
+      },
+      {
+        "name": "Timmy ForearmL inset vent",
+        "first": 1518,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 6,
+        "material": 2
+      },
+      {
+        "name": "Timmy ForearmL inset vent",
+        "first": 1528,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 6,
+        "material": 2
+      },
+      {
+        "name": "Timmy ForearmL inset vent",
+        "first": 1538,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 6,
+        "material": 2
+      },
+      {
+        "name": "Timmy ThighL separate formed guard",
+        "first": 1548,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 14,
+        "material": 1
+      },
+      {
+        "name": "Timmy ThighL inset service panel",
+        "first": 1567,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 14,
+        "material": 0
+      },
+      {
+        "name": "Timmy ThighL protected luminous channel",
+        "first": 1580,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 14,
+        "material": 3
+      },
+      {
+        "name": "Timmy ThighL countersunk fastener",
+        "first": 1592,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Timmy ThighL countersunk fastener",
+        "first": 1626,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Timmy ThighL inset vent",
+        "first": 1660,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Timmy ThighL inset vent",
+        "first": 1670,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Timmy ThighL inset vent",
+        "first": 1680,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Timmy ShinL separate formed guard",
+        "first": 1690,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 15,
+        "material": 1
+      },
+      {
+        "name": "Timmy ShinL inset service panel",
+        "first": 1709,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 15,
+        "material": 0
+      },
+      {
+        "name": "Timmy ShinL protected luminous channel",
+        "first": 1722,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 15,
+        "material": 3
+      },
+      {
+        "name": "Timmy ShinL countersunk fastener",
+        "first": 1734,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Timmy ShinL countersunk fastener",
+        "first": 1768,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Timmy ShinL inset vent",
+        "first": 1802,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Timmy ShinL inset vent",
+        "first": 1812,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Timmy ShinL inset vent",
+        "first": 1822,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Timmy UpperArmR separate formed guard",
+        "first": 1832,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 9,
+        "material": 1
+      },
+      {
+        "name": "Timmy UpperArmR inset service panel",
+        "first": 1851,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 9,
+        "material": 0
+      },
+      {
+        "name": "Timmy UpperArmR protected luminous channel",
+        "first": 1864,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 9,
+        "material": 3
+      },
+      {
+        "name": "Timmy UpperArmR countersunk fastener",
+        "first": 1876,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 9,
+        "material": 2
+      },
+      {
+        "name": "Timmy UpperArmR countersunk fastener",
+        "first": 1910,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 9,
+        "material": 2
+      },
+      {
+        "name": "Timmy UpperArmR inset vent",
+        "first": 1944,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 9,
+        "material": 2
+      },
+      {
+        "name": "Timmy UpperArmR inset vent",
+        "first": 1954,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 9,
+        "material": 2
+      },
+      {
+        "name": "Timmy UpperArmR inset vent",
+        "first": 1964,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 9,
+        "material": 2
+      },
+      {
+        "name": "Timmy ForearmR separate formed guard",
+        "first": 1974,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 10,
+        "material": 1
+      },
+      {
+        "name": "Timmy ForearmR inset service panel",
+        "first": 1993,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 10,
+        "material": 0
+      },
+      {
+        "name": "Timmy ForearmR protected luminous channel",
+        "first": 2006,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 10,
+        "material": 3
+      },
+      {
+        "name": "Timmy ForearmR countersunk fastener",
+        "first": 2018,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Timmy ForearmR countersunk fastener",
+        "first": 2052,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Timmy ForearmR inset vent",
+        "first": 2086,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Timmy ForearmR inset vent",
+        "first": 2096,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Timmy ForearmR inset vent",
+        "first": 2106,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Timmy ThighR separate formed guard",
+        "first": 2116,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 17,
+        "material": 1
+      },
+      {
+        "name": "Timmy ThighR inset service panel",
+        "first": 2135,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 17,
+        "material": 0
+      },
+      {
+        "name": "Timmy ThighR protected luminous channel",
+        "first": 2148,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 17,
+        "material": 3
+      },
+      {
+        "name": "Timmy ThighR countersunk fastener",
+        "first": 2160,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 17,
+        "material": 2
+      },
+      {
+        "name": "Timmy ThighR countersunk fastener",
+        "first": 2194,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 17,
+        "material": 2
+      },
+      {
+        "name": "Timmy ThighR inset vent",
+        "first": 2228,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 17,
+        "material": 2
+      },
+      {
+        "name": "Timmy ThighR inset vent",
+        "first": 2238,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 17,
+        "material": 2
+      },
+      {
+        "name": "Timmy ThighR inset vent",
+        "first": 2248,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 17,
+        "material": 2
+      },
+      {
+        "name": "Timmy ShinR separate formed guard",
+        "first": 2258,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 18,
+        "material": 1
+      },
+      {
+        "name": "Timmy ShinR inset service panel",
+        "first": 2277,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 18,
+        "material": 0
+      },
+      {
+        "name": "Timmy ShinR protected luminous channel",
+        "first": 2290,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 18,
+        "material": 3
+      },
+      {
+        "name": "Timmy ShinR countersunk fastener",
+        "first": 2302,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 18,
+        "material": 2
+      },
+      {
+        "name": "Timmy ShinR countersunk fastener",
+        "first": 2336,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 18,
+        "material": 2
+      },
+      {
+        "name": "Timmy ShinR inset vent",
+        "first": 2370,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 18,
+        "material": 2
+      },
+      {
+        "name": "Timmy ShinR inset vent",
+        "first": 2380,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 18,
+        "material": 2
+      },
+      {
+        "name": "Timmy ShinR inset vent",
+        "first": 2390,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 18,
+        "material": 2
+      },
+      {
+        "name": "Timmy back service shell",
+        "first": 2400,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 3,
+        "material": 1
+      },
+      {
+        "name": "Timmy back exhaust vent",
+        "first": 2416,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Timmy back exhaust vent",
+        "first": 2428,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Timmy back exhaust vent",
+        "first": 2440,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Timmy rear panel countersunk fastener",
+        "first": 2452,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "Timmy rear panel countersunk fastener",
+        "first": 2486,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "Timmy back service shell",
+        "first": 2520,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 3,
+        "material": 1
+      },
+      {
+        "name": "Timmy back exhaust vent",
+        "first": 2536,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Timmy back exhaust vent",
+        "first": 2548,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Timmy back exhaust vent",
+        "first": 2560,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Timmy rear panel countersunk fastener",
+        "first": 2572,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "Timmy rear panel countersunk fastener",
+        "first": 2606,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 2
+      }
+    ],
+    "visorOpacity": 0.12,
+    "weaponDetail": [
+      {
+        "object": "DF_WeaponL",
+        "addedVertices": 36,
+        "addedTriangles": 60,
+        "originalVerticesExact": true
+      },
+      {
+        "object": "DF_WeaponR",
+        "addedVertices": 36,
+        "addedTriangles": 60,
+        "originalVerticesExact": true
+      }
+    ],
+    "assembly": {
+      "hero": "Timmy",
+      "units": "metres",
+      "coordinateSystem": "Blender X right, Y back, Z up; game X right, Y up, Z forward",
+      "derivation": "Actual rest-pose triangles; boundary faces assigned to dominant bone category. Assembly overlaps intentional; OBJ components are surface meshes, not manufacturing solids.",
+      "components": [
+        {
+          "part": "Torso_Armor",
+          "vertices": 2664,
+          "triangles": 5092,
+          "boundsBlenderMetres": [
+            [
+              -0.24643472,
+              -0.214,
+              0.74000001
+            ],
+            [
+              0.24643472,
+              0.315,
+              1.41000009
+            ]
+          ],
+          "dimensionsMm": [
+            492.87,
+            529.0,
+            670.0
+          ]
+        },
+        {
+          "part": "Head_Helmet",
+          "vertices": 4022,
+          "triangles": 7596,
+          "boundsBlenderMetres": [
+            [
+              -0.30700001,
+              -0.32300001,
+              1.255
+            ],
+            [
+              0.30700001,
+              0.215,
+              1.82499993
+            ]
+          ],
+          "dimensionsMm": [
+            614.0,
+            538.0,
+            570.0
+          ]
+        },
+        {
+          "part": "Arm_L",
+          "vertices": 1224,
+          "triangles": 2360,
+          "boundsBlenderMetres": [
+            [
+              -0.417,
+              -0.19178419,
+              0.69563222
+            ],
+            [
+              -0.13999999,
+              0.115,
+              1.40999997
+            ]
+          ],
+          "dimensionsMm": [
+            277.0,
+            306.78,
+            714.37
+          ]
+        },
+        {
+          "part": "Leg_L",
+          "vertices": 1137,
+          "triangles": 2162,
+          "boundsBlenderMetres": [
+            [
+              -0.24499999,
+              -0.19,
+              0.00999999
+            ],
+            [
+              -0.034,
+              0.09999999,
+              0.89000005
+            ]
+          ],
+          "dimensionsMm": [
+            211.0,
+            290.0,
+            880.0
+          ]
+        },
+        {
+          "part": "Arm_R",
+          "vertices": 1224,
+          "triangles": 2360,
+          "boundsBlenderMetres": [
+            [
+              0.14,
+              -0.19178419,
+              0.69563222
+            ],
+            [
+              0.417,
+              0.115,
+              1.40999997
+            ]
+          ],
+          "dimensionsMm": [
+            277.0,
+            306.78,
+            714.37
+          ]
+        },
+        {
+          "part": "Leg_R",
+          "vertices": 1137,
+          "triangles": 2162,
+          "boundsBlenderMetres": [
+            [
+              0.034,
+              -0.19,
+              0.00999999
+            ],
+            [
+              0.245,
+              0.09999999,
+              0.89000005
+            ]
+          ],
+          "dimensionsMm": [
+            211.0,
+            290.0,
+            880.0
+          ]
+        },
+        {
+          "part": "Tail",
+          "vertices": 390,
+          "triangles": 752,
+          "boundsBlenderMetres": [
+            [
+              -0.042,
+              0.1110056,
+              0.70899999
+            ],
+            [
+              0.042,
+              0.74299997,
+              0.89897567
+            ]
+          ],
+          "dimensionsMm": [
+            84.0,
+            631.99,
+            189.98
+          ]
+        },
+        {
+          "part": "Weapons",
+          "vertices": 216,
+          "triangles": 312,
+          "boundsBlenderMetres": [
+            [
+              -0.39567238,
+              -0.23009755,
+              0.68911874
+            ],
+            [
+              0.39400002,
+              -0.16700682,
+              0.72657102
+            ]
+          ],
+          "dimensionsMm": [
+            789.67,
+            63.09,
+            37.45
+          ]
+        }
+      ],
+      "checks": {
+        "sourceTriangles": 22796,
+        "partTriangles": 22796
+      }
+    },
+    "fbxRoundTrip": {
+      "bones": 20,
+      "skinningImported": true,
+      "normalizedWeights": true,
+      "animationClipsImported": [],
+      "vertices": 11224
+    },
+    "fbxSha256": "5e61241902d711b009d14f22d8420a821d83f90c47c7c9730326a0224d93138a",
+    "modelSha256": "5e61241902d711b009d14f22d8420a821d83f90c47c7c9730326a0224d93138a",
+    "blenderSha256": "27853cb9aaa17d758e87db27ea741e0860c9f8ecbb07ec6680e9e57c3d2d8281"
+  },
+  "UnityEditor": "not run",
+  "Android": "not run"
+}

@@ -43,8 +43,11 @@ namespace Alterverse.Combat
             BuildSharedMaterials();
             // Load the same authored flyby for every arena at the point the bomber is created.
             // Resources clips are shared Unity assets and must never be destroyed by a match.
-            engineLoop=Resources.Load<AudioClip>("Audio/BombJetFlyby");
-            if(engineLoop==null)Debug.LogWarning("DIMENSIONS FRONT: BombJetFlyby is missing from Resources/Audio.");
+            if(!Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested)
+            {
+                engineLoop=Resources.Load<AudioClip>("Audio/BombJetFlyby");
+                if(engineLoop==null)Debug.LogWarning("DIMENSIONS FRONT: BombJetFlyby is missing from Resources/Audio.");
+            }
             if(!materialsReady)
             {
                 Debug.LogError("DIMENSIONS FRONT: Space Bomber disabled because required shaders are unavailable.");
@@ -137,6 +140,9 @@ namespace Alterverse.Combat
 
         private void BuildSharedMaterials()
         {
+            // Shaders are a presentation dependency, not a prerequisite for bomb damage.
+            if(Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested)
+            {materialsReady=true;return;}
             Shader lit=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
             Shader unlit=Resources.Load<Shader>("DF_TargetRing")??Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
             if(lit==null||unlit==null)return;
@@ -266,6 +272,7 @@ namespace Alterverse.Combat
 
         private void BuildEngineAudio(AudioClip clip)
         {
+            if(Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested)return;
             if(clip==null)return;
             engineAudio=gameObject.AddComponent<AudioSource>();
             engineAudio.clip=clip;
@@ -336,6 +343,7 @@ namespace Alterverse.Combat
 
         private void BuildVisual(Material armor,Material dark,Material energy)
         {
+            if(Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested)return;
             visual=new GameObject("DF_BomberVisual").transform;
             visual.SetParent(transform,false);
             visual.localScale=Vector3.one*.78f;
@@ -430,6 +438,7 @@ namespace Alterverse.Combat
 
         private void BuildVisuals(Material warningMaterial,Material bombMaterial,Material energyMaterial,Transform world)
         {
+            if(Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested)return;
             if(warningMaterial!=null)
             {
                 warning=new GameObject("DF_BombWarning");warning.transform.SetParent(world,false);
@@ -578,4 +587,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 

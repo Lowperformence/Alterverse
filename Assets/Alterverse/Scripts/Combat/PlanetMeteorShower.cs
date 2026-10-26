@@ -47,6 +47,8 @@ private void OnEnable(){if(!active.Contains(this))active.Add(this);}private void
 public static void Create(Vector3 p,float delay,float dmg,float stagger,DimensionPlanet sourcePlanet){GameObject g=new GameObject("DF_MeteorStrike");g.transform.position=p;MeteorStrike s=g.AddComponent<MeteorStrike>();s.damage=dmg;s.spawnAt=Time.time;s.hitAt=Time.time+delay+stagger;s.startPosition=p;s.owner=sourcePlanet;s.front=sourcePlanet!=null?sourcePlanet.GetComponentInParent<DimensionsFront>():null;if(s.front==null)s.front=FindAnyObjectByType<DimensionsFront>();Transform world=GameObject.Find("DF_MatchWorld")?.transform;if(world!=null)g.transform.SetParent(world,true);s.BuildVisuals(world);}
 private void BuildVisuals(Transform world)
 {
+// Authoritative timing, hazard registry and damage live outside presentation.
+if(Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested)return;
 Shader ink=Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");Shader rock=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
 if(ink==null||rock==null)return;
 warningInk=new Material(ink){name="DF_MeteorWarningInk"};rockMaterial=new Material(rock){name="DF_MeteorRock",color=new Color(.19f,.14f,.11f)};
@@ -64,3 +66,4 @@ private void Update(){if(owner==null||!owner.Available){Destroy(gameObject);retu
 private void OnDestroy(){active.Remove(this);if(warning!=null)Destroy(warning);if(meteor!=null)Destroy(meteor);if(warningInk!=null)Destroy(warningInk);if(warningRingInk!=null)Destroy(warningRingInk);if(rockMaterial!=null)Destroy(rockMaterial);if(meteorMesh!=null)Destroy(meteorMesh);}
 }
 }
+

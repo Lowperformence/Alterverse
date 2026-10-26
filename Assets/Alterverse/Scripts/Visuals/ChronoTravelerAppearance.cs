@@ -21,6 +21,7 @@ namespace Alterverse.Visuals
             public float[] vertices, normals;
             public int[] boneIndices;
             public Submesh[] submeshes;
+            public bool legEquipmentAuthored;
         }
         private static Geometry geometry;
         private Mesh ownedMesh;
@@ -175,7 +176,8 @@ namespace Alterverse.Visuals
             anatomy.localBounds = bounds;
             foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>(true))
                 if (renderer.name == "DF_WeaponR" || renderer.name == "DF_WeaponL") RefinishWeapon(renderer);
-            AddLegEquipment(model, anatomy, data, bones, map, heads, lookup, vertices, unitScale);
+            if (!data.legEquipmentAuthored)
+                AddLegEquipment(model, anatomy, data, bones, map, heads, lookup, vertices, unitScale);
             return true;
         }
 
@@ -303,3 +305,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

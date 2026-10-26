@@ -1,0 +1,53 @@
+name: Authored hero parts
+on:
+  push:
+    branches: ['art/hero-parts-redesign-20261011']
+    paths: ['Tools/HeroParts/**', '.github/workflows/hero-parts-authoring.yml']
+permissions:
+  contents: write
+concurrency:
+  group: hero-parts-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  author:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install matching Blender LTS authoring runtime
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libx11-6 libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libsm6
+          python -m pip install bpy==4.5.14 numpy pillow
+      - name: Inspect original models and rig
+        run: python Tools/HeroParts/inspect_originals.py
+      - name: Build the four replacements and render their exported meshes
+        env:
+          OMP_NUM_THREADS: '2'
+        run: python Tools/HeroParts/build_parts.py
+      - name: Import and validate the skinned FBX exports
+        run: python Tools/HeroParts/validate_exports.py
+      - name: Keep previews and validation available for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hero-parts-previews
+          path: |
+            ArtSource/Heroes/PartsRedesign/*.png
+            ArtSource/Heroes/PartsRedesign/validation-report.json
+          if-no-files-found: ignore
+      - name: Commit built models on the authorized art branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Assets/Alterverse/Resources/CyberRanger/Model.bytes Assets/Alterverse/Resources/UmbralMage/Model.bytes Assets/Alterverse/Resources/CyberShark/Model.bytes Assets/Alterverse/Resources/AuthoredHeroes/Mira.fbx ArtSource/Heroes/Mira.blend ArtSource/Heroes/PartsRedesign
+          if ! git diff --cached --quiet; then
+            git commit -m 'Build authored hero heads, Tahla pauldrons and Nerok outfit'
+            git push origin HEAD:'${{ github.ref_name }}'
+          fi

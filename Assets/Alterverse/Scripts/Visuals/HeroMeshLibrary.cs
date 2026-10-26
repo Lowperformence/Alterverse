@@ -38,7 +38,9 @@ namespace Alterverse.Visuals
                     float sculptShade=Mathf.Lerp(.96f,1.04f,height)*contour;
                     Color shaded=color*sculptShade;shaded.a=0;colors[i]=shaded;
                 }
-                surface[i]=response;
+                // Baked low-frequency coating variation avoids a uniform plastic highlight.
+                float grain=Mathf.PerlinNoise(vertices[i].x*23f+17f,vertices[i].y*19f+vertices[i].z*11f);
+                surface[i]=new Vector2(response.x,Mathf.Clamp01(response.y+(grain-.5f)*.12f));
             }
             mesh.colors=colors;mesh.uv2=surface;
         }

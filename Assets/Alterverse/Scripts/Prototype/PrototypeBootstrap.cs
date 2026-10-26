@@ -74,7 +74,21 @@ if(!IsServerOnlyMatch())PrepareTransitionFrame();
 GameObject previous=GameObject.Find("DF_MatchWorld");
 if(previous!=null){previous.SetActive(false);Destroy(previous);}
 yield return null;
+try
+{
 BuildPrototype();
+if(!IsServerOnlyMatch()&&(GameObject.Find("AV_Player")==null||GameObject.Find("DF_MatchWorld")==null))
+throw new System.InvalidOperationException("Restart returned without a player or world for arena "+ArenaVariantRuntime.Current);
+}
+catch(System.Exception error)
+{
+Debug.LogError("DIMENSIONS FRONT: arena restart failed for "+ArenaVariantRuntime.Current);
+Debug.LogException(error);
+pendingArenaCamera=null;
+pendingArenaWorld=null;
+RestoreTransitionFrame();
+MainMenuController.ShowHome();
+}
 }
 finally{MatchClock.Set(PauseReason.Transition,false);}
 }

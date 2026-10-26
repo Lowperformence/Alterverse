@@ -115,6 +115,7 @@ namespace Alterverse.Visuals {
 
  public sealed partial class HeroSkillVfx:UnityEngine.MonoBehaviour {
   public static UnityEngine.Vector3 LastPoint;
+  public static void TimmyHold(UnityEngine.GameObject actor,Alterverse.Combat.Health target,float duration,float elapsed=0)=>SelectedAbilityVfx.TimmyHold(actor,target,duration,elapsed);
   private static Alterverse.Characters.HeroId Hero(UnityEngine.GameObject a)=>a.GetComponent<Alterverse.Characters.HeroIdentity>().Hero;
   private static UnityEngine.Color Accent(UnityEngine.GameObject a)=>StylizedArtDirection.HeroAccent(Hero(a));
   private static UnityEngine.Vector3 Chest(UnityEngine.GameObject a)=>a.transform.position+UnityEngine.Vector3.up*.25f;
@@ -131,7 +132,7 @@ namespace Alterverse.Visuals {
   public static void Support(UnityEngine.GameObject a,Alterverse.Combat.Health h,bool s,float d){}
   public static void SupportLink(UnityEngine.GameObject a,Alterverse.Combat.Health h){}
   public static void Area(UnityEngine.GameObject a,UnityEngine.Vector3 p,float r,float w,bool warning,bool support,int s){LastPoint=p;if(Hero(a)==Alterverse.Characters.HeroId.Timmy&&s==1)TimmyEffect(a,warning?0:1,p,p,r,warning?w:Alterverse.Characters.TimmyBalance.DustVfxSeconds);}
-  public static void Spell(UnityEngine.GameObject a,UnityEngine.Vector3 p,int s,float f=0,UnityEngine.Transform t=null){if(t!=null)throw new Exception("unintended homing visual");LastPoint=p;if(Hero(a)==Alterverse.Characters.HeroId.Timmy&&s==1&&f>0)TimmyEffect(a,5,Chest(a),p,0,f);}
+  public static void Spell(UnityEngine.GameObject a,UnityEngine.Vector3 p,int s,float f=0,UnityEngine.Transform t=null){if(t!=null)throw new Exception("unintended homing visual");LastPoint=p;if(Hero(a)==Alterverse.Characters.HeroId.Traveler&&s==0)TemporalLaser(a,a.transform.position,p,f);if(Hero(a)==Alterverse.Characters.HeroId.Timmy&&s==1&&f>0)TimmyEffect(a,5,Chest(a),p,0,f);}
   public static void Basic(UnityEngine.GameObject a,UnityEngine.Vector3 p,float f=0,UnityEngine.Transform t=null,bool animate=true){if(t!=null&&Alterverse.Combat.AimingSettings.Current.For(Hero(a),-1).targetingMode!=Alterverse.Combat.TargetingMode.AutoBasic&&Alterverse.Combat.AimingSettings.Current.For(Hero(a),-1).targetingMode!=Alterverse.Combat.TargetingMode.Homing)throw new Exception("unintended homing basic");LastPoint=p;}
   public static void SharkAnchor(UnityEngine.GameObject a,UnityEngine.Vector3 p,float f,UnityEngine.Transform t=null){LastPoint=p;}
   public static void SharkPullChain(UnityEngine.GameObject a,Alterverse.Combat.Health t,float d){}

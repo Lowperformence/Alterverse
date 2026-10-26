@@ -637,7 +637,7 @@ namespace Alterverse.Combat
             jointMat=MakeMaterial(shader,new Color(.16f,.19f,.23f,1),.84f,.48f,Color.black);
             energyMat=MakeMaterial(shader,energy,.10f,.55f,energy*2.3f);
 
-            // Ancient Martian war skeleton: oversized readable bones, rib cage, skull and claws.
+            // Martian robot skeleton: exposed steel ribs, dark servos and orange reactor energy.
             Part("TitanPelvis",PrimitiveType.Cube,transform,new Vector3(0,.20f,0),new Vector3(1.35f,.48f,.72f),armorMat,Quaternion.Euler(0,0,3));
             Part("TitanSpine",PrimitiveType.Cylinder,transform,new Vector3(0,1.22f,0),new Vector3(.22f,1.05f,.22f),jointMat,Quaternion.identity);
             for(int i=0;i<5;i++)
@@ -666,11 +666,24 @@ namespace Alterverse.Combat
             Part("TitanRibRunesL",PrimitiveType.Cube,transform,new Vector3(-.45f,1.15f,.18f),new Vector3(.045f,.42f,.025f),energyMat,Quaternion.Euler(0,0,-32));
             Part("TitanRibRunesR",PrimitiveType.Cube,transform,new Vector3(.45f,1.15f,.18f),new Vector3(.045f,.42f,.025f),energyMat,Quaternion.Euler(0,0,32));
         
-            // Bone-built wrist cuffs and brow plates sharpen the old Martian silhouette.
+            // Mechanical wrist cuffs and brow plates preserve the skeleton silhouette.
             Part("TitanWristCuffL",PrimitiveType.Cube,transform,new Vector3(-1.34f,.45f,.10f),new Vector3(.34f,.16f,.32f),jointMat,Quaternion.Euler(0,0,-8));
             Part("TitanWristCuffR",PrimitiveType.Cube,transform,new Vector3(1.34f,.45f,.10f),new Vector3(.34f,.16f,.32f),jointMat,Quaternion.Euler(0,0,8));
             Part("TitanBrowRidge",PrimitiveType.Cube,transform,new Vector3(0,2.49f,.39f),new Vector3(.78f,.14f,.20f),darkMat,Quaternion.Euler(0,0,-3));
             Part("TitanJawRune",PrimitiveType.Cube,transform,new Vector3(0,1.93f,.43f),new Vector3(.34f,.045f,.04f),energyMat,Quaternion.Euler(0,0,2));
+            teamMat=MakeMaterial(shader,teamEnergy,.12f,.55f,teamEnergy*1.2f);
+            Part("TitanTeamBeacon",PrimitiveType.Cube,transform,new Vector3(0,.21f,.39f),new Vector3(.28f,.07f,.03f),teamMat,Quaternion.identity);
+            Part("TitanReactorHousing",PrimitiveType.Cylinder,transform,new Vector3(0,1.24f,.32f),new Vector3(.47f,.085f,.47f),jointMat,Quaternion.Euler(90,0,0));
+            Part("TitanReactorLens",PrimitiveType.Cylinder,transform,new Vector3(0,1.24f,.415f),new Vector3(.29f,.028f,.29f),energyMat,Quaternion.Euler(90,0,0));
+            for(int i=0;i<3;i++)
+                Part("TitanSpinalCoupler"+i,PrimitiveType.Cylinder,transform,new Vector3(0,.65f+i*.45f,-.09f),new Vector3(.34f,.06f,.34f),armorMat,Quaternion.identity);
+            // Servo covers are children of the moving bones, so they cannot float during gait/attack.
+            foreach(Transform limb in new[]{skeletonLeftArm,skeletonRightArm,skeletonLeftLeg,skeletonRightLeg})
+            {
+                Part("TitanServoSleeve",PrimitiveType.Cylinder,limb,Vector3.zero,new Vector3(1.20f,.23f,1.20f),darkMat,Quaternion.identity);
+                Part("TitanServoRail",PrimitiveType.Cube,limb,new Vector3(0,.03f,.54f),new Vector3(.25f,.58f,.10f),armorMat,Quaternion.identity);
+                Part("TitanServoStatus",PrimitiveType.Cube,limb,new Vector3(0,.10f,.61f),new Vector3(.13f,.18f,.035f),energyMat,Quaternion.identity);
+            }
         }
 
         private void AnimateSkeleton()

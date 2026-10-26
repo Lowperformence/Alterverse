@@ -181,8 +181,8 @@ namespace Alterverse.Visuals
             TravelerPortal(actor,start,slot==0?.55f:.35f,.24f);
         }
 
-        private static Color TravelerColor(int slot)=>slot==3?Color.white:
-            slot==0||slot==1?new Color(1f,.82f,.08f,1f):new Color(.64f,.24f,1f,1f);
+        private static Color TravelerColor(int slot)=>slot==0||slot==3?Color.white:
+            slot==1?new Color(1f,.82f,.08f,1f):new Color(.64f,.24f,1f,1f);
 
         // Pooled spherical cores stay visible even when decorative effects are disabled.
         private static void TravelerOrb(GameObject actor,Vector3 point,int slot,float size,float life,
@@ -197,6 +197,7 @@ namespace Alterverse.Visuals
         }
         private static void TravelerProjectile(GameObject actor,Vector3 start,Vector3 end,int slot,float travel,Transform target)
         {
+            if(slot==0){TemporalLaser(actor,start,end,travel);return;}
             Color color=TravelerColor(slot);
             float size=slot==3?1.05f:slot<0?.30f:.42f;
             if(travel<=0)

@@ -231,6 +231,33 @@ namespace Alterverse.UI
             RoundedOutline(rect, OutlineSoft);
         }
 
+        private static Color RankingMedalColor(int rank) => rank switch
+        {
+            1 => new Color(.96f, .77f, .30f),
+            2 => new Color(.78f, .84f, .91f),
+            3 => new Color(.86f, .57f, .36f),
+            _ => Text
+        };
+
+        public void RankingPanel(Rect rect, int rank)
+        {
+            Panel(rect);
+            if (rank < 1 || rank > 3) return;
+            Color tint = RankingMedalColor(rank);
+            RoundedFill(rect, new Color(tint.r, tint.g, tint.b, .09f));
+            RoundedOutline(rect, new Color(tint.r, tint.g, tint.b, .82f));
+        }
+
+        public void RankingBadge(Rect rect, int rank)
+        {
+            if (rank >= 1 && rank <= 3)
+            {
+                string medal = rank == 1 ? "GOLD" : rank == 2 ? "SILVER" : "BRONZE";
+                StatusBadge(rect, $"#{rank}  {medal}", RankingMedalColor(rank));
+            }
+            else FitLabel(rect, $"#{rank}", Small);
+        }
+
         public void HudPanel(Rect rect) => HudPanel(rect, .40f);
 
         public void HudPanel(Rect rect, float opacity)
@@ -389,3 +416,4 @@ namespace Alterverse.UI
         }
     }
 }
+

@@ -1,0 +1,47 @@
+{
+  "hero": "Andromeda Timmy",
+  "heroId": "Timmy",
+  "key": "Timmy",
+  "created": "2026-10-12",
+  "generator": "OpenAI built-in image_gen",
+  "AI_generated": true,
+  "prompt": "Use case: stylized-concept. Create one original, premium detailed CHARACTER PARTS DESIGN SHEET for DIMENSIONS FRONT, for Blender artists. Reference image is the current project model, used for identity, proportions, basic forms and weapon envelope. Improve every visible surface: designed layered construction, credible bevels, recessed vents, seams, fasteners, articulations, material contrast. Keep the hero recognizable. Light warm-gray drafting background, clean large landscape 3:2 composition, polished colored 3D concept illustration. Layout: left third full body FRONT and BACK aligned neutral A pose, weapons displayed separately. Right two-thirds five clearly separated generously sized panels: HEAD front/profile/back; TORSO shell front/back with exploded outer layer; ARM shoulder/upper arm/elbow/forearm/hand separated; LEG thigh/knee/shin/foot separated; WEAPON side/top and exploded main components. Show real thick buildable forms, precise assembly leaders; no invented numeric measurements, unreadable paragraphs, logos or legal claims. Only short headings HEAD, TORSO, ARMS, LEGS, WEAPON and exact hero name. Keep exposed joints free to bend, no plates bridging joints. Detail must read at mobile-game scale. This is an artistic concept, not a certified dimensioned engineering drawing. Compact cute but heroic orange TABBY CAT astronaut with existing short rounded humanoid feline body, large round helmet, articulated short limbs, visible furry orange paws, tiny cyan claw blades and centered curved tabby tail. Preserve all proportions, no exterior ears outside helmet. Original 'Comet Surveyor' suit: pearl-white hard-shell armor with navy joint seals, woven ivory flexible torso, clear light-gray 50-percent transparent domed visor showing bright pale-green eyes, cream muzzle and small triangular nose. A thin cyan visor gasket, small white temple hinges with cyan light, original tiny cyan comet badge on chest, rectangular telemetry unit with blue screen and two gold control buttons, nested white forearm and knee plates, broad white/navy boots, compact twin jet pack with cyan exhausts and a vertical cyan back stripe. Three slim cyan energy claws on each paw held gently FORWARD in a ready pose. Fine stitch seams, silver screws and sparse tabby markings. No pistol, oversized rifle, franchise space logo or famous cartoon cat likeness. Text 'ANDROMEDA TIMMY'. Upgrade: use a consistent hierarchy of broad clean shells, secondary inset panels and restrained small hardware; add rear service panels, protected cable routing, articulated limb guards and individually shaped material edges. Preserve weapon class and hero colors. For Ione the focus emitter axis must point HORIZONTALLY FORWARD, never upward. For Timmy improve transparent visor clarity so tabby face is clearly visible; no guns. For Traveler keep orb and no staff.",
+  "reference": {
+    "role": "Existing project model render; preserve proportions and identity",
+    "repositoryPath": "ArtSource/Heroes/ConceptModels/Timmy-front.png",
+    "revision": "6ee1e11917e18d0c8fa7d3a3fccd8062602291ce"
+  },
+  "output": {
+    "file": "Timmy-component-concept.png",
+    "status": "concept generated, model validation separately reported",
+    "sha256": "3afee5cc42188fff57894a8be55be1b93c1de7b70f4f5c828726c3f4ccc7718d",
+    "bytes": 2179864,
+    "embeddedC2PAPresent": true,
+    "referenceSha256": "dca91f52946f32c3194b727bc95c4b0dcba4a4165493f0b98a7c6a102dd323f7",
+    "gitBlob": "f89fc3f857c7c32424e47d7e32be60f8a511e802",
+    "C2PASignatureValidation": "not performed"
+  },
+  "rights": {
+    "newOutput": "OpenAI Europe Terms of Use, Content / Ownership of content",
+    "source": "https://openai.com/policies/eu-terms-of-use/",
+    "checked": "2026-10-12",
+    "updated": "2026-01-16",
+    "inheritedEvidence": "ArtSource/Heroes/Concepts/Provenance/Timmy.json",
+    "allThirdPartyRightsCleared": false
+  },
+  "model": {
+    "generator": "Tools/HeroConcepts/build_models.py",
+    "componentGenerator": "Tools/HeroConcepts/part_optimization.py",
+    "validation": "validation.json",
+    "UnityEditor": "not run",
+    "Android": "not run"
+  },
+  "editPrompt": "Use case: precise-object-edit. Edit this ANDROMEDA TIMMY original component concept sheet. Change ONLY bottom WEAPON panel. Remove every spherical orb device, rings and circular floating weapon from this panel. Timmy's only weapons are THREE SHORT CYAN ENERGY CLAWS on each furry orange paw. Replace bottom panel with large front and side close-up of his orange tabby paw wearing a tiny white/navy wrist emitter cuff, three slim cyan glowing claw tips forward from the digits, plus exploded wrist emitter cuff, small cyan power cell, tiny finger guide bands and three short claw tips. No gun, no orb, no staff, no giant blades. Preserve EXACT cat face, clear dome, body, all other HEAD/TORSO/ARMS/LEGS panels, layout and text. Bottom heading remains WEAPON. Preserve claw count visible in the full body; do not change the full body.",
+  "scopeExclusions": [
+    "Auren Kest",
+    "Tahla Venn",
+    "Nerok Abyss",
+    "Brakk Orun",
+    "THE TRAVELER"
+  ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "hero": "Ione Vaska",
+    "file": "ArtSource/Heroes/Concepts/Archive/Ione-head-draft-20261011.png",
+    "sha256": "9c59107910d055f3de06f39d238e7955d05172ef32f7ef22335c42b2d3dd55e7",
+    "size": 2227609,
+    "generation_method": "OpenAI built-in image_gen in this conversation",
+    "embedded_c2pa_present": true,
+    "embedded_action_timestamps": [
+      "2026-10-11T21:16:53.990546187Z",
+      "2026-10-11T21:16:53.992255687Z",
+      "2026-10-11T21:16:53.992260785Z"
+    ],
+    "signature_validation": "not performed",
+    "prompt_status": "Exact historical prompt was not saved as a repository file; the original conversation is the source record.",
+    "kind": "historical head draft preceding the full-roster concept pass"
+  },
+  {
+    "hero": "Sivra Quell",
+    "file": "ArtSource/Heroes/Concepts/Archive/Sivra-head-draft-20261011.png",
+    "sha256": "7700c46b3ac9d0f51857ff12736af9df676ec257d313ea3f66f3b468932a0886",
+    "size": 2323203,
+    "generation_method": "OpenAI built-in image_gen in this conversation",
+    "embedded_c2pa_present": true,
+    "embedded_action_timestamps": [
+      "2026-10-11T21:14:45.662608444Z",
+      "2026-10-11T21:14:45.665985941Z",
+      "2026-10-11T21:14:45.665991720Z"
+    ],
+    "signature_validation": "not performed",
+    "prompt_status": "Exact historical prompt was not saved as a repository file; the original conversation is the source record.",
+    "kind": "historical head draft preceding the full-roster concept pass"
+  }
+]

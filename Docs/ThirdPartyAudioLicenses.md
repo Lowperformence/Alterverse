@@ -1,6 +1,8 @@
 # Third-party audio licenses — DIMENSIONS FRONT
 
-Access/download date: 2026-09-18. All imported recordings use CC0 1.0 Universal. Commercial use and adaptations permitted; attribution is not required. Optional credits: “Audio: Kenney (kenney.nl); music: yd (OpenGameArt.org).” No purchased or noncommercial-only files used.
+Scope: the Kenney/OpenGameArt imports documented below, downloaded 2026-09-18. These recordings use CC0 1.0 Universal. Commercial use and adaptations permitted; attribution is not required. Optional credits: “Audio: Kenney (kenney.nl); music: yd (OpenGameArt.org).” This CC0 statement does not apply to later user-selected recordings.
+
+For the later selections, see [SelectedAudioProvenance.md](SelectedAudioProvenance.md) and [SelectedAudioSources.json](SelectedAudioSources.json). They record 19 identified Pixabay sources under Pixabay's separate Content License and retain unresolved renamed uploads as unknown. The active Mixkit death cue has its separate [license record](HeroDeathVoiceLicense.md).
 
 License: https://creativecommons.org/publicdomain/zero/1.0/
 Kenney source: https://kenney.nl/assets/sci-fi-sounds

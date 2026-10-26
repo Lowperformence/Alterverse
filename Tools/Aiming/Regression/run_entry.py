@@ -49,7 +49,9 @@ def main():
         fixtures = directory / 'EngineStubs.cs'
         fixtures.write_text(stubs)
         presentation = directory / 'VoidPresentation.cs'
-        presentation.write_text('''namespace Alterverse.Visuals {
+        presentation.write_text('''// BOLT-7 combat is covered by its dedicated production-code suite.
+namespace Alterverse.Characters { public sealed partial class HeroAbilityExecution { private bool TryCastBolt7(int slot,Alterverse.Combat.AimPose aim)=>false; } }
+namespace Alterverse.Visuals {
 public class VoidKnightPresentation:UnityEngine.MonoBehaviour {public void BeginCounter(){}}
 public sealed partial class HeroSkillVfx {
  public static void CancelVoidKnightWarnings(UnityEngine.GameObject a){}
@@ -84,5 +86,6 @@ public sealed partial class HeroSkillVfx {
 
 if __name__ == '__main__':
     main()
+
 
 

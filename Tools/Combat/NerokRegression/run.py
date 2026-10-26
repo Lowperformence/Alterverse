@@ -18,7 +18,7 @@ src = root / 'Assets/Alterverse/Scripts'
 names = [
     'Shop/WeaponSkinCatalog.cs', 'Shop/HeroUnlockCatalog.cs', 'Characters/PlayerHeroSelection.cs',
     'Characters/HeroIdentity.cs', 'Characters/HeroAbilityKit.cs', 'Characters/HeroCombatProfile.cs',
-    'Characters/TimmyBalance.cs', 'Characters/VoidKnightBalance.cs', 'Characters/VoidKnightState.cs',
+    'Characters/TimmyBalance.cs', 'Characters/Bolt7Balance.cs', 'Characters/VoidKnightBalance.cs', 'Characters/VoidKnightState.cs',
     'Characters/HeroAbilityExecution.cs', 'Characters/HeroAbilityExecution.CyberShark.cs',
     'Characters/HeroAbilityExecution.Timmy.cs', 'Characters/HeroAbilityExecution.VoidKnight.cs',
     'Characters/HeroAimPrediction.cs', 'Characters/PlayerHeroAbilities.cs',
@@ -50,6 +50,9 @@ engine = engine.replace('public struct Vector3 {', 'public struct Vector3 {publi
 engine = engine.replace('public static class CombatMotion {', 'public static class CombatMotion {public static float Ease(float t){t=UnityEngine.Mathf.Clamp01(t);return t*t*(3-2*t);}public static void Solve(UnityEngine.Transform a,UnityEngine.Transform b,UnityEngine.Transform c,UnityEngine.Vector3 target,UnityEngine.Vector3 hint,float extension=.975f){}')
 extras = (root / 'Tools/Combat/VoidKnightRegression/ExtraStubs.cs').read_text()
 extras = extras.replace('namespace Alterverse.UI {public class AbilityRangePreviewOverlay:MonoBehaviour{}}', '')
+# BOLT-7 combat has a separate production-code runner; this fixture isolates Nerok.
+extras += '\nnamespace Alterverse.Characters { public sealed partial class HeroAbilityExecution { private bool TryCastBolt7(int slot,Alterverse.Combat.AimPose aim)=>false; } }\n'
+
 refs = next((dotnet / 'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'))
 csc = next((dotnet / 'sdk').glob('*/Roslyn/bincore/csc.dll'))
 with tempfile.TemporaryDirectory(prefix='nerok-regression-') as directory:
@@ -64,4 +67,5 @@ with tempfile.TemporaryDirectory(prefix='nerok-regression-') as directory:
     (tmp / 'Regression.runtimeconfig.json').write_text(json.dumps({'runtimeOptions': {
         'tfm': 'net8.0', 'framework': {'name': 'Microsoft.NETCore.App', 'version': '8.0.0'}}}))
     subprocess.run([str(dotnet / 'dotnet'), str(out)], check=True)
+
 

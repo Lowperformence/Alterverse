@@ -1,0 +1,736 @@
+{
+  "schemaVersion": 1,
+  "images": [
+    {
+      "path": "Assets/Alterverse/Resources/CombatUI/AbilityAtlas.png",
+      "sha256": "9cd8a94b5aac9331c8868811a88b47e3f8ac24a82c40cd8511eb1f1fbf25b734",
+      "size": [
+        1145,
+        1616
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": false,
+      "openaiMarkerPresent": false,
+      "embeddedAssertionSnippets": [],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/Background.png",
+      "sha256": "790c5e1676397717071a08c4e75c8dbd7fb1bd419db7f813ccb4a1c2127d2ae2",
+      "size": [
+        512,
+        512
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": false,
+      "openaiMarkerPresent": false,
+      "embeddedAssertionSnippets": [],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/2.png",
+      "sha256": "25b74c829e48cb4209f866ba1af52d07b66fe2f815ff1ff145b5076bc8fa2c3e",
+      "size": [
+        1254,
+        1254
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": true,
+      "openaiMarkerPresent": true,
+      "embeddedAssertionSnippets": [
+        "c2pa",
+        "c2pa",
+        "c2pa:fee90180-1706-4a04-8979-ef9516784536",
+        "c2pa.assertions",
+        "c2pa.icon",
+        "c2pa.actions.v2",
+        "c2pa.createddwhen",
+        "c2pa.converteddwhen",
+        "c2pa.watermarked.unbounddwhen",
+        "c2pa.hash.data",
+        "c2pa.claim.v2",
+        "OpenAI Media Service APIdicon",
+        "c2pa.assertions/c2pa.icondhashX ",
+        "c2pa_rsf0.79.2isignaturexMself#jumbf=/c2pa/urn:c2pa:fee90180-1706-4a04-8979-ef9516784536/c2pa.signaturercreated_assertions",
+        "c2pa.assertions/c2pa.icondhashX "
+      ],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/4.png",
+      "sha256": "3725daf67ec8b1623c81e33eac9624e2c11e43663363e81770bd37dbfece25f7",
+      "size": [
+        1254,
+        1254
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": true,
+      "openaiMarkerPresent": true,
+      "embeddedAssertionSnippets": [
+        "c2pa",
+        "c2pa",
+        "c2pa:1c4aaaae-10cb-4227-a391-d8ab2446093d",
+        "c2pa.assertions",
+        "c2pa.icon",
+        "c2pa.actions.v2",
+        "c2pa.createddwhen",
+        "c2pa.converteddwhen",
+        "c2pa.watermarked.unbounddwhen",
+        "c2pa.hash.data",
+        "c2pa.claim.v2",
+        "OpenAI Media Service APIdicon",
+        "c2pa.assertions/c2pa.icondhashX ",
+        "c2pa_rsf0.79.2kspecVersione2.2.0isignaturexMself#jumbf=/c2pa/urn:c2pa:1c4aaaae-10cb-4227-a391-d8ab2446093d/c2pa.signaturercreated_assertions",
+        "c2pa.assertions/c2pa.icondhashX "
+      ],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/1.png",
+      "sha256": "aa59a1023c55dba55d88273d94b303c524db37a5d6f8433445609b833b664448",
+      "size": [
+        1254,
+        1254
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": true,
+      "openaiMarkerPresent": true,
+      "embeddedAssertionSnippets": [
+        "c2pa",
+        "c2pa",
+        "c2pa:54cb1525-ea1d-45e4-bcd9-3578065db319",
+        "c2pa.assertions",
+        "c2pa.icon",
+        "c2pa.actions.v2",
+        "c2pa.createddwhen",
+        "c2pa.converteddwhen",
+        "c2pa.watermarked.unbounddwhen",
+        "c2pa.hash.data",
+        "c2pa.claim.v2",
+        "OpenAI Media Service APIdicon",
+        "c2pa.assertions/c2pa.icondhashX ",
+        "c2pa_rsf0.79.2isignaturexMself#jumbf=/c2pa/urn:c2pa:54cb1525-ea1d-45e4-bcd9-3578065db319/c2pa.signaturercreated_assertions",
+        "c2pa.assertions/c2pa.icondhashX "
+      ],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/0.png",
+      "sha256": "c21ff6e0540e3b11ae4cbc03ae1161a4a9e13150113c79c2f763498fc7d870b7",
+      "size": [
+        1254,
+        1254
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": true,
+      "openaiMarkerPresent": true,
+      "embeddedAssertionSnippets": [
+        "c2pa",
+        "c2pa",
+        "c2pa:942148e3-ae7b-4bab-9897-aecad8eadf74",
+        "c2pa.assertions",
+        "c2pa.icon",
+        "c2pa.actions.v2",
+        "c2pa.createddwhen",
+        "c2pa.converteddwhen",
+        "c2pa.watermarked.unbounddwhen",
+        "c2pa.hash.data",
+        "c2pa.claim.v2",
+        "OpenAI Media Service APIdicon",
+        "c2pa.assertions/c2pa.icondhashX ",
+        "c2pa_rsf0.79.2kspecVersione2.2.0isignaturexMself#jumbf=/c2pa/urn:c2pa:942148e3-ae7b-4bab-9897-aecad8eadf74/c2pa.signaturercreated_assertions",
+        "c2pa.assertions/c2pa.icondhashX "
+      ],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/3.png",
+      "sha256": "c5ebf721c4fe772cac99f657af35ffb21bb3b7f6172a0db063743c641ae1af88",
+      "size": [
+        1254,
+        1254
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": true,
+      "openaiMarkerPresent": true,
+      "embeddedAssertionSnippets": [
+        "c2pa",
+        "c2pa",
+        "c2pa:9bc0b3b4-b78a-4f36-a08d-627d2590715d",
+        "c2pa.assertions",
+        "c2pa.icon",
+        "c2pa.actions.v2",
+        "c2pa.createddwhen",
+        "c2pa.converteddwhen",
+        "c2pa.watermarked.unbounddwhen",
+        "c2pa.hash.data",
+        "c2pa.claim.v2",
+        "OpenAI Media Service APIdicon",
+        "c2pa.assertions/c2pa.icondhashX ",
+        "c2pa_rsf0.79.2isignaturexMself#jumbf=/c2pa/urn:c2pa:9bc0b3b4-b78a-4f36-a08d-627d2590715d/c2pa.signaturercreated_assertions",
+        "c2pa.assertions/c2pa.icondhashX "
+      ],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/2.png",
+      "sha256": "520fde4afabc2a9689de73ef0b616257b0c10bd57a766823bbe5907b162f0752",
+      "size": [
+        1254,
+        1254
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": true,
+      "openaiMarkerPresent": true,
+      "embeddedAssertionSnippets": [
+        "c2pa",
+        "c2pa",
+        "c2pa:7f842ce9-9fa8-4a1f-b3f7-635f2c37fc93",
+        "c2pa.assertions",
+        "c2pa.icon",
+        "c2pa.actions.v2",
+        "c2pa.createddwhen",
+        "c2pa.converteddwhen",
+        "c2pa.watermarked.unbounddwhen",
+        "c2pa.hash.data",
+        "c2pa.claim.v2",
+        "OpenAI Media Service APIdicon",
+        "c2pa.assertions/c2pa.icondhashX qo~",
+        "c2pa_rsf0.79.2kspecVersione2.2.0isignaturexMself#jumbf=/c2pa/urn:c2pa:7f842ce9-9fa8-4a1f-b3f7-635f2c37fc93/c2pa.signaturercreated_assertions",
+        "c2pa.assertions/c2pa.icondhashX qo~"
+      ],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/4.png",
+      "sha256": "ab2a83ebf121c2103e53430a47aac8f141e5a3c0413c7ada3d42bcb4c4394feb",
+      "size": [
+        1254,
+        1254
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": true,
+      "openaiMarkerPresent": true,
+      "embeddedAssertionSnippets": [
+        "c2pa",
+        "c2pa",
+        "c2pa:983580cf-b010-4b99-80e6-f5c47e1e5a6d",
+        "c2pa.assertions",
+        "c2pa.icon",
+        "c2pa.actions.v2",
+        "c2pa.createddwhen",
+        "c2pa.converteddwhen",
+        "c2pa.watermarked.unbounddwhen",
+        "c2pa.hash.data",
+        "c2pa.claim.v2",
+        "OpenAI Media Service APIdicon",
+        "c2pa.assertions/c2pa.icondhashX ",
+        "c2pa_rsf0.79.2kspecVersione2.2.0isignaturexMself#jumbf=/c2pa/urn:c2pa:983580cf-b010-4b99-80e6-f5c47e1e5a6d/c2pa.signaturercreated_assertions",
+        "c2pa.assertions/c2pa.icondhashX "
+      ],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/1.png",
+      "sha256": "3fd12094d76e89ca634e8ed626d1873886cceab508897bb2be3cde60584ed09f",
+      "size": [
+        1254,
+        1254
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": true,
+      "openaiMarkerPresent": true,
+      "embeddedAssertionSnippets": [
+        "c2pa",
+        "c2pa",
+        "c2pa:e1736678-aa90-49c0-9e25-b18dc768299f",
+        "c2pa.assertions",
+        "c2pa.icon",
+        "c2pa.actions.v2",
+        "c2pa.createddwhen",
+        "c2pa.converteddwhen",
+        "c2pa.watermarked.unbounddwhen",
+        "c2pa.hash.data",
+        "c2pa.claim.v2",
+        "OpenAI Media Service APIdicon",
+        "c2pa.assertions/c2pa.icondhashX ",
+        "c2pa_rsf0.79.2kspecVersione2.2.0isignaturexMself#jumbf=/c2pa/urn:c2pa:e1736678-aa90-49c0-9e25-b18dc768299f/c2pa.signaturercreated_assertions",
+        "c2pa.assertions/c2pa.icondhashX "
+      ],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/0.png",
+      "sha256": "6a305c2904866c40861ebff917290465ab518bed2f3bd799aa5708d263da6242",
+      "size": [
+        1254,
+        1254
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": true,
+      "openaiMarkerPresent": true,
+      "embeddedAssertionSnippets": [
+        "c2pa",
+        "c2pa",
+        "c2pa:ab447972-2280-427c-ad16-9d42940985b4",
+        "c2pa.assertions",
+        "c2pa.icon",
+        "c2pa.actions.v2",
+        "c2pa.createddwhen",
+        "c2pa.converteddwhen",
+        "c2pa.watermarked.unbounddwhen",
+        "c2pa.hash.data",
+        "c2pa.claim.v2",
+        "OpenAI Media Service APIdicon",
+        "c2pa.assertions/c2pa.icondhashX ",
+        "c2pa_rsf0.79.2kspecVersione2.2.0isignaturexMself#jumbf=/c2pa/urn:c2pa:ab447972-2280-427c-ad16-9d42940985b4/c2pa.signaturercreated_assertions",
+        "c2pa.assertions/c2pa.icondhashX "
+      ],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/3.png",
+      "sha256": "a0eb53005934e3197f720702a83a5b1fe5a5b7c5a4cb6e6f6fd03ffe629ea39d",
+      "size": [
+        1254,
+        1254
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": true,
+      "openaiMarkerPresent": true,
+      "embeddedAssertionSnippets": [
+        "c2pa",
+        "c2pa",
+        "c2pa:6809f29d-1164-4672-a8d8-69ddfc768915",
+        "c2pa.assertions",
+        "c2pa.icon",
+        "c2pa.actions.v2",
+        "c2pa.createddwhen",
+        "c2pa.converteddwhen",
+        "c2pa.watermarked.unbounddwhen",
+        "c2pa.hash.data",
+        "c2pa.claim.v2",
+        "OpenAI Media Service APIdicon",
+        "c2pa.assertions/c2pa.icondhashX ",
+        "c2pa_rsf0.79.2kspecVersione2.2.0isignaturexMself#jumbf=/c2pa/urn:c2pa:6809f29d-1164-4672-a8d8-69ddfc768915/c2pa.signaturercreated_assertions",
+        "c2pa.assertions/c2pa.icondhashX "
+      ],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/HeroArt/UrbanDigitalCamo.png",
+      "sha256": "cbb7581dd90d8be0018cd4eb669212248c1de6aa22b08e5d4cec5272d5bbf99e",
+      "size": [
+        1024,
+        1024
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": false,
+      "openaiMarkerPresent": false,
+      "embeddedAssertionSnippets": [],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/HeroArt/WoodlandCamo.png",
+      "sha256": "9cd5bc0334794b0befed40cb6369dcb67713a159a10e12913f519d06d27f2770",
+      "size": [
+        447,
+        447
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": false,
+      "openaiMarkerPresent": false,
+      "embeddedAssertionSnippets": [],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/TimmyTextures/TimmySurface_Albedo.png",
+      "sha256": "6269da8ac5864ca2f252e065c0b572adedfda401a46ce03e98dad6f85e68fa4a",
+      "size": [
+        1024,
+        1024
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": false,
+      "openaiMarkerPresent": false,
+      "embeddedAssertionSnippets": [],
+      "signatureVerified": false
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/TimmyTextures/TimmySurface_Normal.png",
+      "sha256": "ce50c05421ab135776867e5d59b1455f59b57c1ab10537f84a4eabb96e9cbb5a",
+      "size": [
+        1024,
+        1024
+      ],
+      "metadata": {},
+      "c2paMarkerPresent": false,
+      "openaiMarkerPresent": false,
+      "embeddedAssertionSnippets": [],
+      "signatureVerified": false
+    }
+  ],
+  "audioComparisons": [
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Timmy/W_Cast.mp3",
+      "sha256": "a29259ef2b34ce9acd2729923d581532af0b0ee84ba2581ec8c26d482e2ccf35",
+      "frames": 87848,
+      "bestCandidates": [
+        {
+          "source": "ArtSource/Audio/HeroSelections/Originals/soundreality-cinematic-hit-shot-442015(1).mp3",
+          "sourceSha256": "b8ce670d121a46265231d53223deba4ed9456804caf5a4b44e3168ea48ddf2a1",
+          "correlation": 0.045882392842227844,
+          "maxSampleDelta": 1.6073025166988373,
+          "sameBytes": false,
+          "framesDelta": -1058
+        },
+        {
+          "source": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-boom-swoosh-01-416172(1).mp3",
+          "sourceSha256": "c3d99885f1177d1af1fcac0454a5e0e1f5be0939a5c4308510d604845c240ca0",
+          "correlation": -0.007113935641442316,
+          "maxSampleDelta": 1.9198418855667114,
+          "sameBytes": false,
+          "framesDelta": -1058
+        }
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Timmy/Q_Cast.mp3",
+      "sha256": "e026bc6d36a046a89fb65e172209dea98f40173a37f97ace9a55dfc97ed37d9d",
+      "frames": 27519,
+      "bestCandidates": []
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Timmy/Ultimate_Selected.mp3",
+      "sha256": "2f95cbf207a8cf8172a66c881b0f0605b6932886238957dcc6dc66121369dfa0",
+      "frames": 66680,
+      "bestCandidates": [
+        {
+          "source": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-1-482495.mp3",
+          "sourceSha256": "f929dccdff1dc1a3f406179a53c9341bc3fe76d4084de374a617cdae69657a6a",
+          "correlation": 0.1343357065628513,
+          "maxSampleDelta": 1.9226382970809937,
+          "sameBytes": false,
+          "framesDelta": 0
+        },
+        {
+          "source": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-4-482500(1).mp3",
+          "sourceSha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba",
+          "correlation": 0.043683745541635406,
+          "maxSampleDelta": 2.139663338661194,
+          "sameBytes": false,
+          "framesDelta": 0
+        },
+        {
+          "source": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-4-482500.mp3",
+          "sourceSha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba",
+          "correlation": 0.043683745541635406,
+          "maxSampleDelta": 2.139663338661194,
+          "sameBytes": false,
+          "framesDelta": 0
+        }
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Q_Cast.mp3",
+      "sha256": "b57de4de8edf4d49b0a904271b9a04ce07ee1c969b4887d38c29bd0d042e37e6",
+      "frames": 43395,
+      "bestCandidates": [
+        {
+          "source": "ArtSource/Audio/HeroSelections/Originals/freesound_community-steel-chain-dragged-shower-reverb-106252 (1).mp3",
+          "sourceSha256": "dca9119831eab25855d5796eed845f381875ddcb90d52d389467243010ce650a",
+          "correlation": 0.9973498336666317,
+          "maxSampleDelta": 0.36960965394973755,
+          "sameBytes": false,
+          "framesDelta": 0
+        },
+        {
+          "source": "ArtSource/Audio/HeroSelections/Originals/floraphonic-swing-whoosh-metal-hit-19-234636.mp3",
+          "sourceSha256": "6efaf7eaa45342c6d8267118694ea169b0e6d3c62a51745eca434b61869c0fd3",
+          "correlation": 0.003714765399291309,
+          "maxSampleDelta": 1.5650132596492767,
+          "sameBytes": false,
+          "framesDelta": 0
+        },
+        {
+          "source": "ArtSource/Audio/HeroSelections/Originals/soundreality-sci-fi-gun-shot-312659(1).mp3",
+          "sourceSha256": "6ff15c97783a79640ed13da7237228318ae81581b62e32970286d064f79f7d75",
+          "correlation": -0.009125392680787377,
+          "maxSampleDelta": 1.2101570963859558,
+          "sameBytes": false,
+          "framesDelta": 0
+        }
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Ultimate_Selected.mp3",
+      "sha256": "289eea139d9eac4d8115112a27e41a693f636e00cc261d384f4556bbab0f2e0f",
+      "frames": 125950,
+      "bestCandidates": [
+        {
+          "source": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-elemental-spell-impact-water-478377.mp3",
+          "sourceSha256": "3bda79219d71c0557cc605509e7e0540664a07963423c62970ebea556ff6cfab",
+          "correlation": 0.9996113884758463,
+          "maxSampleDelta": 1.0224717855453491,
+          "sameBytes": false,
+          "framesDelta": 0
+        }
+      ]
+    }
+  ],
+  "literalResources": [
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/PlanetSurfaceMaterials.cs",
+      "refs": [
+        "DF_PlanetSurface",
+        "PlanetSurfaces/",
+        "PlanetSurfaces/",
+        "PlanetSurfaces/"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/AuthoredBunkerDetails.cs",
+      "refs": [
+        "AuthoredBunker/BunkerDetails",
+        "AuthoredBunker/",
+        "AuthoredBunker/"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/HeroUndersuitFabric.cs",
+      "refs": [
+        "HeroArt/HeroUndersuitFabric"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/AuthoredHeroPresentation.cs",
+      "refs": [
+        "AuthoredHeroes/",
+        "HeroConcepts/StyleVersion",
+        "CyberRanger/SivraRifleDetails"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/HeroMeshLibrary.cs",
+      "refs": [
+        "HeroArt/HeroSurface"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/ShatteredArenaEdge.cs",
+      "refs": [
+        "PlanetSurfaces/UniversalBorder",
+        "PlanetSurfaces/UniversalBorderDecor"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/RuntimeShaderLibrary.cs",
+      "refs": [
+        "DF_RuntimeLit",
+        "DF_RuntimeUnlit",
+        "DF_RuntimeGroundTelegraph"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/ChronoTravelerAppearance.cs",
+      "refs": [
+        "ChronoTraveler/Model"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/AuthoredHotZoneArt.cs",
+      "refs": [
+        "AuthoredHotZone/Parts",
+        "AuthoredHotZone/",
+        "AuthoredHotZone/",
+        "AuthoredHotZone/",
+        "AuthoredHotZone/"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/PhotoArenaPanorama.cs",
+      "refs": [
+        "MapPanoramas/Universe",
+        "MapPanoramas/PhotoSkybox"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/NerokAnchorMaterial.cs",
+      "refs": [
+        "CyberShark/AnchorMetal"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/SiegeTankAppearance.cs",
+      "refs": [
+        "SiegeTank/Model",
+        "HeroArt/TankWoodlandCamo",
+        "HeroArt/WoodlandCamo"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/BomberExplosionVfx.cs",
+      "refs": [
+        "HeroArt/BombPlume"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/PlanetSceneryMaterials.cs",
+      "refs": [
+        "DF_ScenerySurface",
+        "SurfaceMicro/"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/PlanetWaterMaterials.cs",
+      "refs": [
+        "DF_MapWater"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/CombatAnimationLibrary.cs",
+      "refs": [
+        "CombatAnimation/Library",
+        "CombatAnimation/StandingIdle"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/OriginalWeaponColorwayOverride.cs",
+      "refs": [
+        "HeroArt/WeaponEnergyOverlay"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/HeroVfxPool.cs",
+      "refs": [
+        "CombatVfx/HeroEnergy",
+        "CombatVfx/HeroEnergy"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/TahlaHalo.cs",
+      "refs": [
+        "HeroDetails/TahlaHalo"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/CyberSharkAppearance.cs",
+      "refs": [
+        "CyberShark/Model",
+        "CyberShark/JacketFabric",
+        "CyberShark/SharkSkin"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/CyberSharkEffectMeshes.cs",
+      "refs": [
+        "CyberShark/"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/UmbralMageAppearance.cs",
+      "refs": [
+        "UmbralMage/Model",
+        "HeroArt/IoneArmorOrnaments"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/DiamondCoreArenaRuntime.cs",
+      "refs": [
+        "DF_DiamondCrystal"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/AuthoredBomberModel.cs",
+      "refs": [
+        "AuthoredBomber/Model"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/LocomotionAnimationLibrary.cs",
+      "refs": [
+        "LocomotionAnimation/Library"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/SkinOrnamentPresentation.cs",
+      "refs": [
+        "HeroArt/SkinOrnaments"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/CyberRangerAppearance.cs",
+      "refs": [
+        "CyberRanger/Model"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Visuals/DiamondCoreMapPolish.cs",
+      "refs": [
+        "DF_DiamondCrystal"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/UI/AvatarBadgeRenderer.cs",
+      "refs": [
+        "Avatars/Avatar",
+        "Avatars/CosmicAtlas"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/UI/MenuCosmicBackdrop.cs",
+      "refs": [
+        "FrontEnd/MenuCardAtlas",
+        "FrontEnd/InterstellarBackdropAnimatedPoster",
+        "FrontEnd/InterstellarBackdrop"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/UI/AbilityRangePreviewOverlay.cs",
+      "refs": [
+        "CombatVfx/ManualAimPreview"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/UI/GooglePlayLevelLeaderboard.cs",
+      "refs": [
+        "PlayGamesSettings"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/UI/AbilityButtonView.cs",
+      "refs": [
+        "CombatUI/AbilityAtlas",
+        "CombatUI/AbilityButton",
+        "CyberShark/Icons/",
+        "AndromedaTimmy/Icons/"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/UI/FrontEndTypography.cs",
+      "refs": [
+        "FrontEnd/Rajdhani-Regular",
+        "FrontEnd/Rajdhani-SemiBold",
+        "FrontEnd/DimensionsDisplay-SemiBold"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Audio/DimensionAudio.cs",
+      "refs": [
+        "Audio/SFX/"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Audio/ProductionMusicDirector.cs",
+      "refs": [
+        "Audio/Music/"
+      ]
+    },
+    {
+      "path": "Assets/Alterverse/Scripts/Shop/ShardPacks.cs",
+      "refs": [
+        "Commerce/ShardCatalog"
+      ]
+    }
+  ]
+}

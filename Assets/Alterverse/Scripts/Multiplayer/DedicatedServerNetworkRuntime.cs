@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using Alterverse.Match;
 using Alterverse.Prototype;
-using Alterverse.UI;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
@@ -93,10 +92,8 @@ namespace Alterverse.Multiplayer
         {
             MatchClock.Set(PauseReason.Menu,false);
 
-            // A disabled menu would still report IsVisible=true because visibility is stored internally.
-            // Remove the client-only front end entirely so the headless bootstrap can never wait on it.
-            MainMenuController menu=FindAnyObjectByType<MainMenuController>();
-            if(menu!=null)UnityEngine.Object.Destroy(menu.gameObject);
+            // MainMenuController suppresses itself before initializing on dedicated servers.
+            // No scene-wide menu lookup is needed in this per-frame path.
 
             // PrototypeBootstrap must remain dormant until an authoritative match plan is installed.
             // Once a plan is installed there is nothing to suppress. Avoid an

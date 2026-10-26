@@ -70,8 +70,8 @@ Shader "DimensionsFront/HeroSurface"
     half3 nv=normalize(mul((float3x3)UNITY_MATRIX_V,n));
     half3 vv=normalize(mul((float3x3)UNITY_MATRIX_V,view));
     half3 studio=albedo*half3(.15h,.18h,.24h);
-    studio+=Lobe(nv,vv,normalize(half3(-.45h,.65h,.80h)),half3(.98h,.96h,.92h),albedo,metal,smoothness);
-    studio+=Lobe(nv,vv,normalize(half3(.75h,.10h,.55h)),half3(.18h,.28h,.40h),albedo,metal,smoothness);
+    studio+=Lobe(nv,vv,normalize(half3(-.45h,.65h,.80h)),half3(1.04h,.96h,.83h),albedo,metal,smoothness);
+    studio+=Lobe(nv,vv,normalize(half3(.75h,.10h,.55h)),half3(.19h,.29h,.43h),albedo,metal,smoothness);
     half fresnel=pow(1.0h-saturate(dot(n,view)),3.5h);
     half rimSide=smoothstep(-.35h,.75h,nv.x);
     half3 rimColor=lerp(half3(.30h,.42h,.65h),half3(.38h,.72h,.95h),rimSide);

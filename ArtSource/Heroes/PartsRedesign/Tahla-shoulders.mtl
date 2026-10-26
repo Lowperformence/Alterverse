@@ -1,0 +1,20 @@
+newmtl Gold
+Kd 0.65 0.39 0.1
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Ivory
+Kd 0.92 0.86 0.69
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Emerald
+Kd 0.04 0.31 0.13
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl HealingLight
+Kd 0.18 0.82 0.37
+Ks 0.25 0.25 0.25
+Ns 90
+

@@ -8,14 +8,15 @@ namespace Alterverse.UI
     public sealed class MenuBackgroundVideo : MonoBehaviour
     {
         private const string ClipPath = "FrontEnd/InterstellarBackdropAnimated";
+        private const string PosterPath = "FrontEnd/InterstellarBackdropAnimatedPoster";
         private const float PrepareTimeout = 15f;
         private VideoPlayer player;
         private VideoClip clip;
         private RenderTexture image;
-        private bool firstFrame, paused, unfocused, preparing;
+        private bool imageReady, paused, unfocused, preparing;
         private float prepareStartedAt;
 
-        public Texture Image => firstFrame && image != null && image.IsCreated() ? image : null;
+        public Texture Image => imageReady && image != null && image.IsCreated() ? image : null;
 
         private void OnEnable()
         {
@@ -54,13 +55,40 @@ namespace Alterverse.UI
                 autoGenerateMips = false
             };
             if (!image.Create()) { FailPlayback("Could not create the menu video render target."); return; }
-            firstFrame = false;
+            imageReady = false;
+            SeedPoster();
             player.clip = clip;
             player.targetTexture = image;
             player.sendFrameReadyEvents = true;
             prepareStartedAt = Time.unscaledTime;
             preparing = true;
             player.Prepare();
+        }
+
+        private void SeedPoster()
+        {
+            Texture2D poster = Resources.Load<Texture2D>(PosterPath);
+            if (poster == null) return;
+            // IMGUI must sample the same render target before and after decoding.
+            // A direct Texture2D draw followed by a video RenderTexture can differ
+            // in color conversion; blending moving frames also produces a double edge.
+            RenderTexture previousTarget = RenderTexture.active;
+            bool previousWrite = GL.sRGBWrite;
+            try
+            {
+                GL.sRGBWrite = image.sRGB;
+                Graphics.Blit(poster, image);
+                imageReady = true;
+            }
+            catch (System.Exception)
+            {
+                Debug.LogWarning("DIMENSIONS FRONT: menu poster could not initialize the video target; waiting for the first video frame.", this);
+            }
+            finally
+            {
+                RenderTexture.active = previousTarget;
+                GL.sRGBWrite = previousWrite;
+            }
         }
 
         private void OnPrepared(VideoPlayer source)
@@ -73,8 +101,8 @@ namespace Alterverse.UI
         private void OnFirstFrame(VideoPlayer source, long frame)
         {
             if (!isActiveAndEnabled || source != player || image == null) return;
-            // Keep the still visible until the decoder has produced an actual frame.
-            firstFrame = true;
+            // Replace the seeded poster in place; never switch GUI texture or blend mode.
+            imageReady = true;
             source.sendFrameReadyEvents = false;
         }
 
@@ -127,7 +155,7 @@ namespace Alterverse.UI
 
         private void StopAndRelease()
         {
-            firstFrame = false;
+            imageReady = false;
             preparing = false;
             if (player != null)
             {

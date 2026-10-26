@@ -22,6 +22,7 @@ namespace Alterverse.Shop {
 }
 namespace Alterverse.UI {
  public class FrontEndTheme {
+   public void RankingPanel(Rect r,int rank){Panel(r);}public void RankingBadge(Rect r,int rank){}
   public static object Positive,Accent;public GUIStyle Body=new(),Small=new(),Heading=new(),Field=new();
   public static System.Collections.Generic.List<(Rect Rect,string Text,bool Enabled)> Actions=new();
   public static Func<Rect,string,bool> Click;
@@ -127,3 +128,4 @@ public static class Fixture {
   Assert(service.Busy,"Visible rankings must periodically refresh without a manual tap");
  }
 }
+

@@ -1,0 +1,31 @@
+# Herkunft und Lizenzstand der neun Helden
+
+Stand: 12. Oktober 2026. Diese Bestandsaufnahme bestätigt vorhandene Belege und benennt fehlende Nachweise. Sie ist keine pauschale Erklärung, dass sämtliche Heldenassets abschließend geklärt sind.
+
+Alle neun neuen Konzeptbilder sind als unveränderte Original-PNGs archiviert. `manifest.json` enthält SHA-256, Git-Blob-ID, Erzeugungswerkzeug und eingebettete Zeitangaben; `Tools/HeroConcepts/prompts.json` enthält die Entwurfs- und Änderungsanweisungen. Iones gültige Fassung ist **v2 mit nach vorne gerichteter Waffe**. Alte Fassungen bleiben im Archiv. Eingebettete C2PA-Signaturen wurden nicht kryptographisch geprüft.
+
+| Held | Detailnachweis | Neues Konzept | Bisherige Modelländerung | Vollständige Konzeptumsetzung |
+| --- | --- | --- | --- | --- |
+| Sivra Quell | [Sivra](../ArtSource/Heroes/Concepts/Provenance/Sivra.json) | gespeichert | detailed replacement head | geprüft |
+| Ione Vaska | [Ione](../ArtSource/Heroes/Concepts/Provenance/Ione.json) | gespeichert | detailed replacement head | geprüft |
+| Tahla Venn | [Tahla](../ArtSource/Heroes/Concepts/Provenance/Tahla.json) | gespeichert | three-layer gold/ivory shoulder plates | geprüft |
+| Nerok Abyss | [Nerok](../ArtSource/Heroes/Concepts/Provenance/Nerok.json) | gespeichert | tailored jacket and trousers | geprüft |
+| Zhaev Null | [Zhaev](../ArtSource/Heroes/Concepts/Provenance/Zhaev.json) | gespeichert | keine neue Umsetzung validiert | geprüft |
+| Auren Kest | [Auren](../ArtSource/Heroes/Concepts/Provenance/Auren.json) | gespeichert | keine neue Umsetzung validiert | geprüft |
+| Brakk Orun | [Brakk](../ArtSource/Heroes/Concepts/Provenance/Brakk.json) | gespeichert | keine neue Umsetzung validiert | geprüft |
+| THE TRAVELER | [Traveler](../ArtSource/Heroes/Concepts/Provenance/Traveler.json) | gespeichert | keine neue Umsetzung validiert | geprüft |
+| Andromeda Timmy | [Timmy](../ArtSource/Heroes/Concepts/Provenance/Timmy.json) | gespeichert | keine neue Umsetzung validiert | geprüft |
+
+Alle neun 3D-Modelle wurden nach den archivierten Konzepten ergänzt bzw. umgestaltet und mit Blender/FBX geprüft. Die renderbare Geometrie behält die ausdrücklich erlaubten vorhandenen Grundformen. Unity und Android wurden nicht geprüft. Alle neun Umgestaltungen sind echte, skinnbare Geometrie. Die Körpergrundformen und vorhandenen Rigs wurden übernommen, einzelne Teile ersetzt und weitere Rüstungs-, Kleidungs- und Oberflächendetails ergänzt. Ein vollständiger Neubau aller Körper wurde nicht durchgeführt. Die Prüfungen ersetzen keinen Unity- oder Gerätetest.
+
+## Nachgewiesene Quellen und Grenzen
+
+- **Blender Human Base Meshes 1.4.1:** Die offizielle [Blender Demo Files-Seite](https://www.blender.org/download/demo-files/) nennt dieses konkrete Paket CC0. Das versionierte Listing wurde geprüft und kurz dokumentiert. Der ursprüngliche Paket-README-Download ist weiterhin offen (403). Dieser Punkt betrifft die Archivierung der Originaldatei, nicht eine Behauptung, dass CC0 unbekannt wäre. Bestehende Anatomie wird weiterhin als übernommen ausgewiesen.
+- **Neue Konzepte:** KI-generierte Entwürfe mit OpenAI image_gen. Die [Europe Terms of Use](https://openai.com/policies/eu-terms-of-use/), Fassung vom 16. Januar 2026, regeln die Rechte an Output gegenüber OpenAI. Ein Konzept mit Prompt und Hash belegt die Entstehung; es garantiert keine Exklusivität und klärt keine Rechte an früheren Referenzen.
+- **Bewegung:** Die originalen CC0-Hinweise von KayKit und Quaternius sind vorhanden. Für die vom Nutzer gelieferte Mixamo-Standanimation bestätigt Adobes offizielle FAQ die Verwendung in kommerziellen Spielen. Der separate Quellenbeleg ist unter `Concepts/Licenses/mixamo-idle-source.json` abgelegt; ein persönlicher Downloadbeleg liegt nicht vor. Mixamo wird nicht als CC0 bezeichnet.
+- **Sounds:** Für Kenney/OpenGameArt existieren Quellenzuordnung und CC0-Belege. Für **19 weitere unterschiedliche Pixabay-Aufnahmen** sind Originalseiten, Urheber und die Pixabay-Inhaltslizenz ermittelt; siehe [Soundquellen](SelectedAudioProvenance.md). Die sieben umbenannten Ultimate-Uploads und zwei generisch benannten Aufnahmen sind weiterhin ungeklärt. Zusätzlich werden unbestätigte aktuelle Datei-/Quellenzuordnungen nicht allein aufgrund ähnlicher Dateinamen freigegeben. Es wurden durch die Recherche keine Sounds ersetzt.
+- **Weitere Assets:** Alte Referenzbilder, Porträts, Fähigkeitssymbole, VFX, Texturen und Skins benötigen noch eine vollständige Zuordnung pro Datei. Neue Konzeptbilder schließen diese historischen Lücken nicht automatisch.
+
+## Aufbewahrung und Wiederherstellung
+
+Der Git-Verlauf bewahrt Konzepte, Prompts, Quellenverweise, Quelldateien, Exporte und Prüfberichte. Die JSON-Datei je Held unterscheidet Entwurf, übernommene Basis und Modellumsetzung. Nach erfolgreich gebauter und geprüfter vollständiger Geometrie muss der jeweilige Umsetzungsstatus mit den tatsächlich erzeugten Dateien und Hashes aktualisiert werden. Keine rückwirkend erfundenen Entwürfe oder Herkunftsangaben.

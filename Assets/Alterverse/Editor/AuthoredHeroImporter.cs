@@ -74,13 +74,13 @@ namespace Alterverse.EditorTools
             }
             material.SetColor("_BaseColor", color);
             string name = material.name.ToLowerInvariant();
-            bool metal = name.Contains("metal") || name.Contains("silver") || name.Contains("enamel");
+            bool metal = name.Contains("metal") || name.Contains("silver") || name.Contains("enamel") || name.Contains("steel") || name.Contains("gold");
             material.SetFloat("_Metallic", metal ? .65f : 0);
-            material.SetFloat("_Smoothness", name.Contains("fabric") ? .25f : .55f);
-            if (name.Contains("energy"))
+            material.SetFloat("_Smoothness", name.Contains("fabric") || name.Contains("cloth") ? .20f : name.Contains("skin") ? .30f : .48f);
+            if (name.Contains("energy") || name.Contains("chronolight"))
             {
                 material.EnableKeyword("_EMISSION");
-                material.SetColor("_EmissionColor", color * 2f);
+                material.SetColor("_EmissionColor", color * 1.25f);
             }
             if(Path.GetFileNameWithoutExtension(assetPath)=="VoidKnight")
             {
@@ -185,3 +185,4 @@ namespace Alterverse.EditorTools
     }
 }
 #endif
+
