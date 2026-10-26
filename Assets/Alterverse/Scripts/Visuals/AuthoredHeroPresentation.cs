@@ -80,8 +80,7 @@ namespace Alterverse.Visuals
             RestoreImportedBindPose(instance.transform, hero);
             if (!actor.TryGetComponent<AuthoredHeroPresentation>(out var presentation))
                 presentation = actor.AddComponent<AuthoredHeroPresentation>();
-            bool conceptStyle = Resources.Load<TextAsset>("HeroConcepts/StyleVersion") != null;
-            if (hero == HeroId.Veyr && !conceptStyle)
+            if (hero == HeroId.Veyr)
             {
                 AssassinVioletHeadStripe.Apply(instance.transform);
                 AssassinShoulderStripes.Apply(instance.transform);
@@ -101,12 +100,11 @@ namespace Alterverse.Visuals
             if (hero == HeroId.Mira)
             {
                 TahlaHandSymmetry.Apply(instance.transform);
-                // Tahla retains her original presentation even when other heroes use concept models.
                 HealerLegArmorAppearance.Apply(instance.transform);
                 TahlaHelmet.Apply(instance.transform);
                 TahlaHalo.Apply(instance.transform);
             }
-            if (hero == HeroId.Rook && !conceptStyle) BrakkWrestlingMask.Apply(instance.transform);
+            if (hero == HeroId.Rook) BrakkWrestlingMask.Apply(instance.transform);
             if (hero == HeroId.Nerok) CyberSharkAppearance.Apply(instance.transform);
             if (hero == HeroId.Traveler)
             {
@@ -467,7 +465,7 @@ namespace Alterverse.Visuals
             if (upperLength < .001f || lowerLength < .001f) return;
             Vector3 toTarget = target - shoulder;
             float distance = Mathf.Clamp(toTarget.magnitude,
-                Mathf.Abs(upperLength - lowerLength) + .001f, (upperLength + lowerLength) * .985f);
+                Mathf.Abs(upperLength - lowerLength) + .001f, upperLength + lowerLength - .001f);
             if (toTarget.sqrMagnitude < .000001f) return;
             Vector3 direction = toTarget.normalized;
             Vector3 bend = Vector3.ProjectOnPlane(hint - shoulder, direction);
@@ -1021,5 +1019,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
-

@@ -13,9 +13,8 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        // Version 22 clears incompatible cached normal bindings during the URP conversion.
-        // Changing AuthoredHeroDetailPass alone does not refresh imported FBX data.
-        public override uint GetVersion() => 22;
+        // Reimport cached FBXs with the restored pre-consolidation material response.
+        public override uint GetVersion() => 23;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;
@@ -74,13 +73,13 @@ namespace Alterverse.EditorTools
             }
             material.SetColor("_BaseColor", color);
             string name = material.name.ToLowerInvariant();
-            bool metal = name.Contains("metal") || name.Contains("silver") || name.Contains("enamel") || name.Contains("steel") || name.Contains("gold");
+            bool metal = name.Contains("metal") || name.Contains("silver") || name.Contains("enamel");
             material.SetFloat("_Metallic", metal ? .65f : 0);
-            material.SetFloat("_Smoothness", name.Contains("fabric") || name.Contains("cloth") ? .20f : name.Contains("skin") ? .30f : .48f);
-            if (name.Contains("energy") || name.Contains("chronolight"))
+            material.SetFloat("_Smoothness", name.Contains("fabric") ? .25f : .55f);
+            if (name.Contains("energy"))
             {
                 material.EnableKeyword("_EMISSION");
-                material.SetColor("_EmissionColor", color * 1.25f);
+                material.SetColor("_EmissionColor", color * 2f);
             }
             if(Path.GetFileNameWithoutExtension(assetPath)=="VoidKnight")
             {
@@ -185,4 +184,3 @@ namespace Alterverse.EditorTools
     }
 }
 #endif
-
