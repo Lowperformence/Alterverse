@@ -24,7 +24,8 @@ def main():
     runtime = sorted((dotnet / 'shared/Microsoft.NETCore.App').iterdir())[-1]
     names = ast.literal_eval(re.search(r'^names=(\[[^\n]+\])', (here / 'run.py').read_text(), re.M)[1])
     names += ['Characters/VoidKnightBalance.cs', 'Characters/VoidKnightState.cs',
-              'Characters/HeroAbilityExecution.VoidKnight.cs']
+              'Characters/HeroAbilityExecution.VoidKnight.cs',
+              'Characters/HeroAbilityExecution.Bolt7.cs', 'Combat/Bolt7Combat.cs']
     # Extend the shared fixtures for the appended hero. Combat sources stay unchanged.
     stubs = (here / 'EngineStubs.cs').read_text().replace(
         'public class SerializeField:Attribute{}',
@@ -49,9 +50,7 @@ def main():
         fixtures = directory / 'EngineStubs.cs'
         fixtures.write_text(stubs)
         presentation = directory / 'VoidPresentation.cs'
-        presentation.write_text('''// BOLT-7 combat is covered by its dedicated production-code suite.
-namespace Alterverse.Characters { public sealed partial class HeroAbilityExecution { private bool TryCastBolt7(int slot,Alterverse.Combat.AimPose aim)=>false; } }
-namespace Alterverse.Visuals {
+        presentation.write_text('''namespace Alterverse.Visuals {
 public class VoidKnightPresentation:UnityEngine.MonoBehaviour {public void BeginCounter(){}}
 public sealed partial class HeroSkillVfx {
  public static void CancelVoidKnightWarnings(UnityEngine.GameObject a){}
