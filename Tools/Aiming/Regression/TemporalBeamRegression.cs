@@ -54,7 +54,8 @@ partial class Regression
    Check(CoopGameplayCommands.TrySendAbility(actor,0,Forward(actor)),"client sends Temporal Beam");
    Near(Total(victim),1000,"client cannot apply damage");
    CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
-   manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
+   string message=manager.CustomMessagingManager.Handlers.Keys.Single(name=>name.StartsWith("DF_COOP_ABILITY_",StringComparison.Ordinal));
+   manager.CustomMessagingManager.Handlers[message](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
    for(int i=0;i<fps;i++)Step(1f/fps);
    Near(Total(victim),965,"host resolves one beam hit from client command at "+fps);
   }
