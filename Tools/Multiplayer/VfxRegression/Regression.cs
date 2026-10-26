@@ -27,7 +27,7 @@ static partial class VfxRegression
     {foreach(var f in Visible())f.gameObject.SetActive(false);}
     static void Reset()
     {
-        GameObject.All.Clear();Health.Active.Clear();UnityEngine.Clock.Reset();Debug.ErrorCount=0;
+        GameObject.All.Clear();Health.Active.Clear();UnityEngine.Clock.Reset();Debug.ErrorCount=0;Bolt7Vfx.Calls=0;
         typeof(HeroVfxPool).GetField("instance",BindingFlags.Static|BindingFlags.NonPublic).SetValue(null,null);
         typeof(CoopGameplayCommands).GetProperty("Instance").SetValue(null,null);
         CoopAuthority.Active=true;CoopAuthority.LocalIsHost=false;CoopAuthority.LocalHasServerAuthority=true;
@@ -89,7 +89,7 @@ static partial class VfxRegression
             CoopAuthority.LocalHasServerAuthority=false;manager.IsServer=false;
             float clientHealth=clientVictim.GetComponent<Health>().Current;
             foreach(var packet in events)relay.Receive(0,packet);
-            Check(Visible().Length>0,"Real authoritative combat creates client effect meshes");
+            Check(Visible().Length>0,"Real authoritative combat creates client effect meshes "+id+" ability="+ability+" fps="+fps);
             Check(clientVictim.GetComponent<Health>().Current==clientHealth,"Visual replay never applies duplicate damage");
             relay.Unbind();
         }
@@ -283,7 +283,7 @@ static partial class VfxRegression
         public float ActorHealth,ActorShield,TargetHealth,TargetShield,AllyHealth,AllyShield,Cooldown;
         public Vector3 Position;
         public string[] Events;
-        public bool AtlasSeen;
+        public bool AtlasSeen,NativeBackendSeen;
     }
     static Outcome Scenario(HeroId id,int action,bool online,int fps,bool render=false)
     {
@@ -321,7 +321,7 @@ static partial class VfxRegression
         return new Outcome{ActorHealth=actor.GetComponent<Health>().Current,ActorShield=actor.GetComponent<Health>().Shield,
             TargetHealth=target.GetComponent<Health>().Current,TargetShield=target.GetComponent<Health>().Shield,
             AllyHealth=ally.GetComponent<Health>().Current,AllyShield=ally.GetComponent<Health>().Shield,
-            Position=actor.transform.position,Events=events.ToArray(),AtlasSeen=atlasSeen,
+            Position=actor.transform.position,Events=events.ToArray(),AtlasSeen=atlasSeen,NativeBackendSeen=Bolt7Vfx.Calls>0,
             Cooldown=action<0?actor.GetComponent<BasicAttack>().RemainingCooldown:actor.GetComponent<PlayerHeroAbilities>().RemainingFor(action)};
     }
     static void OfflineOnlineParity()
@@ -526,4 +526,5 @@ static partial class VfxRegression
         Console.WriteLine("PASS "+checks+" production online VFX and combat/shader checks (controlled Unity/GPU/network fixtures)");
     }
 }
+
 

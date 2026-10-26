@@ -5,7 +5,7 @@ from pathlib import Path
 p=argparse.ArgumentParser(description=__doc__);p.add_argument('--dotnet-root',type=Path,required=True);a=p.parse_args()
 here=Path(__file__).resolve().parent;root=here.parents[2];shared=root/'Tools/Aiming/Regression';dotnet=a.dotnet_root.resolve()
 names=ast.literal_eval(re.search(r'^names=(\[[^\n]+\])',(shared/'run.py').read_text(),re.M)[1])
-names+=['Characters/VoidKnightBalance.cs','Characters/VoidKnightState.cs','Characters/HeroAbilityExecution.VoidKnight.cs']
+names+=['Characters/HeroAbilityExecution.Bolt7.cs','Combat/Bolt7Combat.cs','Characters/VoidKnightBalance.cs','Characters/VoidKnightState.cs','Characters/HeroAbilityExecution.VoidKnight.cs']
 engine=(shared/'EngineStubs.cs').read_text()
 engine=engine.replace('public class SerializeField:Attribute{}','public class DisallowMultipleComponent:Attribute{} public class SerializeField:Attribute{}')
 engine=engine.replace('public static bool CanSimulateHostGameplay=>','public static bool CanMutateAuthoritativeState=>CanSimulateHostGameplay;public static bool CanSimulateHostGameplay=>')
@@ -25,3 +25,4 @@ with tempfile.TemporaryDirectory(prefix='df-nova-audio-') as directory:
     subprocess.run([str(dotnet/'dotnet'),str(csc),'-nologo','-noconfig','-langversion:latest','-define:UNITY_EDITOR','-main:NovaAudioRegression','-out:'+str(output),*['-r:'+str(x) for x in refs.glob('*.dll')],str(fixtures),str(presentation),str(here/'AudioRegression.cs'),*[str(root/'Assets/Alterverse/Scripts'/n) for n in names]],check=True)
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))
     subprocess.run([str(dotnet/'dotnet'),str(output)],check=True)
+

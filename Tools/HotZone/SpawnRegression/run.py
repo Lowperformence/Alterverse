@@ -60,7 +60,10 @@ engine=engine.replace('public class Health:UnityEngine.MonoBehaviour {public boo
     {public static readonly List<Health> Active=new();public bool IsDead,DestroyOnDeath;public float Current;
     public void Configure(float max,bool destroy){IsDead=false;Current=max;DestroyOnDeath=destroy;}
     private void OnEnable(){if(!Active.Contains(this))Active.Add(this);}private void OnDisable()=>Active.Remove(this);}''')
-engine=engine.replace('public static GameObject Prefab;public static T Load<T>(string path)where T:class=>Prefab as T;','public static int Loads;public static GameObject Prefab;public static T Load<T>(string path)where T:class{Loads++;return Prefab as T;}')
+engine=engine.replace('public static class Resources {','public static class Resources {public static int Loads;')
+load_method='public static T Load<T>(string path)where T:class=>(Prefabs.TryGetValue(path,out var prefab)?prefab:Prefab) as T;'
+assert load_method in engine
+engine=engine.replace(load_method,'public static T Load<T>(string path)where T:class{Loads++;return (Prefabs.TryGetValue(path,out var prefab)?prefab:Prefab) as T;}')
 refs=sorted((dotnet/'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'))[-1]
 csc=sorted((dotnet/'sdk').glob('*/Roslyn/bincore/csc.dll'))[-1]
 runtime=sorted((dotnet/'shared/Microsoft.NETCore.App').iterdir())[-1]
@@ -75,3 +78,4 @@ with tempfile.TemporaryDirectory(prefix='df-hotzone-spawn-') as directory:
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))
     subprocess.run([str(dotnet/'dotnet'),str(output)],cwd=d,check=True)
     subprocess.run([*command,'-define:UNITY_EDITOR,UNITY_SERVER','-target:library','-out:'+str(d/'Server.dll')],check=True)
+

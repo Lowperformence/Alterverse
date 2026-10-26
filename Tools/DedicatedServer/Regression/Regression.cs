@@ -102,7 +102,7 @@ static class Regression
   Check(bootstrap.enabled&&!UnityEngine.Object.RuntimeSearches.ContainsKey(typeof(Alterverse.Prototype.PrototypeBootstrap)),"Installed match performs zero bootstrap scene searches across 60 frames");
   UnityEngine.Object.RuntimeObjects[typeof(Alterverse.UI.MainMenuController)]=new Alterverse.UI.MainMenuController();
   int destroyed=UnityEngine.Object.DestroyCalls;Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Tick();
-  Check(UnityEngine.Object.DestroyCalls==destroyed+1,"Client menu cleanup remains active during a match");
+  Check(UnityEngine.Object.DestroyCalls==destroyed&&!UnityEngine.Object.RuntimeSearches.ContainsKey(typeof(Alterverse.UI.MainMenuController)),"Installed match avoids per-frame menu searches; menus suppress themselves at initialization");
   Alterverse.Multiplayer.CoopAuthority.ActivePlan=null;Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Tick();
   Check(!bootstrap.enabled,"Returning to unstaged state resumes bootstrap suppression immediately");
  }
@@ -163,5 +163,6 @@ static class Regression
   finally{Directory.Delete(directory,true);}
  }
 }
+
 
 

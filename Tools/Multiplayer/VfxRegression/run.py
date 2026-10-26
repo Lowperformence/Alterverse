@@ -37,7 +37,7 @@ def main():
     names = ast.literal_eval(re.search(r'^names=(\[[^\n]+\])', (shared / 'run.py').read_text(), re.M)[1])
     names += ['Visuals/HeroSkillVfx.cs', 'Visuals/HeroSkillVfx.AttackPolish.cs', 'Visuals/MonsterAttackVfx.cs', 'Visuals/PrototypeVfx.cs', 'Visuals/BomberExplosionVfx.cs', 'Visuals/HeroSkillVfx.VoidKnight.cs',
               'Characters/VoidKnightBalance.cs', 'Characters/VoidKnightState.cs',
-              'Characters/HeroAbilityExecution.VoidKnight.cs', 'Multiplayer/CoopHeroStateSync.Vfx.cs', 'Characters/HeroLocomotion.cs', 'Visuals/HeroPresentationBuffer.cs', 'UI/TargetIndicatorHUD.cs']
+              'Characters/HeroAbilityExecution.VoidKnight.cs', 'Characters/HeroAbilityExecution.Bolt7.cs', 'Combat/Bolt7Combat.cs', 'Multiplayer/CoopHeroStateSync.Vfx.cs', 'Characters/HeroLocomotion.cs', 'Visuals/HeroPresentationBuffer.cs', 'UI/TargetIndicatorHUD.cs']
     engine = (shared / 'EngineStubs.cs').read_text()
     engine = remove_class(engine, 'public sealed partial class HeroSkillVfx:')
     engine = remove_class(engine, 'public static class CoopHeroStateSync ')
@@ -85,7 +85,8 @@ def main():
         health = (root / 'Assets/Alterverse/Scripts/Combat/Health.cs').read_text()
         capacity = health[health.index('private float HeroBaseShieldCapacity'):health.index('private const float HeroBaseShieldRechargeDelay')]
         snapshot = health[health.index('public void ApplyNetworkSnapshot('):health.index('public void RestoreFull()')]
-        add_shield = health[health.index('public void AddShield(float amount, float duration)'):health.index('private void ClearTransient()')]
+        # Stop before the separate shield-transfer/removal gameplay methods.
+        add_shield = health[health.index('public void AddShield(float amount, float duration)'):health.index('public float TransferShieldTo(')]
         transient = re.search(r'private float TransientShield[^;]+;', health)[0]
         shield = re.search(r'public float Shield[^;]+;', health)[0]
         replica = directory / 'NetworkHealthReplica.cs'
@@ -113,3 +114,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

@@ -43,6 +43,7 @@ namespace Alterverse.Match{
  public static class MatchExit{public static bool Leaving;public static string Error;public static Task ReturnToMenuAsync(string message=null){Leaving=true;Error=message;Alterverse.UI.OnlineMatchLoadingScreen.Cancel();return Task.CompletedTask;}}
 }
 namespace Alterverse.Multiplayer{
+ public static class CoopMatchStateSync{public static int ArenaReadyCalls;public static void MarkLocalArenaReady(){ArenaReadyCalls++;}}
  public class OnlineMatchPlan{public Alterverse.Match.MatchSession Session=new();public int HumanCount=2;public string Arena="Moon";}
  public static class CoopAuthority{public static OnlineMatchPlan ActivePlan;public static bool Active=>ActivePlan!=null;public static bool LocalHasServerAuthority;public static void EndMatch(){ActivePlan=null;}}
  public static class CoopRosterBuilder{public static int LocalSlot;public static int FindLocalHumanSlot(OnlineMatchPlan p)=>LocalSlot;}
@@ -85,3 +86,4 @@ namespace Alterverse.Prototype{
 
 namespace Alterverse.Combat { public static class HotZoneTank { public static bool FinishMatchPreparation()=>true; } }
 namespace Alterverse.Visuals { public static class MatchInsertionTransport { public static void PrepareForReveal(UnityEngine.GameObject world){} } }
+
