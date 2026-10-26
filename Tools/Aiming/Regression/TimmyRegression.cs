@@ -51,7 +51,7 @@ partial class Regression
   Check(Alterverse.Audio.DimensionAudio.LastCue==-1,"selected Scratch recording has no second preparation layer");
   Camera.main=null;
   Check(TimmyBalance.TotalPoints==100,"provisional design budget totals 100");
-  Near(HeroCombatProfile.StatsFor(HeroId.Timmy).MoveSpeed,HeroCombatProfile.StatsFor(HeroId.Veyr).MoveSpeed*1.05f,"current Timmy speed is five percent above Zhaev");
+  Near(HeroCombatProfile.StatsFor(HeroId.Timmy).MoveSpeed,HeroCombatProfile.StatsFor(HeroId.Veyr).MoveSpeed*1.05f*1.03f,"Timmy retains the additional three percent speed increase");
   Check(HeroIdentity.BaseHealth(HeroId.Timmy)<HeroIdentity.BaseHealth(HeroId.Veyr),"short-range assassin has lower health");
   Check(HeroAttackCatalog.For(HeroId.Timmy).Length==5,"five attack cards including basic");
   var aim=AimingSettings.Current.For(HeroId.Timmy,3);
@@ -63,8 +63,8 @@ partial class Regression
   var identity=body.AddComponent<HeroIdentity>();identity.Configure(HeroId.Timmy);Near(cc.radius,.28f,"small Timmy collision radius");Near(cc.center.y,-.2f,"smaller capsule preserves ground baseline");
   identity.Configure(HeroId.Timmy);Near(cc.center.y,-.2f,"reconfiguration does not stack offset");identity.Configure(HeroId.Veyr);Near(cc.center.y,.1f,"switching hero restores authored collider center");Near(cc.radius,.4f,"existing collider radius restored");
 
-  Reset();var a=Hero(HeroId.Timmy,0,Vector3.zero);var b=Hero(HeroId.Kaelon,1,Vector3.forward*2);
-  a.GetComponent<BasicAttack>().TryAttackAimed(Forward(a));Run(.7f);Near(Total(b),1000,"basic cannot reach outside 1.6m");
+  Reset();var a=Hero(HeroId.Timmy,0,Vector3.zero);var b=Hero(HeroId.Kaelon,1,Vector3.forward*(TimmyBalance.BasicRange+.1f));
+  a.GetComponent<BasicAttack>().TryAttackAimed(Forward(a));Run(.7f);Near(Total(b),1000,"basic cannot reach outside the current claw range");
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*1.5f);
   var other=Hero(HeroId.Kaelon,1,Angle(10,1.7f));
   Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(0,Forward(a)),"Claw Swipe cast");Run(.5f);
@@ -227,3 +227,4 @@ partial class Regression
   Run(2.3f);Near(Total(b),1000-TimmyBalance.ScratchDamage,"network Scratch keeps full selected-victim damage");Near(Total(other),1000,"network Scratch remains single target");
  }
 }
+

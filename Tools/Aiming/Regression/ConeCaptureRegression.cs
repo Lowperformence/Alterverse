@@ -71,7 +71,7 @@ partial class Regression
   Reset();source=Hero(HeroId.Nyra,0,Vector3.zero);first=Hero(HeroId.Kaelon,1,Vector3.left*4);second=Hero(HeroId.Kaelon,1,Vector3.right*4);
   gesture=ManualAiming.For(source);gesture.Begin(0,new Vector2(700,100));gesture.Drag(new Vector2(604,100),1,false);Check(gesture.Release(),"first rapid skill releases left");
   gesture.Begin(2,new Vector2(700,100));gesture.Drag(new Vector2(796,100),1,false);Check(gesture.Release(),"second rapid skill releases right without waiting");Run(.6f);
-  Near(Total(first),968,"queued beam retains its own captured point");Near(Total(second),980,"queued projectile retains its own captured point");
+  Near(Total(first),968,"queued beam retains its own captured point");Near(Total(second),1000-HeroAbilityKit.LoadoutFor(HeroId.Nyra).E.Power,"queued projectile retains its own captured point");
   Reset();source=Hero(HeroId.Nyra,0,Vector3.zero);first=Hero(HeroId.Kaelon,1,Vector3.forward*4);
   var wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.transform.position=new Vector3(0,.5f,2);wall.transform.localScale=new Vector3(2,2,.2f);
   gesture=ManualAiming.For(source);gesture.Begin(2,new Vector2(700,100));Check(gesture.Pose.HasAimPoint,"cone may capture point behind wall");Check(gesture.Release(),"captured wall shot still casts");Run(.6f);
@@ -92,7 +92,7 @@ partial class Regression
    Check(actor.GetComponent<SoftTargeting>().Current==behind.GetComponent<Health>(),"Ended-only reverse flick reacquires behind immediately at "+fps+" FPS");
    Check(actor.GetComponent<PlayerHeroAbilities>().ERemaining>0&&!ManualAiming.For(actor).Active,"fast reverse commits and clears pose");
    for(int i=0;i<fps;i++)Step(1f/fps);
-   Near(Total(behind),980,"50 ms reverse flick connects at "+fps+" FPS");Near(Total(ahead),1000,"initial forward marker never controls reverse release");
+   Near(Total(behind),1000-HeroAbilityKit.LoadoutFor(HeroId.Nyra).E.Power,"50 ms reverse flick connects at "+fps+" FPS");Near(Total(ahead),1000,"initial forward marker never controls reverse release");
    Check(actor.GetComponent<HeroMotor>().HasMoveInput,"reverse flick keeps left-thumb movement");
   }
  }
@@ -113,7 +113,7 @@ partial class Regression
    actor.transform.forward=Vector3.right;Call(aim,"LateUpdate");Near(Vector3.Angle(aim.Pose.Direction,-Vector3.forward),0,"walking rotation cannot reset held cone");
    Check(actor.GetComponent<SoftTargeting>().Current==behind.GetComponent<Health>(),"behind target captured independently of facing");
    Touch.activeTouches[1]=new Touch{touchId=2,phase=TouchPhase.Ended,screenPosition=point+new Vector2(0,-3*layout.Scale)};Call(hud,"Update");Run(.5f);
-   Near(Total(behind),980,"backward release connects");Near(Total(ahead),1000,"forward enemy excluded from backward cone");
+   Near(Total(behind),1000-HeroAbilityKit.LoadoutFor(HeroId.Nyra).E.Power,"backward release connects");Near(Total(ahead),1000,"forward enemy excluded from backward cone");
    Check(actor.GetComponent<HeroMotor>().HasMoveInput,"backward release preserves movement");
   }
   Reset();var hero=Hero(HeroId.Nyra,0,Vector3.zero);var manual=ManualAiming.For(hero);
@@ -142,7 +142,7 @@ partial class Regression
   CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
   actor.transform.position=Vector3.right*.8f;
   manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V7"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.6f);
-  Near(Total(enemy),980,"server preserves frozen capture through receipt and windup movement");
+  Near(Total(enemy),1000-HeroAbilityKit.LoadoutFor(HeroId.Nyra).E.Power,"server preserves frozen capture through receipt and windup movement");
   Reset();actor=Hero(HeroId.Nyra,0,Vector3.zero);actor.AddComponent<CoopHeroSlot>().Slot=1;enemy=Hero(HeroId.Kaelon,1,Angle(16,4));
   service=new GameObject("commands").AddComponent<CoopGameplayCommands>();manager=new Unity.Netcode.NetworkManager{IsListening=true,IsConnectedClient=true,IsServer=false};Unity.Netcode.NetworkManager.Singleton=manager;
   CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");Check(CoopGameplayCommands.TrySendAbility(actor,2,captured),"client snapshot can arrive after target moves");
@@ -153,3 +153,4 @@ partial class Regression
   Near(Total(enemy),1000,"server does not reacquire or follow moved captured enemy");
  }
 }
+
