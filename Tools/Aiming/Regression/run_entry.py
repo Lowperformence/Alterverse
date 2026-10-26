@@ -61,7 +61,7 @@ public sealed partial class HeroSkillVfx {
         output = directory / 'Regression.dll'
         tests = ['Regression.cs', 'TimmyRegression.cs', 'TimmyVfxRegression.cs', 'ConnectionTiming.cs',
                  'ConeCaptureRegression.cs', 'MovingConnectionRegression.cs', 'EntryRegression.cs',
-                 'RangedConeRegression.cs']
+                 'RangedConeRegression.cs', 'TemporalBeamRegression.cs']
         if args.aim_jitter:
             tests.append('JitterRegression.cs')
         files = [fixtures, presentation, *[here / n for n in tests],
@@ -86,6 +86,3 @@ public sealed partial class HeroSkillVfx {
 
 if __name__ == '__main__':
     main()
-
-
-

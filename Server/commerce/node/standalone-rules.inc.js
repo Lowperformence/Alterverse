@@ -200,9 +200,12 @@ class DfClanRules {
     if(!m)dfBad('Clan membership required');const [id,role]=m;
     if(route==='/social/clan/icon'){
       if(role!=='leader')dfDeny('Leader required');const avatar=data.avatar,sku='avatar_'+avatar;
-      if(!Number.isInteger(avatar)||!Object.hasOwn(ITEMS,sku))dfBad('Choose an owned shop icon');
+      if(!Number.isInteger(avatar)||avatar<0||avatar>1000)dfBad('Choose an owned avatar');
       const entries=new Map(JSON.parse(this.one('SELECT data FROM profile WHERE account=?',[account])[0]).map(e=>[e.key,e]));
-      if(entries.get('DF_AvatarOwned_'+avatar)?.number!==1&&!this.one('SELECT 1 FROM cosmetic WHERE account=? AND sku=?',[account,sku]))dfBad('Purchase this icon before choosing it for your clan');
+      const ownedFlag=key=>{const entry=entries.get(key);return entry?.kind===0&&entry.number===1;};
+      const owned=avatar<6||(avatar===6&&ownedFlag('DF_FoundersPack_Owned'))||(avatar>6&&(
+        ownedFlag('DF_AvatarOwned_'+avatar)||this.one('SELECT 1 FROM cosmetic WHERE account=? AND sku=?',[account,sku])));
+      if(!owned)dfBad('Unlock this avatar before choosing it for your clan');
       this.run('UPDATE social_clan SET avatar=? WHERE id=?',[avatar,id]);return;
     }
     if(route==='/social/clan/leave'){

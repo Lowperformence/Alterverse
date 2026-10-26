@@ -27,7 +27,7 @@ names = [
     'Combat/SoftTargeting.cs', 'Combat/ManualAiming.cs', 'Multiplayer/CoopGameplayCommands.cs',
     'Audio/HeroCombatAudio.cs', 'Audio/CombatSoundPalette.cs', 'UI/HeroAttackCatalog.cs',
     'UI/CombatHudLayout.cs', 'UI/AbilityRangePreviewOverlay.cs',
-    'Visuals/HeroVfxEvents.cs', 'Visuals/HeroSkillVfx.VoidKnight.cs', 'Visuals/VoidKnightPresentation.cs',
+    'Visuals/HeroVfxEvents.cs', 'Visuals/HeroSkillVfx.VoidKnight.cs', 'Visuals/HeroSkillVfx.Traveler.cs', 'Visuals/VoidKnightPresentation.cs',
 ]
 # Reuse the existing combat fixtures; compile the complete current ability partials unchanged.
 engine = (root / 'Tools/Aiming/Regression/EngineStubs.cs').read_text()
@@ -67,5 +67,3 @@ with tempfile.TemporaryDirectory(prefix='nerok-regression-') as directory:
     (tmp / 'Regression.runtimeconfig.json').write_text(json.dumps({'runtimeOptions': {
         'tfm': 'net8.0', 'framework': {'name': 'Microsoft.NETCore.App', 'version': '8.0.0'}}}))
     subprocess.run([str(dotnet / 'dotnet'), str(out)], check=True)
-
-
