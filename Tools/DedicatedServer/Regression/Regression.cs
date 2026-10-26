@@ -33,11 +33,19 @@ static class Regression
   Shader.Available.Clear();foreach(string name in Names)Shader.Available[name]=new Shader{name=name};
   AssetDatabase.Settings=new GraphicsSettings();AssetDatabase.Saves=0;builds=0;
   AssetDatabase.MoveHandler=null;
+  AssetDatabase.DeleteHandler=null;
+  Check(AssetDatabase.EditingDepth==0,"Every recovery releases the import pause, including failures");
+  AssetDatabase.EditingStarts=AssetDatabase.EditingStops=0;
   foreach(string path in new[]{Settings,Held})
   {
    if(File.Exists(Full(path)))File.Delete(Full(path));
    if(File.Exists(Full(path)+".meta"))File.Delete(Full(path)+".meta");
   }
+  string recovery=Full("Builds/ServerBuildRecovery");
+  if(Directory.Exists(recovery))Directory.Delete(recovery,true);
+  if(File.Exists(recovery))File.Delete(recovery);
+  string editor=Full("Assets/Alterverse/Editor");
+  if(Directory.Exists(editor))foreach(string path in Directory.GetFiles(editor,"PlayGamesSettings.regenerated-*"))File.Delete(path);
   Resources.Assets.Clear();HeroPresentationChecks.Checks=0;
   EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene{enabled=true,path="Assets/Game.unity"},new EditorBuildSettingsScene{enabled=false,path="Assets/Disabled.unity"}};
   BuildPipeline.Handler=options=>
@@ -72,9 +80,12 @@ static class Regression
   Restored(local);Check(builds==0,"Do not build when exclusion fails");
   Reset();WriteAsset(Held,local);
   DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer();Restored(local);
-  Reset();WriteAsset(Settings,local);WriteAsset(Held,"other local configuration");
-  Reject(DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer,"neither file was overwritten");
-  Check(File.ReadAllText(Full(Settings))==local&&File.ReadAllText(Full(Held))=="other local configuration"&&builds==0,"Preserve both assets on recovery collision");
+  Reset();WriteAsset(Settings,"regenerated copy");WriteAsset(Held,local);
+  File.WriteAllText(Full(Settings)+".meta","guid: regenerated-resource-copy");
+  DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer();Restored(local);
+  Archived("regenerated copy",local);
+  Check(builds==1,"Recovered collision allows the requested build to proceed");
+  Check(AssetDatabase.EditingStarts==1&&AssetDatabase.EditingStops==1,"Recovery batches asset imports around both moves");
   Reset();WriteAsset(Settings,local);
   AssetDatabase.MoveHandler=(from,to)=>to==Settings?"restore denied":null;
   Reject(DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer,"restore denied");
@@ -83,6 +94,80 @@ static class Regression
   Reset();WriteAsset(Held,local);
   typeof(DimensionsFrontDedicatedServerBuilder).GetMethod("RestoreAfterInterruptedBuild",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Static).Invoke(null,null);
   EditorApplication.delayCall();Restored(local);
+  RecoveryFailureCases(local);
+ }
+ static void Archived(string resource,string held)
+ {
+  string[] directories=Directory.GetDirectories(Full("Builds/ServerBuildRecovery"));
+  Check(directories.Length==1,"Keep one unique archive for this collision");
+  string archive=directories[0];
+  Check(File.ReadAllText(Path.Combine(archive,"ResourceCopy.asset"))==resource,"Archive the exact displaced Resources configuration");
+  Check(File.ReadAllText(Path.Combine(archive,"HeldOriginal.asset"))==held,"Archive the exact held pre-build configuration");
+  Check(File.ReadAllText(Path.Combine(archive,"ResourceCopy.asset.meta"))=="guid: regenerated-resource-copy","Archive the displaced GUID separately");
+  Check(File.ReadAllText(Path.Combine(archive,"HeldOriginal.asset.meta"))=="guid: preserve-google-play-settings","Archive the original GUID separately");
+ }
+ static void Collision(string local)
+ {
+  WriteAsset(Settings,"regenerated copy");WriteAsset(Held,local);
+  File.WriteAllText(Full(Settings)+".meta","guid: regenerated-resource-copy");
+ }
+ static void Recover()=>typeof(DimensionsFrontDedicatedServerBuilder)
+  .GetMethod("RestorePlayGamesSettings",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Static)
+  .Invoke(null,null);
+ static void RecoveryFailureCases(string local)
+ {
+  // A plugin creates a new Resources asset while the held original is excluded.
+  foreach(int outcome in new[]{0,1,2})
+  {
+   Reset();WriteAsset(Settings,local);PlayerSettings.dedicatedServerOptimizations=true;
+   BuildPipeline.Handler=options=>
+   {
+    WriteAsset(Settings,"regenerated copy");File.WriteAllText(Full(Settings)+".meta","guid: regenerated-resource-copy");
+    if(outcome==1)throw new Exception("native exception after regeneration");
+    return new BuildReport{summary=new BuildSummary{result=outcome==2?BuildResult.Failed:BuildResult.Succeeded}};
+   };
+   if(outcome==0)DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer();
+   else Reject(DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer,outcome==1?"native exception after regeneration":"Failed");
+   Restored(local);Archived("regenerated copy",local);
+   Check(PlayerSettings.dedicatedServerOptimizations,"Collision recovery preserves optimization restoration on every build outcome");
+   Check(AssetDatabase.EditingDepth==0,"Import pause released after build outcome");
+  }
+  Reset();Collision(local);
+  AssetDatabase.MoveHandler=(from,to)=>
+  {
+   Check(AssetDatabase.EditingDepth==1,"Collision moves run while import callbacks are paused");
+   return to.Contains(".regenerated-")?"quarantine denied":null;
+  };
+  Reject(DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer,"quarantine denied");
+  Check(File.ReadAllText(Full(Settings))=="regenerated copy"&&File.ReadAllText(Full(Held))==local,"Failed quarantine leaves both source files untouched");
+  Archived("regenerated copy",local);
+  Reset();Collision(local);
+  AssetDatabase.MoveHandler=(from,to)=>from==Held?"restore denied":null;
+  Reject(DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer,"restore denied");
+  Check(File.ReadAllText(Full(Settings))=="regenerated copy"&&File.ReadAllText(Full(Held))==local,"Failed original restoration rolls back the displaced Resources copy");
+  Check(File.ReadAllText(Full(Settings)+".meta")=="guid: regenerated-resource-copy","Rollback preserves the displaced GUID");
+  Archived("regenerated copy",local);
+  Reset();Collision(local);
+  AssetDatabase.MoveHandler=(from,to)=>to==Settings?"restore and rollback denied":null;
+  Reject(DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer,"both copies and metadata are backed up");
+  Check(File.ReadAllText(Full(Held))==local&&!File.Exists(Full(Settings)),"Failed rollback retains the held original");
+  Check(Directory.GetFiles(Full("Assets/Alterverse/Editor"),"PlayGamesSettings.regenerated-*.asset").Length==1,"Failed rollback retains the quarantined copy too");
+  Archived("regenerated copy",local);
+  Reset();Collision(local);AssetDatabase.DeleteHandler=path=>false;
+  DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer();Restored(local);Archived("regenerated copy",local);
+  Check(Directory.GetFiles(Full("Assets/Alterverse/Editor"),"PlayGamesSettings.regenerated-*.asset").Length==1,"A cleanup failure retains the extra Editor-only copy");
+  Reset();Collision(local);
+  Directory.CreateDirectory(Full("Builds"));File.WriteAllText(Full("Builds/ServerBuildRecovery"),"block backup creation");
+  bool backupFailed=false;
+  try{DimensionsFrontDedicatedServerBuilder.BuildLinuxDedicatedServer();}catch(IOException){backupFailed=true;}
+  Check(backupFailed&&builds==0,"Cannot modify or build when backup storage is unavailable");
+  Check(File.ReadAllText(Full(Settings))=="regenerated copy"&&File.ReadAllText(Full(Held))==local,"Backup failure preserves both source assets");
+  Reset();Collision(local);
+  typeof(DimensionsFrontDedicatedServerBuilder).GetMethod("RestoreAfterInterruptedBuild",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Static).Invoke(null,null);
+  EditorApplication.delayCall();Restored(local);Archived("regenerated copy",local);
+  string[] archived=Directory.GetDirectories(Full("Builds/ServerBuildRecovery"));
+  Recover();
+  Check(Directory.GetDirectories(Full("Builds/ServerBuildRecovery")).SequenceEqual(archived),"Repeated startup recovery is idempotent");
  }
  static void Reject(Action action,string phrase)
  {
@@ -163,6 +248,3 @@ static class Regression
   finally{Directory.Delete(directory,true);}
  }
 }
-
-
-

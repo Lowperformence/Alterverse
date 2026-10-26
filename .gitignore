@@ -114,3 +114,7 @@ InitTestScene*.unity*
 .env.*
 !.env.example
 /Assets/Resources/LocalSecrets/
+
+# Temporary server-build settings and failed-recovery quarantine stay local.
+/Assets/Alterverse/Editor/PlayGamesSettings.server-build.asset*
+/Assets/Alterverse/Editor/PlayGamesSettings.regenerated-*.asset*
