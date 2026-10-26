@@ -671,7 +671,7 @@ namespace Alterverse.Combat
             Part("TitanWristCuffR",PrimitiveType.Cube,transform,new Vector3(1.34f,.45f,.10f),new Vector3(.34f,.16f,.32f),jointMat,Quaternion.Euler(0,0,8));
             Part("TitanBrowRidge",PrimitiveType.Cube,transform,new Vector3(0,2.49f,.39f),new Vector3(.78f,.14f,.20f),darkMat,Quaternion.Euler(0,0,-3));
             Part("TitanJawRune",PrimitiveType.Cube,transform,new Vector3(0,1.93f,.43f),new Vector3(.34f,.045f,.04f),energyMat,Quaternion.Euler(0,0,2));
-            teamMat=MakeMaterial(shader,teamEnergy,.12f,.55f,teamEnergy*1.2f);
+            teamMat=MakeMaterial(shader,energy,.12f,.55f,energy*1.2f);
             Part("TitanTeamBeacon",PrimitiveType.Cube,transform,new Vector3(0,.21f,.39f),new Vector3(.28f,.07f,.03f),teamMat,Quaternion.identity);
             Part("TitanReactorHousing",PrimitiveType.Cylinder,transform,new Vector3(0,1.24f,.32f),new Vector3(.47f,.085f,.47f),jointMat,Quaternion.Euler(90,0,0));
             Part("TitanReactorLens",PrimitiveType.Cylinder,transform,new Vector3(0,1.24f,.415f),new Vector3(.29f,.028f,.29f),energyMat,Quaternion.Euler(90,0,0));
@@ -1552,6 +1552,7 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 
 

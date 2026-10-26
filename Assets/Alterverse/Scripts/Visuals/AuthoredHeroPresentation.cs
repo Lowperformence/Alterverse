@@ -266,7 +266,6 @@ namespace Alterverse.Visuals
             foreach (Transform bone in model.GetComponentsInChildren<Transform>(true))
                 {
                 if (bone.name == "DF_Muzzle") muzzle = bone;
-                if (bone.name == "Chest") guardChest = bone;
                 if (bone.name == "DF_SupportGrip") rifleSupport = bone;
                 if (bone.name == "DF_PalmGripL") leftPalm = bone;
                 if (bone.name == "DF_HandleContactR") rifleHandle = bone;
@@ -457,15 +456,10 @@ namespace Alterverse.Visuals
 
         // Solve the guard against actual shoulder/elbow/hand positions. Old guard angles
         // assumed different arm lengths and cannot define a grip on the imported anatomy.
-        private void SolveGuard(ArmChain arm, Vector3 targetInModel, Vector3 hintInModel, float weight, bool followChest = true)
+        private void SolveGuard(ArmChain arm, Vector3 targetInModel, Vector3 hintInModel, float weight)
         {
             if (arm == null || weight <= .001f) return;
             Vector3 shoulder = arm.Upper.position;
-            // Keep the authored guard relative to the moving chest, so turns and weight
-            // shifts travel through shoulder, elbow and hand instead of leaving hands frozen.
-            if (followChest && guardChest != null)
-                targetInModel = (model.worldToLocalMatrix * guardChest.localToWorldMatrix * guardChestRestInverse).MultiplyPoint3x4(targetInModel);
-            if (followChest) targetInModel += arm == leftArm ? leftGuardAdjustment : rightGuardAdjustment;
             Vector3 target = model.TransformPoint(targetInModel);
             Vector3 hint = model.TransformPoint(hintInModel);
             float upperLength = Vector3.Distance(shoulder, arm.Elbow.position);
@@ -1027,4 +1021,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
