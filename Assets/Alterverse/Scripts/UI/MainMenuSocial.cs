@@ -133,8 +133,9 @@ namespace Alterverse.UI
                 for(int i=0;i<rows.Length;i++)
                 {
                     var p=rows[i];float y=322+i*37;
-                    theme.Panel(new Rect(Left,y,ContentWidth,34));
-                    theme.FitLabel(new Rect(Left+14,y,ContentWidth-340,34),$"#{p.rank}  {p.name}",theme.Body);
+                    theme.RankingPanel(new Rect(Left,y,ContentWidth,34),p.rank);
+                    theme.RankingBadge(new Rect(Left+10,y+4,96,26),p.rank);
+                    theme.FitLabel(new Rect(Left+118,y,ContentWidth-444,34),p.name,theme.Body);
                     theme.FitLabel(new Rect(Right-310,y,290,34),$"LEVEL {p.level}  /  {p.xp:N0} XP",theme.Small);
                 }
             }
@@ -144,9 +145,10 @@ namespace Alterverse.UI
                 for(int i=0;i<rows.Length;i++)
                 {
                     var c=rows[i];float y=322+i*37;
-                    theme.Panel(new Rect(Left,y,ContentWidth,34));
-                    AvatarBadgeRenderer.Draw(new Rect(Left+10,y+2,30,30),Mathf.Max(0,c.avatar),Texture2D.whiteTexture,Time.unscaledTime);
-                    theme.FitLabel(new Rect(Left+52,y,ContentWidth-418,34),$"#{c.rank}  [{c.tag}] {c.name}",theme.Body);
+                    theme.RankingPanel(new Rect(Left,y,ContentWidth,34),c.rank);
+                    theme.RankingBadge(new Rect(Left+10,y+4,96,26),c.rank);
+                    AvatarBadgeRenderer.Draw(new Rect(Left+118,y+2,30,30),Mathf.Max(0,c.avatar),Texture2D.whiteTexture,Time.unscaledTime);
+                    theme.FitLabel(new Rect(Left+160,y,ContentWidth-526,34),$"[{c.tag}] {c.name}",theme.Body);
                     theme.FitLabel(new Rect(Right-350,y,330,34),$"TOTAL {c.totalLevel:N0}  /  {c.memberCount}/50 MEMBERS",theme.Small);
                 }
             }
