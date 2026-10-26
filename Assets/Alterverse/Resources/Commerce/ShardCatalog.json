@@ -22,10 +22,50 @@
     }
   ],
   "cosmetics": [
-    {"id":"ufo_test_hat","price":100,"writes":[{"key":"DF_HeadwearOwned_UfoTestHat","kind":0,"number":1}]},
-    {"id":"wizard_hat","price":100,"writes":[{"key":"DF_HeadwearOwned_WizardHat","kind":0,"number":1}]},
-    {"id":"propeller_cap","price":100,"writes":[{"key":"DF_HeadwearOwned_PropellerCap","kind":0,"number":1}]},
-    {"id":"mushroom_hat","price":100,"writes":[{"key":"DF_HeadwearOwned_MushroomHat","kind":0,"number":1}]},
+    {
+      "id": "ufo_test_hat",
+      "price": 100,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_UfoTestHat",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "wizard_hat",
+      "price": 100,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_WizardHat",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "propeller_cap",
+      "price": 100,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_PropellerCap",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "mushroom_hat",
+      "price": 100,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_MushroomHat",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
     {
       "id": "angel_wings",
       "price": 11000,
@@ -1267,6 +1307,53 @@
         }
       ],
       "available": false
+    },
+    {
+      "id": "weapon_10_0",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_10_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_10",
+          "kind": 0,
+          "number": 0
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_10",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinOwned_10",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_10_1",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_10_1",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_10",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_10",
+          "kind": 0,
+          "number": 1
+        }
+      ]
     }
   ],
   "subscription": {

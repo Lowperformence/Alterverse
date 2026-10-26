@@ -58,7 +58,10 @@ namespace Alterverse.Shop
             new(HeroId.Nerok,"DEEP CORAL","Abyssal Anchor","Epic coral anchor engraving over the original anchor. Cosmetic only.",new Color(1f,.25f,.36f),1),
 
             new(HeroId.VoidKnight,"AMETHYST RIFT","Rift Edge Greatsword","The original two-handed greatsword with amethyst void engraving and violet edge energy. Cosmetic only.",new Color(.72f,.22f,1f),0),
-            new(HeroId.VoidKnight,"GLACIAL RIFT","Rift Edge Greatsword","The original two-handed greatsword with cold cyan rift engraving and glacial edge energy. Cosmetic only.",new Color(.16f,.82f,1f),1)
+            new(HeroId.VoidKnight,"GLACIAL RIFT","Rift Edge Greatsword","The original two-handed greatsword with cold cyan rift engraving and glacial edge energy. Cosmetic only.",new Color(.16f,.82f,1f),1),
+
+            new(HeroId.Bolt7,"ION BARRAGE","Gatling & Grenade Launcher","BOLT-7\u0027s original Gatling and grenade launcher with electric cyan circuitry and a dark alloy finish. Cosmetic only.",new Color(.12f,.78f,1f),0),
+            new(HeroId.Bolt7,"EMBER BARRAGE","Gatling & Grenade Launcher","BOLT-7\u0027s original Gatling and grenade launcher with glowing amber circuitry and a dark alloy finish. Cosmetic only.",new Color(1f,.45f,.08f),1)
         };
 
         public static WeaponSkinItem For(HeroId hero)=>For(hero,0);
@@ -206,3 +209,4 @@ namespace Alterverse.Shop
         }
     }
 }
+

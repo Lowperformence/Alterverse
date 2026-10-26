@@ -52,6 +52,7 @@ namespace Alterverse.Visuals
             public Material[] Styled;
             public Renderer Overlay;
             public Mesh PatternMesh;
+            public bool CombinedBody;
         }
 
         private readonly List<RendererState> baseRenderers=new();
@@ -102,6 +103,15 @@ namespace Alterverse.Visuals
         private void CaptureOriginalWeaponRenderers()
         {
             baseRenderers.Clear();
+            // BOLT-7 keeps both weapons in one rigidly skinned body mesh.
+            // The overlay filters weapon-bone triangles; it never changes body materials.
+            if(GetComponent<HeroIdentity>()?.Hero==HeroId.Bolt7)
+            {
+                Transform body=FindRecursive(visualRoot,"BOLT7_LOD0");
+                SkinnedMeshRenderer skin=body!=null?body.GetComponent<SkinnedMeshRenderer>():null;
+                if(skin!=null)baseRenderers.Add(new RendererState{Renderer=skin,Original=(Material[])skin.sharedMaterials.Clone(),CombinedBody=true});
+                return;
+            }
             AuthoredHeroPresentation authored = GetComponent<AuthoredHeroPresentation>();
             if (authored != null)
             {
@@ -151,7 +161,7 @@ namespace Alterverse.Visuals
             for(int i=0;i<baseRenderers.Count;i++)
             {
                 Renderer renderer=baseRenderers[i].Renderer;
-                if(renderer!=null)renderer.enabled=visible;
+                if(renderer!=null&&!baseRenderers[i].CombinedBody)renderer.enabled=visible;
                 if(baseRenderers[i].Overlay!=null)baseRenderers[i].Overlay.enabled=visible;
             }
         }
@@ -178,7 +188,8 @@ namespace Alterverse.Visuals
                 if(source is SkinnedMeshRenderer skin && skin.sharedMesh!=null)
                 {
                     var copy=layer.AddComponent<SkinnedMeshRenderer>();
-                    state.PatternMesh=CreatePatternMesh(skin.sharedMesh);
+                    state.PatternMesh=CreatePatternMesh(skin.sharedMesh,state.CombinedBody?skin.bones:null);
+                    if(state.PatternMesh==null){Destroy(layer);continue;}
                     copy.sharedMesh=state.PatternMesh;
                     copy.bones=skin.bones;
                     copy.rootBone=skin.rootBone;
@@ -238,20 +249,22 @@ namespace Alterverse.Visuals
 
         private static int PatternStyle(HeroId hero)
         {
-            if(hero==HeroId.Nyra||hero==HeroId.Traveler)return 0;
+            if(hero==HeroId.Nyra||hero==HeroId.Traveler||hero==HeroId.Bolt7)return 0;
             if(hero==HeroId.Elyra||hero==HeroId.Mira)return 1;
             if(hero==HeroId.Kaelon||hero==HeroId.Rook)return 2;
             return 3;
         }
 
         // Rest coordinates keep patterns attached during skinning. Only the overlay owns this copy.
-        private static Mesh CreatePatternMesh(Mesh source)
+        private static Mesh CreatePatternMesh(Mesh source,Transform[] weaponBones=null)
         {
+            if(weaponBones!=null&&!source.isReadable)return null;
             Mesh mesh=Instantiate(source);
             mesh.name="DF_EpicDetail_"+source.name;
+            if(weaponBones!=null)Bolt7WeaponColorwayMask.KeepWeapons(mesh,weaponBones);
             if(!source.isReadable)return mesh;
             Vector3[] vertices=source.vertices;
-            Bounds bounds=source.bounds;
+            Bounds bounds=mesh.bounds;
             float scale=Mathf.Max(.001f,Mathf.Max(bounds.size.x,Mathf.Max(bounds.size.y,bounds.size.z)));
             var coordinates=new List<Vector3>(vertices.Length);
             foreach(Vector3 vertex in vertices)coordinates.Add((vertex-bounds.center)/scale);
@@ -267,7 +280,7 @@ namespace Alterverse.Visuals
             for(int i=0;i<baseRenderers.Count;i++)
             {
                 RendererState state=baseRenderers[i];
-                if(state.Renderer!=null&&state.Original!=null)
+                if(!state.CombinedBody&&state.Renderer!=null&&state.Original!=null)
                     state.Renderer.sharedMaterials=state.Original;
                 if(state.Overlay!=null)
                 {
@@ -311,6 +324,7 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
 

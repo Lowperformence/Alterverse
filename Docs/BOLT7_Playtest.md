@@ -108,3 +108,15 @@ BOLT-7 is a released shard hero at **1,800 shards**, SKU `hero_bolt7`, permanent
 Client checks exercise the real wallet, inventory, journal, selection, account cache and commerce coroutines. Server checks cover the actual SQLite and Firestore adapters (strict transactional Firestore fixture), earned-only/paid-only/mixed purchases, retries, parallel attempts, account isolation, ownership restoration and server-controlled pricing through HTTP.
 
 **Rollout requirement:** rebuild/redeploy the existing account/commerce service with the updated shared `Assets/Alterverse/Resources/Commerce/ShardCatalog.json`. Its Dockerfile copies this catalog into the server image; an older running image does not know `hero_bolt7`. Preserve the existing authentication, Firestore storage and billing configuration. This is the persistent account service, separate from the ephemeral Edgegap match server. No production account deployment or real shard payment was performed by these source/fixture checks.
+
+
+## Weapon colorways
+
+BOLT-7 has two 500-shard colorways: **ION BARRAGE** (cyan circuits) and **EMBER BARRAGE** (amber circuits), both labeled **Gatling & Grenade Launcher**. Shop previews, account ownership and equipment use hero 10 / variants 0 and 1, without falling back to Zhaev's blade entries.
+
+BOLT-7's source renderer combines body and weapons. The premium overlay keeps only triangles rigidly bound to Weapon.L / Weapon.R or their animated children. Body/shoulder geometry, native textures, original mesh, skin bindings and combat are retained. Original restores the unmodified appearance; death/respawn does not let the weapon-colorway system re-enable the body renderer.
+
+Before enabling online purchases, deploy the two matching shared catalog products. For the existing separate Node account source, run `node Server/commerce/node/enable-bolt7-weapons.mjs /path/to/current/index.js --write`; it adds only these products, creates a backup and rejects conflicting existing entries. It does not deploy the service. The Python service uses the shared ShardCatalog.json. Include this with the already planned account-service/client release.
+
+Validation: `python Tools/Shop/Bolt7WeaponRegression/run.py --dotnet-root <sdk>` exercises real catalog/inventory and weapon-mask code with fixtures; the two-product SQLite and guarded Node-patcher tests cover purchase writes and retries. Native Unity acceptance must compare Original / both variants, verify only both weapon arms change, watch barrel/launcher animation, switch back to Original, and check death/respawn and account switching.
+
