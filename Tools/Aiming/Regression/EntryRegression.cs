@@ -207,7 +207,8 @@ partial class Regression
    Vector3 center=spec.aimType==AimType.Area?Vector3.forward*spec.castRange*.65f:
     spec.aimType==AimType.AreaCone?Vector3.forward*2:Vector3.zero;
    var b=Hero(HeroId.Kaelon,1,center+Vector3.right*(spec.aoeRadius+5));
-   var pose=new AimPose(Vector3.forward,center);
+   // Match manual area release: the captured world point is explicit, including zero range.
+   var pose=new AimPose(Vector3.forward,center,null,true);
    Check(a.GetComponent<PlayerHeroAbilities>().CastAimed(slot,pose),"empty area cast starts "+hero+slot);
    float windup=a.GetComponent<HeroAbilityKit>().Spec(slot).Windup;
    for(int frame=0;frame<Mathf.CeilToInt((windup+3.5f)*fps);frame++)
