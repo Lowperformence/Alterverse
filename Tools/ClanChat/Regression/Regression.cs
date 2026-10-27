@@ -71,6 +71,22 @@ public static class Fixture {
   Assert(reads==1&&Alterverse.Shop.PaidShardCommerce.Instance.Flushes==flushes,"Reading chat must not wait for an unrelated pending profile save");
   request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/levels",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
   Assert(reads==1&&Alterverse.Shop.PaidShardCommerce.Instance.Flushes==flushes+1,"Player rankings must still save current progression before reading");
+  UnityEngine.Networking.UnityWebRequest.Handler=r=>{reads++;r.downloadHandler.text="{\"fulfilled\":true,\"social\":{\"clans\":[{\"clanId\":\"saved-clan\",\"totalLevel\":35}],\"total\":1}}";return new UnityEngine.Networking.UnityWebRequestAsyncOperation();};
+  request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/clan-levels",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
+  Assert(reads==2&&service.ClanLevels?.clans?.Length==1&&service.ClanLevels.clans[0].totalLevel==35,"Failed account saves must still load the authoritative saved clan standings");
+  Assert(service.Status.Contains("synchronization pending")&&Alterverse.Profile.AccountProfilePrefs.Dirty,"Reading saved clan standings must retain unsaved progression and explain its status");
+  UnityEngine.Networking.UnityWebRequest.Handler=r=>{reads++;r.downloadHandler.text="{\"fulfilled\":true,\"social\":{\"clanProtocolVersion\":4,\"hasClan\":true,\"clan\":{\"clanId\":\"private\"},\"chatEnabled\":true}}";return new UnityEngine.Networking.UnityWebRequestAsyncOperation();};
+  request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/state",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
+  Assert(reads==3&&service.State?.clan?.clanId=="private","A pending profile save must not prevent restoring the clan membership needed by chat");
+  request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/clan/create",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
+  Assert(reads==3,"Clan creation must retain its successful-save requirement before any debit");
+  UnityEngine.Networking.UnityWebRequest.Handler=r=>{reads++;r.responseCode=503;r.result=UnityEngine.Networking.UnityWebRequest.Result.ConnectionError;r.downloadHandler.text="{\"fulfilled\":false,\"message\":\"Clan service temporarily unavailable. Please retry.\"}";return new UnityEngine.Networking.UnityWebRequestAsyncOperation();};
+  request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/clan-levels",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
+  Assert(service.Status.Contains("temporarily unavailable"),"A server failure must not be replaced by the saved-profile notice");
+  Alterverse.Shop.PaidShardCommerce.Instance.SaveSucceeds=true;
+  UnityEngine.Networking.UnityWebRequest.Handler=r=>{r.downloadHandler.text="{\"fulfilled\":true,\"social\":{\"clans\":[]}}";return new UnityEngine.Networking.UnityWebRequestAsyncOperation();};
+  request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/clan-levels",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
+  Assert(service.Status=="Synchronized.","Successful profile saves must clear the pending-save notice");
   Alterverse.Profile.AccountProfilePrefs.Dirty=false;Alterverse.Shop.PaidShardCommerce.Instance.SaveSucceeds=true;
   var menu=new Alterverse.UI.MainMenuController();var flags=System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance;var ui=menu.GetType();
   var consent=ui.GetMethod("DrawClanConsent",flags);
@@ -128,4 +144,5 @@ public static class Fixture {
   Assert(service.Busy,"Visible rankings must periodically refresh without a manual tap");
  }
 }
+
 

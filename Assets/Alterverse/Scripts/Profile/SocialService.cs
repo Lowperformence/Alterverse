@@ -163,9 +163,10 @@ namespace Alterverse.Profile
         }
         IEnumerator Send(string route,Request body,int version)
         {
-            // Publish the latest saved name/XP before ranking reads. A failed flush never
-            // sends stale local progression as an ad-hoc score or mutates the profile.
+            // Try to publish current progression first. Clan state and standings may
+            // still read authoritative saved data when an unrelated profile save fails.
             var commerce=PaidShardCommerce.Instance;
+            bool usingSavedClanProfile=false;
             bool needsProfile=route=="/social/state"||route=="/social/levels"||route=="/social/clan-levels"||route=="/social/clan/create";
             if(needsProfile&&commerce!=null&&commerce.Ready&&AccountProfilePrefs.Dirty)
             {
@@ -173,7 +174,11 @@ namespace Alterverse.Profile
                 while(!save.IsCompleted)yield return null;
                 if(version!=generation)yield break;
                 if(save.IsFaulted||save.IsCanceled||!save.Result)
-                {Status="Account save pending. Retry after synchronization.";Busy=false;yield break;}
+                {
+                    if(route!="/social/state"&&route!="/social/clan-levels")
+                    {Status="Account save pending. Retry after synchronization.";Busy=false;yield break;}
+                    usingSavedClanProfile=true;
+                }
             }
             if(route=="/social/clan/create")
             {
@@ -261,7 +266,8 @@ namespace Alterverse.Profile
             if(route=="/social/chat/send")SentOperationId=body.operationId;
             if(Chat!=null&&route.StartsWith("/social/chat/",StringComparison.Ordinal))ChatStatus="Connected to clan chat.";
             if(route=="/social/chat/report")nextChatPoll=Time.unscaledTime+5f;
-            Status=route=="/social/chat/report"?"Report saved for the game administration.":"Synchronized.";Busy=false;
+            Status=route=="/social/chat/report"?"Report saved for the game administration.":
+                usingSavedClanProfile?"Showing saved clan data. Account synchronization pending.":"Synchronized.";Busy=false;
         }
         // Also protects displays during a staggered client/server rollout.
         internal static void CleanSnapshot(Snapshot value)
@@ -289,6 +295,7 @@ namespace Alterverse.Profile
         void OnDestroy(){if(Instance==this){ResetCache();Instance=null;}}
     }
 }
+
 
 
 
