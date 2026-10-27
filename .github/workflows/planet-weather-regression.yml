@@ -3,6 +3,10 @@ on:
   push:
     paths:
       - 'Assets/Alterverse/Scripts/Visuals/PlanetWeatherRuntime.cs'
+      - 'Assets/Alterverse/Scripts/Visuals/WindVfxRuntime.cs'
+      - 'Assets/Alterverse/Scripts/Visuals/PlanetWindCatalog.cs'
+      - 'Assets/Alterverse/Resources/PlanetWindCatalog.asset'
+      - 'Assets/Vefects/Wind VFX URP/VFX/Particles/**'
       - 'Assets/Alterverse/Scripts/Match/ArenaVariantRuntime.cs'
       - 'Assets/Resources/DF_PlanetWeather.shader'
       - 'Tools/Weather/**'
@@ -10,6 +14,10 @@ on:
   pull_request:
     paths:
       - 'Assets/Alterverse/Scripts/Visuals/PlanetWeatherRuntime.cs'
+      - 'Assets/Alterverse/Scripts/Visuals/WindVfxRuntime.cs'
+      - 'Assets/Alterverse/Scripts/Visuals/PlanetWindCatalog.cs'
+      - 'Assets/Alterverse/Resources/PlanetWindCatalog.asset'
+      - 'Assets/Vefects/Wind VFX URP/VFX/Particles/**'
       - 'Assets/Alterverse/Scripts/Match/ArenaVariantRuntime.cs'
       - 'Assets/Resources/DF_PlanetWeather.shader'
       - 'Tools/Weather/**'
@@ -26,3 +34,5 @@ jobs:
         with:
           dotnet-version: '8.0.x'
       - run: python Tools/Weather/Regression/run.py --dotnet-root "$DOTNET_ROOT"
+
+      - run: python Tools/Weather/run_wind.py --dotnet-root "$DOTNET_ROOT"
