@@ -133,7 +133,20 @@ namespace Alterverse.Visuals
             string name;float time;
             if(dead){name="Death";time=Mathf.Min(now-actionStarted,clips.TryGetValue("Death",out var d)?d.length:0);}
             else if(action!=null&&now<actionUntil){name=action;time=now-actionStarted;}
-            else {name=Time.time<fireUntil?"Fire_Loop":displayedSpeed*displayedSpeed>.15f?"Walk":"Idle";walkTime+=dt;time=walkTime;}
+            else
+            {
+                bool moving=displayedSpeed*displayedSpeed>.15f;
+                bool firing=Time.time<fireUntil;
+                walkTime+=dt;time=walkTime;
+                if(moving&&firing&&clips.TryGetValue("Walk",out var walk)&&walk.length>0&&
+                    clips.TryGetValue("Fire_Loop",out var fire)&&fire.length>0)
+                {
+                    rig.Sample(walk,time%walk.length);
+                    rig.Sample(fire,time%fire.length,true);
+                    return;
+                }
+                name=firing?"Fire_Loop":moving?"Walk":"Idle";
+            }
             if(clips.TryGetValue(name,out var clip)&&clip.length>0)rig.Sample(clip,dead?time:time%clip.length);
         }
     }

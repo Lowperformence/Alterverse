@@ -3,7 +3,7 @@ The fixture reads real shipped resources. It does not run Unity's native rendere
 """
 import argparse,json,re,subprocess,tempfile
 from pathlib import Path
-p=argparse.ArgumentParser();p.add_argument('--dotnet-root',type=Path,required=True);p.add_argument('--presentation-only',action='store_true');a=p.parse_args();sdk=a.dotnet_root.resolve();here=Path(__file__).resolve().parent;root=here.parents[2];src=root/'Assets/Alterverse/Scripts'
+p=argparse.ArgumentParser();p.add_argument('--dotnet-root',type=Path,required=True);mode=p.add_mutually_exclusive_group();mode.add_argument('--presentation-only',action='store_true');mode.add_argument('--layering-only',action='store_true');a=p.parse_args();sdk=a.dotnet_root.resolve();here=Path(__file__).resolve().parent;root=here.parents[2];src=root/'Assets/Alterverse/Scripts'
 s=(root/'Tools/Aiming/Regression/EngineStubs.cs').read_text().split('namespace UnityEngine.InputSystem')[0]
 s=s.replace('public Vector3 position,forward=', 'public Vector3 localPosition;public Quaternion localRotation=Quaternion.identity;public Vector3 position,forward=')
 s=s.replace('public Vector3 InverseTransformPoint(', 'public Vector3 InverseTransformVector(Vector3 p)=>Quaternion.Inverse(rotation)*p;public Vector3 InverseTransformPoint(')
@@ -58,17 +58,18 @@ namespace Alterverse.Visuals {
  public static class Bolt7Assets{public static UnityEngine.Texture2D Texture(string name,bool normal=false)=>null;}
  internal class Bolt7Model{
   internal class Clip{public string name;public float length=1;}
-  public UnityEngine.GameObject Root;public string LastClip;public float LastTime;
+  public UnityEngine.GameObject Root;public string LastClip,BaseClip;public float LastTime;public bool UpperBodyOnly;
   public Clip[] Clips=new[]{new Clip{name="Idle"},new Clip{name="Walk"},new Clip{name="Death"},new Clip{name="Fire_Loop"},new Clip{name="Grenade"},new Clip{name="Heavy_Ram"},new Clip{name="Ultimate"}};
   public string[] MaterialNames=System.Array.Empty<string>();
   public static Bolt7Model Create(UnityEngine.Transform root)=>new(){Root=root.gameObject};
-  public void Sample(Clip clip,float time){LastClip=clip.name;LastTime=time;}
+  public void Sample(Clip clip,float time,bool upperBodyOnly=false){LastClip=clip.name;LastTime=time;UpperBodyOnly=upperBodyOnly;if(!upperBodyOnly)BaseClip=clip.name;}
  }
 }
 '''
 refs=next((sdk/'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'));csc=next((sdk/'sdk').glob('*/Roslyn/bincore/csc.dll'))
+if a.layering_only:production=['Bolt7Model.cs']
 with tempfile.TemporaryDirectory(prefix='bolt7-visual-') as folder:
  folder=Path(folder);(folder/'Fixture.cs').write_text(s);out=folder/'Regression.dll'
- subprocess.run([str(sdk/'dotnet'),str(csc),'-nologo','-nowarn:0649,0067','-langversion:9','-out:'+str(out),*['-r:'+str(f) for f in refs.glob('*.dll')],str(folder/'Fixture.cs'),str(here/('PresentationRegression.cs' if a.presentation_only else 'Regression.cs')),*[str(src/'Visuals'/f) for f in production]],check=True)
+ subprocess.run([str(sdk/'dotnet'),str(csc),'-nologo','-nowarn:0649,0067','-langversion:9','-out:'+str(out),*['-r:'+str(f) for f in refs.glob('*.dll')],str(folder/'Fixture.cs'),str(here/('LayeringRegression.cs' if a.layering_only else 'PresentationRegression.cs' if a.presentation_only else 'Regression.cs')),*[str(src/'Visuals'/f) for f in production]],check=True)
  out.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':'8.0.0'}}}))
  subprocess.run([str(sdk/'dotnet'),str(out),str(root/'Assets/Alterverse/Resources')],check=True)

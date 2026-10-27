@@ -25,12 +25,23 @@ namespace Alterverse.Visuals
         private static Data data;
         private static Mesh mesh;
         private readonly Transform[] bones;
+        private readonly bool[] upperBody;
         internal GameObject Root {get;}
         internal Clip[] Clips=>data.clips;
         internal string[] MaterialNames=>data.materials;
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Reset(){if(mesh!=null)UnityEngine.Object.Destroy(mesh);mesh=null;data=null;}
-        private Bolt7Model(GameObject root,Transform[] bones){Root=root;this.bones=bones;}
+        private Bolt7Model(GameObject root,Transform[] bones)
+        {
+            Root=root;this.bones=bones;upperBody=new bool[bones.Length];
+            for(int i=0;i<bones.Length;i++)
+            {
+                // Chest is the authored torso branch; Root/Pelvis and both legs
+                // remain owned by locomotion while its descendants fire.
+                int parent=data.bones[i].parent;
+                upperBody[i]=data.bones[i].name=="Chest"||(parent>=0&&upperBody[parent]);
+            }
+        }
         private static Vector3 V(float[] a,int i=0)=>new Vector3(a[i],a[i+1],a[i+2]);
         private static Quaternion Q(float[] a,int i=0)=>new Quaternion(a[i+3],a[i+4],a[i+5],a[i+6]);
         private static bool Finite(float[] a){if(a==null)return false;foreach(float f in a)if(float.IsNaN(f)||float.IsInfinity(f))return false;return true;}
@@ -84,11 +95,12 @@ namespace Alterverse.Visuals
             skin.sharedMaterials=new Material[data.materials.Length];
             return new Bolt7Model(root,bones);
         }
-        internal void Sample(Clip clip,float seconds)
+        internal void Sample(Clip clip,float seconds,bool upperBodyOnly=false)
         {
             float frame=Mathf.Clamp(seconds*clip.fps,0,clip.frames-1);int a=Mathf.FloorToInt(frame),b=Mathf.Min(a+1,clip.frames-1);float t=frame-a;
             for(int i=0;i<bones.Length;i++)
             {
+                if(upperBodyOnly&&!upperBody[i])continue;
                 int from=(a*bones.Length+i)*7,to=(b*bones.Length+i)*7;
                 bones[i].localPosition=Vector3.Lerp(V(clip.poses,from),V(clip.poses,to),t);
                 bones[i].localRotation=Quaternion.Slerp(Q(clip.poses,from),Q(clip.poses,to),t);

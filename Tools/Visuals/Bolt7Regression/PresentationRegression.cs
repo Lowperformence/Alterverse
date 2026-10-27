@@ -10,6 +10,40 @@ static class PresentationRegression
     static void Check(bool ok,string why){checks++;if(!ok)throw new Exception(why);}
     static Bolt7Model Rig(Bolt7Visual visual)=>(Bolt7Model)typeof(Bolt7Visual).GetField("rig",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(visual);
     static void Tick(Bolt7Visual visual,float now){Time.time=Time.unscaledTime=now;Time.deltaTime=1f/60f;GameObject.Invoke(visual,"LateUpdate");}
+    static void MovingFire(bool online,bool localHuman,bool server)
+    {
+        CoopAuthority.Active=online;CoopAuthority.LocalHasServerAuthority=server;
+        var actor=new GameObject("walk and fire");actor.AddComponent<CoopHeroSlot>().IsLocalHuman=localHuman;
+        var health=actor.AddComponent<Alterverse.Combat.Health>();Bolt7Visual.Create(actor);
+        var visual=actor.GetComponent<Bolt7Visual>();var rig=Rig(visual);
+        bool remote=online&&!server&&!localHuman;
+        float clock=20f;
+        for(int frame=0;frame<90;frame++)
+        {
+            clock=20f+frame/60f;Time.time=Time.unscaledTime=clock;
+            if(!remote||frame%3==0)
+            {
+                actor.transform.position=new Vector3(frame*.1f,0,0);
+                if(remote)visual.ReceivePresentationSnapshot(actor.transform.position,Quaternion.identity,false,false,clock);
+            }
+            if(frame%6==0)visual.Shot();
+            Tick(visual,clock);
+            if(frame>12)Check(rig.BaseClip=="Walk"&&rig.LastClip=="Fire_Loop"&&rig.UpperBodyOnly,
+                "Sustained shots preserve walking every rendered frame, online and offline");
+        }
+        Check(Math.Abs(actor.transform.position.x-(remote?8.7f:8.9f))<.001f,"Firing presentation cannot move the gameplay root");
+        if(remote){Time.time=Time.unscaledTime=clock+.01f;visual.ReceivePresentationSnapshot(actor.transform.position,Quaternion.identity,true,false,clock+.01f);}
+        for(int frame=1;frame<=60;frame++)
+        {
+            float now=clock+frame/60f;Time.time=now;visual.Shot();Tick(visual,now);
+        }
+        Check(rig.LastClip=="Fire_Loop"&&!rig.UpperBodyOnly,"Stationary firing retains its authored full-body pose");
+        Tick(visual,clock+2f);Check(rig.LastClip=="Idle","Stopping fire and movement restores idle");
+        Time.time=clock+2.01f;visual.Skill(0);visual.Shot();actor.transform.position+=Vector3.right*.1f;Tick(visual,clock+2.02f);
+        Check(rig.LastClip=="Grenade"&&!rig.UpperBodyOnly,"Skills retain full-body priority");
+        health.Die();Tick(visual,clock+2.03f);Check(rig.LastClip=="Death"&&!rig.UpperBodyOnly,"Death overrides walking and firing");
+        health.Restore();Tick(visual,clock+2.04f);Check(rig.LastClip=="Idle","Respawn clears the mixed firing pose");
+    }
     static void Main()
     {
         CoopAuthority.Active=true;
@@ -55,6 +89,10 @@ static class PresentationRegression
         Bolt7Visual.Create(preview);
         Check(ReferenceEquals(previewHat,preview.GetComponent<HeadwearPresentation>()),"Repeated BOLT Create duplicated/replaced the headwear renderer");
         CoopAuthority.Active=false;
+        MovingFire(false,true,false);
+        MovingFire(true,true,false);
+        MovingFire(true,false,false);
+        MovingFire(true,false,true);
         Console.WriteLine("PASS: "+checks+" BOLT-7 network gait/position/owner/relocation checks (controlled rig and engine).");
     }
 }
