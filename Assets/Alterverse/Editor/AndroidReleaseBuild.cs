@@ -136,6 +136,67 @@ namespace Alterverse.EditorChecks
             Debug.Log("DIMENSIONS FRONT: restored Android application ID from '"+previous+"' to '"+AndroidApplicationId+"'.");
         }
 
+        [MenuItem("DIMENSIONS FRONT/Development/Build AdMob test APK")]
+        public static void BuildAdMobTestApk()
+        {
+            if(BuildPipeline.isBuildingPlayer)
+                throw new BuildFailedException("An Android build is already running. Wait for it to finish before starting the ad test.");
+            if(EditorApplication.isCompiling||EditorApplication.isUpdating||EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new BuildFailedException("Wait for Unity to finish importing/compiling and leave Play Mode before building the ad test.");
+            if(EditorUserBuildSettings.activeBuildTarget!=BuildTarget.Android)
+                throw new BuildFailedException("Switch the active Build Profile to Android before building the ad test APK.");
+
+            var scenes=new List<string>();
+            foreach(var scene in EditorBuildSettings.scenes)if(scene.enabled)
+            {
+                if(!File.Exists(scene.path))
+                    throw new BuildFailedException("Enabled build scene is missing: "+scene.path);
+                scenes.Add(scene.path);
+            }
+            if(scenes.Count==0)
+                throw new BuildFailedException("Add the game startup scene to the Android build scene list before building the ad test APK.");
+
+            ApplyAndroidApplicationId();
+            EnsureLauncherIcon();
+            EditorUserBuildSettings.exportAsGoogleAndroidProject=false;
+            EditorUserBuildSettings.buildAppBundle=false;
+            EditorUserBuildSettings.development=true;
+            EditorUserBuildSettings.allowDebugging=false;
+            EditorUserBuildSettings.connectProfiler=false;
+            EditorUserBuildSettings.buildWithDeepProfilingSupport=false;
+            ApplyDeviceCompatibilitySettings();
+            AssetDatabase.SaveAssets();
+
+            Directory.CreateDirectory("Builds/Android");
+            bool clean=SessionState.GetBool(InterruptedBuildKey,false);
+            var options=new BuildPlayerOptions
+            {
+                scenes=scenes.ToArray(),
+                target=BuildTarget.Android,
+                // DEVELOPMENT_BUILD selects Google's test ad unit in RewardedShardAds.
+                // Do not enable the separate IAP shard-test fulfillment bypass.
+                options=BuildOptions.Development|(clean?BuildOptions.CleanBuildCache:BuildOptions.None),
+                locationPathName="Builds/Android/DIMENSIONS-FRONT-ADS-TEST-"+PlayerSettings.Android.bundleVersionCode+".apk"
+            };
+            SessionState.SetBool(InterruptedBuildKey,true);
+            Debug.Log("DIMENSIONS FRONT: building Android APK with TEST ADS. Signing settings are taken from the local project.");
+            try
+            {
+                BuildReport report=BuildPipeline.BuildPlayer(options);
+                if(report==null||report.summary.result!=BuildResult.Succeeded)
+                    throw new BuildFailedException("AdMob test APK was not completed. Inspect Editor.log; the next attempt will use a clean build.");
+                SessionState.EraseBool(InterruptedBuildKey);
+                string output=Path.GetFullPath(report.summary.outputPath);
+                Debug.Log("DIMENSIONS FRONT: TEST ADS APK created at "+output+
+                    ". Install on Android, open the Shards shop and tap WATCH AD. A completed rewarded test ad should add 2 earned shards.");
+                EditorUtility.RevealInFinder(output);
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+        }
+
         [MenuItem("DIMENSIONS FRONT/Release/Prepare Android upload")]
         public static void Prepare()
         {

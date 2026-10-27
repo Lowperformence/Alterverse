@@ -29,6 +29,24 @@ Release builds use the real placement above. The Unity Editor and dedicated serv
 never show ads or grant simulated rewards. This is a client change; it does not
 require a dedicated game-server deployment.
 
+## Build an Android ad-test APK
+
+After updating the project, switch the active Build Profile to Android and use
+**DIMENSIONS FRONT > Development > Build AdMob test APK**. The command checks the
+enabled game scenes, sets APK output and Development Build, and builds to
+`Builds/Android/DIMENSIONS-FRONT-ADS-TEST-<version-code>.apk`. It uses the local
+signing configuration; it does not change signing keys or passwords.
+
+Install the APK on an Android device, open the Shards shop and tap `WATCH AD`.
+The development flag selects Google's test ad unit. Confirm that completing the
+ad adds 2 earned shards, closing before earning the reward adds none, and the
+privacy choices are available when required. No live ad or device test is
+performed merely by updating the source. The separate Google Play IAP shard-test
+bypass is not enabled by this command.
+
+The existing Release build commands restore non-development AAB settings and
+use the production rewarded placement.
+
 ## Before a production rollout
 
 1. Finish AdMob account/app verification. Confirm that the published Play listing's
