@@ -26,6 +26,7 @@ public Health AcquireCone(float range,Vector3 direction,float coneAngle,bool her
 public Health AcquireAssisted(float range,Vector3 direction,float angle,bool heroesOnly=false)
 {
 current=angle>0?AimGeometry.Select(gameObject,direction,range,angle,heroesOnly:heroesOnly):null;
+if(VoidKnightState.HiddenFrom(gameObject,current))current=null;
 stickyUntil=0;return current;
 }
 public Health Acquire(float range,Vector3 aimDirection,bool preferHeroes=true)
@@ -55,7 +56,8 @@ if(preferHeroes&&hero&&score>bestHeroScore){bestHeroScore=score;bestHero=h;}
 }
 if(bestHero!=null)best=bestHero;else if(sticky)return current;current=best;stickyUntil=Time.time+stickSeconds;return current;
 }
-public void Release(){current=basicTarget=null;stickyUntil=basicHoldUntil=0;}public void RegisterOffensiveAction(){if(Valid(current))stickyUntil=Time.time+stickSeconds;}private bool Valid(Health h){if(h==null||h.IsDead||!h.isActiveAndEnabled||h==self)return false;RealityCore core=h.GetComponent<RealityCore>();if(core!=null)return core.IsVulnerable&&core.Team!=(team!=null?team.Team:0);DimensionPlanet planet=h.GetComponent<DimensionPlanet>();if(planet!=null)return planet.Available;TeamMember other=h.GetComponent<TeamMember>();if(other!=null&&team!=null)return other.Team!=team.Team;LaneMinion minion=h.GetComponent<LaneMinion>();if(minion!=null)return minion.Team!=(team!=null?team.Team:0);LaneTower tower=h.GetComponent<LaneTower>();if(tower!=null)return tower.Team!=(team!=null?team.Team:0);return false;}
+public void Release(){current=basicTarget=null;stickyUntil=basicHoldUntil=0;}public void RegisterOffensiveAction(){if(Valid(current))stickyUntil=Time.time+stickSeconds;}private bool Valid(Health h){if(h==null||h.IsDead||!h.isActiveAndEnabled||h==self||VoidKnightState.HiddenFrom(gameObject,h))return false;RealityCore core=h.GetComponent<RealityCore>();if(core!=null)return core.IsVulnerable&&core.Team!=(team!=null?team.Team:0);DimensionPlanet planet=h.GetComponent<DimensionPlanet>();if(planet!=null)return planet.Available;TeamMember other=h.GetComponent<TeamMember>();if(other!=null&&team!=null)return other.Team!=team.Team;LaneMinion minion=h.GetComponent<LaneMinion>();if(minion!=null)return minion.Team!=(team!=null?team.Team:0);LaneTower tower=h.GetComponent<LaneTower>();if(tower!=null)return tower.Team!=(team!=null?team.Team:0);return false;}
 }
 }
+
 

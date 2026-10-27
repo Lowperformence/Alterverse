@@ -136,7 +136,7 @@ namespace Alterverse.AI
         private bool IsEnemy(Health candidate)
         {
             if (candidate == null || candidate == selfHealth || candidate.IsDead ||
-                !candidate.isActiveAndEnabled || teamMember == null) return false;
+                !candidate.isActiveAndEnabled || teamMember == null || VoidKnightState.HiddenFrom(gameObject,candidate)) return false;
 
             HeroIdentity hero=candidate.GetComponent<HeroIdentity>();
             DimensionPlanet planet = candidate.GetComponent<DimensionPlanet>();
@@ -326,5 +326,6 @@ namespace Alterverse.AI
         }
     }
 }
+
 
 

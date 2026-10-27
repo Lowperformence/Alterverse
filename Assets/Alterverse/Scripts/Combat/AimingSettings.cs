@@ -97,6 +97,13 @@ namespace Alterverse.Combat
                     if (overrides[i].hero == hero && overrides[i].slot == slot) { spec = overrides[i].spec; break; }
             // Projectile/beam/homing describe presentation only. Even legacy serialized
             // overrides must resolve damage through the same cone shown to the player.
+            // Sightline Break keeps its needle-thin, doubled field even with an old serialized override.
+            if(hero==HeroId.Nyra&&slot==3)
+            {
+                spec.castRange=HeroAbilityKit.SivraUltimateRange;
+                spec.coneAngle=HeroAbilityKit.SivraUltimateConeAngle;
+                spec.aimType=AimType.Projectile;
+            }
             if (spec.aimType == AimType.Projectile || spec.aimType == AimType.Beam || spec.aimType == AimType.Homing)
                 spec.targetingMode = slot < 0 ? TargetingMode.AutoBasic : TargetingMode.Cone;
             spec.castRange = Mathf.Max(0f, spec.castRange);
@@ -125,4 +132,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 

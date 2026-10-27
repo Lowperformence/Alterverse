@@ -19,6 +19,7 @@ class Regression
  static float Hp(GameObject a)=>a.GetComponent<Health>().Current;
  static void Main()
  {
+  CloakCases();
   Check((int)HeroId.VoidKnight==9&&(int)HeroId.Bolt7==10&&HeroIdentity.HeroCount==11,"stable appended roster ID");Near(HeroIdentity.AttackDamage(HeroId.VoidKnight),20,"20 basic damage");
   Check(HeroIdentity.BaseHealth(HeroId.VoidKnight)<HeroIdentity.BaseHealth(HeroId.Kaelon),"less health than tank");Check(HeroIdentity.BaseHealth(HeroId.VoidKnight)>HeroIdentity.BaseHealth(HeroId.Veyr),"more health than assassin");
   foreach(var id in new[]{HeroId.Veyr,HeroId.Timmy,HeroId.Kaelon})Check(VoidKnightBalance.BasicRange>HeroCombatProfile.StatsFor(id).AttackRange,"longer reach than "+id);
@@ -69,5 +70,38 @@ class Regression
   Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);a.GetComponent<Health>().Current=995;b=Actor(HeroId.Veyr,1,Vector3.forward*2);Unlock(a);a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Aim(a));Run(.7f);Near(Hp(a),1000,"life drain cannot exceed caster maximum HP");
   Console.WriteLine("VOID KNIGHT: "+passed+" checks passed. Engine fixtures; native Unity and NGO not covered.");
  }
+ static void CloakCases()
+ {
+  Reset();var a=Actor(HeroId.VoidKnight,0,Vector3.zero);var b=Actor(HeroId.Veyr,1,Vector3.forward*2);
+  var ally=Actor(HeroId.Nyra,0,Vector3.right);var state=a.GetComponent<VoidKnightState>();
+  Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(0,Aim(a)),"cloak sweep accepted");
+  Run(.27f);Check(!state.Cloaked,"cloak waits for actual swing");
+  Run(.03f);Check(state.Cloaked,"sweep cloaks at release");Near(state.CloakRemaining,1.98f,"cloak lasts two seconds from release");
+  Check(VoidKnightState.HiddenFrom(b,a.GetComponent<Health>()),"enemy loses target visibility");
+  Check(!VoidKnightState.HiddenFrom(ally,a.GetComponent<Health>())&&!VoidKnightState.HiddenFrom(a,a.GetComponent<Health>()),"owner and ally keep visibility");
+  var targeting=b.AddComponent<SoftTargeting>();Check(targeting.Acquire(4,Vector3.back)!=a.GetComponent<Health>(),"automatic acquisition excludes cloaked Knight");
+  float hp=Hp(a);a.GetComponent<Health>().TakeDamage(10);Near(Hp(a),hp-10,"cloak does not grant invulnerability");
+  Run(1.95f);Check(state.Cloaked,"still cloaked just before expiry");Run(.05f);Check(!state.Cloaked,"cloak expires without input");
+  Check(targeting.Acquire(4,Vector3.back)==a.GetComponent<Health>(),"target returns after expiry");
+  Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);state=a.GetComponent<VoidKnightState>();
+  Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(0,Aim(a)),"empty sweep accepted");Run(.3f);Check(state.Cloaked,"miss still cloaks");
+  float left=state.CloakRemaining;Run(.2f);Check(state.CloakRemaining<left,"open hit interval never refreshes cloak");
+  Check(!a.GetComponent<HeroAbilityExecution>().TryCastAimed(0,Aim(a)),"cooldown rejects second sweep");
+  a.GetComponent<Health>().TakeDamage(10000);Check(!state.Cloaked,"death immediately clears cloak");
+  Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);state=a.GetComponent<VoidKnightState>();
+  a.GetComponent<HeroAbilityExecution>().TryCastAimed(0,Aim(a));Run(.1f);a.GetComponent<HeroCombatStatus>().Stun(1);Run(.3f);
+  Check(!state.Cloaked,"interrupted windup never grants cloak");
+  Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);state=a.GetComponent<VoidKnightState>();
+  CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;state.BeginSweepCloak();Check(!state.Cloaked,"replica cannot grant own cloak");
+  state.ApplyCloakSnapshot(2,100,100.5);Near(state.CloakRemaining,1.5f,"replica subtracts network delay");
+  Run(.25f);state.ApplyCloakSnapshot(2,100,100.5);Near(state.CloakRemaining,1.25f,"duplicate event cannot restart cloak");
+  state.ApplyCloakSnapshot(2,99,100.5);Near(state.CloakRemaining,1.25f,"old snapshot cannot overwrite newer cloak");
+  state.ApplyCloakSnapshot(2,double.NaN,101);state.ApplyCloakSnapshot(float.NaN,101,101);Near(state.CloakRemaining,1.25f,"invalid network data rejected");
+  state.ApplyCloakSnapshot(0,101,101);Check(!state.Cloaked,"new server snapshot cancels cloak");
+  state.ApplyCloakSnapshot(2,102,104.1);Check(!state.Cloaked,"late effect never revives expired cloak");
+  state.ApplyCloakSnapshot(2,105,105);Check(state.Cloaked,"latest snapshot repairs a lost effect event");
+  a.SetActive(false);Check(!state.Cloaked,"disable clears cloak");
+ }
 }
+
 

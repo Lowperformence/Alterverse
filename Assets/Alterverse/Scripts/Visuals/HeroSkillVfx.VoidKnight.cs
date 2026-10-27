@@ -3,6 +3,21 @@ namespace Alterverse.Visuals
 {
     public sealed partial class HeroSkillVfx
     {
+        public static void VoidKnightSmoke(GameObject actor,Vector3 origin,bool relay=true,float elapsed=0)
+        {
+            if(actor==null||actor.GetComponent<Alterverse.Characters.HeroIdentity>()?.Hero!=Alterverse.Characters.HeroId.VoidKnight)return;
+            if(relay)Alterverse.Multiplayer.CoopHeroStateSync.BroadcastVoidKnightEffect(actor,4,origin,origin,0,Alterverse.Characters.VoidKnightBalance.SweepCloakSeconds);
+            // Fixed at the strike position: the dissipating cloud never follows or reveals the escape.
+            float seconds=.55f-elapsed;if(seconds<=0)return;
+            Color smoke=new Color(.24f,.18f,.32f,.55f);
+            for(int i=0;i<7;i++)
+            {
+                float angle=i*Mathf.PI*2f/7f;
+                Vector3 offset=new Vector3(Mathf.Cos(angle),.35f+(i%3)*.28f,Mathf.Sin(angle))*.65f;
+                HeroVfxPool.Emit(HeroFxShape.Mist,origin+offset,origin+offset*1.8f+Vector3.up*.6f,
+                    Vector3.one*(.8f+(i%3)*.18f),smoke,seconds,HeroFxMotion.Drift);
+            }
+        }
         public static void CancelVoidKnightWarnings(GameObject actor,bool relay=true)
         {
             HeroVfxPool.CancelWarnings(actor);
@@ -36,3 +51,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

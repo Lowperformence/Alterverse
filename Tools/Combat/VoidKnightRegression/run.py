@@ -39,3 +39,10 @@ with tempfile.TemporaryDirectory(prefix='void-knight-regression-') as tmp:
  subprocess.run([str(dotnet/'dotnet'),str(csc),'-nologo','-noconfig','-langversion:latest','-out:'+str(release_out),*[f'-r:{x}' for x in refs.glob('*.dll')],str(tmp/'EngineStubs.cs'),str(here/'ExtraStubs.cs'),str(here/'PurchaseRegression.cs'),*release_sources],check=True)
  (tmp/'PurchaseRegression.runtimeconfig.json').write_text((tmp/'Regression.runtimeconfig.json').read_text())
  subprocess.run([str(dotnet/'dotnet'),str(release_out)],check=True)
+ # Compile the actual renderer with a separate presentation-only engine fixture.
+ visual_out=tmp/'CloakPresentationRegression.dll'
+ subprocess.run([str(dotnet/'dotnet'),str(csc),'-nologo','-langversion:9','-out:'+str(visual_out),*[f'-r:{x}' for x in refs.glob('*.dll')],
+  str(here/'CloakPresentationRegression.cs'),str(src/'Visuals/VoidKnightStealth.cs'),str(src/'Characters/VoidKnightBalance.cs')],check=True)
+ visual_out.with_suffix('.runtimeconfig.json').write_text((tmp/'Regression.runtimeconfig.json').read_text())
+ subprocess.run([str(dotnet/'dotnet'),str(visual_out)],check=True)
+

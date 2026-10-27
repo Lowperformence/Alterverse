@@ -10,6 +10,7 @@ partial class Regression
 {
  public static void RunEntryCases()
  {
+  RequestedBalanceCases();
   TemporalBeamCases();
   foreach(int fps in new[]{30,60,120})
   {
@@ -33,6 +34,31 @@ partial class Regression
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   Console.WriteLine("PASS "+checks+" skill-entry and existing combat assertions. Deterministic engine fixtures; no native Unity/Android/latency test.");
+ }
+
+ static void RequestedBalanceCases()
+ {
+  Reset();Near(HeroIdentity.AttackDamage(HeroId.Timmy),25,"Timmy requested basic damage");
+  var grenades=HeroAbilityKit.LoadoutFor(HeroId.Bolt7);
+  Near(grenades.Q.Power,35,"Frag Arc requested damage");Near(grenades.E.Power,35,"Impulse requested damage");
+  Near(grenades.Q.Radius,2,"Frag Arc requested radius");Near(grenades.E.Radius,2,"Impulse requested radius");
+  Near(HeroAbilityKit.LoadoutFor(HeroId.Nyra).Ultimate.Range,7.8f*2,"Sivra ultimate doubled range");
+  var aim=AimingSettings.Current.For(HeroId.Nyra,3);Near(aim.coneAngle,3,"Sivra needle-thin cone");
+  var legacy=aim;legacy.castRange=7.8f;legacy.coneAngle=35;
+  AimingSettings.Current.overrides=new[]{new AimingSettings.AttackOverride{hero=HeroId.Nyra,slot=3,spec=legacy}};
+  Near(AimingSettings.Current.For(HeroId.Nyra,3).castRange,15.6f,"legacy asset cannot shorten requested ultimate");
+  Near(AimingSettings.Current.For(HeroId.Nyra,3).coneAngle,3,"legacy asset cannot widen requested ultimate");
+  foreach(int fps in new[]{30,60,120})
+  {
+   Reset();var actor=Hero(HeroId.Nyra,0,Vector3.zero);var center=Hero(HeroId.Kaelon,1,Vector3.forward*14);
+   var side=Hero(HeroId.Kaelon,1,Angle(10,14));var far=Hero(HeroId.Kaelon,1,Vector3.forward*17);
+   Check(actor.GetComponent<PlayerHeroAbilities>().CastAimed(3,Forward(actor,15.6f)),"extended ultimate casts "+fps);
+   for(int i=0;i<fps;i++)Step(1f/fps);
+   Near(Total(center),936,"all three shots reach doubled range "+fps);Near(Total(side),1000,"narrow cone excludes side target "+fps);Near(Total(far),1000,"extended cone retains its maximum range "+fps);
+  }
+  Check(Alterverse.UI.HeroAttackCatalog.For(HeroId.Timmy)[0].Stats.StartsWith("25 DMG"),"Timmy menu uses new basic damage");
+  var cards=Alterverse.UI.HeroAttackCatalog.For(HeroId.Bolt7);
+  Check(cards[1].Stats.Contains("35 DMG")&&cards[1].Stats.Contains("AOE 2")&&cards[3].Stats.Contains("35 DMG")&&cards[3].Stats.Contains("AOE 2"),"grenade menu shares requested combat values");
  }
 
  static void NetworkNonHeroIdentity()
@@ -351,4 +377,5 @@ partial class Regression
   }
  }
 }
+
 

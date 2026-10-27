@@ -344,12 +344,15 @@ namespace Alterverse.Combat
                 bool automatic = AutomaticBasic(p);
                 if (!p.Launched)
                 {
-                    if (automatic && !HeroCombatRules.Enemy(gameObject, p.Target))
+                    if (automatic && (!HeroCombatRules.Enemy(gameObject, p.Target)||VoidKnightState.HiddenFrom(gameObject,p.Target)))
                     { pending[i] = default; continue; }
                     if (automatic) FaceBasicTarget(p);
                     if (Time.time < p.ReleaseAt) continue;
                     p.Launched = true;
                     p.LaunchOrigin = transform.position;
+                    // Trigger once at the real swing, including a miss; late cone entrants cannot restart it.
+                    if(!p.Basic&&p.Slot==0&&identity.Hero==HeroId.VoidKnight)
+                        (GetComponent<VoidKnightState>()??gameObject.AddComponent<VoidKnightState>()).BeginSweepCloak();
                     if (automatic)
                     {
                         p.Point = p.Target.transform.position;
@@ -410,5 +413,6 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 

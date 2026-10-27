@@ -29,6 +29,8 @@ namespace Alterverse.Characters
         public const float SivraDashSpeedSeconds = 1.8f;
         public const float SivraPrismShieldAbsorb = 15f;
         public const float SivraPrismOvershieldSeconds = 3f;
+        public const float SivraUltimateRange = 15.6f;
+        public const float SivraUltimateConeAngle = 3f;
         public HeroId Hero { get; private set; }
         public AbilitySpec Passive { get; private set; }
         public AbilitySpec Q { get; private set; }
@@ -83,7 +85,7 @@ namespace Alterverse.Characters
                     new("Prism Shot",7,32,7.8f),
                     new("Vector Shift",14,0,3f),
                     new("Light Snare",12,25,6.8f),
-                    new("Sightline Break",50,64,7.8f)),
+                    new("Sightline Break",50,64,SivraUltimateRange)),
                 HeroId.Elyra=>new HeroAbilityLoadout(
                     new("Field geometry",0,0,0),
                     new("Orbit Fracture",8,35,7.3f,2f,.38f),
@@ -127,3 +129,4 @@ namespace Alterverse.Characters
         }
     }
 }
+

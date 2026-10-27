@@ -10,6 +10,22 @@ using UnityEngine;
 static class Regression
 {
  static int checks;
+ static void CloakTransportCases()
+ {
+  CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=true;CoopAuthority.ActivePlan=new();
+  var server=new CoopHeroStateSync();var client=new CoopHeroStateSync();var source=Actor(0);var replica=Actor(0,true);
+  source.GetComponent<HeroIdentity>().Hero=replica.GetComponent<HeroIdentity>().Hero=HeroId.VoidKnight;
+  source.gameObject.AddComponent<VoidKnightState>().CloakRemaining=1.5f;
+  server.Slot(source);client.Slot(replica,true);var sm=new NetworkManager{IsServer=true};var cm=new NetworkManager();sm.ServerTime.Time=100;cm.ServerTime.Time=100.2;
+  NetworkManager.Singleton=sm;server.Broadcast(sm);var packet=server.Messages.Sent[^1];
+  Check(packet.Name=="DF_COOP_HERO_SNAPSHOT_V8","new cloak schema uses distinct protocol version");
+  CoopAuthority.LocalHasServerAuthority=false;NetworkManager.Singleton=cm;client.ReceiveSnapshot(0,packet.Values);
+  var state=replica.GetComponent<VoidKnightState>();Check(state!=null&&state.CloakRemaining==1.5f&&state.Sampled==100&&state.Now==100.2,"actual snapshot carries remaining cloak and server timestamp");
+  object[] effect={CoopPlanHandshake.Round,0,4,0f,0f,0f,0f,0f,0f,0f,2f,100d};
+  Alterverse.Visuals.HeroSkillVfx.SmokeCalls=0;client.ReceiveVoid(99,effect);Check(Alterverse.Visuals.HeroSkillVfx.SmokeCalls==0,"non-server cannot publish cloak smoke");
+  client.ReceiveVoid(0,effect);Check(state.CloakRemaining==2&&Math.Abs(Alterverse.Visuals.HeroSkillVfx.SmokeElapsed-.2f)<.001,"actual effect reader applies cloak with elapsed latency");
+  cm.ServerTime.Time=103;int before=Alterverse.Visuals.HeroSkillVfx.SmokeCalls;client.ReceiveVoid(0,effect);Check(Alterverse.Visuals.HeroSkillVfx.SmokeCalls==before,"expired packet never replays smoke");
+ }
  static void Check(bool value,string reason){if(!value)throw new Exception(reason);checks++;}
  static Vector3 P(float x)=>new(x,0,0);
  static void Position(Vector3 actual,Vector3 expected,string reason)=>Check((actual-expected).sqrMagnitude<.000001f,reason);
@@ -69,7 +85,7 @@ static class Regression
   Check((int)snapshot[1]==1,"Snapshot count includes only actors with serializable health");
   // Physics may have advanced after processing the owner packet. Only the pose at
   // acknowledgement time is comparable to that packet's client-side prediction.
-  snapshot[3]=.5f;
+  snapshot[5]=.5f;
   CoopAuthority.LocalHasServerAuthority=false;NetworkManager.Singleton=clientManager;MatchScoreboard.Instance=clientBoard;
   client.ReceiveSnapshot(0,snapshot);
   Position(clientActor.transform.position,P(1.625f),"Full transport preserves four newer movement predictions in flight");
@@ -112,9 +128,9 @@ static class Regression
   Check((int)server.Messages.Sent[^1].Values[1]==8,"A complete 4v4 roster is serialized");
   float snapshotTime=Time.unscaledTime;
   int bytes=0;foreach(var field in server.Messages.Sent[^1].Values)
-   bytes+=field is bool?1:field is int||field is uint||field is float?4:throw new Exception("Unknown snapshot field type");
+   bytes+=field is bool?1:field is double?8:field is int||field is uint||field is float?4:throw new Exception("Unknown snapshot field type");
   Check(bytes<1200,"Full roster snapshot stays below a conservative 1200-byte application payload budget");
-  int projectedTenBytes=8+(bytes-8)/8*10;
+  int projectedTenBytes=20+(bytes-20)/8*10;
   Check(projectedTenBytes<1200,"Projected ten-hero record payload fits the same budget; this does not enable ten-player admission");
   Console.WriteLine($"Hero snapshot application bytes: eight={bytes}, projected ten={projectedTenBytes}; transport framing is additional.");
   CoopAuthority.LocalHasServerAuthority=false;MatchScoreboard.Instance=clientBoard;client.ReceiveSnapshot(0,server.Messages.Sent[^1].Values);
@@ -438,7 +454,8 @@ static class Regression
   Check(budget.Limit(7,float.NaN,4.77f,1f,.18f)==0,"Invalid time cannot mint movement allowance");
  }
 
- static void Main(){SustainedSpeedCases();OwnerBurstProbe();HistoryCases();TransportCases();DashTransportCases();HealingAndStatusCases();WorldPacketCases();SnapshotWorkCases();EnlargedBoundaryCases();CadenceCases();WorldDeltaCases();TimingCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
+ static void Main(){CloakTransportCases();SustainedSpeedCases();OwnerBurstProbe();HistoryCases();TransportCases();DashTransportCases();HealingAndStatusCases();WorldPacketCases();SnapshotWorkCases();EnlargedBoundaryCases();CadenceCases();WorldDeltaCases();TimingCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
 }
+
 
 

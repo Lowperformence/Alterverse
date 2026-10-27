@@ -1,5 +1,6 @@
 // Minimal deterministic Unity/network fixtures. Production aiming/control/attack code is compiled unchanged.
 using System;
+// Rendering is exercised separately by the production-cloak presentation fixture.
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -228,3 +229,6 @@ namespace Alterverse.Visuals {public static class TravelerLightningVfx {
 }}
 
 namespace Alterverse.Visuals {public sealed class Bolt7Visual:UnityEngine.MonoBehaviour {public bool HasNetworkPresentation;public UnityEngine.Vector3 PresentedPosition;public UnityEngine.Quaternion PresentedRotation=UnityEngine.Quaternion.identity;}}
+
+
+namespace Alterverse.Visuals {public class VoidKnightStealth:UnityEngine.MonoBehaviour {}}

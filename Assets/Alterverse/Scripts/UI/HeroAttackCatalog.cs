@@ -97,14 +97,14 @@ namespace Alterverse.UI
         {
             HeroId.Bolt7=>slot switch
             {
-                0=>"Short grenade arc; small area explosion. 35 damage at the centre, falling to 15 at the edge.",
+                0=>$"Short grenade arc; {Bolt7Balance.GrenadeDamage:0} damage throughout a {Bolt7Balance.GrenadeRadius:0.#}m radius. {Bolt7Balance.GrenadeRange:0.#}m throw range; cover blocks it.",
                 1=>"Brief windup and 2m rush; hit every enemy in the full marked 3m, 70 degree cone for 40 damage and knockback. Cover blocks it.",
-                2=>"Second short grenade: 25 damage in 1.1m and 0.8m outward knockback. 6m throw range; cover blocks it.",
+                2=>$"Impulse grenade: {Bolt7Balance.ImpulseDamage:0} damage throughout a {Bolt7Balance.ImpulseRadius:0.#}m radius and {Bolt7Balance.ImpulseKnockback:0.#}m outward knockback. {Bolt7Balance.ImpulseRange:0.#}m throw range; cover blocks it.",
                 _=>"After a 0.9s warning, remove every personal shield and overshield in the enemy area once. Lightning Orb and Lightning Nova, then Star Fog. New shields work immediately. No health damage."
             },
             HeroId.VoidKnight=>slot switch
             {
-                0=>"A wide greatsword cut; its direction stays fixed through the readable windup.",
+                0=>$"A wide greatsword cut; its direction stays fixed through the windup. At the swing, vanish in smoke for {VoidKnightBalance.SweepCloakSeconds:0}s, even on a miss: 80% transparent to yourself and allies, 98% to enemies. Enemy target locks and health markers disappear; area attacks can still hit.",
                 1=>"Stand and guard for 0.65s. Reduce frontal damage 80%. A successful block triggers one short counter. Rear and flank hits bypass the guard.",
                 2=>$"Tap to thrust in movement direction; drag to aim. A short preparation precedes the lunge. The first enemy stops it and is slowed by {(1f-VoidKnightBalance.DashSlow)*100:0}% for {VoidKnightBalance.DashSlowSeconds:0.#}s; walls block it. No invulnerability.",
                 _=>$"After a 0.65s warning, strike an 80-degree front cone once per enemy. Each hit adds {VoidKnightBalance.UltimateLifeDrain:0} damage and restores up to {VoidKnightBalance.UltimateLifeDrain:0} HP from actual health lost. Slow movement 25% for 1.2s. Stuns interrupt preparation."
@@ -135,7 +135,7 @@ namespace Alterverse.UI
                 0=>$"Fixed-direction blue laser. Steal up to {HeroAbilityKit.SivraPrismShieldAbsorb:0} enemy shield before damage. Refill your base shield first; excess becomes {HeroAbilityKit.SivraPrismOvershieldSeconds:0.#}s bonus shield within the shield cap.",
                 1=>$"Reposition dash up to 3m. Passive: after the dash, gain +{(HeroAbilityKit.SivraDashSpeedMultiplier-1f)*100:0}% running speed for {HeroAbilityKit.SivraDashSpeedSeconds:0.#}s.",
                 2=>"Damages and slows the target by 30% for 1.8s.",
-                _=>"Three fixed-direction shots; 64 total damage if all shots connect."
+                _=>$"Three fixed-direction shots through a very narrow {HeroAbilityKit.SivraUltimateConeAngle:0.#}-degree cone, up to {HeroAbilityKit.SivraUltimateRange:0.#}m (double range). 64 total damage if all shots connect."
             },
             HeroId.Elyra=>slot switch
             {
@@ -176,3 +176,4 @@ namespace Alterverse.UI
         };
     }
 }
+
