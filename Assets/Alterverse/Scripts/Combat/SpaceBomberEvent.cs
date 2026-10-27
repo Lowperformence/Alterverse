@@ -100,7 +100,7 @@ namespace Alterverse.Combat
             activeFlyover=root.AddComponent<SpaceBomberFlyover>();
             activeFlyover.Initialize(this,start,end,BomberAltitude,BomberSpeed,pass,
                 armorMaterial,darkMaterial,energyMaterial,warningMaterial,bombMaterial,engineLoop,front,passRandom);
-            if(announceNetwork&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+            if(announceNetwork&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)
                 NetworkFlyoverSpawned?.Invoke(pass,seed);
         }
 

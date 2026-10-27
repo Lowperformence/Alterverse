@@ -226,3 +226,5 @@ namespace Alterverse.Visuals {public static class TravelerLightningVfx {
  public static bool ScheduleImpactAudio(UnityEngine.GameObject a,int s,UnityEngine.Vector3 p,System.Action play){if(!Defer)return false;Pending=play;return true;}
  public static void CancelOwner(UnityEngine.GameObject a){}public static void CancelDelivery(int id){}
 }}
+
+namespace Alterverse.Visuals {public sealed class Bolt7Visual:UnityEngine.MonoBehaviour {public bool HasNetworkPresentation;public UnityEngine.Vector3 PresentedPosition;public UnityEngine.Quaternion PresentedRotation=UnityEngine.Quaternion.identity;}}

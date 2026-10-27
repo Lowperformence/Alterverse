@@ -46,3 +46,5 @@ namespace UnityEngine.SceneManagement {
   public static void UnloadSceneAsync(Scene s){if(!Loaded.Remove(s.Id))return;sceneUnloaded?.Invoke(s);foreach(var g in UnityEngine.GameObject.All.Where(g=>g.scene==s).ToArray())g.DestroyForTest();}
  }
 }
+
+namespace Alterverse.Combat {public sealed class CombatFeedback:UnityEngine.MonoBehaviour {public void RestoreBeforeDeath(){}}}

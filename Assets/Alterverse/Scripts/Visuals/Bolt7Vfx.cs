@@ -16,7 +16,7 @@ namespace Alterverse.Visuals
         private Transform inactiveRoot;
         private const float GrenadeVisualScale=.70f;
         private const float BasicVisualScale=1f/3f;
-        private const float AttackSoundVolumeMultiplier=.65f*.75f;
+        private const float AttackSoundVolumeMultiplier=.65f*.75f*.75f;
         private static readonly Color RamColor=new Color(1f,.68f,.22f,.95f);
         public static void Warm()
         {

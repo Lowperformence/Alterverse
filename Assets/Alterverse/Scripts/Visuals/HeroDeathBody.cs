@@ -52,6 +52,7 @@ namespace Alterverse.Visuals
             foreach (Renderer renderer in visual.GetComponentsInChildren<Renderer>(true))
                 if (renderer.enabled && renderer.gameObject.activeInHierarchy) { visible = true; break; }
             if (!visible) return;
+            actor.GetComponent<Alterverse.Combat.CombatFeedback>()?.RestoreBeforeDeath();
 
             // Bound transient meshes/renderers even if many heroes die simultaneously.
             bodies.RemoveAll(body => body == null);

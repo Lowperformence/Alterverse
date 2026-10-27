@@ -25,6 +25,9 @@ namespace Alterverse.Visuals
         private float displayedSpeed;
         private bool RemoteReplica=>replicaSlot!=null&&CoopAuthority.Active&&
             !CoopAuthority.LocalHasServerAuthority&&!replicaSlot.IsLocalHuman;
+        public bool HasNetworkPresentation=>isActiveAndEnabled&&visualRoot!=null&&RemoteReplica&&presentation.Ready;
+        public Vector3 PresentedPosition {get;private set;}
+        public Quaternion PresentedRotation {get;private set;}=Quaternion.identity;
         public void ReceivePresentationSnapshot(Vector3 position,Quaternion rotation,bool discontinuity,bool forcedMoving,float sampledAt=float.NaN)
         {
             replicaSlot??=GetComponent<CoopHeroSlot>();
@@ -32,7 +35,7 @@ namespace Alterverse.Visuals
             bool reset=discontinuity||!presentation.Ready;
             if(float.IsNaN(sampledAt))presentation.Push(position,rotation,Time.unscaledTime,reset);
             else presentation.PushRemote(position,rotation,sampledAt,Time.unscaledTime,reset);
-            if(reset){previous=position;displayedSpeed=walkTime=0;}
+            if(reset){PresentedPosition=previous=position;PresentedRotation=rotation;displayedSpeed=walkTime=0;}
         }
         private string action;
         private float actionStarted,actionUntil,fireUntil,walkTime;
@@ -96,6 +99,7 @@ namespace Alterverse.Visuals
             // and respawn use the grounded pose immediately, including before the next render.
             action=null;actionUntil=fireUntil=walkTime=displayedSpeed=0;previous=transform.position;
             presentation.Clear();
+            PresentedPosition=transform.position;PresentedRotation=transform.rotation;
             if(visualRoot!=null){visualRoot.localPosition=basePosition;visualRoot.localRotation=Quaternion.identity;}
             if(clips.TryGetValue("Idle",out var idle))rig.Sample(idle,0f);
             // Idle is the fallback pose, not an action that locks out the first walk cycle.
@@ -116,6 +120,7 @@ namespace Alterverse.Visuals
             float now=health==null?Time.unscaledTime:Time.time;float dt=Mathf.Max(.001f,health==null?Time.unscaledDeltaTime:Time.deltaTime);
             Vector3 presented=transform.position;Quaternion rotation=transform.rotation;
             if(RemoteReplica&&presentation.Ready)presentation.Evaluate(Time.unscaledTime,out presented,out rotation);
+            PresentedPosition=presented;PresentedRotation=rotation;
             visualRoot.localPosition=basePosition+transform.InverseTransformVector(presented-transform.position);
             visualRoot.rotation=rotation;
             Vector3 delta=presented-previous;delta.y=0;previous=presented;
