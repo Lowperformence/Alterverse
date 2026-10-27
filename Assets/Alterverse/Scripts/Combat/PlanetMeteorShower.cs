@@ -20,7 +20,7 @@ Vector2 r=Random.insideUnitCircle*radius;
 Vector3 p=transform.position+new Vector3(r.x,0,r.y);
 float stagger=i*.16f;
 MeteorStrike.Create(p,telegraph,damage,stagger,planet);
-if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)
     NetworkMeteorSpawned?.Invoke(gameObject.name,p,telegraph,damage,stagger);
 }
 }

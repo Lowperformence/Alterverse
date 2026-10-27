@@ -65,7 +65,7 @@ namespace Alterverse.Combat
             go.transform.position=ground;
             FractureCorePickup pickup=go.AddComponent<FractureCorePickup>();
             pickup.groundPosition=ground;
-            if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+            if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)
             {
                 pickup.networkId=coopSerial++;
                 NetworkSpawned?.Invoke(pickup.networkId,ground);
@@ -236,7 +236,7 @@ namespace Alterverse.Combat
             claimed=true;
             collector=health.transform;
             collectStarted=Time.time;
-            if(networkId>=0&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+            if(networkId>=0&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)
                 NetworkClaimed?.Invoke(networkId);
 
             health.Heal(health.Max*HealFraction,false);
