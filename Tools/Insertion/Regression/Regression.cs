@@ -34,6 +34,46 @@ static class Regression {
   typeof(MatchOpening).GetField("phaseElapsed",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(opening,elapsed);
  }
  static void Main(string[] args){
+  // Sample the real flight functions: mirrored straight paths, continuous takeoff and packet correction filtering.
+  float Length(Vector3 value)=>(float)Math.Sqrt(value.sqrMagnitude);
+  Vector3 Velocity(Quaternion heading,float p,float h=.001f)=>
+   (MatchInsertionTransport.FlightOffset(heading,p+h)-MatchInsertionTransport.FlightOffset(heading,p-h))/(2f*h);
+  foreach(float yaw in new[]{90f,-90f}){
+   var heading=Quaternion.Euler(0,yaw,0);
+   var hover=MatchInsertionTransport.FlightOffset(heading,1.5f);
+   Check(Length(hover-new Vector3(0,1.8f,-2f))<.0001f,"Stable hover keeps the original spawn cover");
+   Check(Length(MatchInsertionTransport.FlightOffset(heading,2f)-hover)<.0001f,"Delivery starts from the exact hover position");
+   Check(Length(Velocity(heading,1f))<.01f&&Length(Velocity(heading,2f))<.01f,"Arrival and takeoff meet hover without a velocity jump");
+   float lastY=hover.y,lastSpeed=0f;
+   for(int i=0;i<=400;i++){
+    float p=i*.01f;var point=MatchInsertionTransport.FlightOffset(heading,p);
+    Check(Math.Abs(point.z+2f)<.0001f,"Each team flies along its heading without sideways drift");
+    Check(!float.IsNaN(point.y)&&!float.IsInfinity(point.x),"Flight positions stay finite");
+    if(p>2f){
+     float speed=Length(Velocity(heading,p));
+     Check(point.y>=lastY-.0001f,"Takeoff climbs continuously");
+     if(p<3.99f)Check(speed>=lastSpeed-.01f,"Takeoff accelerates without the old midpoint stop");
+     lastY=point.y;lastSpeed=speed;
+    }
+   }
+   Check(Length(Velocity(heading,3f))>5f,"Ship keeps moving across the old departure phase boundary");
+   Check(Length(Velocity(heading,2.999f)-Velocity(heading,3.001f))<.1f,"No velocity discontinuity at the old departure boundary");
+   Check(Length(MatchInsertionTransport.FlightOffset(heading,4f)-hover)>29f,"Departure clears the spawn before GO");
+  }
+  float reference=MatchInsertionTransport.SmoothFlightProgress(1f,3f,.1f);
+  foreach(int fps in new[]{30,60,120}){
+   float filtered=1f;
+   for(int frame=0;frame<fps;frame++){
+    float next=MatchInsertionTransport.SmoothFlightProgress(filtered,3f,1f/fps);
+    Check(next>=filtered&&next<=3f,"Network correction never overshoots or rewinds");filtered=next;
+   }
+   Check(Math.Abs(filtered-3f)<.0001f,"Packet correction settles at each tested frame rate");
+   float split=1f;for(int frame=0;frame<fps/10;frame++)split=MatchInsertionTransport.SmoothFlightProgress(split,3f,1f/fps);
+   Check(Math.Abs(reference-split)<.00001f,"Correction filter is independent of frame subdivision");
+  }
+  Check(MatchInsertionTransport.SmoothFlightProgress(2f,1f,.016f)==2f,"Older snapshots cannot reverse the ship");
+  Check(MatchInsertionTransport.SmoothFlightProgress(1f,3f,0f)==1f,"Zero frame time leaves the ship stationary");
+  Check(MatchInsertionTransport.SmoothFlightProgress(1f,3f,.016f)<1.5f,"A forward snapshot cannot teleport the ship to its target");
   var template=new GameObject("R35 template");template.AddComponent<MeshRenderer>();
   foreach(string name in new[]{"Dropship_Hatch","Dropship_R35-Engine1","Dropship_R35-Engine2"}){
    var child=new GameObject(name);child.transform.SetParent(template.transform,false);child.AddComponent<MeshRenderer>();
@@ -193,3 +233,4 @@ static class Regression {
   Console.WriteLine($"PASS: {checks} insertion/R35/audio/opening checks (managed fixtures; no native rendering).");
  }
 }
+

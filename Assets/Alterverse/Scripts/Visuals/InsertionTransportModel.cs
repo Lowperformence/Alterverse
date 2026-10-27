@@ -31,8 +31,8 @@ namespace Alterverse.Visuals
         public void Pose(float doorOpen,float flightProgress)
         {
             if(!built)return;
-            float arrive=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(flightProgress));
-            float depart=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(flightProgress-3f));
+            float arrive=MatchInsertionTransport.FlightEase(flightProgress);
+            float depart=MatchInsertionTransport.FlightEase((flightProgress-2f)*.5f);
             float tilt=-82f*arrive*(1f-depart);
             if(portEngine!=null)portEngine.localRotation=Quaternion.Euler(tilt,0f,0f);
             if(starboardEngine!=null)starboardEngine.localRotation=Quaternion.Euler(tilt,0f,0f);
@@ -40,3 +40,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

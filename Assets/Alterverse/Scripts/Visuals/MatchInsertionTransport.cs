@@ -30,7 +30,7 @@ namespace Alterverse.Visuals
         private InsertionTransportAudio sound;
         private MobaCamera framing;
         private bool ready, released, finished;
-        private float progress;
+        private float progress, flightProgress;
 
         public void Prepare(MatchOpening controller)
         {
@@ -82,6 +82,8 @@ namespace Alterverse.Visuals
             ready=true;
             // A client joining after GO must not replay an insertion or hide live players.
             if(opening==null||!opening.OpeningActive){Finish();return;}
+            progress=PhaseProgress(opening.PhaseCode,opening.PhaseElapsed,opening.PhaseDuration);
+            flightProgress=progress;
             UpdatePose();
         }
 
@@ -90,6 +92,33 @@ namespace Alterverse.Visuals
         {
             float t=Mathf.Clamp01(elapsed/Mathf.Max(.01f,duration));
             return phase switch {4=>t,3=>1f+t,2=>2f+t,1=>3f+t,0=>4f+t,_=>0f};
+        }
+
+        /// <summary>Filter replicated clock corrections without delaying authoritative passenger release.</summary>
+        public static float SmoothFlightProgress(float current,float target,float deltaTime)
+        {
+            target=Mathf.Max(current,target);
+            return Mathf.Lerp(current,target,1f-Mathf.Exp(-Mathf.Max(0f,deltaTime)/.08f));
+        }
+
+        public static float FlightEase(float t)
+        {
+            t=Mathf.Clamp01(t);
+            // Zero velocity and acceleration at the hover boundary.
+            return t*t*t*(t*(t*6f-15f)+10f);
+        }
+
+        /// <summary>A straight approach, stable unloading hover, then one accelerating climb.</summary>
+        public static Vector3 FlightOffset(Quaternion heading,float flight)
+        {
+            Vector3 hover=new Vector3(0,1.8f,-2f);
+            // Express both ends relative to the same hover point so neither team slides sideways.
+            Vector3 approach=hover+heading*new Vector3(0,7.2f,-16f);
+            float arrive=FlightEase(flight);
+            float takeoff=Mathf.Clamp01((flight-2f)*.5f);
+            // Unlike two separate SmoothSteps, this never stops halfway through departure.
+            float climb=takeoff*takeoff*takeoff;
+            return Vector3.Lerp(approach,hover,arrive)+heading*new Vector3(0,15.3f,24.8f)*climb;
         }
 
         private void LateUpdate()
@@ -104,6 +133,7 @@ namespace Alterverse.Visuals
         {
             // Never rewind an already opened bay when a network correction arrives.
             progress=Mathf.Max(progress,PhaseProgress(opening.PhaseCode,opening.PhaseElapsed,opening.PhaseDuration));
+            flightProgress=SmoothFlightProgress(flightProgress,progress,Time.unscaledDeltaTime);
             if(opening.PhaseCode>=0)sound.Advance(progress);
             if(progress>=2f)ReleasePassengers();
             framing?.SetInsertionFraming(1f-Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress-4f)));
@@ -116,20 +146,12 @@ namespace Alterverse.Visuals
             for(int team=0;team<2;team++)
             {
                 Cargo c=craft[team];if(!c.present)continue;
-                float arrive=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress));
-                float uncover=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress-2f));
-                float depart=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress-3f));
-                // A slight camera-side offset keeps the raised hull over the projected spawn position.
-                Vector3 hover=new Vector3(0,1.8f,-2f);
-                Vector3 approach=c.heading*new Vector3(0,9f,-16f);
-                Vector3 release=c.heading*new Vector3(0,2.3f,2.8f);
-                Vector3 departure=c.heading*new Vector3(0,13f,22f);
-                // Keep the spawn hidden under the solid hull, then reveal it naturally as the ship clears it.
-                Vector3 offset=Vector3.Lerp(approach,hover,arrive)+release*uncover+departure*depart;
-                c.model.transform.position=c.spawn+offset;
+                float arrive=FlightEase(flightProgress);
+                float depart=FlightEase((flightProgress-2f)*.5f);
+                c.model.transform.position=c.spawn+FlightOffset(c.heading,flightProgress);
                 c.model.transform.rotation=c.heading*Quaternion.Euler(Mathf.Lerp(-9f,0,arrive)-12f*depart,0,0);
-                float doors=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress-1f));
-                c.model.Pose(doors,progress);
+                float doors=FlightEase(flightProgress-1f);
+                c.model.Pose(doors,flightProgress);
             }
         }
 
@@ -155,3 +177,4 @@ namespace Alterverse.Visuals
         private void OnDestroy(){ReleasePassengers();}
     }
 }
+
