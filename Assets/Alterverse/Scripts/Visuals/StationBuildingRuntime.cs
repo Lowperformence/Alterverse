@@ -24,7 +24,7 @@ namespace Alterverse.Visuals
         sealed class RenderGroup {public string material,mount;public Mesh mesh;}
         static readonly Dictionary<string,RenderGroup[]> models=new();
         static bool attempted;
-        readonly HashSet<int> completed=new();
+        readonly HashSet<Component> completed=new();
         GameObject world;
         float nextScan;
 
@@ -116,7 +116,7 @@ namespace Alterverse.Visuals
 
         void TryApply(Component source,string model,string oldName)
         {
-            if(completed.Contains(source.GetInstanceID()))return;
+            if(completed.Contains(source))return;
             Transform previous=null;
             if(oldName!=null)previous=source.transform.Find(oldName);
             else for(int i=0;i<source.transform.childCount;i++)
@@ -129,7 +129,7 @@ namespace Alterverse.Visuals
             Transform signal=model=="healnode"?previous.Find("DF_HealingPlus"):null;
             if(model=="bunker"&&(turret==null||turret.Find("DF_Bunker_Muzzle")==null))return;
             if(model=="healnode"&&signal==null)return;
-            completed.Add(source.GetInstanceID());
+            completed.Add(source);
             GameObject root=null;
             var external=new List<GameObject>();
             var owned=new List<Material>();

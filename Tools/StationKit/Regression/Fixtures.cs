@@ -1,7 +1,7 @@
 // Controlled engine fixtures: native Blender geometry is checked separately; this is not a Unity renderer.
 using System;using System.Collections.Generic;using System.Linq;using System.Text.Json;
 namespace UnityEngine {
- public class Object {static int next;readonly int id=++next;public string name;public bool destroyed;public int GetInstanceID()=>id;
+ public class Object {static int next;readonly int id=++next;public string name;public bool destroyed;[Obsolete("Use GetEntityId instead.", true)] public int GetInstanceID()=>id;
   public static T FindAnyObjectByType<T>() where T:class=>GameObject.All.Where(g=>g.activeInHierarchy).SelectMany(g=>g.components).OfType<T>().FirstOrDefault();
   public static void DontDestroyOnLoad(Object o){}public static void Destroy(Object o){if(o==null)return;o.destroyed=true;if(o is GameObject g)g.SetActive(false);}
  }
