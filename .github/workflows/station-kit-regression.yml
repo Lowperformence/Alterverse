@@ -1,0 +1,26 @@
+name: Station Kit visual adapter regression
+on:
+  push:
+    paths:
+      - 'Assets/Alterverse/Scripts/Visuals/StationBuilding*.cs'
+      - 'Assets/Alterverse/Resources/StationKit/**'
+      - 'Tools/StationKit/**'
+      - '.github/workflows/station-kit-regression.yml'
+  pull_request:
+    paths:
+      - 'Assets/Alterverse/Scripts/Visuals/StationBuilding*.cs'
+      - 'Assets/Alterverse/Resources/StationKit/**'
+      - 'Tools/StationKit/**'
+      - '.github/workflows/station-kit-regression.yml'
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python Tools/StationKit/Regression/run.py --dotnet-root "$DOTNET_ROOT"
