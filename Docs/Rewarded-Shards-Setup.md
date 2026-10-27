@@ -29,23 +29,23 @@ Release builds use the real placement above. The Unity Editor and dedicated serv
 never show ads or grant simulated rewards. This is a client change; it does not
 require a dedicated game-server deployment.
 
-## Build an Android ad-test APK
+## Build the production Android App Bundle
 
-After updating the project, switch the active Build Profile to Android and use
-**DIMENSIONS FRONT > Development > Build AdMob test APK**. The command checks the
-enabled game scenes, sets APK output and Development Build, and builds to
-`Builds/Android/DIMENSIONS-FRONT-ADS-TEST-<version-code>.apk`. It uses the local
-signing configuration; it does not change signing keys or passwords.
+Update the project on `codex/epic-toon-replacement-20261024`, select the Android
+Build Profile, then use **DIMENSIONS FRONT > Release > Build signed Android bundle**.
 
-Install the APK on an Android device, open the Shards shop and tap `WATCH AD`.
-The development flag selects Google's test ad unit. Confirm that completing the
-ad adds 2 earned shards, closing before earning the reward adds none, and the
-privacy choices are available when required. No live ad or device test is
-performed merely by updating the source. The separate Google Play IAP shard-test
-bypass is not enabled by this command.
+This command disables Development Build, script debugging and profiler attachment,
+builds a signed AAB with the local upload-keystore settings, and uses the production
+rewarded placement `ca-app-pub-1716027263297702/1813938170`.
+The output is `Builds/Android/DIMENSIONS-FRONT-<version-code>.aab`.
+It runs the existing release validation before building. Signing keys and passwords
+stay local. The bundle is created by the Unity Editor when this command runs;
+updating the source alone does not create or publish a binary.
 
-The existing Release build commands restore non-development AAB settings and
-use the production rewarded placement.
+For a clean release rebuild use
+**DIMENSIONS FRONT > Release > Rebuild signed Android bundle (clean)**.
+The Shards shop's `WATCH AD` button requests a real rewarded ad in this release,
+and Google's earned-reward callback grants 2 earned shards.
 
 ## Before a production rollout
 
