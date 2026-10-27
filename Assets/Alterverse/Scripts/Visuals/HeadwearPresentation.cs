@@ -144,6 +144,11 @@ namespace Alterverse.Visuals
                 // Removed hair/flowers can remain in a mesh's vertex buffer. Only indexed
                 // geometry is visible and may define the hat's contact surface.
                 var used=ReferencedVertices(source,skin.sharedMaterials);
+                // Nerok's cranial fin shares the head weights/material with his skull.
+                // Measure the connected skull rather than balancing a tiny hat on that fin.
+                // Existing material/adornment passes clone the mesh and append a suffix.
+                if(source.name!=null&&source.name.StartsWith("DF_Nerok_Siege_0",System.StringComparison.Ordinal))
+                    used=ConnectedSkull(source,used,weights,index);
                 {
                     // Use visible bind-pose geometry: a hat arriving over the network
                     // while the head is tilted must not bake that temporary pose into its fit.
@@ -311,6 +316,68 @@ namespace Alterverse.Visuals
                 foreach(int index in source.GetTriangles(sub))if(index>=0&&index<used.Length)used[index]=true;
             }
             return used;
+        }
+        static bool[] ConnectedSkull(Mesh source,bool[] visible,BoneWeight[] weights,int head)
+        {
+            var points=source.vertices;
+            var parent=new int[points.Length];
+            var rank=new byte[points.Length];
+            var samePosition=new Dictionary<Vector3,int>();
+            int Find(int i)
+            {
+                int root=i;while(parent[root]!=root)root=parent[root];
+                while(parent[i]!=i){int next=parent[i];parent[i]=root;i=next;}
+                return root;
+            }
+            void Join(int a,int b)
+            {
+                a=Find(a);b=Find(b);if(a==b)return;
+                if(rank[a]<rank[b])parent[a]=b;
+                else{parent[b]=a;if(rank[a]==rank[b])rank[a]++;}
+            }
+            for(int i=0;i<points.Length;i++)
+            {
+                parent[i]=-1;
+                BoneWeight w=weights[i];
+                float weight=(w.boneIndex0==head?w.weight0:0)+(w.boneIndex1==head?w.weight1:0)+
+                    (w.boneIndex2==head?w.weight2:0)+(w.boneIndex3==head?w.weight3:0);
+                if(!visible[i]||weight<.5f||!Finite(points[i]))continue;
+                parent[i]=i;
+                // The exported flat-shaded mesh duplicates vertices at normal/material
+                // seams. Weld identical positions for measurement only, never the model.
+                if(samePosition.TryGetValue(points[i],out int other))Join(i,other);
+                else samePosition.Add(points[i],i);
+            }
+            for(int sub=0;sub<source.subMeshCount;sub++)
+            {
+                var indices=source.GetTriangles(sub);
+                for(int i=0;i+2<indices.Length;i+=3)
+                {
+                    int a=indices[i],b=indices[i+1],c=indices[i+2];
+                    if(a<0||a>=parent.Length||b<0||b>=parent.Length||c<0||c>=parent.Length||
+                        parent[a]<0||parent[b]<0||parent[c]<0)continue;
+                    Join(a,b);Join(a,c);
+                }
+            }
+            var areas=new float[points.Length];
+            for(int sub=0;sub<source.subMeshCount;sub++)
+            {
+                var indices=source.GetTriangles(sub);
+                for(int i=0;i+2<indices.Length;i+=3)
+                {
+                    int a=indices[i],b=indices[i+1],c=indices[i+2];
+                    if(a<0||a>=parent.Length||b<0||b>=parent.Length||c<0||c>=parent.Length||
+                        parent[a]<0||parent[b]<0||parent[c]<0)continue;
+                    areas[Find(a)]+=Vector3.Cross(points[b]-points[a],points[c]-points[a]).magnitude;
+                }
+            }
+            int largest=-1;float largestArea=0;
+            for(int i=0;i<areas.Length;i++)
+                if(areas[i]>largestArea){largest=i;largestArea=areas[i];}
+            var skull=new bool[points.Length];
+            if(largest>=0)
+                for(int i=0;i<skull.Length;i++)skull[i]=parent[i]>=0&&Find(i)==largest;
+            return skull;
         }
         static bool Decoration(Transform part,Transform head)
         {

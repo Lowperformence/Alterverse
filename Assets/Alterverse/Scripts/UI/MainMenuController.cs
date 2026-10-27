@@ -269,7 +269,7 @@ namespace Alterverse.UI
         {
             Page.Play=>1, Page.Heroes=>2, Page.Shop=>3, Page.Inventory=>4,
             Page.Profile=>5, Page.Quests=>6, Page.Leaderboard=>7, Page.Settings=>8,
-            Page.BattlePass=>9, _=>0
+            Page.BattlePass=>9, Page.Clans=>10, _=>0
         };
 
         private void Heading(string title, string description)
@@ -338,9 +338,9 @@ namespace Alterverse.UI
             DrawHomeCard(new Rect(Left,542,cardWidth,126),"01  /  DEPLOYMENT","ENTER THE FRONT",Page.Play);
             DrawHomeCard(new Rect(Left+cardWidth+12,542,cardWidth,126),"02  /  SEASON REWARDS","BATTLE PASS",Page.BattlePass);
             DrawHomeCard(new Rect(Left+(cardWidth+12)*2,542,cardWidth,126),"03  /  DAILY OBJECTIVES","MISSIONS",Page.Quests);
-            if(theme.Action(new Rect(Left,672,cardWidth,44),"RANKING"))SetPage(Page.Leaderboard);
-            if(theme.Action(new Rect(Left+cardWidth+12,672,cardWidth,44),"SETTINGS"))SetPage(Page.Settings);
-            if(theme.Action(new Rect(Left+(cardWidth+12)*2,672,cardWidth,44),"CLANS"))SetPage(Page.Clans);
+            if(theme.Navigation(new Rect(Left,672,cardWidth,44),"RANKING",NavigationIcon(Page.Leaderboard)))SetPage(Page.Leaderboard);
+            if(theme.Navigation(new Rect(Left+cardWidth+12,672,cardWidth,44),"SETTINGS",NavigationIcon(Page.Settings)))SetPage(Page.Settings);
+            if(theme.Navigation(new Rect(Left+(cardWidth+12)*2,672,cardWidth,44),"CLANS",NavigationIcon(Page.Clans)))SetPage(Page.Clans);
             theme.FitLabel(new Rect(Right-350,681,350,26),"SAME STARS. NEW POSSIBILITIES.",theme.Small,true);
         }
         private void DrawHomeCard(Rect rect,string eyebrow,string title,Page target)

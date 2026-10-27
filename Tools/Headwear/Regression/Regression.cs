@@ -222,7 +222,7 @@ static class Regression
                 if(a.z>.7f&&b.z>.7f&&c.z>.7f&&a.y>.2f&&b.y>.2f&&c.y>.2f)
                     Check(z>0,"Front panel or BETA embroidery faces inward.");
             }
-        CollectionCategoryChecks();AttachmentChecks();NetworkChecks();UfoChecks();ShopHatChecks();HatVisibilityChecks();MergedHaloChecks();HatSizeChecks();HatIconChecks();ModernNetworkChecks();
+        CollectionCategoryChecks();AttachmentChecks();NetworkChecks();UfoChecks();ShopHatChecks();HatVisibilityChecks();MergedHaloChecks();HatSizeChecks();HatIconChecks();ModernNetworkChecks();NerokSkullChecks();BoltHeadBindChecks();
         Console.WriteLine("PASS "+checks+" headwear, battle-pass, persistence, mesh and message checks; Unity fit/device/live multiplayer validation remains required.");
     }
     static void CollectionCategoryChecks()
@@ -316,6 +316,105 @@ static class Regression
         mesh.SetVertices(points);
         mesh.SetTriangles(new List<int>{0,1,3,0,3,2,4,6,7,4,7,5,0,4,5,0,5,1,2,3,7,2,7,6,0,2,6,0,6,4,1,5,7,1,7,3},0);
         mesh.RecalculateBounds();return mesh;
+    }
+    static GameObject HeadFixture(bool fin,HeroId hero=HeroId.Nerok)
+    {
+        var actor=Actor(true);actor.GetComponent<HeroIdentity>().Hero=hero;
+        var skin=actor.GetComponentsInChildren<SkinnedMeshRenderer>()[0];
+        var vertices=new List<Vector3>();var triangles=new List<int>();
+        void Surface(Vector3 center,Vector3 radius,int segments,int rings)
+        {
+            var points=new Vector3[(rings+1)*segments];
+            for(int ring=0;ring<=rings;ring++)for(int side=0;side<segments;side++)
+            {
+                float a=ring*Mathf.PI/rings,b=side*2*Mathf.PI/segments;
+                // Exact common pole positions also exercise duplicate normal seams.
+                points[ring*segments+side]=center+new Vector3(
+                    ring==0||ring==rings?0:radius.x*Mathf.Sin(a)*Mathf.Cos(b),
+                    ring==0?radius.y:ring==rings?-radius.y:radius.y*Mathf.Cos(a),
+                    ring==0||ring==rings?0:radius.z*Mathf.Sin(a)*Mathf.Sin(b));
+            }
+            void Triangle(int a,int b,int c)
+            {
+                // Runtime flat shading duplicates every triangle corner. Index-only
+                // component detection would select a single face instead of the skull.
+                foreach(int index in new[]{a,b,c}){triangles.Add(vertices.Count);vertices.Add(points[index]);}
+            }
+            for(int ring=0;ring<rings;ring++)for(int side=0;side<segments;side++)
+            {
+                int a=ring*segments+side,b=ring*segments+(side+1)%segments,c=a+segments,d=b+segments;
+                Triangle(a,b,c);Triangle(b,d,c);
+            }
+        }
+        Surface(new Vector3(0,1.757f,.08975f),new Vector3(.2156875f,.193f,.23275f),24,16);
+        // More vertices than the skull, less surface area; the tallest 20% is all fin.
+        if(fin)Surface(new Vector3(0,2.0005f,-.0915f),new Vector3(.014f,.0745f,.0485f),40,40);
+        var source=new Mesh{name=hero==HeroId.Nerok?"DF_Nerok_Siege_0_SkinOrnaments_HeadAdornment":"BOLT7_AuthoredRuntimeMesh",
+            vertices=vertices.ToArray(),boneWeights=vertices.Select(p=>new BoneWeight{boneIndex0=1,weight0=1}).ToArray(),
+            bindposes=new[]{Matrix4x4.identity,Matrix4x4.identity},subMeshCount=1};
+        source.SetTriangles(triangles,0);source.RecalculateBounds();skin.sharedMesh=source;
+        var root=actor.transform.Find("DF_VisualRoot");
+        HeadwearPresentation.Configure(actor,root,hero,new SkinPreviewSelection());
+        return actor;
+    }
+    static readonly UniversalHeroCosmetic[] AllHats={UniversalHeroCosmetic.BetaCap,UniversalHeroCosmetic.UfoTestHat,
+        UniversalHeroCosmetic.WizardHat,UniversalHeroCosmetic.PropellerCap,UniversalHeroCosmetic.MushroomHat};
+    static void NerokSkullChecks()
+    {
+        int commits=ProfileTransaction.Commits.Count;
+        var plain=HeadFixture(false).GetComponent<HeadwearPresentation>();
+        var finActor=HeadFixture(true);var fitted=finActor.GetComponent<HeadwearPresentation>();
+        Mesh anatomy=finActor.GetComponentsInChildren<SkinnedMeshRenderer>()[0].sharedMesh;
+        var vertices=(Vector3[])anatomy.vertices.Clone();var triangles=anatomy.GetTriangles(0).ToArray();
+        Check(anatomy.bounds.max.y>2.07f,"Fin fixture does not reproduce the high original contact surface.");
+        foreach(var hat in AllHats)
+        {
+            Check(plain.Apply(hat)&&fitted.Apply(hat),"Nerok hat failed to fit: "+fitted.LastFitError);
+            Check(Math.Abs(fitted.HeadBounds.max.y-1.95f)<.00001f,"The fin is still measured as Nerok's skull apex.");
+            Check(fitted.HeadBounds.size==plain.HeadBounds.size&&fitted.CrownSection.center==plain.CrownSection.center,
+                "A detached fin/flat-shading seam changed Nerok's true head measurements.");
+            string name="DF_Headwear_"+HeadwearSelection.ResourceFor(hat);
+            var expected=plain.Head.Find(name).GetComponent<MeshFilter>().sharedMesh;
+            var actual=fitted.Head.Find(name).GetComponent<MeshFilter>().sharedMesh;
+            Check(actual.vertices.SequenceEqual(expected.vertices)&&fitted.SeatInHeadSpace==plain.SeatInHeadSpace,
+                "Nerok's hat width/seat is still determined by the narrow fin.");
+            fitted.Apply(UniversalHeroCosmetic.Original);
+            fitted.Head.localToWorldMatrix=Matrix4x4.TRS(new Vector3(.3f,.2f,-.1f),Quaternion.identity,new Vector3(.9f,1.1f,.8f));
+            fitted.Head.worldToLocalMatrix=fitted.Head.localToWorldMatrix.inverse;
+            Check(fitted.Apply(hat)&&fitted.Head.Find(name).GetComponent<MeshFilter>().sharedMesh.vertices.SequenceEqual(expected.vertices),
+                "A late Nerok equip baked the currently animated head pose into the hat.");
+            Check(anatomy.vertices.SequenceEqual(vertices)&&anatomy.GetTriangles(0).SequenceEqual(triangles),
+                "Measuring the skull modified Nerok's visible head/fin geometry.");
+        }
+        Check(ProfileTransaction.Commits.Count==commits,"Nerok's fit correction changed ownership or progression.");
+        // The same detached geometry on a different model must retain the old fit.
+        var unrelated=HeadFixture(true,HeroId.Bolt7).GetComponent<HeadwearPresentation>();
+        Check(unrelated.Apply(UniversalHeroCosmetic.MushroomHat)&&unrelated.HeadBounds.max.y>2.07f,
+            "The Nerok-only contact correction changed an unrelated hero.");
+    }
+    static void BoltHeadBindChecks()
+    {
+        var actor=HeadFixture(false,HeroId.Bolt7);var view=actor.GetComponent<HeadwearPresentation>();
+        var skin=actor.GetComponentsInChildren<SkinnedMeshRenderer>()[0];
+        // BOLT's authored rest geometry is measured in the visual-root frame and
+        // attached through its actual Head bind matrix, including the model scale.
+        skin.transform.localToWorldMatrix=Matrix4x4.TRS(new Vector3(.4f,-.98f,0),Quaternion.identity,new Vector3(.85f,.85f,.85f));
+        skin.transform.worldToLocalMatrix=skin.transform.localToWorldMatrix.inverse;
+        skin.sharedMesh.bindposes[1]=Matrix4x4.TRS(new Vector3(0,-1.757f,0),Quaternion.identity,Vector3.one);
+        HeadwearPresentation.Configure(actor,actor.transform.Find("DF_VisualRoot"),HeroId.Bolt7,new SkinPreviewSelection{Headwear=UniversalHeroCosmetic.MushroomHat});
+        Check(view.Current==UniversalHeroCosmetic.MushroomHat,"BOLT's selected preview hat did not use its authored Head bind frame.");
+        foreach(var hat in AllHats)
+        {
+            Check(view.Apply(hat)&&view.Head==skin.bones[1],"BOLT hat did not attach to the actual animated Head bone.");
+            string name="DF_Headwear_"+HeadwearSelection.ResourceFor(hat);
+            var expected=view.Head.Find(name).GetComponent<MeshFilter>().sharedMesh.vertices.ToArray();
+            view.Apply(UniversalHeroCosmetic.Original);
+            view.Head.localToWorldMatrix=Matrix4x4.TRS(new Vector3(2,1.5f,-3),Quaternion.identity,new Vector3(.7f,1.2f,.9f));
+            view.Head.worldToLocalMatrix=view.Head.localToWorldMatrix.inverse;
+            Check(view.Apply(hat)&&view.Head.Find(name).GetComponent<MeshFilter>().sharedMesh.vertices.SequenceEqual(expected),
+                "Equipping BOLT's hat after animation/network delivery changed its bind-space fit.");
+            Check(view.Apply(UniversalHeroCosmetic.Original)&&view.Head.Find(name)==null,"BOLT unequip left an old hat on its animated head.");
+        }
     }
     static void HatSizeChecks()
     {

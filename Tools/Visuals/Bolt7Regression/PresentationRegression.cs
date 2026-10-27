@@ -15,6 +15,9 @@ static class PresentationRegression
         CoopAuthority.Active=true;
         var actor=new GameObject("remote Bolt");actor.AddComponent<CoopHeroSlot>();actor.AddComponent<Alterverse.Combat.Health>();Bolt7Visual.Create(actor);
         var visual=actor.GetComponent<Bolt7Visual>();var rig=Rig(visual);
+        var headwear=actor.GetComponent<HeadwearPresentation>();
+        Check(headwear!=null&&headwear.Root.name=="DF_VisualRoot"&&headwear.Root.parent==actor.transform&&headwear.Hero==Alterverse.Characters.HeroId.Bolt7,
+            "Remote BOLT must initialize headwear against its actual visual root before a cosmetic snapshot arrives");
         actor.transform.position=new Vector3(.1f,0,0);Tick(visual,.016f);
         Check(rig.LastClip=="Walk","Grounded spawn idle cannot lock out the first walking frame");
         actor.transform.position=Vector3.zero;
@@ -42,8 +45,15 @@ static class PresentationRegression
         Check(rig.LastClip=="Idle"&&Math.Abs(rig.Root.transform.localPosition.x)<.001f,"Respawn/teleport resets the buffer instead of running across the arena");
         var owner=new GameObject("owner Bolt");owner.AddComponent<CoopHeroSlot>().IsLocalHuman=true;owner.AddComponent<Alterverse.Combat.Health>();Bolt7Visual.Create(owner);
         var ownerVisual=owner.GetComponent<Bolt7Visual>();Tick(ownerVisual,10f);owner.transform.position=new Vector3(.1f,0,0);
+        Check(owner.GetComponent<HeadwearPresentation>()?.Root==Rig(ownerVisual).Root.transform,"Local BOLT skipped the shared headwear renderer");
         ownerVisual.ReceivePresentationSnapshot(new Vector3(99,0,0),Quaternion.identity,false,false,10f);Tick(ownerVisual,10.016f);
         Check(Rig(ownerVisual).LastClip=="Walk"&&Rig(ownerVisual).Root.transform.localPosition.x==0,"Local owner keeps immediate movement and ignores remote presentation snapshots");
+        var preview=new GameObject("preview Bolt");var selection=preview.AddComponent<Alterverse.Shop.SkinPreviewSelection>();Bolt7Visual.Create(preview);
+        var previewHat=preview.GetComponent<HeadwearPresentation>();
+        Check(previewHat!=null&&ReferenceEquals(previewHat.Preview,selection)&&previewHat.Root==Rig(preview.GetComponent<Bolt7Visual>()).Root.transform,
+            "BOLT preview selection must reach headwear after its rig has been created");
+        Bolt7Visual.Create(preview);
+        Check(ReferenceEquals(previewHat,preview.GetComponent<HeadwearPresentation>()),"Repeated BOLT Create duplicated/replaced the headwear renderer");
         CoopAuthority.Active=false;
         Console.WriteLine("PASS: "+checks+" BOLT-7 network gait/position/owner/relocation checks (controlled rig and engine).");
     }

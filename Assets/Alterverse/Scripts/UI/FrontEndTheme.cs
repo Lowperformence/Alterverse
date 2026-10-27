@@ -389,8 +389,8 @@ namespace Alterverse.UI
         public bool Navigation(Rect rect,string text,int icon,bool primary=false,bool selected=false)
         {
             bool clicked=Action(rect,"",primary,selected);
-            Color tint=primary||selected?Accent:Muted;
-            FrontEndNavigation.DrawIcon(new Rect(rect.x+16,rect.y+12,26,26),icon,tint);
+            float iconSize=Mathf.Min(32f,rect.height-8f);
+            FrontEndNavigation.DrawIcon(new Rect(rect.x+12,rect.center.y-iconSize*.5f,iconSize,iconSize),icon,Color.white);
             TextAnchor previousAlignment=Button.alignment;
             Button.alignment=TextAnchor.MiddleLeft;
             FitLabel(new Rect(rect.x+57,rect.y,rect.width-74,rect.height),text,Button);

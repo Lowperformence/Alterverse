@@ -37,8 +37,15 @@ namespace UnityEngine {
 namespace UnityEngine.Rendering{public enum IndexFormat{UInt16,UInt32}public enum GraphicsDeviceType{Null,Vulkan}}
 namespace UnityEngine{public static class SystemInfo{public static Rendering.GraphicsDeviceType graphicsDeviceType=Rendering.GraphicsDeviceType.Vulkan;}}
 namespace Alterverse.Characters{public enum HeroId{Bolt7}}
+namespace Alterverse.Shop{public sealed class SkinPreviewSelection:UnityEngine.Component{}}
 namespace Alterverse.Combat{public class Health:UnityEngine.MonoBehaviour{public bool IsDead;public void Die(){IsDead=true;Died?.Invoke();}public void Restore(){IsDead=false;Changed?.Invoke(280,280);}public event System.Action Died;public event System.Action<float,float> Changed;}}
 namespace Alterverse.Visuals{public static class Bolt7Vfx{public static void Warm(){}}public static class RuntimeShaderLibrary{public static UnityEngine.Material Create(UnityEngine.Color c,bool u,float m,float s,UnityEngine.Color e)=>new(new UnityEngine.Shader());}}
+namespace Alterverse.Visuals{public sealed class HeadwearPresentation:UnityEngine.Component{
+ public UnityEngine.Transform Root;public Alterverse.Characters.HeroId Hero;public Alterverse.Shop.SkinPreviewSelection Preview;
+ public static void Configure(UnityEngine.GameObject actor,UnityEngine.Transform root,Alterverse.Characters.HeroId hero,Alterverse.Shop.SkinPreviewSelection preview){
+  var view=actor.GetComponent<HeadwearPresentation>()??actor.AddComponent<HeadwearPresentation>();view.Root=root;view.Hero=hero;view.Preview=preview;
+ }
+}}
 '''
 s+='''
 namespace Alterverse.Multiplayer{public class CoopHeroSlot:UnityEngine.Component{public bool IsLocalHuman;}public static class CoopAuthority{public static bool Active,LocalHasServerAuthority;}}

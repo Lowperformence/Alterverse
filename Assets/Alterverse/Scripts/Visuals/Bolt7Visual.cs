@@ -74,6 +74,9 @@ namespace Alterverse.Visuals
             health=GetComponent<Health>();previous=transform.position;
             if(health!=null){health.Died+=OnDeath;health.Changed+=OnHealth;}
             if(health!=null)Bolt7Vfx.Warm();GroundedIdle();
+            // BOLT-7 returns before StylizedHeroVisual's shared authored-hero path.
+            // Fit once the real mesh/bind frame exists; the hat then follows its Head bone.
+            HeadwearPresentation.Configure(gameObject,root,HeroId.Bolt7,GetComponent<Alterverse.Shop.SkinPreviewSelection>());
         }
         private static Material MaterialFor(string name)
         {
