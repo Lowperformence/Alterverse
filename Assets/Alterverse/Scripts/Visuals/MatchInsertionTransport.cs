@@ -36,7 +36,7 @@ namespace Alterverse.Visuals
         {
             opening=controller;
             framing=UnityEngine.Camera.main?.GetComponent<MobaCamera>();
-            framing?.SetInsertionFraming(1f);
+            if(framing!=null)framing.SetInsertionFraming(1f);
             sound=gameObject.AddComponent<InsertionTransportAudio>();sound.Prepare();
             for(int team=0;team<2;team++)
             {
@@ -136,7 +136,7 @@ namespace Alterverse.Visuals
             flightProgress=SmoothFlightProgress(flightProgress,progress,Time.unscaledDeltaTime);
             if(opening.PhaseCode>=0)sound.Advance(progress);
             if(progress>=2f)ReleasePassengers();
-            framing?.SetInsertionFraming(1f-Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress-4f)));
+            if(framing!=null)framing.SetInsertionFraming(1f-Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress-4f)));
             if(progress>=4f)
             {
                 foreach(var c in craft)if(c?.model!=null)c.model.gameObject.SetActive(false);
@@ -167,14 +167,16 @@ namespace Alterverse.Visuals
         {
             if(finished)return;finished=true;
             sound?.Stop();
-            framing?.SetInsertionFraming(0f);
+            if(framing!=null)framing.SetInsertionFraming(0f);
             ReleasePassengers();
             foreach(var c in craft)if(c?.model!=null)c.model.gameObject.SetActive(false);
             // Retain the small prepared model until world teardown: no resource destruction at GO.
             enabled=false;
         }
-        private void OnDisable(){sound?.Stop();framing?.SetInsertionFraming(0f);ReleasePassengers();}
+        // Unity's destroyed components still have managed wrappers; ?. cannot test native lifetime.
+        private void OnDisable(){sound?.Stop();if(framing!=null)framing.SetInsertionFraming(0f);ReleasePassengers();}
         private void OnDestroy(){ReleasePassengers();}
     }
 }
+
 

@@ -113,6 +113,7 @@ static class Regression {
   Check(h3.All(r=>!r.forceRenderingOff)&&!i3.enabled,"Late join skips intro without hiding live heroes");
   var (w4,i4,o4,h4)=World();MatchInsertionTransport.PrepareForReveal(w4);
   Check(h4.All(r=>r.forceRenderingOff),"A new match owns a fresh insertion");
+  CheckDestroyedCameraCleanup();
   Check(MatchInsertionTransport.PhaseProgress(4,99,0)==1,"Clamps bad duration and elapsed");
   Check(MatchInsertionTransport.PhaseProgress(-1,0,1)==0,"Unknown replicated phase waits for arrival");
   Check(MatchInsertionTransport.PhaseProgress(2,.5f,1)==2.5f,"Presentation follows authoritative phase progress");
@@ -232,5 +233,27 @@ static class Regression {
   Check(missingFailed,"A missing R35 reports a preparation failure instead of silently restoring the old aircraft");
   Console.WriteLine($"PASS: {checks} insertion/R35/audio/opening checks (managed fixtures; no native rendering).");
  }
+ static void CheckDestroyedCameraCleanup(){
+  foreach(string callback in new[]{"OnDisable","Finish","UpdatePose"}){
+   var cameraObject=new GameObject("Teardown camera");UnityEngine.Camera.main=cameraObject.AddComponent<UnityEngine.Camera>();
+   var camera=cameraObject.AddComponent<MobaCamera>();var target=new GameObject("Surviving camera target");camera.SetTarget(target.transform);
+   var (world,insertion,opening,heroes)=World();MatchInsertionTransport.PrepareForReveal(world);
+   UnityEngine.Object.Destroy(camera);
+   Check(camera==null&&!ReferenceEquals(camera,null),"Destroyed native camera retains its managed wrapper");
+   bool rejectsAccess=false;try{var ignored=camera.transform;}catch(InvalidOperationException){rejectsAccess=true;}
+   Check(rejectsAccess,"Destroyed camera fixture rejects native transform access");
+   Phase(opening,2);Call(insertion,callback);
+   Check(heroes.All(r=>!r.forceRenderingOff),callback+" safely restores passengers when the camera was destroyed first");
+   Call(insertion,"OnDisable");Call(insertion,"OnDestroy");
+   Check(heroes.All(r=>!r.forceRenderingOff),"Repeated teardown remains safe after camera destruction");
+  }
+  var liveObject=new GameObject("Live teardown camera");UnityEngine.Camera.main=liveObject.AddComponent<UnityEngine.Camera>();
+  var live=liveObject.AddComponent<MobaCamera>();live.SetTarget(new GameObject("Live target").transform);float normal=live.transform.position.y;
+  var (w,i,o,h)=World();MatchInsertionTransport.PrepareForReveal(w);Call(i,"OnDisable");
+  Check(Math.Abs(live.transform.position.y-normal)<.001f,"Teardown restores normal framing while the camera is alive");
+  UnityEngine.Object.Destroy(live);Call(i,"OnDisable");Call(i,"OnDestroy");
+  Check(h.All(r=>!r.forceRenderingOff),"Cleanup also survives camera destruction after the first disable");
+ }
 }
+
 

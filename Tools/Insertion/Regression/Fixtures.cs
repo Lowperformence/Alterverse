@@ -5,9 +5,18 @@ using System.Linq;
 namespace UnityEngine {
  public class Object {
   public string name;
+  internal bool destroyed;
+  public static bool operator==(Object a,Object b){
+   if(ReferenceEquals(a,null))return ReferenceEquals(b,null)||b.destroyed;
+   if(ReferenceEquals(b,null))return a.destroyed;
+   return ReferenceEquals(a,b);
+  }
+  public static bool operator!=(Object a,Object b)=>!(a==b);
+  public override bool Equals(object other)=>other is Object value&&this==value;
+  public override int GetHashCode()=>System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this);
   public static T FindAnyObjectByType<T>() where T:Component => FindObjectsByType<T>(FindObjectsSortMode.None).FirstOrDefault();
   public static T[] FindObjectsByType<T>(FindObjectsSortMode mode) where T:Component => GameObject.All.Where(g=>g.activeInHierarchy).SelectMany(g=>g.components).OfType<T>().ToArray();
-  public static void Destroy(Object obj){}
+  public static void Destroy(Object obj){if(!ReferenceEquals(obj,null))obj.destroyed=true;}
   public static GameObject Instantiate(GameObject original,Transform parent,bool world){
    GameObject Copy(GameObject source,Transform target){
     var copy=new GameObject(source.name);copy.transform.SetParent(target,false);copy.transform.localPosition=source.transform.localPosition;
@@ -20,7 +29,7 @@ namespace UnityEngine {
   }
  }
  public class Component:Object {
-  public GameObject gameObject;public Transform transform=>gameObject.transform;
+  public GameObject gameObject;public Transform transform=>destroyed?throw new InvalidOperationException("MissingReferenceException: destroyed "+GetType().Name):gameObject.transform;
   public T GetComponent<T>()where T:class=>gameObject.GetComponent<T>();
   public T[] GetComponentsInChildren<T>(bool inactive=false)where T:class=>gameObject.GetComponentsInChildren<T>(inactive);
  }
@@ -157,3 +166,4 @@ namespace Alterverse.Match {
 namespace Alterverse.Profile {public static class PlayerProfile {public static float MasterVolume=1,SfxVolume=1;}}
 namespace Alterverse.UI {public static class MainMenuController{public static bool IsVisible;}public static class MatchEntryCurtain{public static bool AwaitingArena;}}
 namespace Alterverse.Visuals {public static class StylizedArtDirection{public static readonly UnityEngine.Color ZeroEnergy=new(.76f,.24f,1f),LumenEnergy=new(.18f,.92f,1f);}}
+
