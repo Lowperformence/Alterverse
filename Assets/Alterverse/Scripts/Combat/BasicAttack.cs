@@ -150,7 +150,10 @@ namespace Alterverse.Combat
                 float.IsNaN(elapsed) || float.IsInfinity(elapsed) || windup <= 0 || elapsed < 0 || elapsed >= windup + .18f) return;
             // Seek the accepted action to the server clock, including its recovery.
             float remaining = Mathf.Max(0, windup - elapsed);
-            Vector3 direction = AimGeometry.Direction(point - transform.position);
+            // Delayed acceptance carries a cast-time point. Track the live target
+            // for facing instead of turning back to that old point on every shot.
+            Vector3 facingPoint = HeroCombatRules.Enemy(gameObject, target) ? target.transform.position : point;
+            Vector3 direction = AimGeometry.Direction(facingPoint - transform.position);
             locomotion.FaceAction(direction, remaining + .18f);
             motor?.NotifyAttack(remaining + .18f, direction);
             motor?.TrackBasicTarget(target, remaining + .18f);
@@ -174,7 +177,3 @@ namespace Alterverse.Combat
         }
     }
 }
-
-
-
-
