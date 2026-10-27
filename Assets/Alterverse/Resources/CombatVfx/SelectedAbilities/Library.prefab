@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5322333127479902373
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4716558007722831537}
+  - component: {fileID: 7523656173368000045}
+  m_Layer: 0
+  m_Name: Library
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &4716558007722831537
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5322333127479902373}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7523656173368000045
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5322333127479902373}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1505da2473fb661a65ba265da6e71b6c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Alterverse.Visuals.SelectedAbilityVfx
+  smoke:
+    prefab: {fileID: 1768031153984492483, guid: 9df4ec64e87aafe41ae9e4b7221a1eac, type: 3}
+    nativeRadius: 0.5732677
+    emissionSeconds: 1.05
+    source: Assets/Epic Toon FX/Prefabs/Environment/Smoke/White/SmokeBurstWhiteSoft.prefab
+    sound: {fileID: 0}
+  blood:
+    prefab: {fileID: 5260033419228092176, guid: 0a22c2dd31b4db9408dc42a9a93cc0f0, type: 3}
+    nativeRadius: 5.8104897
+    emissionSeconds: 0.55
+    source: Assets/Epic Toon FX/Prefabs/Combat/Blood/Green/GreenBloodExplosionSpiky.prefab
+    sound: {fileID: 0}
+  strike:
+    prefab: {fileID: 5309195557668625402, guid: dae4f4a3dc2c3dc479ac95be76db5530, type: 3}
+    nativeRadius: 6.891218
+    emissionSeconds: 0.1
+    source: Assets/Epic Toon FX/Prefabs/Environment/Lightning/Sharp Strike/LightningStrikeSharpBlue.prefab
+    sound: {fileID: 0}
+  circle:
+    prefab: {fileID: 1690200680015834225, guid: e05c50eadf39e5346907bdbf22f30d28, type: 3}
+    nativeRadius: 4.260001
+    emissionSeconds: 0.1
+    source: Assets/Epic Toon FX/Prefabs/Combat/Magic/Circle Simple/MagicCircleSimpleYellow.prefab
+    sound: {fileID: 0}
+  fire:
+    prefab: {fileID: 5624794389036644529, guid: d2ab3e2ef3897ec47aabce94b60b9240, type: 3}
+    nativeRadius: 4.970002
+    emissionSeconds: 0.1
+    source: Assets/Epic Toon FX/Prefabs/Combat/Explosions/NovaExplosion/ExplosionNovaFire.prefab
+    sound: {fileID: 0}
+  stars:
+    prefab: {fileID: 700642550049697178, guid: d89b102546939d4489bea3bfee7930b3, type: 3}
+    nativeRadius: 1.9170004
+    emissionSeconds: 1.05
+    source: Assets/Epic Toon FX/Prefabs/Combat/Brawling/Stun/StunnedCirclingStars.prefab
+    sound: {fileID: 8300000, guid: 2722086750a69aa4289a792be804c60b, type: 3}
+  sourceSignature: Renderer material slots 2:Selected ability native compositions 2:Assets/Epic Toon FX/Prefabs/Environment/Smoke/White/SmokeBurstWhiteSoft.prefab=019923a923d14ec4a57ce76278610c41:Assets/Epic Toon FX/Prefabs/Combat/Blood/Green/GreenBloodExplosionSpiky.prefab=b5fc894d39d04e7e3c896a80051b01a2:Assets/Epic Toon FX/Prefabs/Environment/Lightning/Sharp Strike/LightningStrikeSharpBlue.prefab=a8bd357e6605ceb390ecc2aaba50d01c:Assets/Epic Toon FX/Prefabs/Combat/Magic/Circle Simple/MagicCircleSimpleYellow.prefab=b44c6dd8be5ae2007c5ecc4b9ee870ac:Assets/Epic Toon FX/Prefabs/Combat/Explosions/NovaExplosion/ExplosionNovaFire.prefab=572c2ac8847432828076319e466d1f36:Assets/Epic Toon FX/Prefabs/Combat/Brawling/Stun/StunnedCirclingStars.prefab=b739f18a186992bf0f78b4e23823421d:Assets/Epic Toon FX/Sound/etfx_explosion_sparkle2.wav=c417b4b8405fa76f65b810997daac176:151d58c39f5f03f5010860c4b21cf700

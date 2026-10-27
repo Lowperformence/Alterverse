@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &824805664329323455
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1790131378153525468}
+  - component: {fileID: 1844019514825209052}
+  m_Layer: 0
+  m_Name: Library
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &1790131378153525468
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824805664329323455}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1844019514825209052
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824805664329323455}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d04642f09ff4db69d7c5af96b1ea4de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Alterverse.Visuals.SmallBulletVfx
+  muzzle: {fileID: 3433905521950326445, guid: af35007db40730b499cf0da2d65e6d39, type: 3}
+  projectile: {fileID: 1005015581226425097, guid: 26251db571e38ad4aaae3a1816569892, type: 3}
+  impact: {fileID: 4673157046124014430, guid: e60fc5731a383cd4185ed0c3126355c0, type: 3}
+  muzzleRadius: 2.3430004
+  projectileRadius: 1.2070003
+  impactRadius: 3.0260446
+  sourceSignature: Renderer material slots 2:Small Bullet chain 3:Assets/Epic Toon FX/Prefabs/Combat/Missiles/Bullet/BulletSmallFire.prefab:5aea0a0fddf9d2fbf824aa5478a6a90e:Assets/Epic Toon FX/Prefabs/Combat/Muzzleflash/BulletFatMuzzle/BulletFatMuzzleFire.prefab:eac5f422861303546c688ca406cfc501:Assets/Epic Toon FX/Prefabs/Combat/Explosions/BulletExplosion/BulletExplosionFire.prefab:34b40cc16c6c03f69e44c0c6a6ecca75:22d21abee1beb5938877721f8d6a50d0

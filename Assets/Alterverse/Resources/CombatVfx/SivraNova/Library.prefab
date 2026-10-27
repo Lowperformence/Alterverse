@@ -1,0 +1,89 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1647286779384620327
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6396779083190086753}
+  - component: {fileID: 3759751837320333855}
+  m_Layer: 0
+  m_Name: Library
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &6396779083190086753
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1647286779384620327}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3759751837320333855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1647286779384620327}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea78e5bad1252273434ffce9be70cb73, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Alterverse.Visuals.SivraNovaVfx
+  novaSmall:
+    muzzle:
+      prefab: {fileID: 7304502485771862188, guid: 38fa5f944c1e3f442814a7744d56379d, type: 3}
+      radius: 1.5975004
+      emissionSeconds: 0.05
+    projectile:
+      prefab: {fileID: 6846007378085344816, guid: 65c3e823c7dc8814f907e4c655bc7a56, type: 3}
+      radius: 0.9940002
+      emissionSeconds: 1.05
+    impact:
+      prefab: {fileID: 5727623020158550400, guid: af5d2622a4a65ff47a179ed83d404223, type: 3}
+      radius: 2.4750316
+      emissionSeconds: 0.05
+    status:
+      prefab: {fileID: 7304502485771862188, guid: 38fa5f944c1e3f442814a7744d56379d, type: 3}
+      radius: 1.5975004
+      emissionSeconds: 0.05
+    castClip: {fileID: 8300000, guid: b4ce975868fff68458a47704dd4a8cdf, type: 3}
+    impactClip: {fileID: 8300000, guid: 8124281487721774a9b4d5101358b50a, type: 3}
+    windupClip: {fileID: 0}
+    sources: projectile=Assets/Epic Toon FX/Prefabs/Combat/Missiles/NovaSmall/NovaMissileSmallBlue.prefab; muzzle=Assets/Epic Toon FX/Prefabs/Combat/Muzzleflash/EnergyNovaSmallMuzzle/EnergyNovaMuzzleSmallBlue.prefab; impact=Assets/Epic Toon FX/Prefabs/Combat/Explosions/NovaSmallExplosion/ExplosionNovaSmallBlue.prefab; castAudio=Assets/Epic Toon FX/Sound/etfx_shoot_energy04.wav; impactAudio=Assets/Epic Toon FX/Sound/etfx_explosion_plasma2.wav; windupAudio=<not supplied by package>
+  nova:
+    muzzle:
+      prefab: {fileID: 7695209218007976475, guid: 88ce47ac144f3c94690b48f2ddbe0a81, type: 3}
+      radius: 2.8400006
+      emissionSeconds: 0.05
+    projectile:
+      prefab: {fileID: 2487407364109548618, guid: 67b80592f079e1a48bd9bfab456c3c6f, type: 3}
+      radius: 1.7750005
+      emissionSeconds: 1.05
+    impact:
+      prefab: {fileID: 7425090670304337673, guid: 8846cb6649ecbe448bea28cfeaab9ee2, type: 3}
+      radius: 4.9700007
+      emissionSeconds: 0.05
+    status:
+      prefab: {fileID: 0}
+      radius: 1
+      emissionSeconds: 0.1
+    castClip: {fileID: 8300000, guid: b4ce975868fff68458a47704dd4a8cdf, type: 3}
+    impactClip: {fileID: 8300000, guid: 78c1c4dd7e76e0944aa2ce64e5aca494, type: 3}
+    windupClip: {fileID: 0}
+    sources: projectile=Assets/Epic Toon FX/Prefabs/Combat/Missiles/NovaMissile/NovaMissileBlue.prefab; muzzle=Assets/Epic Toon FX/Prefabs/Combat/Muzzleflash/EnergyNovaMuzzle/EnergyNovaMuzzleBlue.prefab; impact=Assets/Epic Toon FX/Prefabs/Combat/Explosions/MagicNovaExplosion/MagicNovaExplosionBlue.prefab; castAudio=Assets/Epic Toon FX/Sound/etfx_shoot_energy04.wav; impactAudio=Assets/Epic Toon FX/Sound/etfx_explosion_magic2.wav; windupAudio=<not supplied by package>
+  sourceSignature: Renderer material slots 2:Sivra blue Nova chains 1:Assets/Epic Toon FX/Prefabs/Combat/Missiles/NovaSmall/NovaMissileSmallBlue.prefab=32a5e084a43ab8d68a72ceba01896179:Assets/Epic Toon FX/Prefabs/Combat/Muzzleflash/EnergyNovaSmallMuzzle/EnergyNovaMuzzleSmallBlue.prefab=5794f7bbfc1f23b599dc0c4e01db8d25:Assets/Epic Toon FX/Prefabs/Combat/Explosions/NovaSmallExplosion/ExplosionNovaSmallBlue.prefab=5858aa808e5f9a5d6f5db9256ef901b5:Assets/Epic Toon FX/Prefabs/Combat/Muzzleflash/EnergyNovaSmallMuzzle/EnergyNovaMuzzleSmallBlue.prefab=5794f7bbfc1f23b599dc0c4e01db8d25:Assets/Epic Toon FX/Prefabs/Combat/Missiles/NovaMissile/NovaMissileBlue.prefab=7ea3e0e3184b7dfa5d3c65f68d13c6bc:Assets/Epic Toon FX/Prefabs/Combat/Muzzleflash/EnergyNovaMuzzle/EnergyNovaMuzzleBlue.prefab=aceaa3b1d6096fd5a710896af94c454a:Assets/Epic Toon FX/Prefabs/Combat/Explosions/MagicNovaExplosion/MagicNovaExplosionBlue.prefab=5c0e2c33b0b2b7b9c9a02a5d490c83a4:Assets/Epic Toon FX/Sound/etfx_shoot_energy04.wav=e4f015a14b15509ef45630a8c87c8202:Assets/Epic Toon FX/Sound/etfx_explosion_plasma2.wav=61311b343171bcd241c20d318cb853f1:Assets/Epic Toon FX/Sound/etfx_shoot_energy04.wav=e4f015a14b15509ef45630a8c87c8202:Assets/Epic Toon FX/Sound/etfx_explosion_magic2.wav=edfba161fe76d1716798188c77a40ef2:Assets/Alterverse/Resources/CombatVfx/SmallBulletParticles.shader=22d21abee1beb5938877721f8d6a50d0

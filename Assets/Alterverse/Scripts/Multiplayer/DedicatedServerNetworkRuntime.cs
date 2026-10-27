@@ -137,16 +137,21 @@ namespace Alterverse.Multiplayer
         {
             return ushort.TryParse(value,out port)&&port>0;
         }
-
-        private static bool DetectDedicatedServerRequest()
+                            private static bool DetectDedicatedServerRequest()
         {
-#if UNITY_SERVER
-            return true;
-#else
-            string[] args=Environment.GetCommandLineArgs();
-            for(int i=0;i<args.Length;i++)
-                if(string.Equals(args[i],"-dfDedicatedServer",StringComparison.OrdinalIgnoreCase))return true;
+#if UNITY_EDITOR
             return false;
+#elif UNITY_SERVER
+    return true;
+#else
+    string[] args = Environment.GetCommandLineArgs();
+    for (int i = 0; i < args.Length; i++)
+    {
+        if (string.Equals(args[i], "-dfDedicatedServer", StringComparison.OrdinalIgnoreCase))
+            return true;
+    }
+
+    return false;
 #endif
         }
 
