@@ -139,16 +139,6 @@ namespace Alterverse.Visuals
             Material abyss=MakeMaterial("DF_Neptune_Abyss",new Color(.006f,.018f,.065f,1f),.08f,.35f);
             Material coral=MakeMaterial("DF_Neptune_Coral",new Color(.025f,.10f,.34f,1f),.05f,.42f);
             Material bio=MakeMaterial("DF_Neptune_Biolume",new Color(.025f,.52f,1f,1f),0f,.62f,true,2.8f);
-            Material pool=MakeMaterial("DF_Neptune_Pool",new Color(.01f,.12f,.39f,1f),.02f,.90f,true,.55f);
-
-            Vector3[] pools={new(-28,0,18),new(28,0,-18),new(-16,0,-29),new(17,0,29)};
-            for(int i=0;i<pools.Length;i++)
-            {
-                Vector3 p=Surface(pools[i].x,pools[i].z,.03f);
-                Primitive(PrimitiveType.Cylinder,"AbyssPool",detailRoot,p,new Vector3(5.6f,.07f,3.4f),
-                    Quaternion.Euler(0,i*36f,0),pool);
-            }
-
             Vector3[] coralFields={
                 new(-38,0,9),new(-34,0,-19),new(-24,0,31),new(25,0,-31),
                 new(36,0,18),new(38,0,-8),new(-9,0,33),new(10,0,-33)
