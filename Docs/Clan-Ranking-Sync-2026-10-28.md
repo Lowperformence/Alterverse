@@ -80,3 +80,33 @@ of the underlying index.
 
 No live source deployment, authenticated Cloud log/index inspection, Unity build or
 Android test has been performed. Those steps still require operator access.
+
+## Current operator export verified
+
+The operator subsequently supplied the existing service source. Its `index.js`
+SHA-256 is `57ca2b5e94c457b1b5b841f8a203b1a7d6b9f48d180e51801632b4bfcb837d30`;
+it declares `2026-10-24.clans.node.1` and still contains `(1<<11)-1` in the daily
+map validation. The incremental patch accepted that exact source. The corrected
+index SHA-256 is `6d88970f2a69d2d11989370ec04cbc72158123802f258ab2380969087ba786ee`.
+
+The replacement export contains only the corrected `index.js` and the original
+byte-identical `package.json` (SHA-256
+`a65aa9078d0f999d90f890f1896246624f605a3060f3d15b2f641fb9444ae9e1`).
+Syntax, the 63 existing patch checks and chat-index diagnostic checks pass.
+`test-profile-sync-export.mjs` additionally reproduces the old rejection before
+any transaction and exercises the actual exported save implementation for all
+14 map bits and their combined mask. All 15 controlled save cases preserve
+completed matches, wins, XP, earned/paid balances, entitlements and unrelated
+document metadata; profile conflict and invalid-mask checks remain intact.
+
+```sh
+node Server/commerce/node/test-profile-sync-export.mjs CURRENT_INDEX.js CORRECTED_INDEX.js
+```
+
+This confirms the compatibility defect in the supplied current source, not the
+contents of a real player's profile. The service still requires deployment of
+the corrected source, authenticated save verification and separate chat-index
+inspection. Google leaderboard zero values also require raw-score/readback vs
+formatted-display verification; this export does not prove a Google formatting
+or leaderboard configuration failure.
+
