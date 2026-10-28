@@ -300,7 +300,7 @@ namespace Alterverse.UI
             float heroX=Left+ContentWidth*.62f;
             // Render the actual selected loadout over the environment, without an opaque card.
             if(showcase?.Image!=null)
-                GUI.DrawTexture(new Rect(heroX,152,Right-heroX,450),showcase.Image,ScaleMode.ScaleToFit,true);
+                GUI.DrawTexture(new Rect(heroX-64,152,Right-heroX,450),showcase.Image,ScaleMode.ScaleToFit,true);
 
             homeLogo??=new GUIStyle(theme.Title){fontSize=64,fontStyle=FontStyle.Normal};
             theme.FitLabel(new Rect(Left,58,ContentWidth*.67f,80),"DIMENSIONS",homeLogo);
@@ -331,8 +331,8 @@ namespace Alterverse.UI
             theme.Label(new Rect(textX,309,textWidth,94),"TWO REALITIES.\nONE FRONT.",theme.Title);
             theme.Label(new Rect(textX,416,textWidth-12,76),"Choose your hero. Fight alongside your team. Claim the Hotzone and break the enemy core.",theme.Body,true);
             FrontEndTheme.Fill(new Rect(textX,510,56,2),FrontEndTheme.Accent);
-            theme.FitLabel(new Rect(heroX+24,616,Right-heroX-48,35),HeroName,theme.Heading);
-            theme.FitLabel(new Rect(heroX+24,654,Right-heroX-48,22),Roles[selectedHero],theme.Small,true);
+            theme.FitLabel(new Rect(heroX+24,616,HomeHeroCaptionWidth,35),HeroName,theme.Heading);
+            theme.FitLabel(new Rect(heroX+24,654,HomeHeroCaptionWidth,22),Roles[selectedHero],theme.Small,true);
 
             float cardWidth=Mathf.Min(232,(ContentWidth*.66f-24)/3f);
             DrawHomeCard(new Rect(Left,542,cardWidth,126),"01  /  DEPLOYMENT","ENTER THE FRONT",Page.Play);
@@ -341,7 +341,7 @@ namespace Alterverse.UI
             if(theme.Navigation(new Rect(Left,672,cardWidth,44),"RANKING",NavigationIcon(Page.Leaderboard)))SetPage(Page.Leaderboard);
             if(theme.Navigation(new Rect(Left+cardWidth+12,672,cardWidth,44),"SETTINGS",NavigationIcon(Page.Settings)))SetPage(Page.Settings);
             if(theme.Navigation(new Rect(Left+(cardWidth+12)*2,672,cardWidth,44),"CLANS",NavigationIcon(Page.Clans)))SetPage(Page.Clans);
-            theme.FitLabel(new Rect(Right-350,681,350,26),"SAME STARS. NEW POSSIBILITIES.",theme.Small,true);
+            DrawHomeNews();
         }
         private void DrawHomeCard(Rect rect,string eyebrow,string title,Page target)
         {
