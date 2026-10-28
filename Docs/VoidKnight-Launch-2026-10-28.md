@@ -1,3 +1,5 @@
+> Current sword visual: [supplied-concept V6](VoidKnight-Sword-Concept-2026-10-28.md). V5 details below describe the original launch revision. Release and ability changes still apply.
+
 # Void Knight / Riftkeeper V5 and ability updates
 
 Void Knight is purchasable for 1,600 Shards using `hero_void_knight` and the existing `DF_HeroOwned_VoidKnight` profile key. Timmy remains unreleased. The two optional Void Knight weapon colorways remain preview-only; their independent purchase guard and shop button retain that state when the hero launches.

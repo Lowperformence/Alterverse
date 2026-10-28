@@ -1,0 +1,21 @@
+{
+  "design": "Concept edge V6",
+  "old_weapon_triangles": 2208,
+  "new_weapon_triangles": 3652,
+  "hero_triangles": 30910,
+  "weapon_parts": 69,
+  "body_meshes_unchanged": 250,
+  "original_actions_unchanged": 12,
+  "original_bones_unchanged": 19,
+  "grip_span_m": 0.38,
+  "length_m": 1.633,
+  "reference_visible_features": [
+    "broad parallel blade",
+    "violet outer cutting edges",
+    "dark longitudinal spine",
+    "compact angular hilt",
+    "round energy sockets"
+  ],
+  "unseen_tip": "inferred; screenshot crops the blade tip",
+  "guard_width_m": 0.388
+}

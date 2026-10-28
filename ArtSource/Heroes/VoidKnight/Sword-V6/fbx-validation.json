@@ -1,0 +1,21 @@
+{
+  "meshes": 2,
+  "triangles": 30910,
+  "bones": 19,
+  "materials": 5,
+  "original_clips": [
+    "Attack1",
+    "Attack2",
+    "Attack3",
+    "Counter",
+    "Death",
+    "Hit",
+    "Idle",
+    "Run",
+    "Skill0",
+    "Skill1",
+    "Skill2",
+    "Ultimate"
+  ],
+  "fbx_round_trip": "passed"
+}
