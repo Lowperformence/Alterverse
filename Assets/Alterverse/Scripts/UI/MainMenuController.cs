@@ -917,9 +917,9 @@ namespace Alterverse.UI
             FrontEndTheme.Fill(new Rect(x,570,rw,3),item.Glow);
 
             string originalName=hero==HeroId.Veyr?"SHADOW STEEL":"ORIGINAL";
-            string action=!HeroUnlockCatalog.Released(hero)?"COMING SOON":!heroAvailable?"UNLOCK HERO FIRST":equipped?$"USE {originalName}":owned?"EQUIP":
+            string action=!WeaponSkinInventory.Released(hero)?"COMING SOON":!heroAvailable?"UNLOCK HERO FIRST":equipped?$"USE {originalName}":owned?"EQUIP":
                 PlayerWallet.CanAfford(item.Price)?"BUY & EQUIP":$"NEED {item.Price} SHARDS";
-            bool enabled=heroAvailable&&(equipped||owned||PlayerWallet.CanAfford(item.Price)||!PaidShardCommerce.Spending&&PlayerWallet.Balance<item.Price);
+            bool enabled=WeaponSkinInventory.Released(hero)&&heroAvailable&&(equipped||owned||PlayerWallet.CanAfford(item.Price)||!PaidShardCommerce.Spending&&PlayerWallet.Balance<item.Price);
             if(ShardPurchaseAction(new Rect(x,588,rw,54),action,equipped||owned?0:item.Price,true,enabled:enabled))
             {
                 if(equipped)
@@ -1592,6 +1592,7 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 
 

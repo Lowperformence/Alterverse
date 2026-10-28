@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {enableVoidKnight} from './enable-void-knight.mjs';
+const source='const w=(key,number=1)=>({key,kind:0,number});const item=(price,writes=[])=>({price,writes});const ITEMS={hero_traveler:item(1500,[w("DF_HeroOwned_Traveler")])};';
+const patched=enableVoidKnight(source);const ctx=vm.createContext({});vm.runInContext(patched+';globalThis.catalog=ITEMS',ctx);
+assert.equal(ctx.catalog.hero_void_knight.price,1600);
+assert.deepEqual(JSON.parse(JSON.stringify(ctx.catalog.hero_void_knight.writes)),[{key:'DF_HeroOwned_VoidKnight',kind:0,number:1}]);
+assert.equal(ctx.catalog.hero_traveler.price,1500);
+assert.equal(enableVoidKnight(patched),patched);
+assert.throws(()=>enableVoidKnight('const ITEMS={hero_void_knight:item(1,[])};'));
+assert.throws(()=>enableVoidKnight('const ITEMS={};const ITEMS={};const item=()=>0;'));
+assert.throws(()=>enableVoidKnight('const OTHER={};'));
+console.log('PASS: launch SKU, exact price/ownership, idempotence, unrelated-product preservation and conflict rejection.');

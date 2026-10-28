@@ -1,0 +1,13 @@
+{
+  "design": "Riftkeeper V5",
+  "old_weapon_triangles": 6608,
+  "new_weapon_triangles": 2208,
+  "hero_triangles": 29466,
+  "weapon_parts": 53,
+  "body_meshes_unchanged": 250,
+  "original_actions_unchanged": 12,
+  "original_bones_unchanged": 19,
+  "grip_span_m": 0.38,
+  "length_m": 1.633,
+  "guard_width_m": 0.494
+}

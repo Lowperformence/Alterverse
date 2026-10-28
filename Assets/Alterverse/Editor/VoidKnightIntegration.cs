@@ -18,7 +18,7 @@ namespace Alterverse.EditorTools
    Require(HeroIdentity.BaseHealth(HeroId.VoidKnight)<HeroIdentity.BaseHealth(HeroId.Kaelon),"Knight must have less health than tank.");
    Require(!HeroAttackDelivery.IsRanged(HeroId.VoidKnight),"Greatsword must remain melee.");
    foreach(var opponent in new[]{HeroId.Veyr,HeroId.Timmy,HeroId.Kaelon})Require(HeroCombatProfile.StatsFor(HeroId.VoidKnight).AttackRange>HeroCombatProfile.StatsFor(opponent).AttackRange,"Insufficient greatsword reach.");
-   Require(!HeroUnlockCatalog.Released(HeroId.VoidKnight)&&!HeroUnlockInventory.Owned(HeroId.VoidKnight),"Knight must remain preview-only until release.");
+   Require(HeroUnlockCatalog.Released(HeroId.VoidKnight),"Void Knight launch must be purchasable; ownership is still required to deploy.");
    Require(HeroUnlockCatalog.Purchasable(HeroId.VoidKnight)&&HeroUnlockCatalog.Price(HeroId.VoidKnight)==1600&&HeroUnlockCatalog.PurchaseSku(HeroId.VoidKnight)=="hero_void_knight"&&HeroUnlockCatalog.OwnedKey(HeroId.VoidKnight)=="DF_HeroOwned_VoidKnight","Knight's 1600-shard unlock mapping is incomplete.");
    var model=Resources.Load<GameObject>("AuthoredHeroes/VoidKnight");Require(model!=null,"Missing imported VoidKnight.fbx.");
    Require(model.GetComponentsInChildren<Renderer>(true).Any(r=>r.name=="DF_WeaponR"),"Greatsword renderer missing.");
@@ -58,3 +58,4 @@ namespace Alterverse.EditorTools
   private static void Require(bool condition,string message){if(!condition)throw new InvalidOperationException(message);}
  }
 }
+

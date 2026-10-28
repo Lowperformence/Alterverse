@@ -16,7 +16,7 @@ class PurchaseRegression
  static void Main()
  {
   const HeroId hero=HeroId.VoidKnight;
-  Check(HeroUnlockCatalog.Released(hero),"temporary release fixture enabled; production remains locked");
+  Check(HeroUnlockCatalog.Released(hero),"production Void Knight release enabled");
   Reset(1599);
   Check(HeroUnlockInventory.Purchase(hero)==HeroUnlockResult.InsufficientShards,"1599 shards cannot buy Knight");
   Check(ProfileTransaction.Commits==0&&PlayerWallet.EarnedBalance==1599&&!HeroUnlockInventory.Owned(hero),"failed purchase preserves wallet and ownership");
@@ -36,6 +36,7 @@ class PurchaseRegression
   Check(HeroUnlockInventory.Purchase(hero)==HeroUnlockResult.NotPurchasable&&ProfileTransaction.Commits==0,"rejected server request does not debit");
   Reset(100,1500);
   Check(HeroUnlockInventory.Purchase(hero)==HeroUnlockResult.NotPurchasable&&PlayerWallet.EarnedBalance==100,"offline fallback cannot spend paid shards");
-  Console.WriteLine("VOID KNIGHT FUTURE RELEASE: "+passed+" purchase checks passed. Temporary release fixture only.");
+  Console.WriteLine("VOID KNIGHT RELEASE: "+passed+" purchase checks passed. Production release catalog.");
  }
 }
+

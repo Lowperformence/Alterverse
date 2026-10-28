@@ -1,4 +1,4 @@
-"""Void Knight weapon listings are previews until the hero's later release."""
+"""Void Knight hero launch; optional weapon colorways remain previews."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,31 +10,21 @@ class VoidKnightWeaponTests(unittest.TestCase):
     def test_hero_launch_price_and_persisted_ownership(self):
         item=ITEMS['hero_void_knight']
         self.assertEqual(item['price'],1600)
-        self.assertIs(item['available'],False)
+        self.assertIs(item['available'],True)
         self.assertEqual(item['writes'],[{'key':'DF_HeroOwned_VoidKnight','kind':0,'number':1}])
 
-    def test_hero_stays_locked_in_both_sqlite_purchase_paths(self):
+    def test_released_hero_purchase_is_atomic_and_persists(self):
         with tempfile.TemporaryDirectory() as tmp:
-            ledger=Ledger(Path(tmp)/'ledger.db')
-            before=ledger.wallet('account-a')
-            before=ledger.save_profile('account-a',[{'key':'DF_Shards','kind':0,'number':2000}],before['profileRevision'])
-            for attempt in (
-                lambda:ledger.purchase('account-a','hero_void_knight','e'*32,before['profileRevision']),
-                lambda:ledger.buy('account-a','hero_void_knight'),
-            ):
-                with self.assertRaisesRegex(ValueError,'not released'):attempt()
-                self.assertEqual(ledger.wallet('account-a'),before)
+            ledger=Ledger(Path(tmp)/'ledger.db');before=ledger.wallet('launch-account')
+            before=ledger.save_profile('launch-account',[{'key':'DF_Shards','kind':0,'number':1600}],before['profileRevision'])
+            after=ledger.purchase('launch-account','hero_void_knight','a'*32,before['profileRevision'])
+            self.assertEqual({e['key']:e.get('number') for e in after['profile']}['DF_Shards'],0)
+            self.assertEqual({e['key']:e.get('number') for e in after['profile']}['DF_HeroOwned_VoidKnight'],1)
+            self.assertEqual(Ledger(Path(tmp)/'ledger.db').wallet('launch-account'),{k:v for k,v in after.items() if k!='operationId'})
+            self.assertEqual(ledger.purchase('launch-account','hero_void_knight','a'*32,before['profileRevision']),after)
 
-    def test_hero_firestore_gate_rejects_before_database_access(self):
-        ledger=FirestoreLedger.__new__(FirestoreLedger)
-        ledger.client=Mock();ledger.accounts=Mock()
-        for attempt in (
-            lambda:ledger.purchase('account-a','hero_void_knight','e'*32,0),
-            lambda:ledger.buy('account-a','hero_void_knight'),
-        ):
-            with self.assertRaisesRegex(ValueError,'not released'):attempt()
-        self.assertEqual(ledger.client.mock_calls,[])
-        self.assertEqual(ledger.accounts.mock_calls,[])
+    def test_timmy_remains_locked(self):
+        self.assertIs(ITEMS['hero_timmy']['available'],False)
 
     def test_future_release_mixed_payment_ownership_retry_and_restore(self):
         # Test-only catalog override; the shipped product remains unavailable.
@@ -112,3 +102,4 @@ class VoidKnightWeaponTests(unittest.TestCase):
                 self.assertIs(item.get('available',True),True)
 
 if __name__=='__main__':unittest.main()
+

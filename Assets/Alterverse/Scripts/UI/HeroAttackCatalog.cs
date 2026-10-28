@@ -66,6 +66,7 @@ namespace Alterverse.UI
             if(hero==HeroId.VoidKnight&&slot==1)return "80% FRONTAL REDUCTION / 0.65s";
             if(hero==HeroId.Elyra&&slot==2)return $"{HeroAbilityKit.PhaseFoldShield:0} SHIELD / {HeroAbilityKit.PhaseFoldShieldSeconds:0.##}s";
             if(hero==HeroId.Timmy&&slot==2)return $"{TimmyBalance.JetShield:0} SHIELD / {TimmyBalance.JetShieldSeconds:0.#}s";
+            if(hero==HeroId.Elyra&&slot==1)return $"{spec.Power:0} DMG + {HeroAbilityKit.IoneInvertShieldAbsorb:0} SHIELD ABSORB";
             if(hero==HeroId.Nyra&&slot==0)return $"{spec.Power:0} DMG + {HeroAbilityKit.SivraPrismShieldAbsorb:0} SHIELD ABSORB";
             if(hero==HeroId.Kaelon&&slot==1)return $"{spec.Power:0} SHIELD / 4s";
             if(hero==HeroId.Kaelon&&slot==3)return $"{spec.Power:0} DMG + 50 SELF HEAL";
@@ -135,12 +136,12 @@ namespace Alterverse.UI
                 0=>$"Fixed-direction blue laser. Steal up to {HeroAbilityKit.SivraPrismShieldAbsorb:0} enemy shield before damage. Refill your base shield first; excess becomes {HeroAbilityKit.SivraPrismOvershieldSeconds:0.#}s bonus shield within the shield cap.",
                 1=>$"Reposition dash up to 3m. Passive: after the dash, gain +{(HeroAbilityKit.SivraDashSpeedMultiplier-1f)*100:0}% running speed for {HeroAbilityKit.SivraDashSpeedSeconds:0.#}s.",
                 2=>"Damages and slows the target by 30% for 1.8s.",
-                _=>$"Three fixed-direction shots through a very narrow {HeroAbilityKit.SivraUltimateConeAngle:0.#}-degree cone, up to {HeroAbilityKit.SivraUltimateRange:0.#}m (double range). 64 total damage if all shots connect."
+                _=>$"Three fixed-direction shots through a very narrow {HeroAbilityKit.SivraUltimateConeAngle:0.#}-degree cone, up to {HeroAbilityKit.SivraUltimateRange:0.#}m (double range). {HeroAbilityKit.LoadoutFor(HeroId.Nyra).Ultimate.Power:0} total damage if all shots connect."
             },
             HeroId.Elyra=>slot switch
             {
                 0=>"Place an area burst; enemies can escape during the warning.",
-                1=>"Area burst that slows enemies 35% for 2s.",
+                1=>$"Area burst that slows enemies 35% for 2s. Absorb up to {HeroAbilityKit.IoneInvertShieldAbsorb:0} existing shield per enemy hit, refilling your base shield first; overflow lasts {HeroAbilityKit.IoneInvertOvershieldSeconds:0.#}s within the shield cap. Unshielded enemies grant no shield.",
                 2=>$"Phase dash up to {HeroAbilityKit.LoadoutFor(HeroId.Elyra).E.Range:0.#}m; gain {HeroAbilityKit.PhaseFoldShield:0} shield for {HeroAbilityKit.PhaseFoldShieldSeconds:0.##}s.",
                 _=>"Large delayed field: 72 damage and 45% slow for 2s."
             },
@@ -176,4 +177,5 @@ namespace Alterverse.UI
         };
     }
 }
+
 

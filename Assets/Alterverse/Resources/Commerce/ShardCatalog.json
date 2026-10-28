@@ -505,7 +505,7 @@
     {
       "id": "hero_void_knight",
       "price": 1600,
-      "available": false,
+      "available": true,
       "writes": [
         {
           "key": "DF_HeroOwned_VoidKnight",
@@ -1363,4 +1363,5 @@
     "basePlanId": "monthly"
   }
 }
+
 

@@ -18,9 +18,9 @@ namespace Alterverse.Shop
         public const string TimmyOwnedKey="DF_HeroOwned_Timmy";
         public const string VoidKnightOwnedKey="DF_HeroOwned_VoidKnight";
         public const string Bolt7OwnedKey="DF_HeroOwned_Bolt7";
-        // Listed for preview, but purchase and deployment remain blocked until release.
+        // Timmy remains preview-only; Void Knight is released at its existing launch price.
         public const bool TimmyReleased=false;
-        public const bool VoidKnightReleased=false;
+        public const bool VoidKnightReleased=true;
         public static bool Released(HeroId hero)=>hero==HeroId.VoidKnight?VoidKnightReleased:hero!=HeroId.Timmy||TimmyReleased;
 
         // The Traveler is a paid shard unlock in normal play.
@@ -69,4 +69,5 @@ namespace Alterverse.Shop
         }
     }
 }
+
 

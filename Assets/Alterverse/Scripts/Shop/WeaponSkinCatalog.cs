@@ -155,11 +155,14 @@ namespace Alterverse.Shop
 
         public static bool Equipped(HeroId hero)=>EquippedVariant(hero)>=0;
 
+        // Launching the hero does not release the two preview-only weapon colorways.
+        public static bool Released(HeroId hero)=>HeroUnlockCatalog.Released(hero)&&hero!=HeroId.VoidKnight;
+
         public static AvatarPurchaseResult Purchase(HeroId hero)=>Purchase(hero,0);
 
         public static AvatarPurchaseResult Purchase(HeroId hero,int variant)
         {
-            if(!HeroUnlockCatalog.Released(hero))return AvatarPurchaseResult.InvalidItem;
+            if(!Released(hero))return AvatarPurchaseResult.InvalidItem;
             ProfileTransaction.Recover();
             if(!WeaponSkinCatalog.Contains(hero,variant))return AvatarPurchaseResult.AlreadyOwned;
             WeaponSkinItem item=WeaponSkinCatalog.For(hero,variant);
@@ -209,4 +212,5 @@ namespace Alterverse.Shop
         }
     }
 }
+
 

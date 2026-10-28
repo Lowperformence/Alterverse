@@ -95,8 +95,9 @@ public static class PrismRegression
         Near(HeroCombatStatus.Slow,.7f,"Light Snare retains its 30 percent slow");
         Near(HeroCombatStatus.Seconds,1.8f,"Light Snare retains its duration");
         Reset();sivra=Hero(HeroId.Nyra,0);enemy=Hero(HeroId.Veyr,1);Shot(sivra,enemy,3,true);
-        Near(enemy.Shield,100-64f/3,"Sightline Break damage stays unchanged");
+        Near(enemy.Shield,100-80f/3,"Sightline Break divides 80 total damage across three shots");
         Near(sivra.Shield,60,"Ultimate volley does not siphon shield");
+        Shot(sivra,enemy,3,true);Shot(sivra,enemy,3,true);Near(enemy.Shield,20,"Three Sightline Break shots deal exactly 80 total");
         var other=Hero(HeroId.Veyr,0);enemy=Hero(HeroId.Veyr,1);Shot(other,enemy);
         Near(enemy.Shield,62,"Other hero's skill damage is unchanged");
 
@@ -111,6 +112,26 @@ public static class PrismRegression
         var replica=Hero(HeroId.Nyra,0);CoopAuthority.CanMutateAuthoritativeState=false;
         replica.ApplyNetworkSnapshot(sivra.Current,sivra.Shield,false);Near(replica.Shield,75,"Existing network shield snapshot preserves absorbed points");
         CoopAuthority.CanMutateAuthoritativeState=true;
+        Reset();var ione=Hero(HeroId.Elyra,0);enemy=Hero(HeroId.Veyr,1);Shot(ione,enemy,1);
+        Near(ione.TemporaryShield,20,"Invert Field absorbs exactly 20 shield on a full recipient");
+        Near(enemy.Shield,54,"Invert transfer precedes unchanged 26 damage");
+        Near(CoopGameplayCommands.Damage,46,"Invert drain and damage acknowledged once");
+        Near(HeroCombatStatus.Slow,.65f,"Invert retains its slow");
+        Time.time=3;Near(ione.TemporaryShield,0,"Invert overflow expires at three seconds");
+        Reset();ione=Hero(HeroId.Elyra,0);enemy=Hero(HeroId.Veyr,1);enemy.TakeDamage(93);Shot(ione,enemy,1);
+        Near(ione.TemporaryShield,7,"Only seven remaining shield points transfer");Near(enemy.Current,174,"Normal damage follows partial transfer");
+        Reset();ione=Hero(HeroId.Elyra,0);enemy=Hero(HeroId.Veyr,1);enemy.TakeDamage(100);Shot(ione,enemy,1);
+        Near(ione.Shield,80,"An unshielded target grants no Invert shield");
+        Reset();ione=Hero(HeroId.Elyra,0);enemy=Hero(HeroId.Veyr,1);ione.TakeDamage(30);Shot(ione,enemy,1);
+        Near(ione.HeroBaseShield,70,"Invert refills missing base shield first");Near(ione.TemporaryShield,0,"No overflow before base is full");
+        Reset();ione=Hero(HeroId.Elyra,0);enemy=Hero(HeroId.Veyr,1);enemy.DamageGate=()=>false;Shot(ione,enemy,1);
+        Near(ione.Shield,80,"Invulnerable contact grants no Invert shield");Near(enemy.Shield,100,"Invulnerable donor is unchanged");
+        enemy.DamageGate=null;CoopAuthority.CanMutateAuthoritativeState=false;Shot(ione,enemy,1);
+        Near(ione.Shield,80,"Replica cannot absorb Invert shield");CoopAuthority.CanMutateAuthoritativeState=true;
+        Reset();ione=Hero(HeroId.Elyra,0);enemy=Hero(HeroId.Veyr,0);Shot(ione,enemy,1);Near(enemy.Shield,100,"Invert cannot drain allies");
+        enemy=Hero(HeroId.Veyr,1);Shot(ione,enemy,0);Near(ione.Shield,80,"Ione Q does not acquire the W absorb");
+        Check(HeroAttackCatalog.For(HeroId.Elyra)[2].Stats.Contains("20 SHIELD ABSORB"),"Invert card includes shield absorption");
+        Check(HeroAttackCatalog.For(HeroId.Nyra)[4].Effect.Contains("80 total damage"),"Ultimate description follows the production damage value");
         var cards=HeroAttackCatalog.For(HeroId.Nyra);
         Check(cards[1].Effect.Contains("15")&&cards[1].Effect.Contains("3s"),"Ability card describes absorption and overflow duration");
         Check(cards[1].Stats.Contains("15 SHIELD ABSORB"),"Primary skill stats make the additional shield absorption visible");
@@ -120,3 +141,4 @@ public static class PrismRegression
         Console.WriteLine("PASS "+checks+" Prism Shot shield-transfer, damage-order, caps, rejection, authority, snapshot, recharge and Light Snare assertions. Unity/network transport not tested.");
     }
 }
+

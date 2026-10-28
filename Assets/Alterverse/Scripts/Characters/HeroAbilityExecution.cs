@@ -318,13 +318,16 @@ namespace Alterverse.Characters
                 damage *= 1f + (1f - target.Normalized) * .35f;
             // Resolve only at confirmed contact, before normal damage consumes a small
             // remaining shield. Health owns authority, invulnerability and pool limits.
-            float absorbed=identity.Hero==HeroId.Nyra&&slot==0
-                ? target.TransferShieldTo(self,HeroAbilityKit.SivraPrismShieldAbsorb,
-                    HeroAbilityKit.SivraPrismOvershieldSeconds) : 0;
+            bool prism=identity.Hero==HeroId.Nyra&&slot==0;
+            bool invert=identity.Hero==HeroId.Elyra&&slot==1;
+            float shieldSeconds=invert?HeroAbilityKit.IoneInvertOvershieldSeconds:HeroAbilityKit.SivraPrismOvershieldSeconds;
+            float absorbed=prism||invert
+                ? target.TransferShieldTo(self,invert?HeroAbilityKit.IoneInvertShieldAbsorb:HeroAbilityKit.SivraPrismShieldAbsorb,
+                    shieldSeconds) : 0;
             if(absorbed>0)
             {
                 Alterverse.Multiplayer.CoopGameplayCommands.RecordAuthoritativeDamage(gameObject,absorbed);
-                HeroSkillVfx.Support(gameObject,self,true,HeroAbilityKit.SivraPrismOvershieldSeconds);
+                HeroSkillVfx.Support(gameObject,self,true,shieldSeconds);
             }
             float before=target.Current+target.Shield;
             HeroCombatRules.Damage(gameObject, target, damage);
@@ -362,3 +365,4 @@ namespace Alterverse.Characters
         }
     }
 }
+
