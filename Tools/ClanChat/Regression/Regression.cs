@@ -69,8 +69,11 @@ public static class Fixture {
   UnityEngine.Networking.UnityWebRequest.Handler=r=>{reads++;r.downloadHandler.text="{\"fulfilled\":true,\"social\":{\"clanId\":\"private\",\"messages\":[]}}";return new UnityEngine.Networking.UnityWebRequestAsyncOperation();};
   request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/chat/read",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
   Assert(reads==1&&Alterverse.Shop.PaidShardCommerce.Instance.Flushes==flushes,"Reading chat must not wait for an unrelated pending profile save");
+  UnityEngine.Networking.UnityWebRequest.Handler=r=>{reads++;r.downloadHandler.text="{\"fulfilled\":true,\"social\":{\"players\":[{\"playerId\":\"saved-player\",\"level\":7,\"xp\":1800}],\"total\":1}}";return new UnityEngine.Networking.UnityWebRequestAsyncOperation();};
   request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/levels",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
-  Assert(reads==1&&Alterverse.Shop.PaidShardCommerce.Instance.Flushes==flushes+1,"Player rankings must still save current progression before reading");
+  Assert(reads==2&&Alterverse.Shop.PaidShardCommerce.Instance.Flushes==flushes+1&&service.Levels?.players?[0].level==7,"Player rankings must try saving first and still load saved server levels after a save failure");
+  Assert(service.Status.Contains("synchronization pending")&&Alterverse.Profile.AccountProfilePrefs.Dirty,"Player ranking reads must retain unsaved local progression and explain the saved values");
+  reads=1;
   UnityEngine.Networking.UnityWebRequest.Handler=r=>{reads++;r.downloadHandler.text="{\"fulfilled\":true,\"social\":{\"clans\":[{\"clanId\":\"saved-clan\",\"totalLevel\":35}],\"total\":1}}";return new UnityEngine.Networking.UnityWebRequestAsyncOperation();};
   request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/clan-levels",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
   Assert(reads==2&&service.ClanLevels?.clans?.Length==1&&service.ClanLevels.clans[0].totalLevel==35,"Failed account saves must still load the authoritative saved clan standings");
@@ -144,5 +147,6 @@ public static class Fixture {
   Assert(service.Busy,"Visible rankings must periodically refresh without a manual tap");
  }
 }
+
 
 

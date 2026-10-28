@@ -163,10 +163,10 @@ namespace Alterverse.Profile
         }
         IEnumerator Send(string route,Request body,int version)
         {
-            // Try to publish current progression first. Clan state and standings may
+            // Try to publish current progression first. Social state and standings may
             // still read authoritative saved data when an unrelated profile save fails.
             var commerce=PaidShardCommerce.Instance;
-            bool usingSavedClanProfile=false;
+            bool usingSavedProfile=false;
             bool needsProfile=route=="/social/state"||route=="/social/levels"||route=="/social/clan-levels"||route=="/social/clan/create";
             if(needsProfile&&commerce!=null&&commerce.Ready&&AccountProfilePrefs.Dirty)
             {
@@ -175,9 +175,9 @@ namespace Alterverse.Profile
                 if(version!=generation)yield break;
                 if(save.IsFaulted||save.IsCanceled||!save.Result)
                 {
-                    if(route!="/social/state"&&route!="/social/clan-levels")
+                    if(route=="/social/clan/create")
                     {Status="Account save pending. Retry after synchronization.";Busy=false;yield break;}
-                    usingSavedClanProfile=true;
+                    usingSavedProfile=true;
                 }
             }
             if(route=="/social/clan/create")
@@ -267,7 +267,7 @@ namespace Alterverse.Profile
             if(Chat!=null&&route.StartsWith("/social/chat/",StringComparison.Ordinal))ChatStatus="Connected to clan chat.";
             if(route=="/social/chat/report")nextChatPoll=Time.unscaledTime+5f;
             Status=route=="/social/chat/report"?"Report saved for the game administration.":
-                usingSavedClanProfile?"Showing saved clan data. Account synchronization pending.":"Synchronized.";Busy=false;
+                usingSavedProfile?"Showing saved server data. Account synchronization pending.":"Synchronized.";Busy=false;
         }
         // Also protects displays during a staggered client/server rollout.
         internal static void CleanSnapshot(Snapshot value)
@@ -295,6 +295,7 @@ namespace Alterverse.Profile
         void OnDestroy(){if(Instance==this){ResetCache();Instance=null;}}
     }
 }
+
 
 
 
