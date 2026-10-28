@@ -45,8 +45,8 @@ static class Regression
   Check(await first&&await second&&PaidShardCommerce.Connections==1,"verified startup connects exactly one backend account");
   Check(!AccountProfilePrefs.Attached,"native success does not fabricate a cloud profile");
   Attach(auth.PlayerId);
-  Check(AccountProfilePrefs.GetString(PlayerProfile.PlayGamesNameKey,"")==""&&PlayerProfile.PlayerName==sdk.Name,
-   "first cloud frame shows Play name even before the alias persistence callback");
+  Check(AccountProfilePrefs.GetString(PlayerProfile.PlayGamesNameKey,"")==""&&PlayerProfile.PlayerName=="CONNECTING...",
+   "first cloud frame waits for the verified Play alias instead of displaying the generated server name");
   sdk.Name=null;
   Check(PlayerProfile.PlayerName=="CONNECTING...","missing Google name never falls back to the server-generated name");
   sdk.Name="Only Play Player";PaidShardCommerce.Raise();

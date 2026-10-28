@@ -21,9 +21,7 @@ namespace Alterverse.Profile
                         return AccountProfilePrefs.Attached || AccountServerBootstrap.Instance == null ||
                             AccountServerBootstrap.Instance.Busy ? "CONNECTING..." : "SIGN IN REQUIRED";
                     string savedName = AccountProfilePrefs.GetString(PlayGamesNameKey, "");
-                    if (SafeIdentityCatalog.IsDisplayName(savedName)) return savedName;
-                    string playName = SafeIdentityCatalog.NormalizePlayGamesName(GooglePlayAccountSession.DisplayName);
-                    return SafeIdentityCatalog.IsDisplayName(playName) ? playName : "CONNECTING...";
+                    return SafeIdentityCatalog.IsDisplayName(savedName) ? savedName : "CONNECTING...";
                 }
                 string value=AccountProfilePrefs.GetString(NameKey, "");
                 if (SafeIdentityCatalog.IsPlayerName(value))
