@@ -1,7 +1,7 @@
 # Rewarded shard ads
 
 The Shards shop has a voluntary `WATCH AD` play button beside the monthly
-subscription. A completed Google rewarded ad grants exactly **2 earned shards**.
+subscription. A completed Google rewarded ad grants exactly **5 earned shards**.
 The subscription purchase and management controls remain in the left-hand panel.
 
 ## AdMob configuration
@@ -9,7 +9,7 @@ The subscription purchase and management controls remain in the left-hand panel.
 - Android app ID: `ca-app-pub-1716027263297702~9368994561`
 - Rewarded ad unit: `ca-app-pub-1716027263297702/1813938170`
 - Placement name: `Store_Shards_Rewarded_2`
-- AdMob reward: amount `2`, item `Shards`
+- AdMob reward: amount `5`, item `Shards` (update the existing unit in the AdMob console).
 - Format: ordinary rewarded ads (voluntary player action).
 
 The IDs are public application identifiers, not credentials.
@@ -45,7 +45,26 @@ updating the source alone does not create or publish a binary.
 For a clean release rebuild use
 **DIMENSIONS FRONT > Release > Rebuild signed Android bundle (clean)**.
 The Shards shop's `WATCH AD` button requests a real rewarded ad in this release,
-and Google's earned-reward callback grants 2 earned shards.
+and Google's earned-reward callback grants 5 earned shards.
+
+The shop heading and both reward-status messages use the same reward constant as
+the payout. The existing ad-unit ID stays in use; its console reward metadata must
+also be set to 5 so the ad's own reward wording matches the game's payout.
+
+## Daily quests
+
+Daily rows display the objective directly in the larger heading style (26 instead
+of 19), for example `Kill 50 enemies`. Internal quest names are no longer rendered.
+All five rows fit the menu's 720-unit canvas; progress, reward and claim controls
+remain available.
+
+`Watch 5 ads in the Store` awards an additional **20 earned shards**, claimed once
+per Europe/Berlin day. Five completed ads therefore pay 25 shards from the ads and
+20 from the quest, for 45 total. Further completed ads still pay 5 shards each.
+Only earned-reward receipts advance the quest, atomically with their shard payout.
+The receipt captures the completion day before queuing to the main thread; a saved
+reward collected on a later day still pays shards but does not count toward that
+day's quest. Legacy saved receipts without a completion day also still pay shards.
 
 ## Before a production rollout
 
@@ -60,7 +79,7 @@ and Google's earned-reward callback grants 2 earned shards.
    that supplied the IDs showed creation success, not these advanced settings.
 4. Update the existing Google Play data-safety and advertising declarations and
    privacy policy to reflect the actual Google ads integration before release.
-5. Test on Android: loading, completion (+2), early close (+0), unavailable ads,
+5. Test on Android: loading, completion (+5), early close (+0), unavailable ads,
    reopening, background/resume, consent choices, account switching and cloud sync.
 
 ## Reward storage and validation boundary
@@ -91,7 +110,9 @@ This compiles the real service, payout, wallet, profile cache and transaction
 journal against controlled SDK/Unity fixtures for Android release, Android
 development, Editor and server defines. It exercises double taps, duplicate and
 late callbacks, early close, presentation failure, cross-account delivery,
-pending-receipt replay, privacy invalidation, ad expiry and bounded retries.
+pending-receipt replay, privacy invalidation, ad expiry and bounded retries. It also
+checks the five-video daily target, separate one-time 20-shard claim, preservation
+of combat/map progress, daily reset, legacy receipts and account isolation.
 The GitHub Actions workflow also runs the existing account regression harness.
 These fixture checks do not replace a Unity build or Android-device validation.
 

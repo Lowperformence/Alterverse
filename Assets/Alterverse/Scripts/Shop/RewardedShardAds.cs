@@ -124,7 +124,7 @@ namespace Alterverse.Shop
             bool rewardReported = false, finished = false;
             ad = null;
             showing = true;
-            Status = "Complete the ad to earn 2 shards.";
+            Status = $"Complete the ad to earn {RewardAmount} shards.";
             Action<bool> finish = failed =>
             {
                 if (finished) return;
@@ -138,13 +138,17 @@ namespace Alterverse.Shop
             shown.OnAdFullScreenContentFailed += error => Post(() => finish(true));
             try
             {
-                shown.Show(reward => Post(() =>
+                shown.Show(reward =>
                 {
-                    if (rewardReported) return;
-                    RewardedShardPayout.Enqueue(receipt);
-                    rewardReported = true;
-                    CollectRewards();
-                }));
+                    int completedDay = Alterverse.Profile.DailyCalendar.Today;
+                    Post(() =>
+                    {
+                        if (rewardReported) return;
+                        RewardedShardPayout.Enqueue(receipt, completedDay);
+                        rewardReported = true;
+                        CollectRewards();
+                    });
+                });
             }
             catch (Exception) { finish(true); }
 #endif
@@ -239,7 +243,7 @@ namespace Alterverse.Shop
                 ad = loaded;
                 loadedAt = Time.unscaledTime;
                 loadFailures = 0;
-                Status = "Watch an ad to earn 2 shards.";
+                Status = $"Watch an ad to earn {RewardAmount} shards.";
             }));
         }
 

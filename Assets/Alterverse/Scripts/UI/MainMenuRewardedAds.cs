@@ -11,7 +11,7 @@ namespace Alterverse.UI
             ads.Prepare();
             Rect panel = new Rect(Right - 250, 312, 250, 128);
             theme.Panel(panel);
-            theme.Label(new Rect(panel.x + 16, 321, 218, 24), "EARN 2 SHARDS", theme.Heading);
+            theme.Label(new Rect(panel.x + 16, 321, 218, 24), $"EARN {RewardedShardAds.RewardAmount} SHARDS", theme.Heading);
             if (theme.Action(new Rect(panel.x + 16, 351, 218, 42), "▶ WATCH AD", true,
                 enabled: ads.CanShow, accent: ShardShopVisualOverlay.TabAccent)) ads.Show();
             theme.Label(new Rect(panel.x + 16, 398, 218, 38), ads.Status, theme.Small, true);

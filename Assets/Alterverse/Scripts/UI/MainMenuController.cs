@@ -1286,15 +1286,14 @@ namespace Alterverse.UI
             for(int i=0;i<PlayerChallengeContent.Daily.Length;i++)
             {
                 ChallengeDef quest=PlayerChallengeContent.Daily[i];
-                float y=322+i*92;
-                theme.Panel(new Rect(x,y,width,84));
-                theme.Label(new Rect(x+18,y+8,width-252,26),quest.Name,theme.Heading);
-                theme.Label(new Rect(x+18,y+35,width-252,24),quest.Description,theme.Body,true);
+                float y=322+i*74;
+                theme.Panel(new Rect(x,y,width,68));
+                theme.Label(new Rect(x+18,y+8,width-252,40),quest.Description,theme.Heading);
                 int progress=DailyQuestProgress.Progress(i),target=DailyQuestProgress.Target(i);
-                theme.Progress(new Rect(x+18,y+67,width-252,5),target>0?progress/(float)target:0);
+                theme.Progress(new Rect(x+18,y+56,width-252,5),target>0?progress/(float)target:0);
                 theme.Label(new Rect(x+width-213,y+8,190,22),$"{progress} / {target}  •  {quest.Shards} SHARDS",theme.Small,true);
                 bool claimed=DailyQuestProgress.Claimed(i);
-                if(theme.Action(new Rect(x+width-205,y+35,180,36),claimed?"CLAIMED":"CLAIM",true,enabled:!claimed&&target>0&&progress>=target))
+                if(theme.Action(new Rect(x+width-205,y+26,180,36),claimed?"CLAIMED":"CLAIM",true,enabled:!claimed&&target>0&&progress>=target))
                     DailyQuestProgress.Claim(i);
             }
         }

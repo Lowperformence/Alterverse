@@ -52,36 +52,37 @@ static class Regression
         Task.Run(() => { first.Earned(new Reward()); first.Earned(new Reward()); }).GetAwaiter().GetResult();
         Check(PlayerWallet.EarnedBalance == 0, "Worker callbacks must not touch Unity/profile state");
         Pump(ads);
-        Check(PlayerWallet.EarnedBalance == 2, "Successful completion grants exactly two, once");
+        Check(PlayerWallet.EarnedBalance == 5, "Successful completion grants exactly five, once");
+        Check(DailyQuestProgress.Progress(4) == 1, "Duplicate earned callbacks advance the daily quest only once");
         first.Close(); Pump(ads);
-        Check(first.Destroyed && PlayerWallet.EarnedBalance == 2, "Close cleans up and never adds a second reward");
+        Check(first.Destroyed && PlayerWallet.EarnedBalance == 5, "Close cleans up and never adds a second reward");
         var cancelled = Load(ads); ads.Show(); cancelled.Close(); Pump(ads);
-        Check(PlayerWallet.EarnedBalance == 2, "Closing early must not grant shards");
+        Check(PlayerWallet.EarnedBalance == 5 && DailyQuestProgress.Progress(4) == 1, "Closing early must not grant shards or quest progress");
         var failed = Load(ads); ads.Show(); failed.Fail(); Pump(ads);
-        Check(PlayerWallet.EarnedBalance == 2 && failed.Destroyed, "Failed presentation must not grant shards");
+        Check(PlayerWallet.EarnedBalance == 5 && failed.Destroyed && DailyQuestProgress.Progress(4) == 1, "Failed presentation must not grant shards or quest progress");
         var late = Load(ads); ads.Show(); late.Close(); Pump(ads); late.Earned(new Reward()); Pump(ads);
-        Check(PlayerWallet.EarnedBalance == 4, "A genuine earned event after close must still be counted");
+        Check(PlayerWallet.EarnedBalance == 10 && DailyQuestProgress.Progress(4) == 2, "A genuine earned event after close must still be counted");
         first.Earned(new Reward()); Pump(ads);
-        Check(PlayerWallet.EarnedBalance == 4, "A late duplicate from an older ad is ignored");
+        Check(PlayerWallet.EarnedBalance == 10 && DailyQuestProgress.Progress(4) == 2, "A late duplicate from an older ad is ignored");
 
         AccountProfilePrefs.Attach("account-a", 1, Profile(10));
         var switched = Load(ads); ads.Show();
         AccountProfilePrefs.Attach("account-b", 1, Profile(20));
         switched.Earned(new Reward()); switched.Close(); Pump(ads);
-        Check(PlayerWallet.EarnedBalance == 20 && RewardedShardPayout.HasPending, "Never give account A's reward to account B");
+        Check(PlayerWallet.EarnedBalance == 20 && RewardedShardPayout.HasPending && DailyQuestProgress.Progress(4) == 0, "Never give account A's reward or quest progress to account B");
         Check(!ads.CanShow, "Collect an outstanding reward before another ad");
         AccountProfilePrefs.Attach("account-a", 1, Profile(10));
         Time.unscaledTime += 2; Pump(ads);
-        Check(PlayerWallet.EarnedBalance == 12 && !RewardedShardPayout.HasPending, "Collect the durable pending reward on the original account");
+        Check(PlayerWallet.EarnedBalance == 15 && !RewardedShardPayout.HasPending && DailyQuestProgress.Progress(4) == 1, "Collect the durable pending reward and quest progress on the original account");
         Check(AccountProfilePrefs.Dirty, "Earned shards must enter the existing cloud profile save path");
 
         var replay = RewardedShardPayout.NewReceipt();
         RewardedShardPayout.Enqueue(replay); RewardedShardPayout.Collect();
         RewardedShardPayout.Enqueue(replay); RewardedShardPayout.Collect();
-        Check(PlayerWallet.EarnedBalance == 14, "Replaying a persisted receipt after interruption must be idempotent");
+        Check(PlayerWallet.EarnedBalance == 20 && DailyQuestProgress.Progress(4) == 2, "Replaying a persisted receipt after interruption must be idempotent");
         var r1 = RewardedShardPayout.NewReceipt(); var r2 = RewardedShardPayout.NewReceipt();
         RewardedShardPayout.Enqueue(r1); RewardedShardPayout.Enqueue(r2);
-        Check(RewardedShardPayout.Collect() == 4 && PlayerWallet.EarnedBalance == 18, "Collect separate rewards individually");
+        Check(RewardedShardPayout.Collect() == 10 && PlayerWallet.EarnedBalance == 30 && DailyQuestProgress.Progress(4) == 4, "Collect separate rewards individually");
 
         // Change privacy preferences during an in-flight load: discard the old result.
         Time.unscaledTime += 70; ads.Prepare();
@@ -90,7 +91,7 @@ static class Regression
         ConsentInformation.Allowed = false; ConsentForm.PrivacyDone(null); Pump(ads);
         staleCallback(stale, null); Pump(ads);
         Check(stale.Destroyed && !ads.CanShow, "Withdrawn consent must invalidate an in-flight ad");
-        Check(PlayerWallet.EarnedBalance == 18, "Privacy updates never grant currency");
+        Check(PlayerWallet.EarnedBalance == 30, "Privacy updates never grant currency");
         Time.unscaledTime += 70; ads.Prepare(); ConsentInformation.Pending(null); Pump(ads);
         int consentCalls = ConsentInformation.Updates;
         for (int i = 0; i < 100; i++) ads.Prepare();
@@ -104,6 +105,7 @@ static class Regression
         int attempts = RewardedAd.Loads;
         for (int i = 0; i < 100; i++) ads.Prepare();
         Check(RewardedAd.Loads == attempts, "Failed load retries must be rate limited");
+        CheckDailyAdQuest();
         Console.WriteLine("PASS: Android rewarded callbacks, duplicate/late events, account switch, persistence, consent, expiry and retry.");
 #else
         ads.Prepare(); ads.Show(); ads.ShowPrivacyOptions(); Pump(ads);
@@ -111,5 +113,58 @@ static class Regression
             "Editor/desktop/server builds must not run mobile SDK or grant pretend rewards");
         Console.WriteLine("PASS: Non-mobile/editor/server reward path disabled.");
 #endif
+    }
+
+    static void CheckDailyAdQuest()
+    {
+        AccountProfilePrefs.Attach("daily-quest", 1, Profile(0));
+        ProfileTransaction.Commit(DailyQuestProgress.MatchWrites(17, 3, 9, true, Alterverse.Match.ArenaVariant.Moon));
+        Check(!DailyQuestProgress.Claim(4), "Cannot claim the ad quest before watching ads");
+        for (int i = 1; i <= 5; i++)
+        {
+            var receipt = RewardedShardPayout.NewReceipt();
+            RewardedShardPayout.Enqueue(receipt);
+            Check(RewardedShardPayout.Collect() == 5, "Every completed video pays five shards");
+            Check(DailyQuestProgress.Progress(4) == i, "Five separate videos advance the daily quest");
+            Check(PlayerWallet.EarnedBalance == i * 5, "The quest bonus is separate from per-video rewards");
+            Check(DailyQuestProgress.Progress(0) == 17 && DailyQuestProgress.Progress(1) == 3 &&
+                DailyQuestProgress.Progress(2) == 9 && DailyQuestProgress.Progress(3) == 1,
+                "Ad progress preserves today's combat and map progress");
+            if (i < 5) Check(!DailyQuestProgress.Claim(4), "Four videos cannot claim the five-video quest");
+        }
+        Check(DailyQuestProgress.Claim(4) && PlayerWallet.EarnedBalance == 45, "Five videos pay 25 shards plus a claimable 20-shard bonus");
+        Check(!DailyQuestProgress.Claim(4) && PlayerWallet.EarnedBalance == 45, "The daily bonus can only be claimed once");
+        RewardedShardPayout.Enqueue(RewardedShardPayout.NewReceipt());
+        RewardedShardPayout.Collect();
+        Check(DailyQuestProgress.Progress(4) == 5 && PlayerWallet.EarnedBalance == 50 && DailyQuestProgress.Claimed(4),
+            "Further videos still pay five but cannot repeat the daily bonus");
+        ProfileTransaction.Commit(DailyQuestProgress.MatchWrites(1, 0, 0));
+        Check(DailyQuestProgress.Progress(4) == 5 && DailyQuestProgress.Claimed(4), "Match rewards preserve ad progress and its claim flag");
+
+        AccountProfilePrefs.SetInt("DF_DailyQuestDay_v2", DailyCalendar.Yesterday);
+        RewardedShardPayout.Enqueue(RewardedShardPayout.NewReceipt());
+        RewardedShardPayout.Collect();
+        Check(DailyQuestProgress.Progress(4) == 1 && !DailyQuestProgress.Claimed(4), "First ad after the daily reset starts a new quest");
+        Check(DailyQuestProgress.Progress(0) == 0 && DailyQuestProgress.Progress(3) == 0, "The daily reset also clears stale match progress");
+
+        // Simulate durable receipts left over from yesterday and from the pre-quest build.
+        foreach (int day in new[] { DailyCalendar.Yesterday, 0 })
+        {
+            string id = Guid.NewGuid().ToString("N");
+            PlayerPrefs.SetString("DF_CommerceRewardedAdsPending_v1",
+                "{\"receipts\":[{\"id\":\"" + id + "\",\"account\":\"daily-quest\",\"day\":" + day + "}]}");
+            Check(RewardedShardPayout.Collect() == 5 && DailyQuestProgress.Progress(4) == 1,
+                "Old saved rewards pay currency without counting as today's videos");
+        }
+        AccountProfilePrefs.Attach("another-player", 1, Profile(0));
+        Check(DailyQuestProgress.Progress(4) == 0 && !DailyQuestProgress.Claimed(4), "Daily ad progress is account-scoped");
+        AccountProfilePrefs.Attach("daily-quest", 1, Profile(0));
+        Check(DailyQuestProgress.Progress(4) == 1, "Daily ad progress survives restoring its account cache");
+        Check(DailyQuestProgress.RewardedAdWrites(DailyCalendar.Yesterday).Length == 0,
+            "Yesterday's completion cannot advance today's daily quest");
+        AccountProfilePrefs.SetInt("DF_DailyQuestDay_v2", int.MaxValue);
+        Check(DailyQuestProgress.RewardedAdWrites(DailyCalendar.Today).Length == 0,
+            "A device clock rollback cannot reset quest claims");
+        Console.WriteLine("PASS: five-video daily quest, 20-shard bonus, claims, match progress, daily reset, old receipts and account isolation.");
     }
 }

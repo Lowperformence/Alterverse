@@ -3,12 +3,19 @@ on:
   push:
     paths:
       - 'Assets/Alterverse/Scripts/Shop/RewardedShard*.cs'
+      - 'Assets/Alterverse/Scripts/Profile/**'
+      - 'Assets/Alterverse/Scripts/Content/PlayerChallengeContent.cs'
+      - 'Assets/Alterverse/Scripts/Match/ArenaVariantRuntime.cs'
+      - 'Tools/Shop/AccountRegression/EngineStubs.cs'
       - 'Tools/Shop/RewardedAdsRegression/**'
       - '.github/workflows/rewarded-ads-regression.yml'
   pull_request:
     paths:
       - 'Assets/Alterverse/Scripts/Shop/RewardedShard*.cs'
       - 'Assets/Alterverse/Scripts/Profile/**'
+      - 'Assets/Alterverse/Scripts/Content/PlayerChallengeContent.cs'
+      - 'Assets/Alterverse/Scripts/Match/ArenaVariantRuntime.cs'
+      - 'Tools/Shop/AccountRegression/EngineStubs.cs'
       - 'Tools/Shop/RewardedAdsRegression/**'
       - 'Packages/manifest.json'
       - 'Assets/GoogleMobileAds/**'

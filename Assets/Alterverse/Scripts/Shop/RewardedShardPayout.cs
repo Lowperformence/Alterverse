@@ -9,10 +9,10 @@ namespace Alterverse.Shop
     // not AdMob server-side verification; no client endpoint can mint paid currency.
     internal static class RewardedShardPayout
     {
-        public const int Amount = 2;
+        public const int Amount = 5;
         const string PendingKey = "DF_CommerceRewardedAdsPending_v1";
         const string ReceiptKey = "DF_RewardedAdLastReceipt_v1";
-        [Serializable] internal sealed class Receipt { public string id, account; }
+        [Serializable] internal sealed class Receipt { public string id, account; public int day; }
         [Serializable] sealed class Pending { public Receipt[] receipts = Array.Empty<Receipt>(); }
         public static bool HasPending => PlayerPrefs.HasKey(PendingKey);
         public static Receipt NewReceipt() => new Receipt
@@ -41,11 +41,12 @@ namespace Alterverse.Shop
         }
 
         // Called only by Google's earned-reward callback, on the Unity thread.
-        public static void Enqueue(Receipt receipt)
+        public static void Enqueue(Receipt receipt, int? completedDay = null)
         {
             var receipts = Read();
             if (receipts.Exists(r => r.id == receipt.id)) return;
             if (receipts.Count >= 64) throw new InvalidOperationException("Stored ad reward needs support.");
+            receipt.day = completedDay ?? DailyCalendar.Today;
             receipts.Add(receipt);
             Save(receipts);
         }
@@ -63,9 +64,13 @@ namespace Alterverse.Shop
                 {
                     // Persist balance and receipt together in the existing crash-recoverable
                     // journal. Never award from OnClosed or OnFailed callbacks.
-                    ProfileTransaction.Commit(
+                    var writes = new List<ProfileTransaction.Write>
+                    {
                         new ProfileTransaction.Write("DF_Shards", ProfileTransaction.Add(PlayerWallet.EarnedBalance, Amount)),
-                        new ProfileTransaction.Write(ReceiptKey, receipt.id));
+                        new ProfileTransaction.Write(ReceiptKey, receipt.id)
+                    };
+                    writes.AddRange(DailyQuestProgress.RewardedAdWrites(receipt.day));
+                    ProfileTransaction.Commit(writes.ToArray());
                     granted += Amount;
                 }
                 receipts.RemoveAt(i);
