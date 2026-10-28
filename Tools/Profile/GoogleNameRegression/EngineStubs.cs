@@ -92,10 +92,11 @@ namespace GooglePlayGames
  {
   public class User {public string id="google-a";}
   public static PlayGamesPlatform Instance=new();public User localUser=new();public bool Authenticated=true;
-  public string Name="Chris Ä龍🎮";public bool ThrowName;public static void Activate(){}
+  public string Name="Chris Ä龍🎮";public bool ThrowName,ManualSucceeds;public int ManualSignIns;public static void Activate(){}
   public bool IsAuthenticated()=>Authenticated;public string GetUserDisplayName()=>ThrowName?throw new Exception():Name;
   public void Authenticate(Action<BasicApi.SignInStatus> callback)=>callback(Authenticated?BasicApi.SignInStatus.Success:BasicApi.SignInStatus.Failed);
-  public void ManuallyAuthenticate(Action<BasicApi.SignInStatus> callback)=>Authenticate(callback);
+  public void ManuallyAuthenticate(Action<BasicApi.SignInStatus> callback)
+  {ManualSignIns++;if(ManualSucceeds)Authenticated=true;Authenticate(callback);}
   public void RequestServerSideAccess(bool refresh,Action<string> callback)=>callback("one-use-code");
  }
 }
@@ -135,3 +136,4 @@ namespace Alterverse.Multiplayer
  public static class CoopAuthority {public static bool Active;}
  public static class DedicatedServerNetworkRuntime {public static bool Requested;}
 }
+

@@ -260,7 +260,11 @@ namespace Alterverse.Profile
                     var auth=AuthenticationService.Instance;
                     if(auth.IsSignedIn)
                     {
-                        if(!restore||!GoogleRestoreAvailable)return false;
+                        // A cached Unity session can outlive a failed silent native
+                        // sign-in. A user retry must still reach interactive Google
+                        // authentication, then verify/link that same account.
+                        if(!restore)return await ConnectGoogleCoreAsync(true,false);
+                        if(!GoogleRestoreAvailable)return false;
                         // Keep the existing save/paid-history checks when a cloud profile
                         // is already active. An unverified startup session has no active
                         // cloud state to flush, so select the existing Google account directly.
@@ -413,3 +417,4 @@ namespace Alterverse.Profile
         }
     }
 }
+

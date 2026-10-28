@@ -77,6 +77,36 @@ static class Regression
   Check(!AccountProfilePrefs.Attached&&PlayerProfile.PlayerName=="SIGN IN REQUIRED",
    "failed login has no active local profile or generated display identity");
 
+  // A cached Unity session survives app updates. A failed silent native login
+  // must still allow the shop/profile RECONNECT button to invoke interactive login.
+  b=NewStartup();auth=AuthenticationService.Instance;auth.IsSignedIn=auth.IsAuthorized=true;
+  auth.PlayerId="cached-linked-player";sdk=PlayGamesPlatform.Instance;
+  sdk.Authenticated=false;sdk.ManualSucceeds=true;
+  Check(!await b.EnsureAuthenticatedAsync()&&PaidShardCommerce.Connections==0,
+   "silent native failure leaves a cached linked account inactive");
+  Check(await b.ConnectGoogleAsync()&&sdk.ManualSignIns==1&&b.GooglePlayAccountReady,
+   "manual reconnect recovers native Google sign-in for an existing signed-in Unity session");
+  Check(auth.PlayerId=="cached-linked-player"&&auth.GoogleSignIns==0&&auth.AnonymousSignIns==0&&auth.Links==0&&PaidShardCommerce.Connections==1,
+   "retry preserves the cached linked identity and connects its wallet once");
+
+  b=NewStartup();auth=AuthenticationService.Instance;auth.IsSignedIn=auth.IsAuthorized=true;
+  auth.PlayerId="cached-unlinked-player";auth.Provider=null;sdk=PlayGamesPlatform.Instance;
+  sdk.Authenticated=false;sdk.ManualSucceeds=true;
+  Check(!await b.EnsureAuthenticatedAsync()&&await b.ConnectGoogleAsync()&&sdk.ManualSignIns==1&&auth.Links==1,
+   "interactive retry links an existing legacy session in place");
+  Check(auth.PlayerId=="cached-unlinked-player"&&auth.GoogleSignIns==0&&auth.AnonymousSignIns==0&&PaidShardCommerce.Connections==1,
+   "legacy retry cannot create a replacement account");
+
+  b=NewStartup();auth=AuthenticationService.Instance;auth.IsSignedIn=auth.IsAuthorized=true;
+  sdk=PlayGamesPlatform.Instance;sdk.Authenticated=false;
+  Check(!await b.ConnectGoogleAsync()&&sdk.ManualSignIns==1&&PaidShardCommerce.Connections==0&&auth.GoogleSignIns==0&&auth.Links==0,
+   "cancelled interactive sign-in retains the account without activating wallet or linking");
+
+  b=NewStartup();auth=AuthenticationService.Instance;auth.IsSignedIn=auth.IsAuthorized=true;
+  auth.Provider="different-google";sdk=PlayGamesPlatform.Instance;sdk.Authenticated=false;sdk.ManualSucceeds=true;
+  Check(!await b.ConnectGoogleAsync()&&sdk.ManualSignIns==1&&b.GoogleRestoreAvailable&&auth.Links==0&&PaidShardCommerce.Connections==0,
+   "interactive retry still requires explicit restore for another Google player");
+
   b=NewStartup();auth=AuthenticationService.Instance;auth.FailGoogle=true;
   Check(!await b.EnsureAuthenticatedAsync()&&auth.AnonymousSignIns==0&&PaidShardCommerce.Connections==0,
    "a fresh Google service failure never falls back to anonymous account creation");
@@ -152,3 +182,4 @@ static class Regression
   Console.WriteLine(checks+" production Google-name account checks passed (controlled SDK, not an Android device).");
  }
 }
+
