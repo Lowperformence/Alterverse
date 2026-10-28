@@ -12,17 +12,25 @@ static class Regression
     static void Check(bool value, string message)
     { if(!value) throw new Exception(message); checks++; }
     static void Call(object target, string method, params object[] args)
-    { target.GetType().GetMethod(method, BindingFlags.Instance|BindingFlags.NonPublic).Invoke(target,args); }
-    static MenuBackgroundVideo Open()
+    {
+        if (target is MenuBackgroundVideo video)
+        {
+            if (method == "OnEnable") video.isActiveAndEnabled = true;
+            if (method == "OnDisable" || method == "OnDestroy") video.isActiveAndEnabled = false;
+        }
+        target.GetType().GetMethod(method, BindingFlags.Instance|BindingFlags.NonPublic).Invoke(target,args);
+    }
+    static MenuBackgroundVideo Open(bool complete=true)
     {
         var video=new GameObject().AddComponent<MenuBackgroundVideo>();
         Call(video,"OnEnable");
+        if (complete) Resources.CompleteLoads();
         return video;
     }
     static VideoPlayer Player(MenuBackgroundVideo video) => video.gameObject.Components.OfType<VideoPlayer>().Single();
     static void Reset(bool poster=true)
     {
-        Resources.Assets.Clear(); Resources.Loads=Resources.Unloads=0;
+        Resources.Assets.Clear(); Resources.Loads=Resources.Unloads=Resources.AsyncLoads=0; Resources.Pending.Clear();
         Resources.Assets[ClipPath]=new VideoClip();
         if(poster)Resources.Assets[PosterPath]=new Texture2D(1918,1080,TextureFormat.RGBA32,false);
         Graphics.Blits=0; Graphics.Throw=false; Graphics.LastSource=null; Graphics.LastTarget=null;
@@ -52,6 +60,29 @@ static class Regression
         Console.WriteLine($"Menu background server: {checks} checks passed.");
         return;
 #else
+        var delayed=Open(false);
+        Check(Resources.AsyncLoads==1 && Resources.Loads==0 && RenderTexture.Allocated.Count==0,
+            "opening the menu schedules an async clip load without synchronous video reads or a render allocation");
+        var still=new MenuCosmicBackdrop(); still.Draw(new Rect(0,0,2400,1080));
+        Check(GUI.Draws.Single().Texture==Resources.Assets[PosterPath], "the authored still is drawable while the video asset is loading");
+        Call(delayed,"OnDisable"); Call(delayed,"OnEnable");
+        Check(Resources.AsyncLoads==1, "reopening during a pending load reuses one request");
+        Resources.CompleteLoads();
+        Check(delayed.Image!=null && Player(delayed).Prepares==1, "only the current active menu begins decoding after loading");
+        Call(delayed,"OnDestroy"); still.Dispose();
+
+        Reset(); delayed=Open(false); Call(delayed,"OnDisable"); Resources.CompleteLoads();
+        Check(delayed.Image==null && RenderTexture.Allocated.Count==0 && Resources.Unloads==1,
+            "a late load after disable releases the clip without creating a decoder target");
+        Call(delayed,"OnEnable"); Resources.CompleteLoads();
+        Check(delayed.Image!=null && Resources.AsyncLoads==2, "a completed disabled request does not block a later reopen");
+        Call(delayed,"OnDestroy");
+
+        Reset(); delayed=Open(false); Call(delayed,"OnDestroy"); Resources.CompleteLoads();
+        Check(delayed.Image==null && RenderTexture.Allocated.Count==0 && Resources.Unloads==1,
+            "a late load after destruction only releases its asset");
+
+        Reset();
         var previousTarget=new RenderTexture(2,2,0,RenderTextureFormat.ARGB32);
         RenderTexture.active=previousTarget;
         var video=Open(); var player=Player(video); var image=video.Image;
@@ -77,6 +108,7 @@ static class Regression
         Check(player.Plays==2&&video.Image==image&&Graphics.Blits==1,"normal resume retains image and does not reseed");
         ((RenderTexture)image).Release();
         Call(video,"OnApplicationFocus",true);
+        Resources.CompleteLoads();
         var recovered=video.Image;
         Check(recovered!=null&&recovered!=image&&Graphics.Blits==2,"lost Android render target is recreated and reseeded");
         Check(image.destroyed&&player.Subscriptions==3,"old target disposed; no duplicate callback subscriptions");
@@ -84,7 +116,7 @@ static class Regression
         Call(video,"OnDisable");
         Check(video.Image==null&&recovered.destroyed&&!((RenderTexture)recovered).IsCreated(),"disable releases render target");
         Check(player.targetTexture==null&&player.clip==null&&!player.sendFrameReadyEvents,"disable disconnects decoder and callbacks");
-        Call(video,"OnEnable");
+        Call(video,"OnEnable"); Resources.CompleteLoads();
         Check(video.Image!=null&&Graphics.Blits==3&&player.Subscriptions==3,"menu reopen seeds once without duplicate subscriptions");
         Call(video,"OnDestroy");
         Check(player.Subscriptions==0&&video.Image==null,"destroy unsubscribes all decoder callbacks");

@@ -13,24 +13,27 @@ namespace Alterverse.Profile
         {
             get
             {
+                if (GooglePlayAccountSession.Supported)
+                {
+                    // Android exposes one verified Play identity. The server's generated
+                    // bookkeeping name must never flash while its display alias is saved.
+                    if (!AccountServerBootstrap.CloudProfileReady)
+                        return AccountProfilePrefs.Attached || AccountServerBootstrap.Instance == null ||
+                            AccountServerBootstrap.Instance.Busy ? "CONNECTING..." : "SIGN IN REQUIRED";
+                    string savedName = AccountProfilePrefs.GetString(PlayGamesNameKey, "");
+                    if (SafeIdentityCatalog.IsDisplayName(savedName)) return savedName;
+                    string playName = SafeIdentityCatalog.NormalizePlayGamesName(GooglePlayAccountSession.DisplayName);
+                    return SafeIdentityCatalog.IsDisplayName(playName) ? playName : "CONNECTING...";
+                }
                 string value=AccountProfilePrefs.GetString(NameKey, "");
                 if (SafeIdentityCatalog.IsPlayerName(value))
                 {
-                    // Do not briefly show a server-generated identity while the
-                    // Google account and correct cloud profile are still being verified.
-                    if (GooglePlayAccountSession.Supported && !AccountServerBootstrap.CloudProfileReady)
-                        return "CONNECTING...";
                     string alias=AccountProfilePrefs.Attached?AccountProfilePrefs.GetString(PlayGamesNameKey, ""):null;
                     return SafeIdentityCatalog.IsDisplayName(alias)?alias:value;
                 }
                 // When signed in, wait for the server-assigned name. Never invent
                 // and save a second identity locally for a connected account.
                 if (AccountProfilePrefs.Attached) return "CONNECTING...";
-                // Never show or persist a fabricated local player identity on Android
-                // while the actual cloud account is being recovered.
-                if (GooglePlayAccountSession.Supported)
-                    return AccountServerBootstrap.Instance==null || AccountServerBootstrap.Instance.Busy
-                        ? "CONNECTING..." : "SIGN IN REQUIRED";
                 value=SafeIdentityCatalog.GeneratePlayerName();
                 AccountProfilePrefs.SetString(NameKey,value); AccountProfilePrefs.Save();
                 return value;
@@ -82,4 +85,3 @@ namespace Alterverse.Profile
         public const string Language="English";
     }
 }
-

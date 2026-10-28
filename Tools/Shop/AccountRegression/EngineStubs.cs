@@ -79,7 +79,7 @@ namespace UnityEngine.Networking
 namespace Alterverse.Profile
 {
  public static class SafeIdentityCatalog{public static bool IsPlayerName(string name)=>name!=null&&name.StartsWith("SolarFox",StringComparison.Ordinal);}
- public class AccountServerBootstrap{public static AccountServerBootstrap Instance;public bool Busy;}
+ public class AccountServerBootstrap{public static AccountServerBootstrap Instance;public bool Busy;public static bool CloudProfileReady=true;}
 }
 namespace Alterverse.Shop{public static class ShardPacks{public static bool IsSubscription(string id)=>id=="dimensions_shards_monthly";
         public static bool IsProduct(string id)=>Contains(id)||IsSubscription(id);

@@ -12,6 +12,8 @@ namespace Alterverse.UI
         private const float PrepareTimeout = 15f;
         private VideoPlayer player;
         private VideoClip clip;
+        private ResourceRequest clipRequest;
+        private bool disposed;
         private RenderTexture image;
         private bool imageReady, paused, unfocused, preparing;
         private float prepareStartedAt;
@@ -27,6 +29,7 @@ namespace Alterverse.UI
 
         private void StartPlayback()
         {
+            if (disposed || clipRequest != null) return;
             if (player == null)
             {
                 player = gameObject.AddComponent<VideoPlayer>();
@@ -44,7 +47,26 @@ namespace Alterverse.UI
                 player.errorReceived += OnError;
             }
 
-            clip = Resources.Load<VideoClip>(ClipPath);
+            // Do not synchronously read the video asset during menu creation.
+            // The existing poster remains visible while this request completes.
+            var request = Resources.LoadAsync<VideoClip>(ClipPath);
+            clipRequest = request;
+            request.completed += _ =>
+            {
+                clipRequest = null;
+                var loaded = request.asset as VideoClip;
+                if (disposed || !isActiveAndEnabled)
+                {
+                    if (loaded != null) Resources.UnloadAsset(loaded);
+                    return;
+                }
+                BeginPlayback(loaded);
+            };
+        }
+
+        private void BeginPlayback(VideoClip loaded)
+        {
+            clip = loaded;
             if (clip == null) return;
             image = new RenderTexture((int)clip.width, (int)clip.height, 0, RenderTextureFormat.ARGB32)
             {
@@ -179,6 +201,7 @@ namespace Alterverse.UI
 
         private void OnDestroy()
         {
+            disposed = true;
             StopAndRelease();
             if (player == null) return;
             player.prepareCompleted -= OnPrepared;

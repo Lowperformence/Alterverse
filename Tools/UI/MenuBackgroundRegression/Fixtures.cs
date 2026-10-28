@@ -74,10 +74,29 @@ namespace UnityEngine
             if (Throw) throw new InvalidOperationException("fixture GPU failure");
         }
     }
+    public class AsyncOperation
+    {
+        public event Action<AsyncOperation> completed;
+        public void Complete() => completed?.Invoke(this);
+    }
+    public class ResourceRequest : AsyncOperation { public Object asset; }
     public static class Resources
     {
         public static readonly Dictionary<string,Object> Assets = new();
-        public static int Loads, Unloads;
+        public static int Loads, Unloads, AsyncLoads;
+        public static readonly List<ResourceRequest> Pending = new();
+        public static ResourceRequest LoadAsync<T>(string path) where T : Object
+        {
+            AsyncLoads++;
+            var request = new ResourceRequest { asset = Assets.TryGetValue(path, out var value) ? value as T : null };
+            Pending.Add(request);
+            return request;
+        }
+        public static void CompleteLoads()
+        {
+            var pending = Pending.ToArray(); Pending.Clear();
+            foreach (var request in pending) request.Complete();
+        }
         public static T Load<T>(string path) where T : Object
         { Loads++; return Assets.TryGetValue(path, out var value) ? value as T : null; }
         public static void UnloadAsset(Object value) { Unloads++; }

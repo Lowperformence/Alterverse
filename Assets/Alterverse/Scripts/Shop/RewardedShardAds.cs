@@ -60,7 +60,9 @@ namespace Alterverse.Shop
                 CollectRewards();
             }
 #if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
-            if (ad != null && Time.unscaledTime - loadedAt >= 3300) DestroyLoadedAd();
+            if (ad != null && AdExpired) DestroyLoadedAd();
+            // Keep one video ready before the shop opens; never present it automatically.
+            Prepare();
 #endif
         }
 
@@ -81,9 +83,10 @@ namespace Alterverse.Shop
             get
             {
 #if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
-                return consentChecked && !showing && !consentBusy && !privacyBusy && !RewardedShardPayout.HasPending &&
+                return Alterverse.Profile.AccountServerBootstrap.CloudProfileReady &&
+                    consentChecked && !showing && !consentBusy && !privacyBusy && !RewardedShardPayout.HasPending &&
                     ConsentInformation.CanRequestAds() && ad != null && ad.CanShowAd() &&
-                    Time.unscaledTime - loadedAt < 3300;
+                    !AdExpired;
 #else
                 return false;
 #endif
@@ -102,15 +105,15 @@ namespace Alterverse.Shop
             }
         }
 
-        // Called while the shard shop is open. Retries are delayed and capped;
-        // loading a replacement never opens it automatically.
+        // Warm one ad independently of the shop UI. Retry backoff, consent and
+        // pending-reward checks apply equally to background and shop requests.
         public void Prepare()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
-            if (showing || consentBusy || privacyBusy || RewardedShardPayout.HasPending || Time.unscaledTime < nextAttempt) return;
+            if (disposed || showing || consentBusy || privacyBusy || RewardedShardPayout.HasPending || Time.unscaledTime < nextAttempt) return;
             if (!consentChecked || !ConsentInformation.CanRequestAds()) { GatherConsent(); return; }
             if (!initialized) { InitializeAds(); return; }
-            if (ad != null && !ad.CanShowAd()) DestroyLoadedAd();
+            if (ad != null && (AdExpired || !ad.CanShowAd())) DestroyLoadedAd();
             if (ad == null && !loading) LoadAd();
 #endif
         }
@@ -130,7 +133,7 @@ namespace Alterverse.Shop
                 if (finished) return;
                 finished = true;
                 showing = false;
-                nextAttempt = Time.unscaledTime + 1;
+                nextAttempt = Time.unscaledTime;
                 shown.Destroy();
                 if (!rewardReported) Status = failed ? "Ad could not open. No shards awarded." : "Ad closed. No reward earned.";
             };
@@ -175,6 +178,17 @@ namespace Alterverse.Shop
         bool consentChecked, consentBusy, privacyBusy, initialized, initializing, loading, showing;
         int consentVersion, loadFailures;
         float nextAttempt, loadedAt;
+        DateTime loadedAtUtc;
+
+        bool AdExpired
+        {
+            get
+            {
+                // Also count time spent suspended, when Unity's frame clock may stop.
+                double age = (DateTime.UtcNow - loadedAtUtc).TotalSeconds;
+                return age < 0 || age >= 3300 || Time.unscaledTime - loadedAt >= 3300;
+            }
+        }
 
         void GatherConsent()
         {
@@ -242,6 +256,7 @@ namespace Alterverse.Shop
                 }
                 ad = loaded;
                 loadedAt = Time.unscaledTime;
+                loadedAtUtc = DateTime.UtcNow;
                 loadFailures = 0;
                 Status = $"Watch an ad to earn {RewardAmount} shards.";
             }));
@@ -257,8 +272,12 @@ namespace Alterverse.Shop
         void OnApplicationPause(bool paused)
         {
 #if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
-            // Cached ads may have expired while Unity was suspended.
-            if (!paused && !showing) DestroyLoadedAd();
+            // A brief app switch should not throw away an already downloaded video.
+            if (!paused && !showing)
+            {
+                if (ad != null && (AdExpired || !ad.CanShowAd())) DestroyLoadedAd();
+                Prepare();
+            }
 #endif
         }
 

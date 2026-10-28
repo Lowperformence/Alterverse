@@ -10,7 +10,7 @@ using UnityEngine;
 static class Regression
 {
     static void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
-    static void Call(RewardedShardAds ads, string name) => typeof(RewardedShardAds).GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic).Invoke(ads, null);
+    static void Call(RewardedShardAds ads, string name, params object[] args) => typeof(RewardedShardAds).GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic).Invoke(ads, args);
     static void Pump(RewardedShardAds ads) => Call(ads, "Update");
     static AccountProfilePrefs.Entry[] Profile(int balance) => new[] { new AccountProfilePrefs.Entry { key = "DF_Shards", number = balance } };
     static RewardedAd Load(RewardedShardAds ads)
@@ -38,15 +38,27 @@ static class Regression
         Check(ConsentInformation.Updates == 1, "One consent update per launch");
         ConsentInformation.Pending(null);
         Pump(ads);
-        ads.Prepare();
         Pump(ads);
         Check(MobileAds.Calls == 1, "SDK initialized once");
+        Check(RewardedAd.Loads == 1 && RewardedAd.Pending != null,
+            "Preload immediately after launch consent without opening the shop or calling Prepare");
+        Check(!ads.CanShow && RewardedAd.Shows == 0, "Loading never enables an unready ad or opens it automatically");
         var first = Load(ads);
+        AccountServerBootstrap.CloudProfileReady = false;
+        ads.Show();
+        Check(!ads.CanShow && RewardedAd.Shows == 0 && !first.Destroyed,
+            "A cached video stays ready but cannot start before the verified cloud account is loaded");
+        AccountServerBootstrap.CloudProfileReady = true;
 #if DEVELOPMENT_BUILD
         Check(RewardedAd.LastUnit == "ca-app-pub-3940256099942544/5224354917", "Development builds must use a rewarded test unit");
 #else
         Check(RewardedAd.LastUnit == RewardedShardAds.AndroidAdUnitId, "Release builds use the user's rewarded placement");
 #endif
+        int initialLoads = RewardedAd.Loads;
+        for (int i = 0; i < 20; i++) { ads.Prepare(); Pump(ads); }
+        Call(ads, "OnApplicationPause", true); Call(ads, "OnApplicationPause", false); Pump(ads);
+        Check(ads.CanShow && !first.Destroyed && RewardedAd.Loads == initialLoads && RewardedAd.Shows == 0,
+            "Keep one ready cached video across GUI requests and a brief app switch");
         ads.Show(); ads.Show();
         Check(RewardedAd.Shows == 1, "Repeated taps must not open two ads");
         Task.Run(() => { first.Earned(new Reward()); first.Earned(new Reward()); }).GetAwaiter().GetResult();
@@ -54,7 +66,10 @@ static class Regression
         Pump(ads);
         Check(PlayerWallet.EarnedBalance == 5, "Successful completion grants exactly five, once");
         Check(DailyQuestProgress.Progress(4) == 1, "Duplicate earned callbacks advance the daily quest only once");
+        int loadsBeforeClose = RewardedAd.Loads;
         first.Close(); Pump(ads);
+        Check(RewardedAd.Loads == loadsBeforeClose + 1 && RewardedAd.Pending != null,
+            "Closing preloads the next video in the same update, without a one-second timer");
         Check(first.Destroyed && PlayerWallet.EarnedBalance == 5, "Close cleans up and never adds a second reward");
         var cancelled = Load(ads); ads.Show(); cancelled.Close(); Pump(ads);
         Check(PlayerWallet.EarnedBalance == 5 && DailyQuestProgress.Progress(4) == 1, "Closing early must not grant shards or quest progress");
@@ -98,6 +113,13 @@ static class Regression
         Check(ConsentInformation.Updates == consentCalls, "A denied/unavailable consent state must not loop each GUI event");
         ConsentInformation.Allowed = true; Time.unscaledTime += 70;
         ads.ShowPrivacyOptions(); ConsentForm.PrivacyDone(null); Pump(ads);
+        var suspended = Load(ads);
+        typeof(RewardedShardAds).GetField("loadedAtUtc", BindingFlags.Instance | BindingFlags.NonPublic)
+            .SetValue(ads, DateTime.UtcNow.AddMinutes(-56));
+        int loadsBeforeResume = RewardedAd.Loads;
+        Call(ads, "OnApplicationPause", false); Pump(ads);
+        Check(suspended.Destroyed && !ads.CanShow && RewardedAd.Loads == loadsBeforeResume + 1,
+            "A long suspension expires and replaces an ad even if Unity's frame clock has not advanced");
         var ready = Load(ads);
         Time.unscaledTime += 3301; Pump(ads);
         Check(ready.Destroyed && !ads.CanShow, "Expire cached ads before Google's one-hour limit");
@@ -106,6 +128,7 @@ static class Regression
         for (int i = 0; i < 100; i++) ads.Prepare();
         Check(RewardedAd.Loads == attempts, "Failed load retries must be rate limited");
         CheckDailyAdQuest();
+        Console.WriteLine("PASS: background preload, one cached video, immediate replacement, short resume and suspended expiry.");
         Console.WriteLine("PASS: Android rewarded callbacks, duplicate/late events, account switch, persistence, consent, expiry and retry.");
 #else
         ads.Prepare(); ads.Show(); ads.ShowPrivacyOptions(); Pump(ads);
