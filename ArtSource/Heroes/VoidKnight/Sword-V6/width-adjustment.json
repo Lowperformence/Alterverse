@@ -1,0 +1,13 @@
+{
+  "blade_width_factor": 0.75,
+  "maximum_blade_width_before_m": 0.28200006298721636,
+  "maximum_blade_width_after_m": 0.21150002768263665,
+  "changed_blade_parts": 23,
+  "unchanged_guard_grip_pommel_parts": 46,
+  "unchanged_body_meshes": 250,
+  "original_bones_unchanged": 19,
+  "original_actions_unchanged": 12,
+  "maximum_length_error_m": 1.1222437024116516e-07,
+  "maximum_depth_error_m": 2.6898305804934353e-08,
+  "topology_materials_and_skin_weights": "unchanged"
+}

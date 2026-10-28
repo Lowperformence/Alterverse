@@ -12,7 +12,7 @@ text(70,48,'DIMENSIONS FRONT / WEAPON ATELIER',20,'#a28ccf',True)
 text(67,87,'VOID KNIGHT',57,'#f3f4fc',True);text(71,161,'KONZEPTFORM  /  SCHWERT V6',24,'#bca3ff',True)
 text(1790,58,'KONSTRUKTION & MATERIALSTUDIE',22,'#e3def4',True)
 text(1790,99,'Blender 5.0.1  |  reale Modellansichten',21)
-text(1790,139,'1.633 mm Länge / Spitze passend ergänzt',21)
+text(1790,139,'1.633 mm Länge / Klinge 25 % schmaler',21)
 line([(70,218),(2530,218)],'#485176')
 panel((60,250,960,1630));panel((990,250,1390,1630));panel((1420,250,2540,1110));panel((1420,1140,2540,1630))
 text(90,277,'01  VORDERANSICHT',23,'#c4b1ef',True);text(1020,277,'02  PROFIL',23,'#c4b1ef',True)
@@ -29,7 +29,7 @@ gy=y+int(h*.74);line([(x,gy+70),(x+w,gy+70)],'#8b99b8');text(x+max(0,w//2-45),gy
 # Numbered leaders correspond to material and construction notes below.
 for label,pos,elbow,end in [('A',(x+w*.52,y+h*.18),(825,y+h*.18),(865,y+h*.18)),('B',(x+w*.18,y+h*.43),(825,y+h*.43),(865,y+h*.43)),('C',(x+w*.74,y+h*.70),(825,y+h*.70),(865,y+h*.70)),('D',(x+w*.50,y+h*.88),(825,y+h*.88),(865,y+h*.88))]:
  line([pos,elbow,end],'#b39bda',2);d.ellipse((pos[0]-4,pos[1]-4,pos[0]+4,pos[1]+4),fill='#cdb1ff');text(end[0]+8,end[1]-15,label,23,'#d5b7ff',True)
-text(85,1670,'A  SCHWERE KLINGE',21,'#c4b1ef',True);text(85,1710,'Breite, fast parallele Klingenflanken.',21);text(85,1742,'Dunkler, gegliederter Mittelrücken.',21)
+text(85,1670,'A  SCHMALERE KLINGE',21,'#c4b1ef',True);text(85,1710,'212 mm maximale Klingenbreite.',21);text(85,1742,'Dunkler, gegliederter Mittelrücken.',21)
 text(730,1670,'B  VIOLETTE AUSSENKANTEN',21,'#c4b1ef',True);text(730,1710,'Energieeinsätze an beiden Schneidkanten.',21);text(730,1742,'Geometrisch entlang der Fasen geführt.',21)
 text(1420,1670,'C  TECHNISCHE GRIFFFASSUNG',21,'#c4b1ef',True);text(1420,1710,'Zwei runde, versenkte Energiefassungen.',21);text(1420,1742,'Kompakte, kantige Parierstange.',21)
 text(2090,1670,'D  ZWEIHANDGRIFF',21,'#c4b1ef',True);text(2090,1710,'Dunkle Griffsegmente.',21);text(2090,1742,'Metallzwingen, Gegengewicht.',21)

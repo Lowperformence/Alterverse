@@ -15,7 +15,7 @@ V5 source, GLB and drawing remain versioned as history. V6 supersedes V5 for the
 
 ## Construction
 
-The 1.633 m sword retains the original 0.38 m hand span and original rig-space frame. Broad near-parallel blade flats carry a layered dark spine and small fitted hardware. Physical violet bands track both outer cutting facets on both faces, rather than the central fuller. A 0.388 m compact technical guard has matching round energy sockets with separate recessed seats, bevel rings and faceted crystals. A segmented black two-handed grip terminates in an angular counterweight.
+The 1.633 m sword retains the original 0.38 m hand span and original rig-space frame. Following the user's width adjustment, the complete blade assembly is 25% narrower: maximum blade width is now 0.2115 m, previously 0.282 m. Its near-parallel blade flats carry a layered dark spine and small fitted hardware. Physical violet bands track both outer cutting facets on both faces. A 0.388 m compact technical guard has matching round energy sockets with separate recessed seats, bevel rings and faceted crystals. A segmented black two-handed grip terminates in an angular counterweight. The 46 guard, grip and pommel parts remain byte-identical in geometry; blade length and thickness remain unchanged.
 
 All 69 sword components stay rigidly weighted to the original `WeaponGripR` bone. The source replacement validates the coordinates and material indices of all 250 non-weapon body meshes, original rest bones and all twelve action keyframe data blocks before saving. Shared character materials and textures are reused.
 
@@ -29,6 +29,8 @@ With Blender 5.0.1, run from the hero source directory:
 4. `Sword-V6/render_sword.py`
 5. `Sword-V6/make_drawing.py` with Pillow after rendering.
 
-The current V6 builder also accepts its own output. Triangle totals are 3,652 for the sword and 30,910 for the hero (below 35,000). Reimporting the runtime FBX confirms two meshes (`DF_Anatomy`, `DF_WeaponR`), five materials, 19 bones, all twelve expected clips and the exact 30,910 triangles. Validation reports are alongside the standalone source. The construction sheet uses actual Blender renders.
+The current V6 builder also accepts its own output and includes `BLADE_WIDTH_SCALE = .75`. `narrow_concept_blade.py` applies the same width adjustment directly to the existing V6 blade and is idempotent, preserving all other mesh coordinates, topology, materials, skin weights, bones and action data. Its measured invariants are in `Sword-V6/width-adjustment.json`.
+
+Triangle totals are 3,652 for the sword and 30,910 for the hero (below 35,000). Reimporting the runtime FBX confirms two meshes (`DF_Anatomy`, `DF_WeaponR`), five materials, 19 bones, all twelve expected clips and the exact 30,910 triangles. Validation reports are alongside the standalone source. The construction sheet uses actual Blender renders.
 
 This change modifies only sword assets, their generation sources, drawing and documentation. Hero release/price, Sivra/Ione abilities, armor, animation data, combat reach and other gameplay remain as in the preceding commit. For this additional visual revision only, import in Unity and rebuild the Android client; the earlier combat changes still require the previously documented matching dedicated server build. Native Unity/device rendering and hand-contact appearance still require inspection in the actual game.

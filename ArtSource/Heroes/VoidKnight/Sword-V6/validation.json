@@ -17,5 +17,7 @@
     "round energy sockets"
   ],
   "unseen_tip": "inferred; screenshot crops the blade tip",
-  "guard_width_m": 0.388
+  "guard_width_m": 0.388,
+  "blade_width_factor": 0.75,
+  "maximum_blade_width_m": 0.21150002768263665
 }

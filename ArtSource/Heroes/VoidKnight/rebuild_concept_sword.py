@@ -6,6 +6,9 @@ from pathlib import Path
 from mathutils import Vector
 import numpy as np
 HERE=Path(__file__).resolve().parent
+# User-approved V6 shape; narrow only the complete blade assembly by 25%.
+BLADE_WIDTH_SCALE=.75
+BLADE_PREFIXES=('VKC_Blade_Hull','VKC_Violet_CuttingEdge_','VKC_Spine_Panel_','VKC_Spine_SilverKey_')
 bpy.ops.wm.open_mainfile(filepath=str(HERE/'VoidKnight.blend'))
 rig=next(o for o in bpy.data.objects if o.type=='ARMATURE');rig.data.pose_position='REST'
 def digest(o):return hashlib.sha256(np.array([list(v.co) for v in o.data.vertices],dtype=np.float32).tobytes()+str([(tuple(p.vertices),p.material_index) for p in o.data.polygons]).encode()).hexdigest()
@@ -112,11 +115,21 @@ f=[tuple(range(7,-1,-1))]+[(j*8+i,j*8+(i+1)%8,(j+1)*8+(i+1)%8,(j+1)*8+i) for j i
 mesh('Pommel_ArmoredCap',v,f,[black],bevel=.001)
 for face in [-1,1]:plate('Pommel_VioletIndicator_'+str(face),[(-.010,-.240),(.010,-.240),(.010,-.228),(-.010,-.228)],face*.029,-face*.002,energy,0)
 
+
+# Leave the accepted guard, energy sockets, grip, pommel and blade length/depth
+# alone. Every blade detail follows the same width-only scale in its grip frame.
+for part in created:
+ if part.name.startswith(BLADE_PREFIXES):
+  for vertex in part.data.vertices:
+   vertex.co+=across*((vertex.co-grip).dot(across)*(BLADE_WIDTH_SCALE-1))
+  part.data.update();part['blade_width_factor']=BLADE_WIDTH_SCALE
+rig['sword_blade_width_factor']=BLADE_WIDTH_SCALE
+
 assert body=={o.name:digest(o) for o in bpy.data.objects if o.type=='MESH' and o.get('bone')!='WeaponGripR'}
 assert bones=={b.name:(tuple(b.head_local),tuple(b.tail_local),b.parent.name if b.parent else None) for b in rig.data.bones}
 assert actions=={a.name:[(f.data_path,f.array_index,[(tuple(p.co),p.interpolation) for p in f.keyframe_points]) for layer in a.layers for st in layer.strips for slot in a.slots for f in (st.channelbag(slot).fcurves if st.channelbag(slot) else [])] for a in bpy.data.actions}
 tri=lambda objs:sum(sum(len(p.vertices)-2 for p in o.data.polygons) for o in objs)
-report={'design':'Concept edge V6','old_weapon_triangles':oldtris,'new_weapon_triangles':tri(created),'hero_triangles':tri([o for o in bpy.data.objects if o.type=='MESH']),'weapon_parts':len(created),'body_meshes_unchanged':len(body),'original_actions_unchanged':len(actions),'original_bones_unchanged':len(bones),'grip_span_m':.38,'length_m':1.633,'reference_visible_features':['broad parallel blade','violet outer cutting edges','dark longitudinal spine','compact angular hilt','round energy sockets'],'unseen_tip':'inferred; screenshot crops the blade tip','guard_width_m':.388}
+report={'design':'Concept edge V6','old_weapon_triangles':oldtris,'new_weapon_triangles':tri(created),'hero_triangles':tri([o for o in bpy.data.objects if o.type=='MESH']),'weapon_parts':len(created),'body_meshes_unchanged':len(body),'original_actions_unchanged':len(actions),'original_bones_unchanged':len(bones),'grip_span_m':.38,'length_m':1.633,'reference_visible_features':['broad parallel blade','violet outer cutting edges','dark longitudinal spine','compact angular hilt','round energy sockets'],'unseen_tip':'inferred; screenshot crops the blade tip','guard_width_m':.388,'blade_width_factor':BLADE_WIDTH_SCALE,'maximum_blade_width_m':.282*BLADE_WIDTH_SCALE}
 assert report['hero_triangles']<=35000,report
 for o in created:
  assert all(math.isfinite(c) for v in o.data.vertices for c in v.co)
