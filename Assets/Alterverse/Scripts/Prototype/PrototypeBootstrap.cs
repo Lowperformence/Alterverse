@@ -186,6 +186,7 @@ new GameObject("DF_HotZoneTankHUD").AddComponent<HotZoneTankHUD>();
 new GameObject("DF_OvertimePresentation").AddComponent<OvertimePresentation>();
 }
 new GameObject("DF_DimensionPlanetDirector").AddComponent<DimensionPlanetDirector>();
+new GameObject("DF_HalloweenPumpkinEvent").AddComponent<HalloweenPumpkinEvent>();
 if(!serverOnly)new GameObject("DF_PlanetHUD").AddComponent<PlanetHUD>();
 new GameObject("DF_SpaceBomberDirector").AddComponent<SpaceBomberDirector>();
 new GameObject("AV_MatchTelemetry").AddComponent<MatchTelemetry>();
@@ -298,6 +299,7 @@ DefenseTrench.Spawn(team,ArenaLayout.DefensePosition(team,false,flank),flank==0?
 }
 private static void CreateCentralHealing(){GameObject heal=new GameObject("DF_CentralHealingPickup");heal.transform.position=new Vector3(0,.12f,0);heal.AddComponent<CentralHealingPickup>();}private static void CreateBaseCore(Vector3 p,Color c,string n,bool zero,int team){GameObject g=new GameObject(n);g.layer=GameplayCollision.Structures;g.transform.position=p;CapsuleCollider body=g.AddComponent<CapsuleCollider>();body.radius=.9f;body.height=2.6f;body.center=Vector3.up*1.3f;Health h=g.AddComponent<Health>();h.Configure(5000,true);g.AddComponent<RealityCore>().Initialize(team);g.AddComponent<RealityCoreShell>().Build(zero);g.AddComponent<ProductionBaseEnvironment>().Build(zero);}private static void CreateGround(string n,Vector3 p,Vector3 s,Color c){GameObject g=new GameObject(n);g.layer=GameplayCollision.Ground;g.transform.position=p;Mesh mesh=GameplayCollision.CreateRoundedPrismMesh(Vector3.zero,s.x,s.y,s.z,4f,8);MeshCollider floor=g.AddComponent<MeshCollider>();floor.sharedMesh=mesh;floor.convex=true;g.AddComponent<GameplayCollisionMeshOwner>().Own(mesh);}
 }}
+
 
 
 
