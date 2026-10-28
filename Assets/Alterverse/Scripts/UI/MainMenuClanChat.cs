@@ -9,7 +9,8 @@ namespace Alterverse.UI
         string chatDraft="",chatAgeBand,reportMessageId,reportPlayerId,pendingPlayerAction,chatPendingOperation,chatSubmittedText;
         bool chatTermsAccepted,leaderTermsAccepted,showLeaderTerms,showBlockedPlayers;
         int reportReasonIndex,blockedOffset;
-        Vector2 chatScroll,adminScroll;
+        Vector2 chatScroll,adminScroll,chatRulesScroll,leaderRulesScroll;
+        GUIStyle clanRulesText,clanConsentText;
         SocialService.Player selectedChatPlayer;
         SocialService.Report selectedChatReport;
         string lastChatMessageId;
@@ -22,6 +23,7 @@ namespace Alterverse.UI
             reportMessageId=reportPlayerId=pendingPlayerAction=null;
             selectedChatPlayer=null;selectedChatReport=null;
             showLeaderTerms=showBlockedPlayers=false;chatScroll=adminScroll=Vector2.zero;
+            chatRulesScroll=leaderRulesScroll=Vector2.zero;
             lastChatMessageId=null;lastChatHeight=0;
         }
         string ChatTime(long milliseconds)
@@ -80,7 +82,9 @@ namespace Alterverse.UI
                 }
                 y+=rowHeight;
             }
-            if(messages.Length==0)theme.Label(new Rect(12,10,width-24,80),service.Chat==null?"Connecting to clan chat…":"No messages yet. Say hello to your clan.",theme.Body,true);
+            if(messages.Length==0)theme.Label(new Rect(12,10,width-24,80),service.Chat==null?service.ChatStatus:"No messages yet. Say hello to your clan.",theme.Body);
+            if(service.Chat==null&&theme.Action(new Rect(12,100,260,48),service.Busy?"CONNECTING…":"RETRY CHAT",true,enabled:!service.Busy))
+                ChatRequest("/social/chat/read",new SocialService.Request{clanId=state.clan.clanId});
             GUI.EndScrollView();
             bool muted=state.mutedUntil>DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             bool wasEnabled=GUI.enabled;GUI.enabled=wasEnabled&&!muted&&!service.Busy&&service.Chat!=null;
@@ -96,24 +100,56 @@ namespace Alterverse.UI
         }
         void DrawChatConsent(SocialService service,SocialService.Snapshot state,bool leader)
         {
-            theme.Label(new Rect(Left,390,ContentWidth,30),leader?"CLAN MODERATION AGREEMENT":"CHAT RULES",theme.Heading);
-            theme.Label(new Rect(Left,426,ContentWidth,126),leader?state.leaderRules:state.chatRules,theme.Small,true);
+            // Own the full content area: readable rules must not be squeezed below
+            // the clan header. Long server-provided terms scroll without shrinking.
+            theme.Panel(new Rect(Left-8,258,ContentWidth+16,408));
+            theme.Label(new Rect(Left+16,270,ContentWidth-224,36),leader?"CLAN MODERATION AGREEMENT":"CHAT RULES",theme.Heading);
+            if(theme.Action(new Rect(Right-184,270,168,42),"BACK TO CLAN"))
+            {clanDetailTab=0;showLeaderTerms=false;return;}
+            theme.Label(new Rect(Left+16,314,ContentWidth-32,40),leader?
+                "As clan leader, you moderate your clan chat. Please read the agreement.":
+                "Choose your age group once. We store the group, not your exact age or date of birth.",theme.Body);
             if(leader)
             {
-                leaderTermsAccepted=GUI.Toggle(new Rect(Left,558,ContentWidth,30),leaderTermsAccepted,"I accept the moderation terms (version "+state.leaderRulesVersion+").");
-                if(theme.Action(new Rect(Left,606,220,42),"ACCEPT TERMS",true,enabled:leaderTermsAccepted&&!service.Busy))
+                DrawClanRulesText(new Rect(Left+16,360,ContentWidth-32,176),state.leaderRules,ref leaderRulesScroll);
+                leaderTermsAccepted=DrawClanConsent(new Rect(Left+16,548,ContentWidth-32,56),leaderTermsAccepted,
+                    "I have read and accept the clan moderation agreement.",!service.Busy);
+                if(theme.Action(new Rect(Left+16,616,300,44),"ACCEPT TERMS",true,enabled:leaderTermsAccepted&&!service.Busy))
                 {ChatRequest("/social/chat/leader-consent",new SocialService.Request{accepted=true,consentVersion=state.leaderRulesVersion});showLeaderTerms=false;leaderTermsAccepted=false;}
             }
             else
             {
+                DrawClanRulesText(new Rect(Left+16,360,ContentWidth-32,102),state.chatRules,ref chatRulesScroll);
+                theme.Label(new Rect(Left+16,466,ContentWidth-32,30),"YOUR AGE GROUP",theme.Body);
                 string[] ages={"UNDER 13","13–17","18 OR OLDER"};string[] values={"under13","13-17","18+"};
+                float gap=12,width=(ContentWidth-32-gap*2)/3;
                 for(int i=0;i<ages.Length;i++)
-                    if(theme.Action(new Rect(Left+i*190,554,180,30),ages[i],selected:chatAgeBand==values[i]))chatAgeBand=values[i];
-                chatTermsAccepted=GUI.Toggle(new Rect(Left,590,ContentWidth,28),chatTermsAccepted,"I accept the chat rules (version "+state.chatRulesVersion+").");
-                if(theme.Action(new Rect(Left,624,220,36),"ENTER CLAN CHAT",true,enabled:chatTermsAccepted&&(chatAgeBand=="13-17"||chatAgeBand=="18+")&&!service.Busy))
+                    if(theme.Action(new Rect(Left+16+i*(width+gap),502,width,44),ages[i],selected:chatAgeBand==values[i],enabled:!service.Busy))chatAgeBand=values[i];
+                chatTermsAccepted=DrawClanConsent(new Rect(Left+16,554,ContentWidth-32,56),chatTermsAccepted,
+                    "I have read and accept the chat rules.",!service.Busy);
+                if(theme.Action(new Rect(Left+16,620,300,40),"ENTER CLAN CHAT",true,enabled:chatTermsAccepted&&(chatAgeBand=="13-17"||chatAgeBand=="18+")&&!service.Busy))
                     ChatRequest("/social/chat/consent",new SocialService.Request{accepted=true,consentVersion=state.chatRulesVersion,ageBand=chatAgeBand});
-                if(chatAgeBand=="under13")theme.Label(new Rect(Left+236,624,ContentWidth-236,36),"Clan chat is available from age 13.",theme.Small,true);
+                if(chatAgeBand=="under13")theme.Label(new Rect(Left+332,620,ContentWidth-348,40),"Chat is unavailable for this age group.",theme.Body);
             }
+        }
+        void DrawClanRulesText(Rect rect,string text,ref Vector2 scroll)
+        {
+            clanRulesText??=new GUIStyle(theme.Body){fontSize=24,wordWrap=true};
+            float width=rect.width-28,height=Mathf.Max(rect.height,clanRulesText.CalcHeight(new GUIContent(text??""),width)+12);
+            scroll=GUI.BeginScrollView(rect,scroll,new Rect(0,0,width,height));
+            GUI.Label(new Rect(0,0,width,height),text??"",clanRulesText);
+            GUI.EndScrollView();
+        }
+        bool DrawClanConsent(Rect rect,bool accepted,string label,bool enabled)
+        {
+            // One large hit target, including the label; no tiny default GUI.Toggle.
+            if(theme.Action(rect,"",selected:accepted,enabled:enabled))accepted=!accepted;
+            var box=new Rect(rect.x+10,rect.y+10,36,36);
+            theme.Frame(box,true);
+            if(accepted)FrontEndTheme.Fill(new Rect(box.x+7,box.y+7,22,22),FrontEndTheme.Positive);
+            clanConsentText??=new GUIStyle(theme.Body){fontSize=22,wordWrap=true};
+            theme.Label(new Rect(rect.x+60,rect.y+4,rect.width-72,rect.height-8),label,clanConsentText);
+            return accepted;
         }
         void DrawChatReport(SocialService service,SocialService.Snapshot state)
         {
@@ -212,3 +248,4 @@ namespace Alterverse.UI
         }
     }
 }
+

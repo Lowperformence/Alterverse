@@ -49,7 +49,9 @@ partial class Regression
      var wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.layer=GameplayCollision.Structures;
      wall.transform.position=new Vector3(0,.5f,distance*.55f);wall.transform.localScale=new Vector3(.12f,2,.15f);
      Check(RangedCast(actor,slot,Forward(actor,spec.castRange)),"off-axis cone casts");
-     Run(1);Check(Total(enemy)<1000,"central visual obstacle does not block clear cone edge "+hero+slot);
+     Run(1);
+     if(spec.coneAngle<=3f)Near(Total(enemy),1000,"central cover blocks the needle-thin cone "+hero+slot);
+     else Check(Total(enemy)<1000,"central visual obstacle does not block clear cone edge "+hero+slot);
 
      // Cover on the target ray, an ally and an out-of-range body remain protected.
      Reset();actor=Hero(hero,0,Vector3.zero);enemy=Hero(HeroId.Kaelon,1,Vector3.forward*distance);
@@ -159,3 +161,4 @@ partial class Regression
   Near(Total(close),1000,"server attack damages only one target "+hero+slot);
  }
 }
+

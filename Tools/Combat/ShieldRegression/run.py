@@ -24,7 +24,7 @@ namespace UnityEngine {
 }
 namespace Alterverse.Characters {
  HERO_ENUM
- public class HeroIdentity:UnityEngine.MonoBehaviour{public HeroId Hero;}
+ public class HeroIdentity:UnityEngine.MonoBehaviour{public HeroId Hero;public static float BaseHealth(HeroId id)=>200;public static float AttackDamage(HeroId id)=>5;}
  public class VoidKnightState:UnityEngine.MonoBehaviour{public float ReduceFrontalDamage(float amount,UnityEngine.GameObject source)=>amount;}
 }
 namespace Alterverse.Combat {
@@ -62,7 +62,7 @@ class ShieldRegression {
     Alterverse.Characters.HeroId.Nerok=>90,Alterverse.Characters.HeroId.Rook=>80,
     Alterverse.Characters.HeroId.Veyr=>70,Alterverse.Characters.HeroId.Kaelon=>70,
     Alterverse.Characters.HeroId.VoidKnight=>60,Alterverse.Characters.HeroId.Nyra=>30,_=>50};
-   float expected=previous+30;
+   float expected=id==Alterverse.Characters.HeroId.Bolt7?40:previous+30;
    var x=Hero(id);
    Near(x.HeroBaseShieldMax,expected,"hero capacity "+id);Near(x.Shield,expected,"spawn shield "+id);
    x.TakeDamage(10);Near(x.HeroBaseShield,expected-10,"damage absorption "+id);
@@ -101,7 +101,7 @@ class ShieldRegression {
   h.TakeDamage(20);Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=false;Refresh(h,111.25f);Near(h.Shield,60,"client cannot authoritatively regenerate shield");
   Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=true;Refresh(h,111.25f);Near(h.Shield,80,"host applies due recharge");
   var neutral=new UnityEngine.GameObject().AddComponent<Alterverse.Combat.Health>();neutral.Configure(200);Near(neutral.HeroBaseShieldMax,0,"non-hero does not acquire a base shield");
-  System.Console.WriteLine("PASS "+checks+" production Health shield assertions: all ten heroes/bots +30 shield, 11.25s delay, Phase Fold unchanged, absorption, deadline/reset, snapshots, death/respawn and authority. Unity/network transport not tested.");
+  System.Console.WriteLine("PASS "+checks+" production Health shield assertions: all existing heroes/bots +30 shield and BOLT-7 40 shield, 11.25s delay, Phase Fold unchanged, absorption, deadline/reset, snapshots, death/respawn and authority. Unity/network transport not tested.");
  }
 }
 '''
@@ -110,7 +110,7 @@ if not hero_enum:raise RuntimeError('Production HeroId enum not found')
 fixture=fixture.replace('HERO_ENUM',hero_enum.group())
 with tempfile.TemporaryDirectory(prefix='df-shield-regression-') as d:
  d=Path(d);(d/'Fixture.cs').write_text(engine+fixture)
- sources=[d/'Fixture.cs',root/'Assets/Alterverse/Scripts/Combat/Health.cs',root/'Assets/Alterverse/Scripts/Characters/TimmyBalance.cs',root/'Assets/Alterverse/Scripts/Characters/HeroAbilityKit.cs']
+ sources=[d/'Fixture.cs',root/'Assets/Alterverse/Scripts/Combat/Health.cs',root/'Assets/Alterverse/Scripts/Characters/TimmyBalance.cs',root/'Assets/Alterverse/Scripts/Characters/VoidKnightBalance.cs',root/'Assets/Alterverse/Scripts/Characters/Bolt7Balance.cs',root/'Assets/Alterverse/Scripts/Characters/HeroCombatProfile.cs',root/'Assets/Alterverse/Scripts/Characters/HeroAbilityKit.cs']
  if a.dotnet_root:
   sdk=a.dotnet_root.resolve();dotnet=sdk/'dotnet';csc=sorted((sdk/'sdk').glob('*/Roslyn/bincore/csc.dll'))[-1]
   references=sorted((sdk/'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'))[-1];binary=d/'Shield.dll'
@@ -122,4 +122,5 @@ with tempfile.TemporaryDirectory(prefix='df-shield-regression-') as d:
   mono=a.mono_root/'usr/bin/mono-sgen';binary=d/'Shield.exe'
   subprocess.run([str(mono),str(a.roslyn),'-nologo','-noconfig','-langversion:9','-r:'+str(a.mono_root/'usr/lib/mono/4.5/System.dll'),'-r:'+str(a.mono_root/'usr/lib/mono/4.5/System.Core.dll'),'-out:'+str(binary),*map(str,sources)],env=env,check=True)
   subprocess.run([str(mono),str(binary)],env=env,check=True)
+
 

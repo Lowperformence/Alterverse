@@ -4,15 +4,15 @@ Black armored, purple emissive swordsman from an unknown galaxy. Helmet referenc
 
 | Attack | Damage | Reach | Cooldown | Behavior |
 |---|---:|---:|---:|---|
-| Greatsword basic | 18 | 3.1 m | 1.2 s interval | 0.28 s preparation; three alternating two-handed strikes |
+| Greatsword basic | 20 | 3.1 m | 1.2 s interval | 0.28 s preparation; three alternating two-handed strikes |
 | Q — Rift Sweep | 24 | 3.4 m | 7 s | 0.28 s preparation; one acquired enemy in the melee cone |
-| W — Null Guard | — | Self | 12 s | Anchored 0.65 s; 50% reduction in a fixed frontal 120° sector; successful block triggers one 14-damage counter at 3.2 m |
-| E — Rift Lunge | 16 | 4 m | 9 s | 0.18 s preparation, 0.22 s lunge; first enemy stops travel and is slowed 50% for 2 s; native movement collision; no invulnerability |
+| W — Null Guard | — | Self | 12 s | Anchored 0.65 s; 80% reduction in a fixed frontal 120° sector; successful block triggers one 14-damage counter at 3.2 m |
+| E — Rift Lunge | 22 | 4 m | 9 s | 0.18 s preparation, 0.22 s lunge; first enemy stops travel and is slowed 50% for 2 s; native movement collision; no invulnerability |
 | R — Eventide Cleave | 42 + 20 drain | 3.8 m | 40 s | 0.65 s telegraph, fixed 80° cone; once per enemy; up to 20 HP restored per target from actual health lost; 25% slow for 1.2 s |
 
 Passive: three confirmed basic hits prime a 30-point temporary shield for 2 s on the next damaging skill. Whiffs and rejected damage do not build or consume charges. Multi-target hits consume it once.
 
-Health: 290 raw, **350.175 final HP** after the existing universal multiplier, versus Auren's 481.7925 HP. Existing regenerating hero shield capacity: 60. Sustained basic DPS: 15, below the tank's 16.19. The explicit 18-damage requirement takes precedence over the initial lower-per-hit-damage idea. The normal 45-second opening ultimate lock is retained.
+Health: 290 raw, **390.175 final HP** after the existing universal multiplier and the additional 40 final HP, versus Auren's 481.7925 HP. Existing regenerating hero shield capacity: 60. Sustained basic DPS: 16.67 (20 damage / 1.2 s). These values include the October 25 basic, guard, lunge and health buffs. The normal 45-second opening ultimate lock is retained.
 
 ## Assets
 
@@ -87,3 +87,4 @@ remain. The `Void Knight model regression` CI opens the source and every module,
 the runtime FBX and runs the combat/shop checks. Blender studio renders are construction
 previews; actual Unity URP import, Android appearance/performance and native play mode still
 need the editor/device pass.
+

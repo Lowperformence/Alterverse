@@ -1,4 +1,5 @@
 using Alterverse.Characters;
+using Alterverse.Combat;
 using UnityEngine;
 
 namespace Alterverse.Visuals
@@ -42,6 +43,7 @@ namespace Alterverse.Visuals
             if(actor==null||Hero(actor)!=HeroId.Timmy)return;
             if(kind==4||kind==6)
             {
+                SelectedAbilityVfx.CancelSmoke(actor);
                 HeroVfxPool.CancelShape(actor,HeroFxShape.Claw,HeroFxMotion.TravelFixedFrame);
                 HeroVfxPool.CancelShape(actor,HeroFxShape.Claw,HeroFxMotion.AttachedJet);
                 HeroVfxPool.CancelShape(actor,HeroFxShape.Streak,HeroFxMotion.AttachedJet);
@@ -57,6 +59,15 @@ namespace Alterverse.Visuals
             else if(kind==5)TimmyGrenade(actor,from,to,duration,elapsed);
             else return;
             if(relay)Alterverse.Multiplayer.CoopHeroStateSync.BroadcastTimmyEffect(actor,kind,from,to,radius,duration);
+        }
+        public static void TimmyHold(GameObject actor,Health target,float duration)
+        {
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.TimmyHold,actor,slot:3,duration:duration,
+                target:target!=null?target.gameObject:null);
+            if(actor==null||target==null||Hero(actor)!=HeroId.Timmy)return;
+            float elapsed=HeroVfxEvents.ReplayElapsed;
+            if(SelectedAbilityVfx.TimmyHold(actor,target,duration,elapsed)&&duration>0)
+                Alterverse.Audio.HeroCombatAudio.PlayScratchHold(actor,target.transform.position,elapsed);
         }
         public static void CancelTimmyDash(GameObject actor)
         {if(actor!=null&&Hero(actor)==HeroId.Timmy)TimmyEffect(actor,4,Vector3.zero,Vector3.zero,0,0);}
@@ -114,6 +125,8 @@ namespace Alterverse.Visuals
                 Vector3 p=nozzle!=null?nozzle.position:Chest(actor)-heading*.22f+facing*Vector3.right*(side*.12f);
                 Transform follow=nozzle!=null?nozzle:actor.transform;
                 Quaternion exhaust=Quaternion.LookRotation((heading+Vector3.up*.35f).normalized);
+                SelectedAbilityVfx.JetSmoke(actor,nozzle,p,Quaternion.LookRotation((-heading-Vector3.up*.25f).normalized),
+                    to+(p-from),jetLife,elapsed);
                 HeroVfxPool.Sprite(HeroFxSprite.Flame,p,p,new Vector2(.23f,.39f),
                     new Color(.24f,.82f,1f,.72f),jetLife,actor,HeroFxMotion.AttachedJet,
                     exhaust,follow:follow,elapsed:elapsed);

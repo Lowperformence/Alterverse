@@ -1,0 +1,625 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 377e363e09cd0debbd80c2e1a9195d50, type: 3}
+  m_Name: Library
+  m_EditorClassIdentifier: Assembly-CSharp::Alterverse.Visuals.EpicVfxLibrary
+  entries:
+  - key: Slash
+    prefab: {fileID: 546184340459193026, guid: 0472d75e2b29d0646b997860afb300e0, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.3
+  - key: HeavySlash
+    prefab: {fileID: 625376289694358427, guid: c067eb11015c62a4a9de2273bd0d943d, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.3
+  - key: Claw
+    prefab: {fileID: 4829873522136219667, guid: 3819f183965341846b6ea1f85a3e3be5, type: 3}
+    scale: 0.5
+    nativeSeconds: 0.3
+  - key: SwordImpact
+    prefab: {fileID: 9044831188616579133, guid: b04f2826e10abfa4d848924c4559511c, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.5
+  - key: Orb
+    prefab: {fileID: 8038333083402596921, guid: 06b5d510ce4ce8444bc8c19ed3bef57e, type: 3}
+    scale: 0.5
+    nativeSeconds: 0.5
+  - key: Missile
+    prefab: {fileID: 3802300169099125578, guid: b956f219ba8a29946a150968e606d8a0, type: 3}
+    scale: 0.4
+    nativeSeconds: 0.35
+  - key: Rune
+    prefab: {fileID: 5950543725300662021, guid: ecbc5d3363adca7458b835d5fc78c57e, type: 3}
+    scale: 0.5
+    nativeSeconds: 1.25
+  - key: Shield
+    prefab: {fileID: 5093376198567076637, guid: ceb6320c89a766144a862d2f1ccd7407, type: 3}
+    scale: 0.5
+    nativeSeconds: 1
+  - key: Heal
+    prefab: {fileID: 2680562926165171262, guid: 8e78030ee060d6640881bf6767575bcf, type: 3}
+    scale: 0.5
+    nativeSeconds: 1.3
+  - key: Portal
+    prefab: {fileID: 2273869539026997534, guid: ea7e39a32f54c914ebb3cbd02d4f280a, type: 3}
+    scale: 0.35
+    nativeSeconds: 1.5
+  - key: Vortex
+    prefab: {fileID: 9033986037623357274, guid: 9683e75bc392bc044a05170dd2ae1048, type: 3}
+    scale: 0.35
+    nativeSeconds: 1.5
+  - key: Water
+    prefab: {fileID: 3360879759954608729, guid: 428b63f8070133d48b1ded06172bc4a2, type: 3}
+    scale: 0.55
+    nativeSeconds: 0.4
+  - key: Smoke
+    prefab: {fileID: 2011536220215020198, guid: 01824080f304db94b854125500c54ac3, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.5
+  - key: Nova
+    prefab: {fileID: 8932556132307555615, guid: 7f74aed6defc4bb4e871ce6b956571bc, type: 3}
+    scale: 0.5
+    nativeSeconds: 1.2
+  - key: Punch
+    prefab: {fileID: 4748366866206121046, guid: c4fc60e8ede1b2c419a721295abba0e2, type: 3}
+    scale: 0.4
+    nativeSeconds: 0.3
+  - key: HeavyImpact
+    prefab: {fileID: 396580944309625771, guid: 11b286e04e9488d469df42a836232b26, type: 3}
+    scale: 0.4
+    nativeSeconds: 0.45
+  - key: NatureMissile
+    prefab: {fileID: 1360188457802705230, guid: 4bb48b232a53b6e40b73107acf664a0f, type: 3}
+    scale: 0.4
+    nativeSeconds: 0.5
+  - key: NatureImpact
+    prefab: {fileID: 5030405697365966194, guid: e007112dace54cb4a995b7b67606abb8, type: 3}
+    scale: 0.4
+    nativeSeconds: 1
+  - key: NatureNova
+    prefab: {fileID: 8303289764690346431, guid: c567fe0fc2ebe614ebf274d948adafc9, type: 3}
+    scale: 0.5
+    nativeSeconds: 1
+  - key: ArcaneMissile
+    prefab: {fileID: 2281988599837294936, guid: 75c14c4eb61c9904c897dfe6d8552a87, type: 3}
+    scale: 0.4
+    nativeSeconds: 0.7
+  - key: MagicImpact
+    prefab: {fileID: 9051383806939495150, guid: 6f0c715e5af79a3458354c8755b736ac, type: 3}
+    scale: 0.4
+    nativeSeconds: 2
+  - key: ShadowMissile
+    prefab: {fileID: 1000113068775922524, guid: 8260a716c53b4b44193d054b1ba327a7, type: 3}
+    scale: 0.35
+    nativeSeconds: 0.4
+  - key: FireNova
+    prefab: {fileID: 6849199933892529988, guid: 920b9d878aa5a474790f1431f6e865f7, type: 3}
+    scale: 0.5
+    nativeSeconds: 0.8
+  - key: Impact
+    prefab: {fileID: 5123433753928313766, guid: 5c2876c64e438ad45abeea02c47cda8e, type: 3}
+    scale: 0.35
+    nativeSeconds: 1.4
+  - key: FireImpact
+    prefab: {fileID: 8035884052395051011, guid: 5039fe664066daf499bbea30bd973f64, type: 3}
+    scale: 0.35
+    nativeSeconds: 0.6
+  - key: Spark
+    prefab: {fileID: 2466223241396404166, guid: 74babc4be08c14d45b4926a7c1185a81, type: 3}
+    scale: 0.3
+    nativeSeconds: 0.6
+  - key: Fire
+    prefab: {fileID: 1943746981778018437, guid: 803bef8b279166d4786de3ba3ce06384, type: 3}
+    scale: 0.4
+    nativeSeconds: 0.45
+  - key: Muzzle
+    prefab: {fileID: 2614349198924213645, guid: 1cd2eca319ec4de439ad8c9f65118151, type: 3}
+    scale: 0.3
+    nativeSeconds: 0.5
+  - key: Jet
+    prefab: {fileID: 5656114746563678518, guid: cb895339dddd19746b7375258c3a513d, type: 3}
+    scale: 0.25
+    nativeSeconds: 0.9
+  - key: BladeWave
+    prefab: {fileID: 5757411052515205070, guid: 8d79e24c8c1b7f742a255b622160cfd5, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.4
+  - key: SharpBolt
+    prefab: {fileID: 8039527348335351751, guid: 7733c7cc84305c34daf339f817e40bc1, type: 3}
+    scale: 0.4
+    nativeSeconds: 1
+  - key: LeafDart
+    prefab: {fileID: 8746654136020041865, guid: b21a9c0f39b22874b95c4c01bdb6f01a, type: 3}
+    scale: 0.4
+    nativeSeconds: 1
+  - key: SpinStrike
+    prefab: {fileID: 8927517146844090464, guid: 9fd1210828e9e0642be480d8bdd8f7b2, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.5
+  - key: Veyr_Basic_NullCutEdge
+    prefab: {fileID: 4794518205811595156, guid: 1a9ca328a84da0447ae1dfc691b50c8b, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.3
+  - key: Veyr_Basic_NullCutEdge_Cast
+    prefab: {fileID: 7429090794075251229, guid: 7bcf89b04e949ff4a8730e4aa1b1ad77, type: 3}
+    scale: 0.1925
+    nativeSeconds: 1.5
+  - key: Veyr_Basic_NullCutEdge_Hit
+    prefab: {fileID: 7192473452939954642, guid: b3c16ef5f7e5b9249834967b8c69f80a, type: 3}
+    scale: 0.315
+    nativeSeconds: 0.5
+  - key: Veyr_Q_SplitRiftCut
+    prefab: {fileID: 2774528047266750529, guid: f9a0626981a413e47845e7e849da25ee, type: 3}
+    scale: 0.45
+    nativeSeconds: 1.5
+  - key: Veyr_Q_SplitRiftCut_Cast
+    prefab: {fileID: 5919793624117610537, guid: 25aed4693981def4cbe6142aa016bb0b, type: 3}
+    scale: 0.1925
+    nativeSeconds: 1.5
+  - key: Veyr_Q_SplitRiftCut_Hit
+    prefab: {fileID: 3492654625412692177, guid: 60f32fc1111eb4643b31004d022ec219, type: 3}
+    scale: 0.315
+    nativeSeconds: 0.5
+  - key: Veyr_W_RiftScarCrescent
+    prefab: {fileID: 402449419676468713, guid: e2d9db2fc1de6af4faab92b5d37d02f6, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.4
+  - key: Veyr_W_RiftScarCrescent_Cast
+    prefab: {fileID: 4093223357351958148, guid: e1a29b8bb2e18bd408d3f0750e6be4fa, type: 3}
+    scale: 0.1925
+    nativeSeconds: 1.5
+  - key: Veyr_W_RiftScarCrescent_Hit
+    prefab: {fileID: 122488715250579075, guid: cedd7b40d008fab47b52b5d47a45bff7, type: 3}
+    scale: 0.315
+    nativeSeconds: 0.5
+  - key: Veyr_E_GapfoldTear
+    prefab: {fileID: 3345586719881424289, guid: 63ba40fb872bb1349aa7491f16215c6e, type: 3}
+    scale: 0.35
+    nativeSeconds: 1.5
+  - key: Veyr_E_GapfoldTear_Cast
+    prefab: {fileID: 3151079774584790159, guid: 9c6b6d0011f2dee45a5276849ff48516, type: 3}
+    scale: 0.1925
+    nativeSeconds: 1.5
+  - key: Veyr_E_GapfoldTear_Hit
+    prefab: {fileID: 4338504649231724514, guid: 5ccc2e80b3c0aee429a6d5030e5fd97f, type: 3}
+    scale: 0.315
+    nativeSeconds: 0.5
+  - key: Veyr_R_VacantEchoScythe
+    prefab: {fileID: 7920596341169558649, guid: d58efa24a3f91d04fae24291df1836bc, type: 3}
+    scale: 0.63
+    nativeSeconds: 0.4
+  - key: Veyr_R_VacantEchoScythe_Cast
+    prefab: {fileID: 4280989631097860098, guid: cabb7f332aea7c44ba4e6d4cf7d8315c, type: 3}
+    scale: 0.2695
+    nativeSeconds: 1.5
+  - key: Veyr_R_VacantEchoScythe_Hit
+    prefab: {fileID: 7087472578124770797, guid: 52147849506d00f428a27955e73a1165, type: 3}
+    scale: 0.44099998
+    nativeSeconds: 0.5
+  - key: Kaelon_Basic_KestGauntlet
+    prefab: {fileID: 596663161548402288, guid: ace0821ac157e9f4d9636618050565eb, type: 3}
+    scale: 0.4
+    nativeSeconds: 0.3
+  - key: Kaelon_Basic_KestGauntlet_Cast
+    prefab: {fileID: 2645525173549237395, guid: d7d13a34603398844a1c6f5a705307f2, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: Kaelon_Basic_KestGauntlet_Hit
+    prefab: {fileID: 4396581647695712392, guid: bff2b0b5959089041b3905a35f2e288d, type: 3}
+    scale: 0.28
+    nativeSeconds: 0.45
+  - key: Kaelon_Q_AnchorShockFront
+    prefab: {fileID: 3892967002895912756, guid: a680a0859f2a0a9488544068f66f1eec, type: 3}
+    scale: 0.4
+    nativeSeconds: 1.25
+  - key: Kaelon_Q_AnchorShockFront_Cast
+    prefab: {fileID: 6126047580487395806, guid: c52beda1455b6d94a83c52b89cd9201d, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: Kaelon_Q_AnchorShockFront_Hit
+    prefab: {fileID: 1693323835445033491, guid: f4b6570384f3f034285fbd356753ac19, type: 3}
+    scale: 0.28
+    nativeSeconds: 0.45
+  - key: Kaelon_W_LumenRampart
+    prefab: {fileID: 4490003516444913622, guid: c00f23968b6382b419d79fea8a9b1780, type: 3}
+    scale: 0.5
+    nativeSeconds: 1.25
+  - key: Kaelon_W_LumenRampart_Cast
+    prefab: {fileID: 1758793145871687229, guid: f2b88c9e98cd939478efa7121fef36f6, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: Kaelon_W_LumenRampart_Hit
+    prefab: {fileID: 5098130280230734817, guid: 8c4cf05ecf29fc64c9c3e5024e445c87, type: 3}
+    scale: 0.28
+    nativeSeconds: 0.45
+  - key: Kaelon_E_GravityEight
+    prefab: {fileID: 2940385736867971500, guid: 6237aa68521c6b64db548ad357758962, type: 3}
+    scale: 0.5
+    nativeSeconds: 1.25
+  - key: Kaelon_E_GravityEight_Cast
+    prefab: {fileID: 7989625194981263861, guid: 021bb29c686eaff4882bab7aca8febbc, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: Kaelon_E_GravityEight_Hit
+    prefab: {fileID: 7936614101483491311, guid: 3652c40af016be5438229cf577704497, type: 3}
+    scale: 0.28
+    nativeSeconds: 0.45
+  - key: Kaelon_R_CitadelSeal
+    prefab: {fileID: 7779047774959426853, guid: ad726fc975ba60745aa9ca8a60d6057a, type: 3}
+    scale: 0.7
+    nativeSeconds: 1.25
+  - key: Kaelon_R_CitadelSeal_Cast
+    prefab: {fileID: 3828566630526929067, guid: 85ce6d37ec1a12544bb9da6bfd96dd78, type: 3}
+    scale: 0.385
+    nativeSeconds: 1.25
+  - key: Kaelon_R_CitadelSeal_Hit
+    prefab: {fileID: 9081216217253525112, guid: f3ea19df50b318d40ae4bab800810516, type: 3}
+    scale: 0.392
+    nativeSeconds: 0.45
+  - key: Nyra_Basic_QuellNeedle
+    prefab: {fileID: 1833951211109084603, guid: 39f54f4c8172df14387f0b8db3645fab, type: 3}
+    scale: 0.4
+    nativeSeconds: 1
+  - key: Nyra_Basic_QuellNeedle_Cast
+    prefab: {fileID: 4900100871857325589, guid: 980d178604f0add46b1223f671c682cd, type: 3}
+    scale: 0.165
+    nativeSeconds: 0.5
+  - key: Nyra_Basic_QuellNeedle_Hit
+    prefab: {fileID: 4652933400655920001, guid: a4c1cf2d7e5896e4abbfa8a0fe3cf532, type: 3}
+    scale: 0.24499999
+    nativeSeconds: 1.4
+  - key: Nyra_Q_PrismLine_Cast
+    prefab: {fileID: 7170251184045763791, guid: b09b8852fcfc4d04a8bcb657c7c6afbd, type: 3}
+    scale: 0.165
+    nativeSeconds: 0.5
+  - key: Nyra_Q_PrismLine_Hit
+    prefab: {fileID: 6419261885007684752, guid: ed6ec9879385f2e4882acb21a4678bb9, type: 3}
+    scale: 0.24499999
+    nativeSeconds: 1.4
+  - key: Nyra_W_VectorAfterimage
+    prefab: {fileID: 7118404281546534965, guid: dd2cc380ccac28a4898f7e9283327ed8, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.6
+  - key: Nyra_W_VectorAfterimage_Cast
+    prefab: {fileID: 5412483571516970755, guid: 8668719d9e3f9664db1066193ffa1c04, type: 3}
+    scale: 0.165
+    nativeSeconds: 0.5
+  - key: Nyra_W_VectorAfterimage_Hit
+    prefab: {fileID: 5805457984428375764, guid: 8a00b7eb9458e6f49b97ef6c19efe04a, type: 3}
+    scale: 0.24499999
+    nativeSeconds: 1.4
+  - key: Nyra_E_SnareFork
+    prefab: {fileID: 5367489150584761353, guid: 57abebe803e633942b0b3853a1c99865, type: 3}
+    scale: 0.4
+    nativeSeconds: 1.25
+  - key: Nyra_E_SnareFork_Cast
+    prefab: {fileID: 4931892597788351785, guid: b23841380a2e1534380ed27230ce69df, type: 3}
+    scale: 0.165
+    nativeSeconds: 0.5
+  - key: Nyra_E_SnareFork_Hit
+    prefab: {fileID: 826082684603663974, guid: dcdbdeb23a484134583a76b0ca1f02e1, type: 3}
+    scale: 0.35
+    nativeSeconds: 1.25
+  - key: Nyra_R_SightlineVolley
+    prefab: {fileID: 121810564824941022, guid: 0c8017d5f1df66148af3b13a29c4cb07, type: 3}
+    scale: 0.56
+    nativeSeconds: 1
+  - key: Nyra_R_SightlineVolley_Cast
+    prefab: {fileID: 6033047213775487364, guid: 03f7d509c477dd24782f1c63369b0ab6, type: 3}
+    scale: 0.231
+    nativeSeconds: 0.5
+  - key: Nyra_R_SightlineVolley_Hit
+    prefab: {fileID: 6377968342977222119, guid: 89cae05989a131f4aaae21ad710e2098, type: 3}
+    scale: 0.343
+    nativeSeconds: 1.4
+  - key: Elyra_Basic_VaskaArcaneLance
+    prefab: {fileID: 8028677283458120595, guid: 84870cfdce1260440a7c80936f0cdd9c, type: 3}
+    scale: 0.4
+    nativeSeconds: 0.7
+  - key: Elyra_Basic_VaskaArcaneLance_Cast
+    prefab: {fileID: 4294418613085903167, guid: c65bb820fb9aeb4479f102eba8abeb54, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: Elyra_Basic_VaskaArcaneLance_Hit
+    prefab: {fileID: 5959945760225092813, guid: 2362e2e5954bd244e97cb897c7868bcc, type: 3}
+    scale: 0.28
+    nativeSeconds: 2
+  - key: Elyra_Q_OrbitFracturePair
+    prefab: {fileID: 8262726773656604612, guid: 57fb5c05451321042be6322ff9da57b8, type: 3}
+    scale: 0.4
+    nativeSeconds: 0.7
+  - key: Elyra_Q_OrbitFracturePair_Cast
+    prefab: {fileID: 2576537119390616197, guid: b7f8feaaa2b52fd4e968160bbb3737d5, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: Elyra_Q_OrbitFracturePair_Hit
+    prefab: {fileID: 8179822714866771086, guid: d1cf5305d3cbc6549b38e83e36ef05fc, type: 3}
+    scale: 0.28
+    nativeSeconds: 2
+  - key: Elyra_W_InvertWell
+    prefab: {fileID: 8032797773749319668, guid: ba0bd01a6ae86144a9e4a9b868e2bc0e, type: 3}
+    scale: 0.35
+    nativeSeconds: 1.5
+  - key: Elyra_W_InvertWell_Cast
+    prefab: {fileID: 8156681201232659275, guid: ff934beced564164db7d2f6949553b69, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: Elyra_W_InvertWell_Hit
+    prefab: {fileID: 6221635685466488770, guid: 2d640a230224ae84daf168e718234c01, type: 3}
+    scale: 0.28
+    nativeSeconds: 2
+  - key: Elyra_E_PhaseSplit
+    prefab: {fileID: 388200833721859085, guid: 71051cf0357820149aad072b9d6198bd, type: 3}
+    scale: 0.35
+    nativeSeconds: 1.5
+  - key: Elyra_E_PhaseSplit_Cast
+    prefab: {fileID: 819107694979790936, guid: 4d5d02dac253c6d47abe09a143d212e5, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: Elyra_E_PhaseSplit_Hit
+    prefab: {fileID: 5352963002757519772, guid: 46550f47af76c8748a8acbae32d14d5e, type: 3}
+    scale: 0.28
+    nativeSeconds: 2
+  - key: Elyra_R_ImpossibleCollapse
+    prefab: {fileID: 3071378663752171595, guid: ededd3ef03587cf4ca1169582b698d7e, type: 3}
+    scale: 0.48999998
+    nativeSeconds: 2
+  - key: Elyra_R_ImpossibleCollapse_Cast
+    prefab: {fileID: 6269829527505384700, guid: d8de7008fe600cc45b5873137fe1798e, type: 3}
+    scale: 0.385
+    nativeSeconds: 1.25
+  - key: Elyra_R_ImpossibleCollapse_Hit
+    prefab: {fileID: 6428062517460952998, guid: 846faa7eed911ae46919430bcfbc6c9e, type: 3}
+    scale: 0.392
+    nativeSeconds: 2
+  - key: Mira_Basic_VennLeafDart
+    prefab: {fileID: 7868739194369498989, guid: 69da1c21a6ca35b48b92a0121eaa737e, type: 3}
+    scale: 0.4
+    nativeSeconds: 1
+  - key: Mira_Basic_VennLeafDart_Cast
+    prefab: {fileID: 930345960051097109, guid: 0363a6b9bf622d74fb753cf589bfe796, type: 3}
+    scale: 0.22000001
+    nativeSeconds: 1
+  - key: Mira_Basic_VennLeafDart_Hit
+    prefab: {fileID: 5555392183143496430, guid: 8feebdbaa858639479e62557ff4a462c, type: 3}
+    scale: 0.28
+    nativeSeconds: 1
+  - key: Mira_Q_ResonantThorns
+    prefab: {fileID: 5758496183916154614, guid: e1366c93cdca6f849a0bbb319883395a, type: 3}
+    scale: 0.4
+    nativeSeconds: 1
+  - key: Mira_Q_ResonantThorns_Cast
+    prefab: {fileID: 6659191151173979170, guid: 4306086e427d13f409d817441e0b6ce9, type: 3}
+    scale: 0.22000001
+    nativeSeconds: 1
+  - key: Mira_Q_ResonantThorns_Hit
+    prefab: {fileID: 5605182552264603935, guid: 8afd01af76810cb4586a7a14774a14d9, type: 3}
+    scale: 0.28
+    nativeSeconds: 1
+  - key: Mira_W_GrowthBloom
+    prefab: {fileID: 8085143987248301663, guid: db74e96d9ba2bca4193b54e142c356e5, type: 3}
+    scale: 0.5
+    nativeSeconds: 1.3
+  - key: Mira_W_GrowthBloom_Cast
+    prefab: {fileID: 316044573976828549, guid: 57294849b1cb0a741b765a775069034f, type: 3}
+    scale: 0.22000001
+    nativeSeconds: 1
+  - key: Mira_W_GrowthBloom_Hit
+    prefab: {fileID: 3870865546691255488, guid: 6f450e4e2d7be8f4c8a0e46369d7eebe, type: 3}
+    scale: 0.28
+    nativeSeconds: 1
+  - key: Mira_E_ShelterPetals
+    prefab: {fileID: 7348914460555728474, guid: 831c87f79db2b694fad950f1f0b19f7b, type: 3}
+    scale: 0.4
+    nativeSeconds: 1.25
+  - key: Mira_E_ShelterPetals_Cast
+    prefab: {fileID: 5292867693931419452, guid: 7a6691452d6b83242882ac061679adbe, type: 3}
+    scale: 0.22000001
+    nativeSeconds: 1
+  - key: Mira_E_ShelterPetals_Hit
+    prefab: {fileID: 7868297291886678255, guid: 6fff95bafb109d54da8848b49f19e48d, type: 3}
+    scale: 0.28
+    nativeSeconds: 1
+  - key: Mira_R_WildsurgeBloom
+    prefab: {fileID: 6286737200982958164, guid: 0869cb52fcaee60479ff1dc9c8edf5b7, type: 3}
+    scale: 0.7
+    nativeSeconds: 1
+  - key: Mira_R_WildsurgeBloom_Cast
+    prefab: {fileID: 3473422659846343285, guid: 843b77385845a8848b39fb956a290c6c, type: 3}
+    scale: 0.308
+    nativeSeconds: 1
+  - key: Mira_R_WildsurgeBloom_Hit
+    prefab: {fileID: 4017136819952092620, guid: 92d767ad67d0533468cb0ea332595258, type: 3}
+    scale: 0.392
+    nativeSeconds: 1
+  - key: Rook_Basic_OrunHammer
+    prefab: {fileID: 8989694209780595654, guid: c929f5d284f54cd4dae9578c32644556, type: 3}
+    scale: 0.4
+    nativeSeconds: 0.6
+  - key: Rook_Basic_OrunHammer_Cast
+    prefab: {fileID: 3149239838939179456, guid: bc2605c3d7be3a04a9385b02ceac2226, type: 3}
+    scale: 0.165
+    nativeSeconds: 0.6
+  - key: Rook_Basic_OrunHammer_Hit
+    prefab: {fileID: 7983219094393980453, guid: 8dc35c306bd8800488760af8fc969869, type: 3}
+    scale: 0.24499999
+    nativeSeconds: 0.6
+  - key: Rook_Q_WreckArc
+    prefab: {fileID: 3672972245829158830, guid: 09d0bec491b9e024d833e679ced75af2, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.6
+  - key: Rook_Q_WreckArc_Cast
+    prefab: {fileID: 4797835063171958233, guid: 23355d81c7a5e514a9d2db42d40d2593, type: 3}
+    scale: 0.165
+    nativeSeconds: 0.6
+  - key: Rook_Q_WreckArc_Hit
+    prefab: {fileID: 6299333769574251891, guid: cc266eaec239b14448c19efa3832485d, type: 3}
+    scale: 0.24499999
+    nativeSeconds: 0.6
+  - key: Rook_W_ArmorRivet
+    prefab: {fileID: 8812286242964252398, guid: 87faa5e0ac8d8ef47a101f4199b754c9, type: 3}
+    scale: 0.5
+    nativeSeconds: 1.25
+  - key: Rook_W_ArmorRivet_Cast
+    prefab: {fileID: 6088728028963606406, guid: bc7d96ea70ec10a4fa3d6b1e9de15a76, type: 3}
+    scale: 0.165
+    nativeSeconds: 0.6
+  - key: Rook_W_ArmorRivet_Hit
+    prefab: {fileID: 2852767896139812740, guid: b0858245115700847b273a886f417ed9, type: 3}
+    scale: 0.24499999
+    nativeSeconds: 0.6
+  - key: Rook_E_WreckstormSpin
+    prefab: {fileID: 5494986175556791714, guid: dfec676f16a9a6b4bb1fdd577d2c1cf2, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.6
+  - key: Rook_E_WreckstormSpin_Cast
+    prefab: {fileID: 835108242977438448, guid: 25dbcbd8cc49eb64c8ba44ddefcd2473, type: 3}
+    scale: 0.165
+    nativeSeconds: 0.6
+  - key: Rook_E_WreckstormSpin_Hit
+    prefab: {fileID: 7640247441918476406, guid: ae2fb68d391c04d4d848da67f020dc8d, type: 3}
+    scale: 0.24499999
+    nativeSeconds: 0.6
+  - key: Rook_R_OverdriveEruption
+    prefab: {fileID: 2453774120118261106, guid: a40ec65a48ea75545b2db205bb4cf924, type: 3}
+    scale: 0.7
+    nativeSeconds: 0.8
+  - key: Rook_R_OverdriveEruption_Cast
+    prefab: {fileID: 6493045219582705582, guid: fcba50d2087de6946bf2742a0c3bacd0, type: 3}
+    scale: 0.231
+    nativeSeconds: 0.6
+  - key: Rook_R_OverdriveEruption_Hit
+    prefab: {fileID: 2959440256222005376, guid: cc36bd5623a72144da8b0bce6e568ea7, type: 3}
+    scale: 0.343
+    nativeSeconds: 0.6
+  - key: Traveler_Basic_ChronoDart
+    prefab: {fileID: 8157470423404698474, guid: 94fb0ff41d7b4d743801067b5dae3c85, type: 3}
+    scale: 0.4
+    nativeSeconds: 1
+  - key: Traveler_Basic_ChronoDart_Cast
+    prefab: {fileID: 3044355744858470024, guid: 0d5bdd6798d49b74c8bf84b4c3cf0a0e, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: Traveler_Basic_ChronoDart_Hit
+    prefab: {fileID: 8520060246340788087, guid: 3c7d2d2557cea704aa1c9a1e4dd8753d, type: 3}
+    scale: 0.28
+    nativeSeconds: 2
+  - key: Traveler_Q_TemporalCrescent
+    prefab: {fileID: 8773806778039568920, guid: 6cba6621410bf9e428defd08906ce6d9, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.4
+  - key: Traveler_Q_TemporalCrescent_Cast
+    prefab: {fileID: 4887090658405453653, guid: 79e3f484105fc6d4a90807c9386aea60, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: Traveler_Q_TemporalCrescent_Hit
+    prefab: {fileID: 8641756066888732668, guid: 6d22833fe42b33a478d1f10cdf2c1775, type: 3}
+    scale: 0.28
+    nativeSeconds: 2
+  - key: Traveler_W_RiftStepClock
+    prefab: {fileID: 5561885823189540797, guid: d884a24638f1374499a673c21f157df5, type: 3}
+    scale: 0.35
+    nativeSeconds: 1.5
+  - key: Traveler_W_RiftStepClock_Cast
+    prefab: {fileID: 4936134267674261932, guid: 37dc37a216d2d754eae14a611ff93e92, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: Traveler_W_RiftStepClock_Hit
+    prefab: {fileID: 4099313039861868112, guid: 430479a9b64c95a49ae359cec459a6e6, type: 3}
+    scale: 0.28
+    nativeSeconds: 2
+  - key: Traveler_E_ChronoFigureEight
+    prefab: {fileID: 2003917302134247926, guid: f9e82138b025eea4bb1ad7b1d9e2d963, type: 3}
+    scale: 0.5
+    nativeSeconds: 1.5
+  - key: Traveler_E_ChronoFigureEight_Cast
+    prefab: {fileID: 4430687852678939232, guid: 251d801b4b889ab4688e59a79c312363, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: Traveler_E_ChronoFigureEight_Hit
+    prefab: {fileID: 8539064963132599009, guid: c841b0a847b07e34a860f92ed8c61395, type: 3}
+    scale: 0.28
+    nativeSeconds: 2
+  - key: Traveler_R_ParadoxCollapse
+    prefab: {fileID: 2348485377577191341, guid: 3bde51775c08dfc4db41516da9ce3565, type: 3}
+    scale: 0.48999998
+    nativeSeconds: 1.5
+  - key: Traveler_R_ParadoxCollapse_Cast
+    prefab: {fileID: 714663613565603865, guid: d38148a4c841a8248b54fa76fc32a33f, type: 3}
+    scale: 0.385
+    nativeSeconds: 1.25
+  - key: Traveler_R_ParadoxCollapse_Hit
+    prefab: {fileID: 3214212168660997952, guid: cab2f1fc1f726974e853b86a2713abbb, type: 3}
+    scale: 0.392
+    nativeSeconds: 2
+  - key: VoidKnight_Basic_VoidEdge
+    prefab: {fileID: 2763854629803667846, guid: de3d33d5f952f9d49b99fd58836c3de6, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.3
+  - key: VoidKnight_Basic_VoidEdge_Cast
+    prefab: {fileID: 3166694680236549815, guid: 3490112a528f308459b08a3436f3dcd1, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: VoidKnight_Basic_VoidEdge_Hit
+    prefab: {fileID: 9217724367673302841, guid: 0434a36238cd91548b4a0a01bd623122, type: 3}
+    scale: 0.315
+    nativeSeconds: 0.5
+  - key: VoidKnight_Q_RiftSweepCross
+    prefab: {fileID: 5026472329831617102, guid: 49d19fe9c59851a40bbee045942000c9, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.3
+  - key: VoidKnight_Q_RiftSweepCross_Cast
+    prefab: {fileID: 5582074756981098911, guid: c5eae702ca8c92b4896e7425735b616a, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: VoidKnight_Q_RiftSweepCross_Hit
+    prefab: {fileID: 5903448238464144282, guid: 1fa6194daa40b3a4697eb802ef1710c9, type: 3}
+    scale: 0.315
+    nativeSeconds: 0.5
+  - key: VoidKnight_W_NullGuardSeal
+    prefab: {fileID: 3136891063149193173, guid: 63cee006958812d418e8cb6d2135bdc9, type: 3}
+    scale: 0.5
+    nativeSeconds: 1.5
+  - key: VoidKnight_W_NullGuardSeal_Cast
+    prefab: {fileID: 3243558023666730424, guid: eff028ac475429e4fb19261c8c5ce1aa, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: VoidKnight_W_NullGuardSeal_Hit
+    prefab: {fileID: 6116421355710893407, guid: ca45754d3d39f6c4ca80b3f34e87421e, type: 3}
+    scale: 0.315
+    nativeSeconds: 0.5
+  - key: VoidKnight_E_LungeBladeWake
+    prefab: {fileID: 6460641033710468273, guid: 08eaa282057eb5e49b41a3a22fca904b, type: 3}
+    scale: 0.45
+    nativeSeconds: 0.4
+  - key: VoidKnight_E_LungeBladeWake_Cast
+    prefab: {fileID: 458712451589750945, guid: 3275e3422cd49944998841b3d31ef170, type: 3}
+    scale: 0.275
+    nativeSeconds: 1.25
+  - key: VoidKnight_E_LungeBladeWake_Hit
+    prefab: {fileID: 3053789391362316311, guid: d5dcd6ab6c4011b4aa560a2cebbcdffa, type: 3}
+    scale: 0.315
+    nativeSeconds: 0.5
+  - key: VoidKnight_R_EventideCleaveFan
+    prefab: {fileID: 36052671727926750, guid: 40550b0f2bd9b3142886481f7c775948, type: 3}
+    scale: 0.63
+    nativeSeconds: 0.5
+  - key: VoidKnight_R_EventideCleaveFan_Cast
+    prefab: {fileID: 5653256919688546376, guid: f4ccb91818aaeb747a8012d29565c061, type: 3}
+    scale: 0.385
+    nativeSeconds: 1.25
+  - key: VoidKnight_R_EventideCleaveFan_Hit
+    prefab: {fileID: 146965514606079504, guid: 7a9c4658392fc1c40a16e46adae81544, type: 3}
+    scale: 0.44099998
+    nativeSeconds: 0.5
+  beamMaterial: {fileID: 2100000, guid: 083f3cd2688c8f343a027d81330430c0, type: 2}
+  sourceVersion: Epic Toon FX user import; DF replacement 5

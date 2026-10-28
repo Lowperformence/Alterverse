@@ -1,5 +1,5 @@
-// Controlled HTTP/Firestore fixture for the real Node server plus the one-item patch.
-import {enableUfoTestHat} from '../../../Server/commerce/node/enable-ufo-test-hat.mjs';
+// Controlled HTTP/Firestore fixture for the real Node server plus the catalog patch.
+import {enableUfoTestHat,headwearItems} from '../../../Server/commerce/node/enable-ufo-test-hat.mjs';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -131,8 +131,8 @@ const ufoValue=w=>w.profile.find(x=>x.key===ufoKey)?.number;
 const earned=w=>w.profile.find(x=>x.key==='DF_Shards')?.number||0;
 const ufoSeed=(shards,paid=0)=>({...saved([nameEntry('SolarFox1234567'),xpEntry,{key:'DF_Shards',kind:0,number:shards}]),balance:paid,owned:[]});
 const buy=(e,revision,id='a'.repeat(32))=>e.request('/wallet/spend',{cosmeticId:'ufo_test_hat',operationId:id,expectedProfileRevision:revision});
-test('UFO exact one earned shard grants ownership and leaves XP/loadout unchanged',async()=>{
- const e=await environment({[playerPath]:ufoSeed(1)});const r=await buy(e,4);
+test('UFO exact 100 earned shards grants ownership and leaves XP/loadout unchanged',async()=>{
+ const e=await environment({[playerPath]:ufoSeed(100)});const r=await buy(e,4);
  assert.equal(r.status,200,JSON.stringify(e.logs));assert.equal(earned(r.body.wallet),0);assert.equal(ufoValue(r.body.wallet),1);
  assert.equal(r.body.wallet.profile.find(x=>x.key===xpEntry.key).text,'98765');
  assert.ok(!r.body.wallet.profile.some(x=>x.key.startsWith('DF_HeadwearEquipped_')));
@@ -141,23 +141,34 @@ test('UFO zero funds fails without changing the wallet',async()=>{
  const seed=ufoSeed(0);const e=await environment({[playerPath]:seed});const r=await buy(e,4);
  assert.equal(r.status,400);same(e.documents.get(playerPath),seed);
 });
-test('UFO one paid shard is accepted through the existing ledger',async()=>{
- const e=await environment({[playerPath]:ufoSeed(0,1)});const r=await buy(e,4);
+test('UFO 100 paid shards is accepted through the existing ledger',async()=>{
+ const e=await environment({[playerPath]:ufoSeed(0,100)});const r=await buy(e,4);
  assert.equal(r.status,200);assert.equal(r.body.wallet.balance,0);assert.equal(ufoValue(r.body.wallet),1);
 });
 test('UFO simultaneous retries and later re-purchase charge exactly once',async()=>{
- const e=await environment({[playerPath]:ufoSeed(2)});const result=await Promise.all([buy(e,4),buy(e,4),buy(e,4)]);
+ const e=await environment({[playerPath]:ufoSeed(200)});const result=await Promise.all([buy(e,4),buy(e,4),buy(e,4)]);
  assert.ok(result.every(x=>x.status===200));const current=result.at(-1).body.wallet;
  const again=await buy(e,current.profileRevision,'b'.repeat(32));
- assert.equal(again.status,200);assert.equal(earned(again.body.wallet),1);assert.equal(ufoValue(again.body.wallet),1);
+ assert.equal(again.status,200);assert.equal(earned(again.body.wallet),100);assert.equal(ufoValue(again.body.wallet),1);
 });
 test('UFO ownership/equipment survives Node restart and is isolated from another account',async()=>{
- const e=await environment({[playerPath]:ufoSeed(1)});const r=await buy(e,4);assert.equal(r.status,200);
+ const e=await environment({[playerPath]:ufoSeed(100)});const r=await buy(e,4);assert.equal(r.status,200);
  const w=r.body.wallet;const saved=await e.request('/profile/save',{expectedProfileRevision:w.profileRevision,profile:[...w.profile,{key:'DF_HeadwearEquipped_5',kind:0,number:8}]});
  assert.equal(saved.status,200);const restarted=await environment(Object.fromEntries(e.documents));const loaded=await restarted.request();
  assert.equal(ufoValue(loaded.body.wallet),1);assert.equal(loaded.body.wallet.profile.find(x=>x.key==='DF_HeadwearEquipped_5').number,8);
  const other=await environment(Object.fromEntries(e.documents),{payload:{sub:'other-player',project_id:'57bb61ab-1371-4b7a-a996-5a932e351c03',aud:['upid:57bb61ab-1371-4b7a-a996-5a932e351c03','envName:production']}});
  assert.equal(ufoValue((await other.request()).body.wallet),undefined);
+});
+
+for(const item of headwearItems) test(item.id+' unlocks for 100 shards and retains ownership on retry',async()=>{
+ const e=await environment({[playerPath]:ufoSeed(200)});
+ const buyHat=(revision,operationId)=>e.request('/wallet/spend',{cosmeticId:item.id,operationId,expectedProfileRevision:revision});
+ const r=await buyHat(4,'c'.repeat(32));
+ assert.equal(r.status,200,JSON.stringify(e.logs));assert.equal(earned(r.body.wallet),100);
+ assert.equal(r.body.wallet.profile.find(x=>x.key===item.writes[0].key)?.number,1);
+ assert.ok(!r.body.wallet.profile.some(x=>x.key.startsWith('DF_HeadwearEquipped_')));
+ const again=await buyHat(r.body.wallet.profileRevision,'d'.repeat(32));
+ assert.equal(again.status,200);assert.equal(earned(again.body.wallet),100);
 });
 
 let passed = 0;

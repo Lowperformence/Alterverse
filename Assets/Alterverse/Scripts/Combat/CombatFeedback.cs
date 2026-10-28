@@ -63,6 +63,8 @@ namespace Alterverse.Combat
         private static Color SourceColor(GameObject source)
         {HeroIdentity hero=source!=null?source.GetComponentInParent<HeroIdentity>():null;return hero!=null?StylizedArtDirection.HeroAccent(hero.Hero):new Color(.95f,.74f,.45f);}
         private void LateUpdate(){if(flashing&&Time.time>=flashUntil)Restore();}
+        // Restore the original colors before a lethal hit's flash can be copied into a corpse.
+        public void RestoreBeforeDeath(){Restore();}
         private void Restore()
         {
             if(renderers!=null&&saved!=null&&flashed!=null)

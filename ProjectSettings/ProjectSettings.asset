@@ -87,7 +87,7 @@ PlayerSettings:
   androidApplicationEntry: 2
   defaultIsNativeResolution: 1
   macRetinaSupport: 1
-  runInBackground: 0
+  runInBackground: 1
   callOnDisableOnAssetBundleUnload: 1
   muteOtherAudioSources: 0
   Prepare IOS For Recording: 0
@@ -97,7 +97,7 @@ PlayerSettings:
   hideHomeButton: 0
   submitAnalytics: 1
   usePlayerLog: 1
-  dedicatedServerOptimizations: 1
+  dedicatedServerOptimizations: 0
   bakeCollisionMeshes: 0
   forceSingleInstance: 0
   useFlipModelSwapchain: 1
@@ -143,13 +143,13 @@ PlayerSettings:
   switchGraphicsJobsSyncAfterKick: 1
   vulkanNumSwapchainBuffers: 3
   vulkanEnableSetSRGBWrite: 0
-  vulkanEnablePreTransform: 1
+  vulkanEnablePreTransform: 0
   vulkanEnableLateAcquireNextImage: 0
   vulkanEnableCommandBufferRecycling: 1
   loadStoreDebugModeEnabled: 0
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
-  bundleVersion: 0.1.6
+  bundleVersion: 0.7.7
   preloadedAssets:
   - {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   metroInputSource: 0
@@ -180,7 +180,7 @@ PlayerSettings:
     iPhone: 0
     tvOS: 0
   overrideDefaultApplicationIdentifier: 1
-  AndroidBundleVersionCode: 8
+  AndroidBundleVersionCode: 67
   AndroidMinSdkVersion: 26
   AndroidTargetSdkVersion: 36
   AndroidPreferredInstallLocation: 1
@@ -408,114 +408,42 @@ PlayerSettings:
       m_Width: 432
       m_Height: 432
       m_Kind: 2
-      m_SubKind:
+      m_SubKind: 
     - m_Textures:
       - {fileID: 2800000, guid: bd42afc1768b41df950fa3d547d52ca4, type: 3}
       - {fileID: 2800000, guid: e98e2cd38bc84f99ae34d29678e19c09, type: 3}
       m_Width: 324
       m_Height: 324
       m_Kind: 2
-      m_SubKind:
+      m_SubKind: 
     - m_Textures:
       - {fileID: 2800000, guid: bd42afc1768b41df950fa3d547d52ca4, type: 3}
       - {fileID: 2800000, guid: e98e2cd38bc84f99ae34d29678e19c09, type: 3}
       m_Width: 216
       m_Height: 216
       m_Kind: 2
-      m_SubKind:
+      m_SubKind: 
     - m_Textures:
       - {fileID: 2800000, guid: bd42afc1768b41df950fa3d547d52ca4, type: 3}
       - {fileID: 2800000, guid: e98e2cd38bc84f99ae34d29678e19c09, type: 3}
       m_Width: 162
       m_Height: 162
       m_Kind: 2
-      m_SubKind:
+      m_SubKind: 
     - m_Textures:
       - {fileID: 2800000, guid: bd42afc1768b41df950fa3d547d52ca4, type: 3}
       - {fileID: 2800000, guid: e98e2cd38bc84f99ae34d29678e19c09, type: 3}
       m_Width: 108
       m_Height: 108
       m_Kind: 2
-      m_SubKind:
+      m_SubKind: 
     - m_Textures:
       - {fileID: 2800000, guid: bd42afc1768b41df950fa3d547d52ca4, type: 3}
       - {fileID: 2800000, guid: e98e2cd38bc84f99ae34d29678e19c09, type: 3}
       m_Width: 81
       m_Height: 81
       m_Kind: 2
-      m_SubKind:
-    - m_Textures:
-      - {fileID: 2800000, guid: 9a1fa66365c54b0188e958a910747aad, type: 3}
-      m_Width: 192
-      m_Height: 192
-      m_Kind: 1
-      m_SubKind:
-    - m_Textures:
-      - {fileID: 2800000, guid: 9a1fa66365c54b0188e958a910747aad, type: 3}
-      m_Width: 144
-      m_Height: 144
-      m_Kind: 1
-      m_SubKind:
-    - m_Textures:
-      - {fileID: 2800000, guid: 9a1fa66365c54b0188e958a910747aad, type: 3}
-      m_Width: 96
-      m_Height: 96
-      m_Kind: 1
-      m_SubKind:
-    - m_Textures:
-      - {fileID: 2800000, guid: 9a1fa66365c54b0188e958a910747aad, type: 3}
-      m_Width: 72
-      m_Height: 72
-      m_Kind: 1
-      m_SubKind:
-    - m_Textures:
-      - {fileID: 2800000, guid: 9a1fa66365c54b0188e958a910747aad, type: 3}
-      m_Width: 48
-      m_Height: 48
-      m_Kind: 1
-      m_SubKind:
-    - m_Textures:
-      - {fileID: 2800000, guid: 9a1fa66365c54b0188e958a910747aad, type: 3}
-      m_Width: 36
-      m_Height: 36
-      m_Kind: 1
-      m_SubKind:
-    - m_Textures:
-      - {fileID: 2800000, guid: 9a1fa66365c54b0188e958a910747aad, type: 3}
-      m_Width: 192
-      m_Height: 192
-      m_Kind: 0
-      m_SubKind:
-    - m_Textures:
-      - {fileID: 2800000, guid: 9a1fa66365c54b0188e958a910747aad, type: 3}
-      m_Width: 144
-      m_Height: 144
-      m_Kind: 0
-      m_SubKind:
-    - m_Textures:
-      - {fileID: 2800000, guid: 9a1fa66365c54b0188e958a910747aad, type: 3}
-      m_Width: 96
-      m_Height: 96
-      m_Kind: 0
-      m_SubKind:
-    - m_Textures:
-      - {fileID: 2800000, guid: 9a1fa66365c54b0188e958a910747aad, type: 3}
-      m_Width: 72
-      m_Height: 72
-      m_Kind: 0
-      m_SubKind:
-    - m_Textures:
-      - {fileID: 2800000, guid: 9a1fa66365c54b0188e958a910747aad, type: 3}
-      m_Width: 48
-      m_Height: 48
-      m_Kind: 0
-      m_SubKind:
-    - m_Textures:
-      - {fileID: 2800000, guid: 9a1fa66365c54b0188e958a910747aad, type: 3}
-      m_Width: 36
-      m_Height: 36
-      m_Kind: 0
-      m_SubKind:
+      m_SubKind: 
   - m_BuildTarget: tvOS
     m_Icons:
     - m_Textures: []
@@ -581,7 +509,10 @@ PlayerSettings:
   - serializedVersion: 2
     m_BuildTarget: Android
     m_EncodingQuality: 1
-  m_BuildTargetGroupHDRCubemapEncodingQuality: []
+  m_BuildTargetGroupHDRCubemapEncodingQuality:
+  - serializedVersion: 2
+    m_BuildTarget: Android
+    m_EncodingQuality: 1
   m_BuildTargetGroupLightmapSettings: []
   m_BuildTargetGroupLoadStoreDebugModeSettings: []
   m_BuildTargetNormalMapEncoding:
@@ -859,7 +790,25 @@ PlayerSettings:
   webWasm2023: 1
   webEnableSubmoduleStrippingCompatibility: 0
   webProgressiveAssetLoading: 0
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    Android: DOTWEEN
+    EmbeddedLinux: DOTWEEN
+    GameCoreScarlett: DOTWEEN
+    GameCoreXboxOne: DOTWEEN
+    Kepler: DOTWEEN
+    LinuxHeadlessSimulation: DOTWEEN
+    Nintendo Switch: DOTWEEN
+    Nintendo Switch 2: DOTWEEN
+    PS4: DOTWEEN
+    PS5: DOTWEEN
+    QNX: DOTWEEN
+    Standalone: DOTWEEN
+    VisionOS: DOTWEEN
+    WebGL: DOTWEEN
+    Windows Store Apps: DOTWEEN
+    XboxOne: DOTWEEN
+    iPhone: DOTWEEN
+    tvOS: DOTWEEN
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
@@ -937,7 +886,8 @@ PlayerSettings:
   XboxOneXTitleMemory: 8
   XboxOneOverrideIdentityName: 
   XboxOneOverrideIdentityPublisher: 
-  cloudServicesEnabled: {}
+  cloudServicesEnabled:
+    Purchasing: 0
   luminIcon:
     m_Name: 
     m_ModelFolderPath: 

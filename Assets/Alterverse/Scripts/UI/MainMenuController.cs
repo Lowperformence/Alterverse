@@ -21,7 +21,7 @@ namespace Alterverse.UI
         private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "BATTLE PASS", "PROFILE", "CLANS", "DAILY", "RANKING", "SETTINGS" };
         private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.BattlePass, Page.Profile, Page.Clans, Page.Quests, Page.Leaderboard, Page.Settings };
         private static readonly int[] HomeNavigation={0,1,2,3,5};
-        private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER", "TIDAL BRUISER", "FELINE ASSASSIN", "VOID DUELIST" };
+        private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER", "TIDAL BRUISER", "FELINE ASSASSIN", "VOID DUELIST", "MECH / SHIELD BREAKER" };
         private static readonly string[] RoleDescriptions = {
             "Close the distance. Isolate a vulnerable target, strike, then disengage.",
             "Hold the front. Shield your team and interrupt enemies at close range.",
@@ -31,11 +31,12 @@ namespace Alterverse.UI
             "Win the long fight. Trade at close range with heavy strikes and sustain.",
             "Slip between seconds. Reposition through rifts, control space and strike with chronolight.",
             "Hook an enemy with your anchor. Shield yourself and control fights with a water vortex.",
-            "A small cat astronaut. Jet into range, scratch one enemy, then slip away.", "A two-handed greatsword duelist from an unknown galaxy. Longer melee reach, measured damage and timely frontal parries." };
-        private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL", "PULL / AREA CONTROL", "MOBILITY / SINGLE TARGET", "MELEE REACH / PARRY" };
+            "A small cat astronaut. Jet into range, scratch one enemy, then slip away.", "A two-handed greatsword duelist from an unknown galaxy. Longer melee reach, measured damage and timely frontal parries.", "Compact mech: rapid Gatling fire, short grenade arcs and a shield-breaking electrical ultimate." };
+        private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL", "PULL / AREA CONTROL", "MOBILITY / SINGLE TARGET", "MELEE REACH / PARRY", "GATLING / GRENADES / SHIELD BREAK" };
         private Page page = Page.Home;
         private bool visible = true, launching, coopLaunching, nameRerollBusy, suspended;
         private bool choosingMatchMode;
+        private Vector2 heroRosterScroll;
         private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1, weaponSkinVariant;
         private int playArenaBrowseIndex=-1,mapShopPageStart;
         private bool battlePassPreviewPremium;
@@ -61,10 +62,19 @@ namespace Alterverse.UI
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreate()
         {
+            if (DedicatedServerNetworkRuntime.Requested) return;
             if (FindAnyObjectByType<MainMenuController>() == null) new GameObject("DF_MainMenu").AddComponent<MainMenuController>();
         }
         private void Awake()
         {
+            // Headless servers must never initialize profile, video or hero preview UI.
+            if (DedicatedServerNetworkRuntime.Requested)
+            {
+                visible = false;
+                enabled = false;
+                Destroy(gameObject);
+                return;
+            }
             if (instance != null && instance != this) { Destroy(gameObject); return; }
             instance = this;
             selectedHero = Mathf.Clamp((int)PlayerHeroSelection.Selected,0,HeroIdentity.HeroCount-1);
@@ -253,12 +263,13 @@ namespace Alterverse.UI
         {
             theme.Panel(rect);
             ShardShopVisualOverlay.DrawWallet(rect,PlayerWallet.Balance);
+            if(GUI.Button(rect,GUIContent.none,GUIStyle.none))OpenShardStore();
         }
         private static int NavigationIcon(Page target) => target switch
         {
             Page.Play=>1, Page.Heroes=>2, Page.Shop=>3, Page.Inventory=>4,
             Page.Profile=>5, Page.Quests=>6, Page.Leaderboard=>7, Page.Settings=>8,
-            Page.BattlePass=>9, _=>0
+            Page.BattlePass=>9, Page.Clans=>10, _=>0
         };
 
         private void Heading(string title, string description)
@@ -289,7 +300,7 @@ namespace Alterverse.UI
             float heroX=Left+ContentWidth*.62f;
             // Render the actual selected loadout over the environment, without an opaque card.
             if(showcase?.Image!=null)
-                GUI.DrawTexture(new Rect(heroX,152,Right-heroX,450),showcase.Image,ScaleMode.ScaleToFit,true);
+                GUI.DrawTexture(new Rect(heroX-64,152,Right-heroX,450),showcase.Image,ScaleMode.ScaleToFit,true);
 
             homeLogo??=new GUIStyle(theme.Title){fontSize=64,fontStyle=FontStyle.Normal};
             theme.FitLabel(new Rect(Left,58,ContentWidth*.67f,80),"DIMENSIONS",homeLogo);
@@ -304,7 +315,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(profile.x+68,profile.y+32,196,23),$"LEVEL {PlayerExperience.Level}",theme.Small,true);
             theme.Progress(new Rect(profile.x+68,profile.y+60,194,3),PlayerExperience.LevelProgress);
             if(GUI.Button(profile,GUIContent.none,GUIStyle.none))SetPage(Page.Profile);
-            DrawShardWallet(new Rect(Right-280,106,280,70));
+            DrawShardWallet(new Rect(profile.x-292,profile.y,280,profile.height));
 
             FrontEndTheme.Fill(new Rect(Left,246,1,276),new Color(.66f,.75f,.84f,.45f));
             int[] homeNavigation=HomeNavigation;
@@ -320,17 +331,17 @@ namespace Alterverse.UI
             theme.Label(new Rect(textX,309,textWidth,94),"TWO REALITIES.\nONE FRONT.",theme.Title);
             theme.Label(new Rect(textX,416,textWidth-12,76),"Choose your hero. Fight alongside your team. Claim the Hotzone and break the enemy core.",theme.Body,true);
             FrontEndTheme.Fill(new Rect(textX,510,56,2),FrontEndTheme.Accent);
-            theme.FitLabel(new Rect(heroX+24,616,Right-heroX-48,35),HeroName,theme.Heading);
-            theme.FitLabel(new Rect(heroX+24,654,Right-heroX-48,22),Roles[selectedHero],theme.Small,true);
+            theme.FitLabel(new Rect(heroX+24,616,HomeHeroCaptionWidth,35),HeroName,theme.Heading);
+            theme.FitLabel(new Rect(heroX+24,654,HomeHeroCaptionWidth,22),Roles[selectedHero],theme.Small,true);
 
             float cardWidth=Mathf.Min(232,(ContentWidth*.66f-24)/3f);
             DrawHomeCard(new Rect(Left,542,cardWidth,126),"01  /  DEPLOYMENT","ENTER THE FRONT",Page.Play);
             DrawHomeCard(new Rect(Left+cardWidth+12,542,cardWidth,126),"02  /  SEASON REWARDS","BATTLE PASS",Page.BattlePass);
             DrawHomeCard(new Rect(Left+(cardWidth+12)*2,542,cardWidth,126),"03  /  DAILY OBJECTIVES","MISSIONS",Page.Quests);
-            if(theme.Action(new Rect(Left,680,112,28),"RANKING"))SetPage(Page.Leaderboard);
-            if(theme.Action(new Rect(Left+124,680,112,28),"SETTINGS"))SetPage(Page.Settings);
-            if(theme.Action(new Rect(Left+248,680,112,28),"CLANS"))SetPage(Page.Clans);
-            theme.FitLabel(new Rect(Right-350,681,350,26),"SAME STARS. NEW POSSIBILITIES.",theme.Small,true);
+            if(theme.Navigation(new Rect(Left,672,cardWidth,44),"RANKING",NavigationIcon(Page.Leaderboard)))SetPage(Page.Leaderboard);
+            if(theme.Navigation(new Rect(Left+cardWidth+12,672,cardWidth,44),"SETTINGS",NavigationIcon(Page.Settings)))SetPage(Page.Settings);
+            if(theme.Navigation(new Rect(Left+(cardWidth+12)*2,672,cardWidth,44),"CLANS",NavigationIcon(Page.Clans)))SetPage(Page.Clans);
+            DrawHomeNews();
         }
         private void DrawHomeCard(Rect rect,string eyebrow,string title,Page target)
         {
@@ -444,7 +455,7 @@ namespace Alterverse.UI
             if (theme.Action(new Rect(Left+matchButtonWidth+matchButtonGap,620,matchButtonWidth,58),"Ranked",true,
                 enabled:matchButtonsEnabled && HeroUnlockInventory.Owned((HeroId)selectedHero),locked:heroReleaseLocked || !RankedAvailability.Enabled))
             { PlayerHeroSelection.Select((HeroId)selectedHero); RankedPanel.Show(); }
-            if (theme.Action(new Rect(Left+2*(matchButtonWidth+matchButtonGap),620,matchButtonWidth,58),"Play Offline",
+            if (theme.Action(new Rect(Left+2*(matchButtonWidth+matchButtonGap),620,matchButtonWidth,58),"Play Offline",primary:true,
                 enabled:matchButtonsEnabled,locked:heroReleaseLocked)) _ = BeginOfflineMatchAsync();
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
                 !AccountServerBootstrap.CloudProfileReady?"WAIT FOR CLOUD SYNC  /  PROFILE > GOOGLE ACCOUNT":
@@ -592,31 +603,40 @@ namespace Alterverse.UI
         }
         private void DrawHeroes()
         {
-            Heading("Heroes",$"{HeroIdentity.HeroCount} heroes. Choose how you fight.");
-            const float rosterWidth=244f;
-            float rowStep=HeroIdentity.HeroCount>9?46f:HeroIdentity.HeroCount>8?48f:55f;
-            for(int i=0;i<HeroIdentity.HeroCount;i++)
+            const float rosterWidth=244f,rowStep=48f;
+            float portraitX=Left+rosterWidth+16;
+            float portraitWidth=Mathf.Clamp(ContentWidth*.275f,292f,356f);
+            float attacksX=portraitX+portraitWidth+18;
+            float attacksWidth=Right-attacksX;
+            // The heading sits above the hero card so the roster can use the full column.
+            theme.Label(new Rect(portraitX,110,Right-portraitX,52),"Heroes",theme.Title);
+            theme.Label(new Rect(portraitX,166,Right-portraitX,30),$"{HeroIdentity.HeroCount} heroes. Choose how you fight.",theme.Body,true);
+            Rect roster=new Rect(Left,112,rosterWidth,572);
+            float listHeight=Mathf.Max(roster.height,HeroIdentity.HeroCount*rowStep-5f);
+            float rowWidth=rosterWidth-(listHeight>roster.height?20f:0f);
+            heroRosterScroll=GUI.BeginScrollView(roster,heroRosterScroll,new Rect(0,0,rowWidth,listHeight),false,false);
+            try
             {
-                Rect row=new Rect(Left,216+i*rowStep,rosterWidth,rowStep-5f);
-                HeroId rowHero=(HeroId)i;
-                bool chosen=i==selectedHero;
-                bool owned=HeroUnlockInventory.Owned(rowHero);
-                if(theme.Action(row,"",selected:chosen))ChangeHero(i);
-                FrontEndTheme.Fill(new Rect(row.x+5,row.y+10,3,row.height-20),Alterverse.Visuals.StylizedArtDirection.HeroAccent(rowHero));
-                theme.Label(new Rect(row.x+18,row.y+(rowStep<55f?3f:5f),row.width-32,rowStep<55f?22f:24f),HeroIdentity.NameFor(rowHero),theme.Body);
-                string subtitle=!HeroUnlockCatalog.Released(rowHero)?"COMING SOON":owned?Roles[i]:$"LOCKED  •  {HeroUnlockCatalog.Price(rowHero):N0} SHARDS";
-                theme.Label(new Rect(row.x+18,row.y+(rowStep<55f?25f:31f),row.width-32,rowStep<55f?17f:18f),subtitle,theme.Small,true);
+                for(int i=0;i<HeroIdentity.HeroCount;i++)
+                {
+                    Rect row=new Rect(0,i*rowStep,rowWidth,rowStep-5f);
+                    HeroId rowHero=(HeroId)i;
+                    bool chosen=i==selectedHero;
+                    bool owned=HeroUnlockInventory.Owned(rowHero);
+                    if(theme.Action(row,"",selected:chosen))ChangeHero(i);
+                    FrontEndTheme.Fill(new Rect(row.x+5,row.y+10,3,row.height-20),Alterverse.Visuals.StylizedArtDirection.HeroAccent(rowHero));
+                    const float labelX=18f;
+                    theme.Label(new Rect(row.x+labelX,row.y+3f,row.width-labelX-14,22f),HeroIdentity.NameFor(rowHero),theme.Body);
+                    string subtitle=!HeroUnlockCatalog.Released(rowHero)?"COMING SOON":owned?Roles[i]:$"LOCKED  •  {HeroUnlockCatalog.Price(rowHero):N0} SHARDS";
+                    theme.Label(new Rect(row.x+labelX,row.y+24f,row.width-labelX-14,16f),subtitle,theme.Small,true);
+                }
             }
+            finally{GUI.EndScrollView();}
 
             HeroId heroId=(HeroId)selectedHero;
             bool heroOwned=HeroUnlockInventory.Owned(heroId);
             bool heroReleaseLocked=!HeroUnlockCatalog.Released(heroId);
             Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent(heroId);
-            float portraitX=Left+rosterWidth+16;
-            float portraitWidth=Mathf.Clamp(ContentWidth*.275f,292f,356f);
-            float attacksX=portraitX+portraitWidth+18;
-            float attacksWidth=Right-attacksX;
-
             theme.Label(new Rect(portraitX,212,portraitWidth,44),HeroName,theme.Heading);
             theme.FitLabel(new Rect(portraitX,250,portraitWidth,22),Roles[selectedHero]+"  •  "+Strengths[selectedHero],theme.Small,true);
             DrawPortrait(new Rect(portraitX,282,portraitWidth,272));
@@ -687,8 +707,10 @@ namespace Alterverse.UI
             if(theme.Action(new Rect(Left+(tabW+tabGap),204,tabW,52),"AVATARS",selected:avatarShop))
             {skinShop=shardShop=itemShop=weaponShop=mapShop=battlePassShop=heroShop=false;shopMessage="";}
             theme.Label(new Rect(Right-264,116,264,42),collection.BalanceText((HeroId)selectedHero),theme.Small);
-            if(theme.Action(new Rect(Left+(tabW+tabGap)*2,204,tabW,52),"SHARDS",selected:shardShop))
+            Rect shardTab=new Rect(Left+(tabW+tabGap)*2,204,tabW,52);
+            if(theme.Action(shardTab,"SHARDS",selected:shardShop,accent:ShardShopVisualOverlay.TabAccent))
             {skinShop=itemShop=weaponShop=mapShop=battlePassShop=heroShop=false;shardShop=true;shopMessage="";}
+            ShardShopVisualOverlay.DrawTabSparkles(shardTab,shardShop);
             if(theme.Action(new Rect(Left+(tabW+tabGap)*3,204,tabW,52),"WEAPONS",selected:weaponShop))
             {skinShop=shardShop=itemShop=mapShop=battlePassShop=heroShop=false;weaponShop=true;shopMessage="";}
             if(theme.Action(new Rect(Left+(tabW+tabGap)*4,204,tabW,52),"HERO",selected:heroShop))
@@ -721,7 +743,7 @@ namespace Alterverse.UI
             if (theme.Action(new Rect(Left+198,542,64,60),">")) { shopAvatarIndex=(shopAvatarIndex+1)%AvatarShopCatalog.Items.Length; shopMessage=""; }
             bool affordable=PlayerWallet.CanAfford(item.Price);
             string action=equipped?"EQUIPPED":owned?"EQUIP":affordable?"UNLOCK":"NEED MORE SHARDS";
-            if (theme.Action(new Rect(Left+292,542,galleryWidth-320,60),action,true,enabled:!cosmeticBusy&&!equipped&&(owned||affordable)))
+            if (ShardPurchaseAction(new Rect(Left+292,542,galleryWidth-320,60),action,owned?0:item.Price,true,enabled:!cosmeticBusy&&!equipped&&(owned||affordable||PlayerWallet.Balance<item.Price)))
             {
                 if (owned) { PlayerProfile.Avatar=item.AvatarId; shopMessage="Avatar equipped."; }
                 else { AvatarPurchaseResult result=AvatarShopService.TryPurchase(item); shopPurchasePending=result==AvatarPurchaseResult.Pending; shopMessage=result==AvatarPurchaseResult.Pending?"Saving purchase…":result==AvatarPurchaseResult.Purchased?"Unlocked and equipped.":result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed."; }
@@ -749,7 +771,7 @@ namespace Alterverse.UI
             float w=ContentWidth*.54f,x=Left+w+32,rw=ContentWidth-w-32;
             theme.Panel(new Rect(Left,270,w,394));
             FrontEndTheme.Fill(new Rect(Left,270,5,394),Alterverse.Visuals.StylizedArtDirection.HeroAccent(hero));
-            float tabWidth=(w-68f)/4f;
+            float tabWidth=(w-76f)/5f;
             if(theme.Action(new Rect(Left+22,282,tabWidth,32),"TRAVELER",selected:hero==HeroId.Traveler))
                 selectedHero=(int)HeroId.Traveler;
             if(theme.Action(new Rect(Left+30+tabWidth,282,tabWidth,32),"NEROK ABYSS",selected:hero==HeroId.Nerok))
@@ -758,15 +780,18 @@ namespace Alterverse.UI
                 selectedHero=(int)HeroId.Timmy;
             if(theme.Action(new Rect(Left+46+tabWidth*3,282,tabWidth,32),"VOID KNIGHT",selected:hero==HeroId.VoidKnight))
                 selectedHero=(int)HeroId.VoidKnight;
+            if(theme.Action(new Rect(Left+54+tabWidth*4,282,tabWidth,32),"BOLT-7",selected:hero==HeroId.Bolt7))
+                selectedHero=(int)HeroId.Bolt7;
             DrawPortrait(new Rect(Left+22,320,w-44,280));
-            theme.Center(new Rect(Left+22,614,w-44,34),hero==HeroId.VoidKnight?"PREMIUM HERO  •  ARMORED SKIRMISHER":hero==HeroId.Timmy?"PREMIUM HERO  •  FELINE ASSASSIN":hero==HeroId.Nerok?
+            theme.Center(new Rect(Left+22,614,w-44,34),hero==HeroId.Bolt7?"PREMIUM HERO  •  COMPACT MECH":hero==HeroId.VoidKnight?"PREMIUM HERO  •  ARMORED SKIRMISHER":hero==HeroId.Timmy?"PREMIUM HERO  •  FELINE ASSASSIN":hero==HeroId.Nerok?
                 "PREMIUM HERO  •  TIDAL BRUISER":"PREMIUM HERO  •  TEMPORAL SKIRMISHER");
 
             theme.Label(new Rect(x,276,rw,58),HeroIdentity.NameFor(hero).ToUpperInvariant(),theme.Title);
-            theme.Label(new Rect(x,342,rw,28),hero==HeroId.VoidKnight?"GREATSWORD / PARRY / LIFE DRAIN":hero==HeroId.Timmy?"JETPACK / CLAWS / SINGLE TARGET":hero==HeroId.Nerok?
+            theme.Label(new Rect(x,342,rw,28),hero==HeroId.Bolt7?"GATLING / GRENADES / SHIELD BREAK":hero==HeroId.VoidKnight?"GREATSWORD / PARRY / LIFE DRAIN":hero==HeroId.Timmy?"JETPACK / CLAWS / SINGLE TARGET":hero==HeroId.Nerok?
                 "ANCHOR / PULL / AREA CONTROL":"TIME / LIGHT / MOBILITY  •  NO COMBAT POWER ADVANTAGE",theme.Small,true);
             theme.Label(new Rect(x,384,rw,92),
-                hero==HeroId.VoidKnight?
+                hero==HeroId.Bolt7?
+                "A compact combat mech with a rapid-fire Gatling, two short-range grenades and Piston Ram. Null Field strips current enemy shields from its area.":hero==HeroId.VoidKnight?
                 "An armored swordsman from an unknown galaxy. Control distance with a two-handed greatsword, parry incoming strikes and drain enemy health with Eventide Cleave. Coming soon.":hero==HeroId.Timmy?
                 "A small cat astronaut with suit claws and a twin-nozzle jetpack. Pounce into range, scratch one enemy and slip away. Coming soon.":hero==HeroId.Nerok?
                 "A shark bruiser with a heavy anchor. Hook enemies, protect yourself and draw opponents into an abyssal vortex.":
@@ -777,8 +802,8 @@ namespace Alterverse.UI
 
             string action=releaseLocked?$"UNLOCK {price:N0} SHARDS":owned?"SELECT "+HeroIdentity.NameFor(hero).ToUpperInvariant():
                 PlayerWallet.CanAfford(price)?$"UNLOCK {price:N0} SHARDS":$"NEED {price:N0} SHARDS";
-            bool enabled=owned||PlayerWallet.CanAfford(price);
-            if(theme.Action(new Rect(x,558,rw,62),action,true,enabled:enabled,locked:releaseLocked))
+            bool enabled=owned||PlayerWallet.CanAfford(price)||!PaidShardCommerce.Spending&&PlayerWallet.Balance<price;
+            if(ShardPurchaseAction(new Rect(x,558,rw,62),action,owned?0:price,true,enabled:enabled,locked:releaseLocked))
             {
                 if(owned)
                 {
@@ -813,20 +838,22 @@ namespace Alterverse.UI
             var sub=ShardPacks.Subscription;
             if(sub!=null)
             {
-                Rect club=new Rect(Left,312,ContentWidth,128);
+                float clubWidth=ContentWidth-268;
+                Rect club=new Rect(Left,312,clubWidth,128);
                 theme.Panel(club);ShardShopVisualOverlay.DrawSubscriptionArtwork(club);
-                theme.Label(new Rect(Left+124,322,ContentWidth-400,27),sub.Name+"  /  MONTHLY SUBSCRIPTION",theme.Small);
-                theme.Label(new Rect(Left+124,350,ContentWidth-400,34),$"{sub.Amount:N0} SHARDS EVERY MONTH",theme.Heading);
+                theme.Label(new Rect(Left+124,321,clubWidth-140,22),sub.Name+"  /  MONTHLY SUBSCRIPTION",theme.Small);
+                theme.FitLabel(new Rect(Left+124,343,clubWidth-140,30),$"{sub.Amount:N0} SHARDS EVERY MONTH",theme.Heading);
                 int discount=store?.SubscriptionDiscount??0;
                 string benefit=discount>0?$"SAVE {discount}% per shard vs. available one-time packs":store?.SubscriptionStatus??"Subscription setup in progress";
-                theme.Label(new Rect(Left+124,385,ContentWidth-400,22),benefit,theme.Small,true);
+                theme.Label(new Rect(Left+124,371,clubWidth-140,20),benefit,theme.Small,true);
                 bool active=store?.SubscriptionActive==true;
                 string price=store?.Price(sub.Id)??"Unavailable";
                 string action=active?"SUBSCRIPTION ACTIVE":price=="Unavailable"?"COMING SOON":price+" / MONTH";
-                if(theme.Action(new Rect(Right-250,328,232,48),action,true,enabled:store!=null&&store.CanBuy(sub.Id)))store.Buy(sub.Id);
-                if(theme.Action(new Rect(Right-250,382,232,26),"MANAGE / CANCEL"))store?.ManageSubscription();
-                theme.Label(new Rect(Left+16,410,ContentWidth-32,28),"Optional. Automatically bills monthly until cancelled in Google Play. Shards after each successful payment.",theme.Small,true);
+                if(theme.Action(new Rect(Left+124,393,190,26),action,true,enabled:store!=null&&store.CanBuy(sub.Id)))store.Buy(sub.Id);
+                if(theme.Action(new Rect(Left+328,393,174,26),"MANAGE / CANCEL"))store?.ManageSubscription();
+                theme.FitLabel(new Rect(Left+16,420,clubWidth-32,18),"Monthly billing until cancelled in Google Play. Shards after each successful payment.",theme.Small,true);
             }
+            DrawRewardedShardPanel();
             int packCount=ShardPacks.All.Length;
             float w=packCount>0?(ContentWidth-14f*(packCount-1))/packCount:0f;
             for(int i=0;i<packCount;i++)
@@ -842,7 +869,7 @@ namespace Alterverse.UI
 
         private void DrawSkinShop()
         {
-            collection.Draw(theme,new Rect(Left,270,ContentWidth,410),(HeroId)selectedHero,false,showcase,changeCollectionHero);
+            collection.Draw(theme,new Rect(Left,270,ContentWidth,410),(HeroId)selectedHero,false,showcase,changeCollectionHero,OpenShardStore);
         }
 
         private void DrawWeaponSkinShop()
@@ -892,8 +919,8 @@ namespace Alterverse.UI
             string originalName=hero==HeroId.Veyr?"SHADOW STEEL":"ORIGINAL";
             string action=!HeroUnlockCatalog.Released(hero)?"COMING SOON":!heroAvailable?"UNLOCK HERO FIRST":equipped?$"USE {originalName}":owned?"EQUIP":
                 PlayerWallet.CanAfford(item.Price)?"BUY & EQUIP":$"NEED {item.Price} SHARDS";
-            bool enabled=heroAvailable&&(equipped||owned||PlayerWallet.CanAfford(item.Price));
-            if(theme.Action(new Rect(x,588,rw,54),action,true,enabled:enabled))
+            bool enabled=heroAvailable&&(equipped||owned||PlayerWallet.CanAfford(item.Price)||!PaidShardCommerce.Spending&&PlayerWallet.Balance<item.Price);
+            if(ShardPurchaseAction(new Rect(x,588,rw,54),action,equipped||owned?0:item.Price,true,enabled:enabled))
             {
                 if(equipped)
                 {
@@ -958,9 +985,9 @@ namespace Alterverse.UI
                 if(releaseLocked)action=$"UNLOCK {item.Price}";
                 else if(owned){action=item.Price>0?"OWNED":"FREE";enabled=false;}
                 else if(PlayerWallet.CanAfford(item.Price))action=$"UNLOCK {item.Price}";
-                else {action=$"NEED {item.Price} SHARDS";enabled=false;}
+                else {action=$"NEED {item.Price} SHARDS";enabled=!PaidShardCommerce.Spending&&PlayerWallet.Balance<item.Price;}
 
-                if(theme.Action(new Rect(x+18,572,cardW-36,44),action,enabled:enabled,locked:releaseLocked))
+                if(ShardPurchaseAction(new Rect(x+18,572,cardW-36,44),action,item.Price,enabled:enabled,locked:releaseLocked))
                 {
                     if(!owned)
                     {
@@ -1059,7 +1086,7 @@ namespace Alterverse.UI
             if(!BattlePassProgress.PremiumUnlocked)
             {
                 bool canBuy=PlayerWallet.CanAfford(BattlePassProgress.PremiumPrice);
-                if(theme.Action(new Rect(px,632,previewW,44),canBuy?$"UNLOCK PREMIUM • {BattlePassProgress.PremiumPrice:N0} SHARDS":$"PREMIUM • NEED {BattlePassProgress.PremiumPrice-PlayerWallet.Balance:N0} SHARDS",true,enabled:canBuy))
+                if(ShardPurchaseAction(new Rect(px,632,previewW,44),canBuy?$"UNLOCK PREMIUM • {BattlePassProgress.PremiumPrice:N0} SHARDS":$"PREMIUM • NEED {BattlePassProgress.PremiumPrice-PlayerWallet.Balance:N0} SHARDS",BattlePassProgress.PremiumPrice,true,enabled:canBuy||!PaidShardCommerce.Spending&&PlayerWallet.Balance<BattlePassProgress.PremiumPrice))
                 {
                     BattlePassPurchaseResult result=BattlePassProgress.UnlockPremium();
                     shopPurchasePending=result==BattlePassPurchaseResult.Pending;
@@ -1141,7 +1168,7 @@ namespace Alterverse.UI
 
         private string BattlePassRewardDescription(BattlePassReward reward)
         {
-            if(reward.Headwear==UniversalHeroCosmetic.BetaCap)return "Exclusive BETA cap. Equip per hero in Inventory > Cosmetics > Skins. Works with wings.";
+            if(reward.Headwear==UniversalHeroCosmetic.BetaCap)return "Exclusive BETA cap. Equip per hero in Inventory > Cosmetics > Hats. Works with wings.";
             if(reward.AvatarId==BattlePassProgress.BetaCrownAvatarId)return "Exclusive Beta Crown avatar.";
             if(reward.Item!=BattleItemType.None)return BattleItemInventory.ShortDescription(reward.Item);
             if(reward.Shards>0)return "Shard currency reward.";
@@ -1172,7 +1199,7 @@ namespace Alterverse.UI
 
                 bool canBuy=PlayerWallet.CanAfford(BattleItemInventory.ShardPrice);
                 string action=canBuy?"BUY 1":$"NEED {BattleItemInventory.ShardPrice} SHARDS";
-                if(theme.Action(new Rect(x+128,y+110,cardW-142,38),action,true,enabled:canBuy))
+                if(ShardPurchaseAction(new Rect(x+128,y+110,cardW-142,38),action,BattleItemInventory.ShardPrice,true,enabled:canBuy||!PaidShardCommerce.Spending&&PlayerWallet.Balance<BattleItemInventory.ShardPrice))
                 {
                     bool bought=BattleItemInventory.TryBuy(item);
                     shopMessage=bought
@@ -1259,15 +1286,14 @@ namespace Alterverse.UI
             for(int i=0;i<PlayerChallengeContent.Daily.Length;i++)
             {
                 ChallengeDef quest=PlayerChallengeContent.Daily[i];
-                float y=322+i*92;
-                theme.Panel(new Rect(x,y,width,84));
-                theme.Label(new Rect(x+18,y+8,width-252,26),quest.Name,theme.Heading);
-                theme.Label(new Rect(x+18,y+35,width-252,24),quest.Description,theme.Body,true);
+                float y=322+i*74;
+                theme.Panel(new Rect(x,y,width,68));
+                theme.Label(new Rect(x+18,y+8,width-252,40),quest.Description,theme.Heading);
                 int progress=DailyQuestProgress.Progress(i),target=DailyQuestProgress.Target(i);
-                theme.Progress(new Rect(x+18,y+67,width-252,5),target>0?progress/(float)target:0);
+                theme.Progress(new Rect(x+18,y+56,width-252,5),target>0?progress/(float)target:0);
                 theme.Label(new Rect(x+width-213,y+8,190,22),$"{progress} / {target}  •  {quest.Shards} SHARDS",theme.Small,true);
                 bool claimed=DailyQuestProgress.Claimed(i);
-                if(theme.Action(new Rect(x+width-205,y+35,180,36),claimed?"CLAIMED":"CLAIM",true,enabled:!claimed&&target>0&&progress>=target))
+                if(theme.Action(new Rect(x+width-205,y+26,180,36),claimed?"CLAIMED":"CLAIM",true,enabled:!claimed&&target>0&&progress>=target))
                     DailyQuestProgress.Claim(i);
             }
         }
@@ -1518,16 +1544,14 @@ namespace Alterverse.UI
 
         private void DrawLaunch()
         {
-            theme.Label(new Rect(Left,230,ContentWidth,60),"Entering the Front",theme.Title);
-            theme.Label(new Rect(Left,316,ContentWidth,40),HeroName+"  /  "+Roles[selectedHero],theme.Heading);
             string mode=coopLaunching&&CoopAuthority.ActivePlan!=null
                 ?$"PRIVATE CO-OP  •  {CoopAuthority.ActivePlan.HumanCount} PLAYERS  /  {ArenaShopCatalog.For(CoopAuthority.ActivePlan.Arena).Name}  /  ZERO TEAM"
                 :ArenaVariantRuntime.ShuffleEnabled
                     ?"MATCH 4v4  /  RANDOM OWNED ARENA  /  ZERO TEAM"
                     : "MATCH 4v4  /  "+ArenaShopCatalog.For(ArenaVariantRuntime.Selected).Name+"  /  ZERO TEAM";
-            theme.Label(new Rect(Left,372,ContentWidth,32),mode,theme.Body,true);
-            theme.Progress(new Rect(Left,452,ContentWidth,5),Mathf.Clamp01((Time.unscaledTime-launchAt)/.55f));
-            theme.Label(new Rect(Left,480,ContentWidth,30),coopLaunching?"Synchronizing co-op battlefield":"Preparing your local match",theme.Small,true);
+            MatchLoadingPresentation.Draw(theme, coopLaunching
+                ? "SYNCHRONIZING BATTLEFIELD" : "PREPARING BATTLEFIELD", mode,
+                HeroName+"  /  "+Roles[selectedHero]);
         }
         private void EnterMatch()
         {
@@ -1557,6 +1581,7 @@ namespace Alterverse.UI
             }
 
             bool restarting=GameObject.Find("DF_MatchWorld")!=null;
+            MatchEntryCurtain.Begin();
             Alterverse.Prototype.PrototypeBootstrap.PrepareTransitionFrame();
             launching=false;visible=false;MatchClock.Set(PauseReason.Result,false);MatchClock.Set(PauseReason.Menu,false);
             // Hide before building: a failed build can synchronously restore this menu.
@@ -1567,4 +1592,8 @@ namespace Alterverse.UI
         }
     }
 }
+
+
+
+
 

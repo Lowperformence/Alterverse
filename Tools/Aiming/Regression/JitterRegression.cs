@@ -55,9 +55,53 @@ partial class Regression
    Check(soft.AcquireBasic(5,Vector3.forward)==priorityHero,"hero still replaces nonhero during hold "+hero);
   }
  }
+ static void OnlineSnapshotEdgeCases()
+ {
+  foreach(int fps in new[]{30,60,120})foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))
+  {
+   Reset();var actor=Hero(hero,0,Vector3.zero);actor.AddComponent<Alterverse.Multiplayer.CoopHeroSlot>();
+   var basic=actor.GetComponent<BasicAttack>();var motor=actor.GetComponent<HeroMotor>();var soft=actor.GetComponent<SoftTargeting>();
+   float range=basic.Aim.castRange;
+   var target=Hero(HeroId.Kaelon,1,Vector3.forward*(range-.05f)).GetComponent<Health>();
+   Alterverse.Multiplayer.CoopAuthority.Active=true;Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority=false;
+   Check(soft.AcquireBasic(range,Vector3.forward)==target,"online held focus acquired "+hero);
+   motor.TrackBasicTarget(target,.08f);
+   var decoy=Hero(HeroId.Rook,1,Vector3.right*(range*.7f)).GetComponent<Health>();decoy.Current=1;
+   for(int frame=0;frame<fps;frame++)
+   {
+    Clock.Advance(1f/fps);
+    // Alternate 20Hz poses across the exact range by up to a full relative movement step.
+    int snapshot=(int)(frame/(float)fps*20);
+    target.transform.position=Vector3.forward*(range+(snapshot%2==0?.65f:-.05f));
+    typeof(BasicAttack).GetField("nextAttackTime",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(basic,Time.time+10);
+    Check(!basic.TryAttack(),"online hold never bypasses cooldown or range "+hero);
+    Check(soft.Current==target,"20Hz edge snapshots do not swap the held target "+hero);
+    Check(Facing(motor,out var direction),"online edge keeps combat facing "+hero);
+    Near(Vector3.Angle(direction,Vector3.forward),0,"online edge never turns toward movement/decoy "+hero);
+   }
+   Near(target.Current,1000,"focus tolerance never deals out-of-range damage "+hero);
+   target.transform.position=Vector3.forward*(range+1f);
+   Check(soft.AcquireBasic(range,Vector3.forward)==decoy,"genuinely distant focus can be replaced "+hero);
+   Clock.Advance(.3f);typeof(HeroMotor).GetMethod("UpdateState",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(motor,new object[]{Vector3.right});
+   Check(!Facing(motor,out _),"release expires online facing "+hero);
+  }
+  Reset();var owner=Hero(HeroId.Nyra,0,Vector3.zero);owner.AddComponent<Alterverse.Multiplayer.CoopHeroSlot>();
+  var enemy=Hero(HeroId.Kaelon,1,Vector3.forward*3).GetComponent<Health>();
+  Alterverse.Multiplayer.CoopAuthority.Active=true;Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority=false;
+  var attack=owner.GetComponent<BasicAttack>();
+  attack.ApplyNetworkWindup(Vector3.right*3,enemy,.2f,.1f);
+  Near(Vector3.Angle(owner.transform.forward,Vector3.forward),0,"delayed acceptance faces the live target instead of its old cast point");
+  enemy.transform.position=Vector3.left*3;attack.ApplyNetworkWindup(Vector3.right*3,enemy,.2f,.1f);
+  Near(Vector3.Angle(owner.transform.forward,Vector3.left),0,"subsequent acceptance follows the target's new direction");
+  attack.ApplyNetworkWindup(Vector3.right*3,null,.2f,.1f);
+  Near(Vector3.Angle(owner.transform.forward,Vector3.right),0,"fixed-point windup retains its captured aim");
+  attack.ApplyNetworkWindup(Vector3.forward*3,enemy,.2f,.4f);
+  Near(Vector3.Angle(owner.transform.forward,Vector3.right),0,"expired acceptance never changes facing");
+ }
  public static void RunJitterCases()
  {
   HeldFocusCases();
+  OnlineSnapshotEdgeCases();
   foreach(int fps in new[]{30,60,120})
   {
    foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))for(int slot=0;slot<4;slot++)
@@ -115,4 +159,3 @@ partial class Regression
   Console.WriteLine("PASS "+checks+" AOE/facing edge assertions at 30/60/120 FPS; actual ManualAiming, BasicAttack and HeroMotor. Native movement/rotation/rendering are fixtures.");
  }
 }
-

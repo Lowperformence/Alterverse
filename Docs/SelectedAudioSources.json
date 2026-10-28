@@ -1,0 +1,1108 @@
+{
+  "asOf": "2026-10-12",
+  "scope": "selected hero recordings and bomber/mech additions; preserves previously documented Kenney/OpenGameArt and Mixkit sources",
+  "verifiedPixabaySources": 19,
+  "records": [
+    {
+      "provider": "Pixabay",
+      "assetId": 426481,
+      "title": "Big robot footstep 009",
+      "creator": "AudioPapkin",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-big-robot-footstep-009-426481/",
+      "published": "2025-10-27",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/audiopapkin-big-robot-footstep-009-426481.mp3",
+          "sha": "10861b8c243281527e30028d584e567b9c9e087b",
+          "size": 76032,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "5e14be6ffde96bd5f8ce191d8789f12c6deef417df0ee675f5449555dc7f14fe"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [
+        {
+          "source": "audiopapkin-big-robot-footstep-009-426481.mp3",
+          "sourceSha256": "5e14be6ffde96bd5f8ce191d8789f12c6deef417df0ee675f5449555dc7f14fe",
+          "sourcePeak": 1.418144,
+          "gain": 0.444243,
+          "trimmedLeadingSeconds": 0.276916,
+          "durationSeconds": 2.09907,
+          "targets": [
+            {
+              "hero": "Nerok",
+              "slot": "E",
+              "ability": "Breaker Wave",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/E_Cast.ogg",
+              "decodedPeak": 0.627093,
+              "sha256": "5768f1d54931adaaf7a5f42817b29eeefdece56eb2d3eff0b6da2de6a7f0a997"
+            }
+          ]
+        }
+      ],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison"
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 445104,
+      "title": "Big robot footstep 014",
+      "creator": "AudioPapkin",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-big-robot-footstep-014-445104/",
+      "published": "2025-12-01",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/audiopapkin-big-robot-footstep-014-445104.mp3",
+          "sha": "85cbf4159dff6fa67214394f27592eef3a570a27",
+          "size": 53760,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "7914552fd9dd48f3899d5e24265fc28475e6a20f88325bcba3606cc7be571e1f"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [
+        {
+          "source": "audiopapkin-big-robot-footstep-014-445104.mp3",
+          "sourceSha256": "7914552fd9dd48f3899d5e24265fc28475e6a20f88325bcba3606cc7be571e1f",
+          "sourcePeak": 1.40667,
+          "gain": 0.447866,
+          "trimmedLeadingSeconds": 0.083333,
+          "durationSeconds": 1.596667,
+          "targets": [
+            {
+              "hero": "Rook",
+              "slot": "E",
+              "ability": "Wreckstorm",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/E_Cast.ogg",
+              "decodedPeak": 0.619211,
+              "sha256": "f696f4d204889ab6786f5e07114b16666c96ac449152298608d2dda832df07c1"
+            }
+          ]
+        }
+      ],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison"
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 416172,
+      "title": "Boom Swoosh 01",
+      "creator": "DRAGON-STUDIO",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-boom-swoosh-01-416172/",
+      "published": "2025-10-13",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-boom-swoosh-01-416172(1).mp3",
+          "sha": "c333bdfd037d98f1644468409bf2b5df432d31eb",
+          "size": 129024,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "c3d99885f1177d1af1fcac0454a5e0e1f5be0939a5c4308510d604845c240ca0"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison",
+      "currentMappings": [
+        {
+          "hero": "Rook",
+          "slot": "Q",
+          "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Q_Cast.ogg"
+        }
+      ]
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 478377,
+      "title": "Elemental Spell Impact (Water)",
+      "creator": "DRAGON-STUDIO",
+      "sourceUrl": "https://pixabay.com/de/sound-effects/film-spezialeffekte-elemental-spell-impact-water-478377/",
+      "published": "2026-02-03",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-elemental-spell-impact-water-478377.mp3",
+          "sha": "abbe4793c508263a6f48cc603c528889585a7db1",
+          "size": 182784,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": null
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison",
+      "currentMappings": [
+        {
+          "hero": "Nerok",
+          "slot": "R",
+          "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Ultimate_Selected.mp3"
+        }
+      ]
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 393845,
+      "title": "Sword Slice 2",
+      "creator": "DRAGON-STUDIO",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sword-slice-2-393845/",
+      "published": "2025-08-26",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-sword-slice-2-393845.mp3",
+          "sha": "b9cb837b8d5b984d1f30a92451af3743d7d42e61",
+          "size": 70217,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "abcd14bd051183b3812fd68e87a87ab30116f30514c6328a108a36eb2863a8e3"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [
+        {
+          "source": "dragon-studio-sword-slice-2-393845.mp3",
+          "sourceSha256": "abcd14bd051183b3812fd68e87a87ab30116f30514c6328a108a36eb2863a8e3",
+          "sourcePeak": 1.305887,
+          "gain": 0.482431,
+          "trimmedLeadingSeconds": 0.07542,
+          "durationSeconds": 2.118866,
+          "targets": [
+            {
+              "hero": "Veyr",
+              "slot": "Q",
+              "ability": "Null Cut",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Q_Cast.ogg",
+              "decodedPeak": 0.621945,
+              "sha256": "eca935fecf6df6a47caea70aef45e94f851d9980857ddab8e0fae9284bdcc844"
+            }
+          ]
+        }
+      ],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison"
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 393847,
+      "title": "Sword Slice",
+      "creator": "DRAGON-STUDIO",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sword-slice-393847/",
+      "published": "2025-08-26",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-sword-slice-393847(1).mp3",
+          "sha": "29d9cf739f9d11055cbb172e6c879f53f00a3827",
+          "size": 70217,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "f8f92bb55fd1e0b9c45b131f323fdfd705e01ba3bb87ca42a1d52d9e73fd3d8b"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [
+        {
+          "source": "dragon-studio-sword-slice-393847(1).mp3",
+          "sourceSha256": "f8f92bb55fd1e0b9c45b131f323fdfd705e01ba3bb87ca42a1d52d9e73fd3d8b",
+          "sourcePeak": 0.950092,
+          "gain": 0.663094,
+          "trimmedLeadingSeconds": 0.048186,
+          "durationSeconds": 2.1461,
+          "targets": [
+            {
+              "hero": "Veyr",
+              "slot": "W",
+              "ability": "Rift Scar",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/W_Cast.ogg",
+              "decodedPeak": 0.621818,
+              "sha256": "67f75dd06c847b5b3bd533016030fa413187554ef4a8d61bbcc1a96857ef975c"
+            }
+          ]
+        }
+      ],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison"
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 234631,
+      "title": "Swing Whoosh Metal Hit 14",
+      "creator": "floraphonic",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-metal-hit-14-234631/",
+      "published": "2024-08-23",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/floraphonic-swing-whoosh-metal-hit-14-234631.mp3",
+          "sha": "181d810945098451b1369f1448c4cfd12d0a8203",
+          "size": 49152,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "53d0e74685f4594f99b4b3708e369c7d9f2830943cc82bd68baec1cf248fff0f"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [
+        {
+          "source": "floraphonic-swing-whoosh-metal-hit-14-234631.mp3",
+          "sourceSha256": "53d0e74685f4594f99b4b3708e369c7d9f2830943cc82bd68baec1cf248fff0f",
+          "sourcePeak": 1.525825,
+          "gain": 0.412891,
+          "trimmedLeadingSeconds": 0.034717,
+          "durationSeconds": 1.50127,
+          "targets": [
+            {
+              "hero": "Kaelon",
+              "slot": "E",
+              "ability": "Gravity Anchor",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/E_Cast.ogg",
+              "decodedPeak": 0.64821,
+              "sha256": "a713205ce4a6b6cdb388161c0f0540989bd9363d5759776c0c7faddc343bfbb8"
+            }
+          ]
+        }
+      ],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison"
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 234636,
+      "title": "Swing Whoosh Metal Hit 19",
+      "creator": "floraphonic",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-metal-hit-19-234636/",
+      "published": "2024-08-23",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/floraphonic-swing-whoosh-metal-hit-19-234636.mp3",
+          "sha": "b231cfacc4c15a02b5b492a81abec67ef83b8cef",
+          "size": 62976,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "6efaf7eaa45342c6d8267118694ea169b0e6d3c62a51745eca434b61869c0fd3"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [
+        {
+          "source": "floraphonic-swing-whoosh-metal-hit-19-234636.mp3",
+          "sourceSha256": "6efaf7eaa45342c6d8267118694ea169b0e6d3c62a51745eca434b61869c0fd3",
+          "sourcePeak": 1.435104,
+          "gain": 0.438993,
+          "trimmedLeadingSeconds": 0.030771,
+          "durationSeconds": 1.937234,
+          "targets": [
+            {
+              "hero": "Kaelon",
+              "slot": "Q",
+              "ability": "Anchor Strike",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Q_Cast.ogg",
+              "decodedPeak": 0.655683,
+              "sha256": "6b55c4a027ad458a1d3021e137467b8dcdac802a6220e22c3c603d046325d0ea"
+            }
+          ]
+        }
+      ],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison"
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 101878,
+      "title": "Funny Swish",
+      "creator": "deleted_user_6479820 (Freesound), via freesound_community",
+      "sourceUrl": "https://pixabay.com/de/sound-effects/film-spezialeffekte-funny-swish-101878/",
+      "published": "2022-09-02",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/freesound_community-funny-swish-101878(1).mp3",
+          "sha": "345df594854599bceb076d99f0680abfe03be412",
+          "size": 12960,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "0601948ad6e4937cc6bca126f0decb2218037f39f6f7dc99cee359efdb66212b"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [
+        {
+          "source": "freesound_community-funny-swish-101878(1).mp3",
+          "sourceSha256": "0601948ad6e4937cc6bca126f0decb2218037f39f6f7dc99cee359efdb66212b",
+          "sourcePeak": 0.234468,
+          "gain": 2.686935,
+          "trimmedLeadingSeconds": 0.045034,
+          "durationSeconds": 0.602971,
+          "targets": [
+            {
+              "hero": "Veyr",
+              "slot": "E",
+              "ability": "Gapfold",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/E_Cast.ogg",
+              "decodedPeak": 0.637064,
+              "sha256": "18d48bc1b9fce1d2d74e88b4bcc6199f04e031201e3a665401e08f0588314bad"
+            },
+            {
+              "hero": "Traveler",
+              "slot": "W",
+              "ability": "Rift Step",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/W_Cast.ogg",
+              "decodedPeak": 0.637064,
+              "sha256": "2a2b910c00e19a8851cc5225d340d45e06ff09783289f7c983bdab33783d9377"
+            },
+            {
+              "hero": "Elyra",
+              "slot": "E",
+              "ability": "Phase Fold",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/E_Cast.ogg",
+              "decodedPeak": 0.637064,
+              "sha256": "b3fef5c9ef6d709ecb5865fef592b079708b6de057ca6ace0890fdb61db43b50"
+            }
+          ]
+        }
+      ],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison"
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 7103,
+      "title": "Power Down",
+      "creator": "noirenex (Freesound), via freesound_community",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-power-down-7103/",
+      "published": "2021-08-10",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/freesound_community-power-down-7103.mp3",
+          "sha": "16882235827db26f6ebe7c890aae6cd4b249f96e",
+          "size": 36480,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "0306117013c4d78cd3ee99b2fdadd478fbe12a7f18a46f533ac599e31c8854e7"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [
+        {
+          "source": "freesound_community-power-down-7103.mp3",
+          "sourceSha256": "0306117013c4d78cd3ee99b2fdadd478fbe12a7f18a46f533ac599e31c8854e7",
+          "sourcePeak": 0.761972,
+          "gain": 0.826802,
+          "trimmedLeadingSeconds": 0.045034,
+          "durationSeconds": 1.77898,
+          "targets": [
+            {
+              "hero": "Mira",
+              "slot": "Q",
+              "ability": "Resonant Seed",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Q_Cast.ogg",
+              "decodedPeak": 0.629832,
+              "sha256": "89f0b48058ad68a3ae7b0329954bb045d8db0b726b58de1b6e6f677c7facea04"
+            }
+          ]
+        }
+      ],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison"
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 106252,
+      "title": "Steel chain dragged, shower reverb",
+      "creator": "ani_music (Freesound), via freesound_community",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-steel-chain-dragged-shower-reverb-106252/",
+      "published": "2022-09-08",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/freesound_community-steel-chain-dragged-shower-reverb-106252 (1).mp3",
+          "sha": "e80f0c1c27aed44ad3a4716a1e4a6e15ecc21e92",
+          "size": 39360,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "dca9119831eab25855d5796eed845f381875ddcb90d52d389467243010ce650a"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison",
+      "currentMappings": [
+        {
+          "hero": "Nerok",
+          "slot": "Q",
+          "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Q_Cast.mp3"
+        }
+      ]
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 442015,
+      "title": "Cinematic Hit Shot",
+      "creator": "SoundReality",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-cinematic-hit-shot-442015/",
+      "published": "2025-12-01",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/soundreality-cinematic-hit-shot-442015(1).mp3",
+          "sha": "20fa42dd9d09fde66cf379886354ea899ec98eb0",
+          "size": 129024,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "b8ce670d121a46265231d53223deba4ed9456804caf5a4b44e3168ea48ddf2a1"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison",
+      "currentMappings": [
+        {
+          "hero": "Rook",
+          "slot": "E",
+          "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/E_Cast.ogg"
+        }
+      ]
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 312659,
+      "title": "Sci Fi Gun Shot",
+      "creator": "SoundReality",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sci-fi-gun-shot-312659/",
+      "published": "2025-03-13",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/soundreality-sci-fi-gun-shot-312659(1).mp3",
+          "sha": "f1970533f9b11bb44e40003688fade3a1d608fe6",
+          "size": 62976,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "6ff15c97783a79640ed13da7237228318ae81581b62e32970286d064f79f7d75"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [
+        {
+          "source": "soundreality-sci-fi-gun-shot-312659(1).mp3",
+          "sourceSha256": "6ff15c97783a79640ed13da7237228318ae81581b62e32970286d064f79f7d75",
+          "sourcePeak": 1.027432,
+          "gain": 0.613179,
+          "trimmedLeadingSeconds": 0.033946,
+          "durationSeconds": 1.934059,
+          "targets": [
+            {
+              "hero": "Nyra",
+              "slot": "E",
+              "ability": "Light Snare",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/E_Cast.ogg",
+              "decodedPeak": 0.617177,
+              "sha256": "c2a7f34c96ebc77af7b6bf1e9cae40aa915bae70b93829dcf79e192a653f4b6e"
+            }
+          ]
+        }
+      ],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison"
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 229313,
+      "title": "Sci-Fi Blaster Shot",
+      "creator": "Universfield",
+      "sourceUrl": "https://pixabay.com/de/sound-effects/film-spezialeffekte-sci-fi-blaster-shot-229313/",
+      "published": "2024-08-05",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/universfield-sci-fi-blaster-shot-229313(1).mp3",
+          "sha": "64762f218f1d5a6d5a726c486a401988c0b89f60",
+          "size": 27648,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "2816aa3a9e943f668b99850494401c0dbb73c351eb6546cbc3663c10040006a8"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [
+        {
+          "source": "universfield-sci-fi-blaster-shot-229313(1).mp3",
+          "sourceSha256": "2816aa3a9e943f668b99850494401c0dbb73c351eb6546cbc3663c10040006a8",
+          "sourcePeak": 0.90869,
+          "gain": 0.693306,
+          "trimmedLeadingSeconds": 0.072925,
+          "durationSeconds": 0.791088,
+          "targets": [
+            {
+              "hero": "Nyra",
+              "slot": "Q",
+              "ability": "Prism Shot",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Q_Cast.ogg",
+              "decodedPeak": 0.655923,
+              "sha256": "2c827ab0a1b4be8b327f09fa7481f1797e2cbdaa8ed4d9522cdeae0658e7b14e"
+            }
+          ]
+        }
+      ],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison"
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 378663,
+      "title": "Healing Magic (2)",
+      "creator": "Yodguard",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-healing-magic-2-378663/",
+      "published": "2025-07-23",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-healing-magic-2-378663(1).mp3",
+          "sha": "6b249bcfe410e72fe1b1c366d4cba2aed4668e79",
+          "size": 257280,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "2285c7be860fc2f563298e3cd930acf24d0533dcec528d4881cb3735c1d898fb"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": true,
+      "historicalMappings": [
+        {
+          "source": "yodguard-healing-magic-2-378663(1).mp3",
+          "sourceSha256": "2285c7be860fc2f563298e3cd930acf24d0533dcec528d4881cb3735c1d898fb",
+          "sourcePeak": 0.557184,
+          "gain": 1.130686,
+          "trimmedLeadingSeconds": 0.021315,
+          "durationSeconds": 8.018685,
+          "targets": [
+            {
+              "hero": "Mira",
+              "slot": "W",
+              "ability": "Growth Veil",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/W_Cast.ogg",
+              "decodedPeak": 0.566341,
+              "sha256": "40cc499267f67940c8e27377f9499ad46f82cd299d345b46a65d44bbb51d8952"
+            }
+          ]
+        }
+      ],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison"
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 482495,
+      "title": "Short energy beam shot (1)",
+      "creator": "Yodguard",
+      "sourceUrl": "https://pixabay.com/sound-effects/technology-short-energy-beam-shot-1-482495/",
+      "published": "2026-02-10",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-1-482495.mp3",
+          "sha": "1014699a9db262de77094c3c3a224ec2fec739c1",
+          "size": 96768,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "f929dccdff1dc1a3f406179a53c9341bc3fe76d4084de374a617cdae69657a6a"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": true,
+      "historicalMappings": [
+        {
+          "source": "yodguard-short-energy-beam-shot-1-482495.mp3",
+          "sourceSha256": "f929dccdff1dc1a3f406179a53c9341bc3fe76d4084de374a617cdae69657a6a",
+          "sourcePeak": 1.214438,
+          "gain": 0.518759,
+          "trimmedLeadingSeconds": 0.034263,
+          "durationSeconds": 2.989751,
+          "targets": [
+            {
+              "hero": "Elyra",
+              "slot": "W",
+              "ability": "Invert Field",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/W_Cast.ogg",
+              "decodedPeak": 0.625996,
+              "sha256": "9376b6ecdedacde988ded03fc17610d9b4d8031d12c0d669da36123ef4f825e3"
+            }
+          ]
+        }
+      ],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison"
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 482500,
+      "title": "Short energy beam shot (4)",
+      "creator": "Yodguard",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-short-energy-beam-shot-4-482500/",
+      "published": "2026-02-11",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-4-482500 (1).mp3",
+          "sha": "ff42e59fd4135bda83df6d08127d0d82bfe760e3",
+          "size": 96768,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba"
+        },
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-4-482500(1).mp3",
+          "sha": "ff42e59fd4135bda83df6d08127d0d82bfe760e3",
+          "size": 96768,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba"
+        },
+        {
+          "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-4-482500.mp3",
+          "sha": "ff42e59fd4135bda83df6d08127d0d82bfe760e3",
+          "size": 96768,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": true,
+      "historicalMappings": [
+        {
+          "source": "yodguard-short-energy-beam-shot-4-482500(1).mp3",
+          "sourceSha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba",
+          "sourcePeak": 0.940812,
+          "gain": 0.669634,
+          "trimmedLeadingSeconds": 0.030408,
+          "durationSeconds": 2.993605,
+          "targets": [
+            {
+              "hero": "Elyra",
+              "slot": "Q",
+              "ability": "Orbit Fracture",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Q_Cast.ogg",
+              "decodedPeak": 0.632278,
+              "sha256": "48aeb9c87bea0dc7684f1fe5982c8947ffadce3b1a0b207848b54332561beef9"
+            }
+          ]
+        },
+        {
+          "source": "yodguard-short-energy-beam-shot-4-482500.mp3",
+          "sourceSha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba",
+          "sourcePeak": 0.940812,
+          "gain": 0.669634,
+          "trimmedLeadingSeconds": 0.030408,
+          "durationSeconds": 2.993605,
+          "targets": [
+            {
+              "hero": "Mira",
+              "slot": "E",
+              "ability": "Venn Shelter",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/E_Cast.ogg",
+              "decodedPeak": 0.632278,
+              "sha256": "c515800d7dff2ed6e1d402fde8a6992e5f931f27ce86695dbee375860ad1d57b"
+            }
+          ]
+        },
+        {
+          "source": "yodguard-short-energy-beam-shot-4-482500 (1).mp3",
+          "sourceSha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba",
+          "sourcePeak": 0.940812,
+          "gain": 0.669634,
+          "trimmedLeadingSeconds": 0.030408,
+          "durationSeconds": 2.993605,
+          "targets": [
+            {
+              "hero": "Traveler",
+              "slot": "E",
+              "ability": "Chrono Snare",
+              "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/E_Cast.ogg",
+              "decodedPeak": 0.632278,
+              "sha256": "6359d9031b582b46d8bf660ebf2f9782244a38912423256757df42f7838b5174"
+            }
+          ]
+        }
+      ],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison",
+      "currentMappings": [
+        {
+          "hero": "Timmy",
+          "slot": "R",
+          "path": "Assets/Alterverse/Resources/Audio/Heroes/Timmy/Ultimate_Selected.mp3",
+          "note": "Filename/catalog match; byte identity was not established. See decoded-audio audit."
+        }
+      ]
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 337205,
+      "title": "Fighter Jet Powerful Low Flyby SFX",
+      "creator": "MIGHTUSER",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-fighter-jet-powerful-low-flyby-sfx-337205/",
+      "published": "2025-05-06",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/Bomber/mightuser-fighter-jet-powerful-low-flyby-sfx-337205.mp3",
+          "sha": "666053cac1f14caeee627cae1fca44da1d13d012",
+          "size": 473856,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": "d82a4c7963ffb560eb0fe8b499f272795694423173f61df8fbb8ab5abc4fa1d7"
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison",
+      "currentMappings": [
+        {
+          "path": "Assets/Alterverse/Resources/Audio/SFX/BombJetFlyby.ogg"
+        }
+      ]
+    },
+    {
+      "provider": "Pixabay",
+      "assetId": 100653,
+      "title": "Heathers Gunshot Effect2",
+      "creator": "okieactor (Freesound), via freesound_community",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-heathers-gunshot-effect2-100653/",
+      "published": "2022-09-01",
+      "checked": "2026-10-12",
+      "license": "Pixabay Content License",
+      "licenseUrl": "https://pixabay.com/service/terms/",
+      "licenseTermsUpdated": "2024-11-18",
+      "licenseSummary": "https://pixabay.com/service/license-summary/",
+      "originalFiles": [
+        {
+          "path": "ArtSource/Audio/Mechs/freesound_community-heathers-gunshot-effect2-100653.mp3",
+          "sha": "4208fb925214dfe2ba93401f54ee0a4d46f5d077",
+          "size": 38880,
+          "gitObjectAlgorithm": "sha1",
+          "sha256": null
+        }
+      ],
+      "originalFilenameAndAssetIdMatch": true,
+      "remoteDownloadByteComparison": false,
+      "downloadCertificateAvailable": false,
+      "pageEvidence": {
+        "method": "official source page retrieved; catalog ID, title, creator and license statement checked",
+        "licenseStatement": "Free for use under the Pixabay Content License"
+      },
+      "AI_generated": false,
+      "historicalMappings": [],
+      "status": "source identified and publisher license verified; original catalog filename/ID match, not a new byte-identity comparison",
+      "currentMappings": [
+        {
+          "path": "Assets/Alterverse/Resources/Audio/SFX/MechGun.ogg",
+          "note": "layered burst; see ArtSource/Audio/Mechs/README.md"
+        }
+      ]
+    }
+  ],
+  "existingOtherEvidence": [
+    "Docs/ThirdPartyAudioLicenses.md",
+    "Docs/AudioLicenses/Kenney-SciFi-CC0.txt",
+    "Docs/AudioLicenses/Kenney-RPG-CC0.txt",
+    "Docs/AudioLicenses/Kenney-Impact-CC0.txt",
+    "ArtSource/Audio/Combat/sources.json",
+    "Docs/HeroDeathVoiceLicense.md"
+  ],
+  "notes": [
+    "Pixabay sources here were published after 2019-01-09, so are not labeled CC0.",
+    "Seven renamed ultimate slots correspond to six unique uploaded hashes: Auren and Traveler share one input hash.",
+    "Historical manifest mappings can be superseded by Brakk/shared-slot overrides documented in ArtSource/Audio/HeroSelections/README.md.",
+    "Creator provenance is based on primary publisher statements, not a guarantee about all underlying third-party rights.",
+    "The nine unverified inputs are retired; current replacements and licensed inputs are recorded in AudioReplacements.json. Git history preserves old revisions without assigning them a retrospective license."
+  ],
+  "retiredUnverified": [
+    {
+      "heroId": "Rook",
+      "role": "Ultimate",
+      "sourceLabel": "brakk ulti.wav",
+      "sourceSha256": "b998cbcd8c89b188380eaeb532d31539edd6b2e3ce22a23175ff1b91c40ae9e9",
+      "sourceUrl": null,
+      "license": null,
+      "status": "original filename was renamed; no verifiable catalog ID or publisher notice",
+      "runtime": {
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Ultimate_Selected.ogg",
+        "sha": "6ec253d33397bd04897f69c86fd2e65580faed64",
+        "size": 23492
+      }
+    },
+    {
+      "heroId": "Mira",
+      "role": "Ultimate",
+      "sourceLabel": "heiler ulti.wav",
+      "sourceSha256": "91037a5a859e90e1255757f9127782e661a764ff20a2a042bfb95d7b8e686734",
+      "sourceUrl": null,
+      "license": null,
+      "status": "original filename was renamed; no verifiable catalog ID or publisher notice",
+      "runtime": {
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Ultimate_Selected.ogg",
+        "sha": "4f9f5dc25b065a048ea8e259b8efb495d15f1f2d",
+        "size": 58986
+      }
+    },
+    {
+      "heroId": "Elyra",
+      "role": "Ultimate",
+      "sourceLabel": "ione ulti.wav",
+      "sourceSha256": "6097c4b9350beb3f6af7cc078bc81c0dd28ba381315eca066063a1cf85507db2",
+      "sourceUrl": null,
+      "license": null,
+      "status": "original filename was renamed; no verifiable catalog ID or publisher notice",
+      "runtime": {
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Ultimate_Selected.ogg",
+        "sha": "f00c89127891528e55aaf5d25b65ee4a947ea964",
+        "size": 59888
+      }
+    },
+    {
+      "heroId": "Nyra",
+      "role": "Ultimate",
+      "sourceLabel": "sivra ulti.wav",
+      "sourceSha256": "32fe8e4b6f40d44ab78b5599da01450ec44601fd4259821dcef5c258bec4bdd1",
+      "sourceUrl": null,
+      "license": null,
+      "status": "original filename was renamed; no verifiable catalog ID or publisher notice",
+      "runtime": {
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Ultimate_Selected.ogg",
+        "sha": "a7b994ff5a6379d1fc0f6a227e11d90060f8da0d",
+        "size": 89689
+      }
+    },
+    {
+      "heroId": "Kaelon",
+      "role": "Ultimate",
+      "sourceLabel": "tank ulti.wav",
+      "sourceSha256": "d1eb06ceff0c8e6475cb7cdda9d8c1f379855656a2491a4ce8718b05572a4593",
+      "sourceUrl": null,
+      "license": null,
+      "status": "original filename was renamed; no verifiable catalog ID or publisher notice",
+      "runtime": {
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Ultimate_Selected.ogg",
+        "sha": "8db76686f5a5427fd937a2d4f6ff9a18231aca12",
+        "size": 55746
+      }
+    },
+    {
+      "heroId": "Traveler",
+      "role": "Ultimate",
+      "sourceLabel": "ulti traveler.wav",
+      "sourceSha256": "d1eb06ceff0c8e6475cb7cdda9d8c1f379855656a2491a4ce8718b05572a4593",
+      "sourceUrl": null,
+      "license": null,
+      "status": "original filename was renamed; no verifiable catalog ID or publisher notice",
+      "runtime": {
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Ultimate_Selected.ogg",
+        "sha": "8748a746f09463341a188a197c1f442a846667ca",
+        "size": 53070
+      }
+    },
+    {
+      "heroId": "Veyr",
+      "role": "Ultimate",
+      "sourceLabel": "assasinen ulti.mp3",
+      "sourceSha256": "a57a2611ad4484d1934d71b7a7a911cace8a0a91d1792f645f9d8199d65d507d",
+      "sourceUrl": null,
+      "license": null,
+      "status": "original filename was renamed; no verifiable catalog ID or publisher notice",
+      "runtime": {
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Ultimate_Selected.ogg",
+        "sha": "8e30d260420ca4622b9935e223ded8115ed0e80e",
+        "size": 28407
+      }
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Explosion.wav",
+      "sha": "8ccfcac38a88187352a69cfbeff8a3dea34e398e",
+      "size": 439916,
+      "sourceUrl": null,
+      "license": null,
+      "status": "generic source filename; origin not yet verified"
+    },
+    {
+      "path": "ArtSource/Audio/Nerok/BasicHit.mp3",
+      "sha": "bd50343741b4c93e9d0db09ca11dab1f7f8a0ea3",
+      "size": 56832,
+      "sourceUrl": null,
+      "license": null,
+      "status": "generic source filename; origin not yet verified"
+    }
+  ],
+  "replacementEvidence": "Docs/HeroAssets/AudioReplacements.json",
+  "unresolved": []
+}

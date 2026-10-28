@@ -82,7 +82,8 @@ namespace Alterverse.Combat
             if (captured) point = target.transform.position;
             Pose = new AimPose(direction, AimGeometry.ClampPoint(transform.position, point, Spec.castRange),
                 Spec.targetingMode == TargetingMode.Ally || Spec.targetingMode == TargetingMode.Homing ||
-                Spec.aimType==AimType.Dash&&Spec.targetingMode==TargetingMode.Cone ? target : null, captured);
+                Spec.aimType==AimType.Dash&&Spec.targetingMode==TargetingMode.Cone ? target : null,
+                captured || Spec.aimType == AimType.Area);
         }
         public bool Release()
         {

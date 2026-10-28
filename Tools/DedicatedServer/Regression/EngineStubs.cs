@@ -54,6 +54,20 @@ namespace UnityEditor
  public static class AssetDatabase
  {
   public static Func<string,string,string> MoveHandler;
+  public static int EditingDepth,EditingStarts,EditingStops;
+  public static void StartAssetEditing(){EditingDepth++;EditingStarts++;}
+  public static void StopAssetEditing(){EditingDepth--;EditingStops++;}
+  public static Func<string,bool> DeleteHandler;
+  public static bool DeleteAsset(string path)
+  {
+   if(DeleteHandler!=null&&!DeleteHandler(path)) return false;
+   string root=System.IO.Path.GetFullPath(System.IO.Path.Combine(UnityEngine.Application.dataPath,".."));
+   string full=System.IO.Path.Combine(root,path);
+   if(!System.IO.File.Exists(full))return false;
+   System.IO.File.Delete(full);
+   if(System.IO.File.Exists(full+".meta"))System.IO.File.Delete(full+".meta");
+   return true;
+  }
   public static string MoveAsset(string from,string to)
   {
    string error=MoveHandler?.Invoke(from,to);
@@ -110,4 +124,3 @@ namespace Alterverse.Match {public enum PauseReason{Menu}public static class Mat
 namespace Alterverse.Prototype {public sealed class PrototypeBootstrap:UnityEngine.Object {public bool enabled=true;}}
 namespace Alterverse.UI {public sealed class MainMenuController:UnityEngine.Object {public UnityEngine.Object gameObject=new();}}
 namespace Alterverse.Multiplayer {public static class CoopAuthority {public static object ActivePlan;}}
-

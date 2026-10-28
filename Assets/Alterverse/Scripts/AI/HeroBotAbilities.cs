@@ -97,10 +97,13 @@ namespace Alterverse.AI
                 if((h==HeroId.Kaelon||h==HeroId.Rook)&&distance>kit.Ultimate.Radius)ultimateWindow=false;
                 if(controlledTarget==target&&!followUp&&!execute)ultimateWindow=false;
             }
+            if(h==HeroId.Bolt7)ultimateWindow=isHero&&target.Shield>0&&distance<=kit.Ultimate.Range;
             if (h != HeroId.Mira && ultimateWindow && TryCast(3,target)) return;
             // Mage follows visible CC after a human delay. Ordinary uncoordinated casts still work.
             if(coordinated&&h==HeroId.Elyra&&controlledTarget==target&&!followUp)return;
             if(h==HeroId.VoidKnight&&safeEngage&&distance>3.1f&&distance<5.5f&&TryCast(2,target))return;
+            if(h==HeroId.Bolt7&&distance<=Bolt7Balance.RamRange&&TryCast(1,target))return;
+            if(h==HeroId.Bolt7&&distance<=Bolt7Balance.ImpulseRange&&TryCast(2,target))return;
             if (TryCast(0,target)) return;
             if ((h == HeroId.Veyr || h == HeroId.Elyra || h == HeroId.Timmy) && TryCast(1,target)) return;
             if(h==HeroId.Timmy&&safeEngage&&distance>TimmyBalance.ClawRange&&distance<6f)TryCast(2,target);
@@ -152,3 +155,4 @@ namespace Alterverse.AI
         }
     }
 }
+

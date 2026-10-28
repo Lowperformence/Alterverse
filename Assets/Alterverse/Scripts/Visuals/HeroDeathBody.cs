@@ -52,6 +52,7 @@ namespace Alterverse.Visuals
             foreach (Renderer renderer in visual.GetComponentsInChildren<Renderer>(true))
                 if (renderer.enabled && renderer.gameObject.activeInHierarchy) { visible = true; break; }
             if (!visible) return;
+            actor.GetComponent<Alterverse.Combat.CombatFeedback>()?.RestoreBeforeDeath();
 
             // Bound transient meshes/renderers even if many heroes die simultaneously.
             bodies.RemoveAll(body => body == null);
@@ -72,7 +73,7 @@ namespace Alterverse.Visuals
             foreach (var pair in copies)
                 body.CopyRenderer(pair.Key, pair.Value, copies);
 
-            Transform hips = Find(root, "Hips") ?? Find(root, "DF_PelvisJoint");
+            Transform hips = Find(root, "Hips") ?? Find(root, "DF_PelvisJoint") ?? Find(root, "Pelvis");
             Vector3 pivot = hips != null ? hips.position : actor.transform.position;
             root.SetParent(null, true);
             host.transform.position = pivot;
@@ -194,6 +195,8 @@ namespace Alterverse.Visuals
 
         private bool BuildRagdoll(Transform root, GameObject actor)
         {
+            // BOLT's authored mech has a rigid chest and weapon arms, not a humanoid spine/hands.
+            if (root.Find("BOLT7_AuthoredModel") != null) return BuildMechRagdoll(root, actor);
             Transform Bone(string name, string legacy) => Find(root, name) ?? Find(root, legacy);
             Transform hips = Bone("Hips", "DF_PelvisJoint");
             Transform spine = Bone("Spine", "DF_SpineLower");
@@ -229,6 +232,44 @@ namespace Alterverse.Visuals
                 shin.Body.AddTorque(actor.transform.right * .7f, ForceMode.VelocityChange);
             }
 
+            return FinishRagdoll(root, actor, pelvis, upper);
+        }
+
+        private bool BuildMechRagdoll(Transform root, GameObject actor)
+        {
+            Transform hips = Find(root, "Pelvis"), chest = Find(root, "Chest"), head = Find(root, "Head");
+            var arms = new Transform[2];var weapons = new Transform[2];var thighs = new Transform[2];
+            var knees = new Transform[2];var feet = new Transform[2];
+            for (int i = 0; i < 2; i++)
+            {
+                string side = i == 0 ? ".L" : ".R";
+                arms[i] = Find(root, "UpperArm" + side);weapons[i] = Find(root, "Weapon" + side);
+                thighs[i] = Find(root, "Thigh" + side);knees[i] = Find(root, "Shin" + side);feet[i] = Find(root, "Foot" + side);
+                if (arms[i] == null || weapons[i] == null || thighs[i] == null || knees[i] == null || feet[i] == null) return false;
+            }
+            if (hips == null || chest == null || head == null) return false;
+            float scale = Mathf.Clamp((head.position.y - feet[0].position.y) / 1.65f, .6f, 2f);
+            BodyPart pelvis = Segment(hips, chest.position, null, 16f, .20f * scale);
+            BodyPart upper = Segment(chest, head.position, pelvis, 24f, .27f * scale, 30f, 25f);
+            Segment(head, head.position + actor.transform.up * (.20f * scale), upper, 5f, .14f * scale, 40f, 35f);
+            for (int i = 0; i < 2; i++)
+            {
+                BodyPart arm = Segment(arms[i], weapons[i].position, upper, 6f, .11f * scale, 85f, 55f);
+                // Weapon children (barrels, ram collar and grenade drum) stay bound to their arm.
+                Vector3 weaponEnd = weapons[i].position + actor.transform.forward * (.42f * scale);
+                Segment(weapons[i], weaponEnd, arm, 7f, .16f * scale, 40f, 35f);
+                BodyPart leg = Segment(thighs[i], knees[i].position, pelvis, 10f, .13f * scale, 55f, 65f);
+                BodyPart shin = Segment(knees[i], feet[i].position, leg, 7f, .11f * scale, 15f, 110f);
+                shin.LowTwist = -10f;
+                Segment(feet[i], feet[i].position + actor.transform.forward * (.22f * scale), shin, 3f, .09f * scale, 35f, 25f);
+                leg.Body.AddTorque(-actor.transform.right * .9f, ForceMode.VelocityChange);
+                shin.Body.AddTorque(actor.transform.right * .7f, ForceMode.VelocityChange);
+            }
+            return FinishRagdoll(root, actor, pelvis, upper);
+        }
+
+        private bool FinishRagdoll(Transform root, GameObject actor, BodyPart pelvis, BodyPart upper)
+        {
             GameObject ground = new GameObject("DF_RagdollGround");
             ground.transform.SetParent(transform, false);
             ground.transform.SetPositionAndRotation(groundPoint - groundNormal * .15f,

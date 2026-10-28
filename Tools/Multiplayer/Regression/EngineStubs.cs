@@ -84,7 +84,7 @@ namespace Unity.Netcode
  }
  public class NetworkManager
  {
-  public static NetworkManager Singleton;public const ulong ServerClientId=0;
+  public class Clock {public double Time;}public Clock ServerTime=new();public static NetworkManager Singleton;public const ulong ServerClientId=0;
   public bool IsListening=true;public CustomMessagingManager CustomMessagingManager=new();public bool IsServer;public readonly List<ulong> ConnectedClientsIds=new(){0,7};
  }
 }
@@ -117,7 +117,8 @@ namespace Alterverse.Combat
 }
 namespace Alterverse.Characters
 {
- public enum HeroId {Other,Timmy}
+ public enum HeroId {Other,Timmy,VoidKnight}
+ public sealed class VoidKnightState:Component {public float CloakRemaining;public double Sampled,Now;public void ApplyCloakSnapshot(float remaining,double sampled,double now){CloakRemaining=remaining;Sampled=sampled;Now=now;}}
  public sealed class HeroIdentity:Component {public HeroId Hero;}
  public sealed class HeroCombatProfile:Component {public float MoveSpeed=6.5f;}
  public sealed class HeroMotor:Component {public Vector3 SmoothedVelocity;}
@@ -133,6 +134,14 @@ namespace Alterverse.Characters
 }
 namespace Alterverse.Visuals
 {
+ public sealed class Bolt7Visual:Component {public float SampledAt=float.NaN;public void ReceivePresentationSnapshot(Vector3 p,Quaternion q,bool reset,bool forced,float sampledAt=float.NaN){SampledAt=sampledAt;}}
+ public static class HeroSkillVfx
+ {
+  public static int SmokeCalls;public static float SmokeElapsed;
+  public static void CancelVoidKnightWarnings(GameObject a,bool relay){}
+  public static void VoidKnightField(GameObject a,Vector3 d,float r,float s,bool w,bool thrust,bool relay,float elapsed,Vector3 origin){}
+  public static void VoidKnightSmoke(GameObject a,Vector3 origin,bool relay,float elapsed){SmokeCalls++;SmokeElapsed=elapsed;}
+ }
  public sealed class HeroVisualMotion:Component {public Vector3 PresentedPosition;public float SampledAt;public void ReceivePresentationSnapshot(Vector3 p,Quaternion q,bool reset,bool forced,float sampledAt=float.NaN){SampledAt=sampledAt;}}
 }
 namespace Alterverse.Multiplayer
@@ -176,6 +185,7 @@ namespace Alterverse.Multiplayer
   public void ReceiveOwner(ulong id,object[] values)=>OnOwnerPose(id,new Unity.Netcode.FastBufferReader(values));
   public void Broadcast(Unity.Netcode.NetworkManager m)=>BroadcastHostSnapshot(m);
   public void ReceiveSnapshot(ulong id,object[] values)=>OnHeroSnapshot(id,new Unity.Netcode.FastBufferReader(values));
+  public void ReceiveVoid(ulong id,object[] values)=>OnVoidKnightEffect(id,new Unity.Netcode.FastBufferReader(values));
  }
 }
 
@@ -218,5 +228,6 @@ namespace Alterverse.Multiplayer
   public void Broadcast(NetworkManager manager)=>SendState(manager);public CustomMessagingManager Messages=>messaging;
  }
 }
+
 
 

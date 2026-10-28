@@ -18,3 +18,4 @@ jobs:
           dotnet-version: '8.0.x'
       - run: python Tools/Combat/NerokRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Aiming/Regression/run_entry.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Combat/Bolt7Regression/run.py --dotnet-root "$DOTNET_ROOT"

@@ -71,6 +71,7 @@ namespace Alterverse.Profile
         public Snapshot Reports { get; private set; }
         public string SentOperationId { get; private set; }
         public string Status { get; private set; }="Sign in to load friends and clans.";
+        public string ChatStatus { get; private set; }="Connecting to clan chat…";
         public bool Busy { get; private set; }
         public bool Connected=>!string.IsNullOrEmpty(endpoint)&&!string.IsNullOrEmpty(Credential());
         string ClanOperationKey=>"DF_CommerceClanCreate_"+PaidShardCommerce.Instance?.AccountHash;
@@ -95,7 +96,7 @@ namespace Alterverse.Profile
         public void KeepChatOpen(){chatVisibleUntil=Time.unscaledTime+.3f;}
         void OnApplicationFocus(bool focused){chatFocused=focused;if(!focused)ClearChat();}
         void OnApplicationPause(bool paused){chatPaused=paused;if(paused)ClearChat();}
-        void ClearChat(){Chat=null;if(State!=null)State.messages=null;nextChatPoll=Time.unscaledTime+2f;}
+        void ClearChat(string message="Connecting to clan chat…"){Chat=null;ChatStatus=message;if(State!=null)State.messages=null;nextChatPoll=Time.unscaledTime+2f;}
 
         public static void Connect(string address,Func<string> credential)
         {
@@ -125,6 +126,7 @@ namespace Alterverse.Profile
             loadedSyncedProfile=false;
             State=Search=Levels=Clans=ClanLevels=null;
             Chat=Reports=null;SentOperationId=null;chatVisibleUntil=nextChatPoll=0;
+            ChatStatus="Connecting to clan chat…";
         }
         string Credential(){try{return token?.Invoke();}catch(Exception){return null;}}
         void Update()
@@ -161,16 +163,22 @@ namespace Alterverse.Profile
         }
         IEnumerator Send(string route,Request body,int version)
         {
-            // Publish the latest saved name/XP before ranking reads. A failed flush never
-            // sends stale local progression as an ad-hoc score or mutates the profile.
+            // Try to publish current progression first. Social state and standings may
+            // still read authoritative saved data when an unrelated profile save fails.
             var commerce=PaidShardCommerce.Instance;
-            if(commerce!=null&&commerce.Ready&&AccountProfilePrefs.Dirty)
+            bool usingSavedProfile=false;
+            bool needsProfile=route=="/social/state"||route=="/social/levels"||route=="/social/clan-levels"||route=="/social/clan/create";
+            if(needsProfile&&commerce!=null&&commerce.Ready&&AccountProfilePrefs.Dirty)
             {
                 var save=commerce.FlushProfileAsync();
                 while(!save.IsCompleted)yield return null;
                 if(version!=generation)yield break;
                 if(save.IsFaulted||save.IsCanceled||!save.Result)
-                {Status="Account save pending. Retry after synchronization.";Busy=false;yield break;}
+                {
+                    if(route=="/social/clan/create")
+                    {Status="Account save pending. Retry after synchronization.";Busy=false;yield break;}
+                    usingSavedProfile=true;
+                }
             }
             if(route=="/social/clan/create")
             {
@@ -186,7 +194,9 @@ namespace Alterverse.Profile
             if(string.IsNullOrEmpty(credential))
             {
                 if(clanSpending)commerce?.EndSocialSpend(clanSpendSession,null,null);
-                clanSpending=false;Status="Sign in to reconnect.";Busy=false;yield break;
+                clanSpending=false;Status="Sign in to reconnect.";
+                if(route.StartsWith("/social/chat/",StringComparison.Ordinal))ClearChat(Status);
+                Busy=false;yield break;
             }
             request.SetRequestHeader("Content-Type","application/json");
             request.SetRequestHeader("Authorization","Bearer "+credential);
@@ -209,11 +219,11 @@ namespace Alterverse.Profile
                 }
                 if(request.responseCode==409){Status="Account changed. Refreshing your balance; retry after synchronization.";commerce?.Refresh();}
                 else if(request.responseCode==401){State=Search=Levels=Clans=ClanLevels=Reports=null;ClearChat();Status="Sign in to reconnect.";}
-                else Status=request.responseCode==403?"Your clan role does not allow this action.":
-                    !string.IsNullOrEmpty(response?.message)?response.message:"Social server unavailable. Tap REFRESH to retry.";
+                else Status=!string.IsNullOrEmpty(response?.message)?response.message:
+                    request.responseCode==403?"Your clan role does not allow this action.":"Social server unavailable. Tap REFRESH to retry.";
                 if(route.StartsWith("/social/chat/",StringComparison.Ordinal))
                 {
-                    ClearChat();nextChatPoll=Time.unscaledTime+5f;
+                    ClearChat(Status);nextChatPoll=Time.unscaledTime+5f;
                     if(request.responseCode==403){loadedSyncedProfile=false;State=null;Reports=null;}
                 }
                 Busy=false;yield break;
@@ -254,8 +264,10 @@ namespace Alterverse.Profile
                 if(route!="/social/state"){Levels=ClanLevels=Clans=Search=null;}
             }
             if(route=="/social/chat/send")SentOperationId=body.operationId;
+            if(Chat!=null&&route.StartsWith("/social/chat/",StringComparison.Ordinal))ChatStatus="Connected to clan chat.";
             if(route=="/social/chat/report")nextChatPoll=Time.unscaledTime+5f;
-            Status=route=="/social/chat/report"?"Report saved for the game administration.":"Synchronized.";Busy=false;
+            Status=route=="/social/chat/report"?"Report saved for the game administration.":
+                usingSavedProfile?"Showing saved server data. Account synchronization pending.":"Synchronized.";Busy=false;
         }
         // Also protects displays during a staggered client/server rollout.
         internal static void CleanSnapshot(Snapshot value)
@@ -283,5 +295,8 @@ namespace Alterverse.Profile
         void OnDestroy(){if(Instance==this){ResetCache();Instance=null;}}
     }
 }
+
+
+
 
 

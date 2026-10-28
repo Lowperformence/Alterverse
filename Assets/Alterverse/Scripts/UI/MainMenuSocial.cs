@@ -8,6 +8,10 @@ namespace Alterverse.UI
     public sealed partial class MainMenuController
     {
         int rankingTab,clanTab,memberOffset;
+        int requestedRankingTab=-1;
+        string rankingAccount;
+        long rankingProfileRevision=-1;
+        float rankingRefreshAt;
         string socialIdentity,lastClanIdentity;
         bool clanApplications,clanOpen=true,founderTermsAccepted;
         int clanDetailTab,clanIconIndex,clanDescriptionIndex;
@@ -42,7 +46,7 @@ namespace Alterverse.UI
             if(theme.Action(new Rect(Right-150,670,150,36),"REFRESH",enabled:service!=null&&!service.Busy))
             {
                 if(page==Page.Leaderboard&&rankingTab>0)
-                    service.Load(rankingTab==1?"/social/levels":"/social/clan-levels",new SocialService.Request{offset=RankingOffset()});
+                    LoadRankingPage(service,RankingOffset());
                 else if(service.State==null)service.Load("/social/state");
                 else if(page==Page.Clans&&clanTab==0)
                     service.Load("/social/clans",new SocialService.Request{query=clanQuery,offset=service.Clans?.offset??0});
@@ -50,6 +54,16 @@ namespace Alterverse.UI
             }
         }
         int RankingOffset()=>rankingTab==1?SocialService.Instance?.Levels?.offset??0:SocialService.Instance?.ClanLevels?.offset??0;
+        void LoadRankingPage(SocialService service,int offset)
+        {
+            if(service.Busy)return;
+            requestedRankingTab=rankingTab;
+            rankingAccount=PaidShardCommerce.Instance?.AccountHash;
+            rankingProfileRevision=AccountProfilePrefs.Revision;
+            rankingRefreshAt=Time.unscaledTime+30f;
+            service.Load(rankingTab==1?"/social/levels":"/social/clan-levels",
+                new SocialService.Request{offset=offset});
+        }
         void SocialAction(string route,string playerId=null,string clanId=null,string role=null)
         {
             SocialService.Instance?.Load(route,new SocialService.Request{playerId=playerId,clanId=clanId,role=role});
@@ -89,16 +103,23 @@ namespace Alterverse.UI
                 if(theme.Action(new Rect(Left+i*210,202,198,36),tabs[i],selected:rankingTab==i))
                 {
                     rankingTab=i;
-                    if(i>0)SocialService.Instance?.Load(i==1?"/social/levels":"/social/clan-levels");
+                    requestedRankingTab=-1;
                 }
             }
             if(rankingTab==0)return false;
             if(!SocialReady()){SocialFooter();return true;}
             var service=SocialService.Instance;
+            // A tab click during another request used to be silently dropped.
+            // Retry once idle, refresh saved progress and keep visible lists current.
+            bool changed=requestedRankingTab!=rankingTab||rankingAccount!=PaidShardCommerce.Instance?.AccountHash;
+            if(!service.Busy&&(changed||rankingProfileRevision!=AccountProfilePrefs.Revision||
+                Time.unscaledTime>=rankingRefreshAt))
+                LoadRankingPage(service,changed?0:RankingOffset());
             var result=rankingTab==1?service.Levels:service.ClanLevels;
             if(result==null)
             {
-                theme.Label(new Rect(Left,268,ContentWidth,36),"Tap REFRESH to load the global ranking.",theme.Body,true);
+                theme.Label(new Rect(Left,268,ContentWidth,36),service.Busy?
+                    "Loading the global ranking…":"Tap REFRESH to load the global ranking.",theme.Body,true);
                 SocialFooter();return true;
             }
             theme.FitLabel(new Rect(Left,256,ContentWidth,32),rankingTab==1?
@@ -112,8 +133,9 @@ namespace Alterverse.UI
                 for(int i=0;i<rows.Length;i++)
                 {
                     var p=rows[i];float y=322+i*37;
-                    theme.Panel(new Rect(Left,y,ContentWidth,34));
-                    theme.FitLabel(new Rect(Left+14,y,ContentWidth-340,34),$"#{p.rank}  {p.name}",theme.Body);
+                    theme.RankingPanel(new Rect(Left,y,ContentWidth,34),p.rank);
+                    theme.RankingBadge(new Rect(Left+10,y+4,96,26),p.rank);
+                    theme.FitLabel(new Rect(Left+118,y,ContentWidth-444,34),p.name,theme.Body);
                     theme.FitLabel(new Rect(Right-310,y,290,34),$"LEVEL {p.level}  /  {p.xp:N0} XP",theme.Small);
                 }
             }
@@ -123,13 +145,14 @@ namespace Alterverse.UI
                 for(int i=0;i<rows.Length;i++)
                 {
                     var c=rows[i];float y=322+i*37;
-                    theme.Panel(new Rect(Left,y,ContentWidth,34));
-                    AvatarBadgeRenderer.Draw(new Rect(Left+10,y+2,30,30),Mathf.Max(0,c.avatar),Texture2D.whiteTexture,Time.unscaledTime);
-                    theme.FitLabel(new Rect(Left+52,y,ContentWidth-418,34),$"#{c.rank}  [{c.tag}] {c.name}",theme.Body);
+                    theme.RankingPanel(new Rect(Left,y,ContentWidth,34),c.rank);
+                    theme.RankingBadge(new Rect(Left+10,y+4,96,26),c.rank);
+                    AvatarBadgeRenderer.Draw(new Rect(Left+118,y+2,30,30),Mathf.Max(0,c.avatar),Texture2D.whiteTexture,Time.unscaledTime);
+                    theme.FitLabel(new Rect(Left+160,y,ContentWidth-526,34),$"[{c.tag}] {c.name}",theme.Body);
                     theme.FitLabel(new Rect(Right-350,y,330,34),$"TOTAL {c.totalLevel:N0}  /  {c.memberCount}/50 MEMBERS",theme.Small);
                 }
             }
-            DrawSocialPager(result.offset,count,offset=>service.Load(rankingTab==1?"/social/levels":"/social/clan-levels",new SocialService.Request{offset=offset}),result.total);
+            DrawSocialPager(result.offset,count,offset=>LoadRankingPage(service,offset),result.total);
             SocialFooter();return true;
         }
 
@@ -203,27 +226,30 @@ namespace Alterverse.UI
                 clanDescriptionIndex=0;
                 clanOpen=pending.open;
             }
-            theme.Panel(new Rect(Left-8,262,ContentWidth+16,390));
+            theme.Panel(new Rect(Left-8,262,ContentWidth+16,402));
             theme.Label(new Rect(Left,270,ContentWidth,26),"Generated clan name and tag  /  50 members  /  500 Shards",theme.Small,true);
             theme.Label(new Rect(Left,302,ContentWidth,30),SafeIdentityCatalog.Descriptions[0],theme.Body,true);
             if(theme.Action(new Rect(Left,342,340,38),clanOpen?"JOIN POLICY: OPEN":"JOIN POLICY: APPLICATION",enabled:pending==null&&!service.Busy))clanOpen=!clanOpen;
             if(state.chatEnabled)
             {
-                theme.Label(new Rect(Left,386,ContentWidth,130),state.leaderRules,theme.Small,true);
-                founderTermsAccepted=GUI.Toggle(new Rect(Left,522,ContentWidth,32),founderTermsAccepted,"I accept the clan moderation terms (version "+state.leaderRulesVersion+").");
+                DrawClanRulesText(new Rect(Left,386,ContentWidth,126),state.leaderRules,ref leaderRulesScroll);
+                founderTermsAccepted=DrawClanConsent(new Rect(Left,522,ContentWidth,56),founderTermsAccepted,
+                    "I have read and accept the clan moderation agreement.",!service.Busy);
             }
-            theme.Label(new Rect(Left,558,ContentWidth,28),pending!=null?"Pending request: retry to confirm. You will not be charged twice.":"The server assigns a unique clan identity.",theme.Small,true);
+            theme.Label(new Rect(Left,582,ContentWidth,24),pending!=null?"Pending request: retry to confirm. You will not be charged twice.":"The server assigns a unique clan identity.",theme.Small,true);
             bool supported=state.clanCreationCost==500&&state.clanProtocolVersion>=(state.chatEnabled?4:3);
-            if(theme.Action(new Rect(Left,596,300,48),service.HasPendingClanCreation?"RETRY CLAN CREATION":"CREATE  /  500 SHARDS",true,enabled:!service.Busy&&supported&&(!state.chatEnabled||founderTermsAccepted)&&(service.HasPendingClanCreation||PlayerWallet.Balance>=500)))
+            if(ShardPurchaseAction(new Rect(Left,614,300,46),service.HasPendingClanCreation?"RETRY CLAN CREATION":"CREATE  /  500 SHARDS",service.HasPendingClanCreation?0:500,true,enabled:!service.Busy&&supported&&(!state.chatEnabled||founderTermsAccepted)))
                 service.CreateClan(new SocialService.Request{descriptionId=0,open=clanOpen,accepted=founderTermsAccepted,consentVersion=state.leaderRulesVersion});
-            if(!supported)theme.Label(new Rect(Left+320,596,ContentWidth-320,48),"Update the account server to create clans.",theme.Small,true);
-            else if(PlayerWallet.Balance<500&&!service.HasPendingClanCreation)theme.Label(new Rect(Left+320,596,ContentWidth-320,48),$"You need {500-PlayerWallet.Balance} more Shards.",theme.Small,true);
+            if(!supported)theme.Label(new Rect(Left+320,614,ContentWidth-320,46),"Update the account server to create clans.",theme.Small,true);
+            else if(PlayerWallet.Balance<500&&!service.HasPendingClanCreation)theme.Label(new Rect(Left+320,614,ContentWidth-320,46),$"You need {500-PlayerWallet.Balance} more Shards.",theme.Small,true);
         }
 
         void DrawMyClan(SocialService service,SocialService.Snapshot state)
         {
             var clan=state.clan;
             if(clan==null){theme.EmptyState(new Rect(Left,272,ContentWidth,154),"Your clan starts here","Join a crew from FIND CLANS, or create a clan for 500 Shards.");return;}
+            if(clanDetailTab==2&&state.chatEnabled&&(!state.chatAccepted||showLeaderTerms||state.role=="leader"&&!state.leaderAccepted))
+            {DrawChatConsent(service,state,state.chatAccepted&&(showLeaderTerms||state.role=="leader"&&!state.leaderAccepted));return;}
             theme.Panel(new Rect(Left-8,262,ContentWidth+16,78));
             AvatarBadgeRenderer.Draw(new Rect(Left,268,66,66),Mathf.Max(0,clan.avatar),Texture2D.whiteTexture,Time.unscaledTime);
             theme.FitLabel(new Rect(Left+80,268,ContentWidth-270,30),$"[{clan.tag}] {clan.name}",theme.Heading);
@@ -276,26 +302,24 @@ namespace Alterverse.UI
         }
         void DrawClanImage(SocialService service,SocialService.Snapshot state)
         {
-            var icons=new System.Collections.Generic.List<int>();
-            foreach(var item in AvatarShopCatalog.Items)
-                if(AvatarInventory.IsOwned(item.AvatarId))icons.Add(item.AvatarId);
+            var icons=AvatarCollection.OwnedIds();
             if(icons.Count==0)
             {
-                theme.Label(new Rect(Left,402,ContentWidth,58),"Purchase an icon in the Store to use it as your clan image.",theme.Heading);
-                if(theme.Action(new Rect(Left,480,260,48),"OPEN STORE"))SetPage(Page.Shop);
+                theme.Label(new Rect(Left,402,ContentWidth,58),"No owned avatars are available yet.",theme.Heading);
+                if(theme.Action(new Rect(Left,480,260,48),"BROWSE AVATARS"))OpenAvatarStore();
                 return;
             }
             clanIconIndex=Mathf.Clamp(clanIconIndex,0,icons.Count-1);
             int id=icons[clanIconIndex];
             AvatarBadgeRenderer.Draw(new Rect(Left+24,400,160,160),id,Texture2D.whiteTexture,Time.unscaledTime);
             theme.Label(new Rect(Left+220,406,ContentWidth-220,42),AvatarPresentation.Name(id),theme.Heading);
-            theme.Label(new Rect(Left+220,460,ContentWidth-220,42),"Choose one of your owned shop icons. Only the leader can change the clan image.",theme.Body,true);
+            theme.Label(new Rect(Left+220,460,ContentWidth-220,42),"Choose any owned avatar, including starter and reward images. Only the leader can change it.",theme.Body,true);
             if(theme.Action(new Rect(Left+220,528,72,44),"<"))clanIconIndex=(clanIconIndex-1+icons.Count)%icons.Count;
             theme.Center(new Rect(Left+304,528,150,44),$"{clanIconIndex+1} / {icons.Count}");
             if(theme.Action(new Rect(Left+466,528,72,44),">"))clanIconIndex=(clanIconIndex+1)%icons.Count;
             if(theme.Action(new Rect(Left,590,300,48),state.clan.avatar==id?"SELECTED":"SET CLAN IMAGE",true,enabled:!service.Busy&&state.clan.avatar!=id))
                 service.Load("/social/clan/icon",new SocialService.Request{avatar=id});
+            if(theme.Action(new Rect(Left+316,590,260,48),"BROWSE AVATARS"))OpenAvatarStore();
         }
     }
 }
-

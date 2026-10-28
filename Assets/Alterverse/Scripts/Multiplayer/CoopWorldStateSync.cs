@@ -205,6 +205,13 @@ namespace Alterverse.Multiplayer
 
                 string id=fixedId.ToString();
                 if(removedKeys.Contains(id))continue;
+                if(entities.TryGetValue(id,out var previous)&&previous!=null&&previous.Key!=id)
+                {
+                    // A pooled actor may already represent a later occurrence while the
+                    // discovery cache still holds its previous key. Late movement/health
+                    // for that previous occurrence must never mutate the new monster.
+                    entities.Remove(id);removedKeys.Add(id);continue;
+                }
                 if(!entities.TryGetValue(id,out CoopWorldEntityKey entity)||entity==null)
                 {
                     if(dead||!MatchNetworkProtocol.Finite(x)||!MatchNetworkProtocol.Finite(y)||
@@ -233,7 +240,7 @@ namespace Alterverse.Multiplayer
                 if(entities.TryGetValue(id,out CoopWorldEntityKey entity)&&entity!=null)
                 {
                     entities.Remove(id);
-                    Destroy(entity.gameObject);
+                    if(entity.Key==id&&!HotZoneTank.ReturnToRewardPool(entity.gameObject))Destroy(entity.gameObject);
                 }
             }
         }
@@ -256,5 +263,7 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
+
 
 

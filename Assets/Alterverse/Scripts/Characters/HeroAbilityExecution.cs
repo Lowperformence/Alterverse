@@ -102,17 +102,19 @@ namespace Alterverse.Characters
         private bool TryCastCore(int slot, Health target, Vector3 movement, AimPose? aimed)
         {
             if (!isActiveAndEnabled || !Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay || slot < 0 || slot > 3 || Time.timeScale <= 0 || self.IsDead || !HeroCombatStatus.CanAct(gameObject) || Remaining(slot) > 0) return false;
+            if(identity.Hero==HeroId.Bolt7&&!Bolt7Balance.HasAbility(slot))return false;
             if(identity.Hero==HeroId.VoidKnight&&voidPending)return false;
             AbilitySpec spec = kit.Spec(slot); HeroId hero = identity.Hero;
             float presentationWindup=spec.Windup;
             AimSpec aimSpec = AimingSettings.Current.For(hero, slot);
             AimPose attackAim = aimed ?? new AimPose(target != null ? target.transform.position - transform.position : movement,
                 target != null ? target.transform.position : transform.position, null, target != null);
-            bool usesDelivery = aimSpec.aimType == AimType.Melee || aimSpec.aimType == AimType.Projectile ||
-                aimSpec.aimType == AimType.Beam || aimSpec.aimType == AimType.Homing;
+            bool usesDelivery = hero != HeroId.Bolt7 && (aimSpec.aimType == AimType.Melee || aimSpec.aimType == AimType.Projectile ||
+                aimSpec.aimType == AimType.Beam || aimSpec.aimType == AimType.Homing);
             if (usesDelivery && !HeroAttackDelivery.For(gameObject).HasCapacity(hero == HeroId.Nyra && slot == 3 ? SightlineBreakShots : 1)) return false;
             bool mobility = (hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) || (hero == HeroId.Elyra && slot == 2) || (hero == HeroId.Traveler && slot == 1);
-            if(hero==HeroId.VoidKnight&&(slot==1||slot==2||slot==3)){if(!TryCastVoidKnight(slot,attackAim))return false;}
+            if(hero==HeroId.Bolt7){if(!TryCastBolt7(slot,attackAim))return false;}
+            else if(hero==HeroId.VoidKnight&&(slot==1||slot==2||slot==3)){if(!TryCastVoidKnight(slot,attackAim))return false;}
             else if (hero == HeroId.Timmy && (slot == 2 || slot == 3))
             {
                 if(!TryCastTimmy(slot,target,attackAim,aimed.HasValue && attackAim.AllowDashTargetCapture))return false;
@@ -310,12 +312,23 @@ namespace Alterverse.Characters
         }
         private void Hit(int slot, Health target, bool visual = true,bool launched=false)
         {
+            if(!HeroCombatRules.Enemy(gameObject,target))return;
             float damage = kit.Spec(slot).Power;
             if (identity.Hero == HeroId.Veyr && slot == 3 && target.GetComponent<HeroIdentity>() != null)
                 damage *= 1f + (1f - target.Normalized) * .35f;
+            // Resolve only at confirmed contact, before normal damage consumes a small
+            // remaining shield. Health owns authority, invulnerability and pool limits.
+            float absorbed=identity.Hero==HeroId.Nyra&&slot==0
+                ? target.TransferShieldTo(self,HeroAbilityKit.SivraPrismShieldAbsorb,
+                    HeroAbilityKit.SivraPrismOvershieldSeconds) : 0;
+            if(absorbed>0)
+            {
+                Alterverse.Multiplayer.CoopGameplayCommands.RecordAuthoritativeDamage(gameObject,absorbed);
+                HeroSkillVfx.Support(gameObject,self,true,HeroAbilityKit.SivraPrismOvershieldSeconds);
+            }
             float before=target.Current+target.Shield;
             HeroCombatRules.Damage(gameObject, target, damage);
-            bool damaged=target!=null&&target.Current+target.Shield<before;
+            bool damaged=absorbed>0||target!=null&&target.Current+target.Shield<before;
             // A rejected hit (for example an invulnerable objective) cannot apply control either.
             if(!damaged)return;
             GetComponent<VoidKnightState>()?.RecordSkillHit();
@@ -345,7 +358,7 @@ namespace Alterverse.Characters
             if (visual&&!launched) HeroSkillVfx.Spell(gameObject, target.transform.position, slot);
             if(damaged&&(identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Mira||identity.Hero==HeroId.Veyr&&slot==1||
                 identity.Hero==HeroId.Nyra&&slot==2||identity.Hero==HeroId.Elyra&&(slot==1||slot==3)||identity.Hero==HeroId.Rook&&slot==0||identity.Hero==HeroId.Traveler&&(slot==2||slot==3)))
-                HeroSkillVfx.Debuff(gameObject,target);
+                HeroSkillVfx.Debuff(gameObject,target,slot);
         }
     }
 }

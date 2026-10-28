@@ -126,7 +126,7 @@ namespace Alterverse.Match
                 telegraphMaterial.SetFloat("_RingAlpha",.5f);
                 telegraphMaterial.SetFloat("_RingWidth",.042f);
             }
-            if(announceNetwork&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+            if(announceNetwork&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)
                 NetworkPulseStarted?.Invoke(gameObject.name,telegraphDuration);
         }
 
@@ -160,7 +160,8 @@ namespace Alterverse.Match
             }
 
             Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Explosion,transform.position,.6f);
-            PrototypeVfx.Burst(transform.position, warning, radius * .55f, 10);
+            if(!AttackExplosionVfx.TryPlay(AttackExplosionVfx.Kind.FluxNuke,transform.position))
+                PrototypeVfx.Burst(transform.position, warning, radius * .55f, 10);
             telegraphing=false;
             flashUntil=Time.time+.18f;
             nextPulse=Time.time+Mathf.Max(.5f,interval);
@@ -174,7 +175,7 @@ namespace Alterverse.Match
                 telegraphMaterial.SetFloat("_RingWidth",.085f);
             }
 
-            if(authoritative&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+            if(authoritative&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)
                 NetworkPulseDetonated?.Invoke(gameObject.name);
         }
 

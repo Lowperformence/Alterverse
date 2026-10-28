@@ -9,17 +9,17 @@ namespace Alterverse.Shop
     public sealed class CosmeticDefinition
     {
         public readonly UniversalHeroCosmetic Id;
-        public readonly string Name, OwnedKey, Description, PriceLabel, BonusLabel;
+        public readonly string Name, OwnedKey, Description, PriceLabel, BonusLabel, PurchaseSku, HeadwearResource;
         public readonly int Price;
         public readonly CosmeticCategory Category;
         public readonly Color Accent;
         public readonly bool Headwear, Purchasable;
         public float ProgressionPercent=>WingMatchRewardBonus.Percent(Id);
         public CosmeticDefinition(UniversalHeroCosmetic id,string name,int price,string ownedKey,CosmeticCategory category,string description,Color accent,
-            bool headwear=false,bool purchasable=true,string unlockLabel=null)
+            bool headwear=false,bool purchasable=true,string unlockLabel=null,string purchaseSku="",string headwearResource=null)
         {
             Id=id;Name=name;Price=price;OwnedKey=ownedKey;Category=category;Description=description;Accent=accent;
-            Headwear=headwear;Purchasable=purchasable;
+            Headwear=headwear;Purchasable=purchasable;PurchaseSku=purchaseSku;HeadwearResource=headwearResource;
             PriceLabel=unlockLabel??(price==0?"FREE":price.ToString("N0")+" SHARDS");
             float bonus=WingMatchRewardBonus.Percent(id);
             BonusLabel=bonus==0?"NO PROGRESSION BONUS":WingMatchRewardBonus.ShopBonus(id);
@@ -39,19 +39,19 @@ namespace Alterverse.Shop
             new(UniversalHeroCosmetic.DeluxeWings,DeluxeWings.Name,DeluxeWings.Price,DeluxeWings.OwnedKey,CosmeticCategory.Wings,"Faceted silver crystal wings with icy cyan fractures.",new Color(.72f,.92f,1f)),
             new(UniversalHeroCosmetic.BetaCap,HeadwearSelection.BetaCapName,0,HeadwearSelection.BetaCapOwnedKey,CosmeticCategory.Skins,
                 "Exclusive BETA cap. Separate headwear slot for every hero; can be worn with wings.",new Color(.45f,.83f,1f),
-                headwear:true,purchasable:false,unlockLabel:"PREMIUM BATTLE PASS / LEVEL 50"),
+                headwear:true,purchasable:false,unlockLabel:"PREMIUM BATTLE PASS / LEVEL 50",headwearResource:"BetaCap"),
             new(UniversalHeroCosmetic.UfoTestHat,HeadwearSelection.UfoName,HeadwearSelection.UfoPrice,HeadwearSelection.UfoOwnedKey,
-                CosmeticCategory.Skins,"A confused little UFO with crooked antennae. Test headwear; wear it with wings.",
-                new Color(.25f,.9f,.7f),headwear:true,unlockLabel:"1 SHARD"),
-            new(UniversalHeroCosmetic.WizardHat,"WIZARD HAT",0,"DF_HeadwearOwned_WizardHat",CosmeticCategory.Skins,
+                CosmeticCategory.Skins,"A playful UFO with crooked antennae. Separate headwear slot; wear it with wings.",
+                new Color(.25f,.9f,.7f),headwear:true,purchaseSku:"ufo_test_hat",headwearResource:"UfoTestHat"),
+            new(UniversalHeroCosmetic.WizardHat,"ASTRAL WIZARD",HeadwearSelection.ShopPrice,"DF_HeadwearOwned_WizardHat",CosmeticCategory.Skins,
                 "A crooked violet wizard hat with embroidered stars and a moonstone buckle.",new Color(.65f,.38f,.95f),
-                headwear:true,purchasable:false,unlockLabel:"FREE TEST HAT"),
-            new(UniversalHeroCosmetic.PropellerCap,"PROPELLER CAP",0,"DF_HeadwearOwned_PropellerCap",CosmeticCategory.Skins,
+                headwear:true,purchaseSku:"wizard_hat",headwearResource:"WizardHat"),
+            new(UniversalHeroCosmetic.PropellerCap,"SKY SPINNER",HeadwearSelection.ShopPrice,"DF_HeadwearOwned_PropellerCap",CosmeticCategory.Skins,
                 "A cheerful four-panel cap with a colorful three-blade propeller.",new Color(.20f,.80f,.70f),
-                headwear:true,purchasable:false,unlockLabel:"FREE TEST HAT"),
-            new(UniversalHeroCosmetic.MushroomHat,"MUSHROOM HAT",0,"DF_HeadwearOwned_MushroomHat",CosmeticCategory.Skins,
+                headwear:true,purchaseSku:"propeller_cap",headwearResource:"PropellerCap"),
+            new(UniversalHeroCosmetic.MushroomHat,"COSMIC MUSHROOM",HeadwearSelection.ShopPrice,"DF_HeadwearOwned_MushroomHat",CosmeticCategory.Skins,
                 "A red mushroom canopy with cream spots and a soft fitted headband.",new Color(.95f,.30f,.35f),
-                headwear:true,purchasable:false,unlockLabel:"FREE TEST HAT")
+                headwear:true,purchaseSku:"mushroom_hat",headwearResource:"MushroomHat")
         };
         public static IReadOnlyList<CosmeticDefinition> All { get; }=System.Array.AsReadOnly(definitions);
         public static CosmeticDefinition Find(UniversalHeroCosmetic id)
@@ -60,20 +60,24 @@ namespace Alterverse.Shop
         {
             var definition=Find(id);if(definition==null)return false;
             if(id==UniversalHeroCosmetic.BetaCap&&!CosmeticProfile.IsTest)BattlePassProgress.ReconcileCosmeticRewards();
-            return id==UniversalHeroCosmetic.Original||HeadwearSelection.IsFreeTestHat(id)||CosmeticProfile.GetInt(definition.OwnedKey,0)==1||
+            return id==UniversalHeroCosmetic.Original||CosmeticProfile.GetInt(definition.OwnedKey,0)==1||
                 id==UniversalHeroCosmetic.Voidfall&&CosmeticProfile.PaidVoidfall;
         }
-        public static string Sku(UniversalHeroCosmetic id) => id switch
+        public static string Sku(UniversalHeroCosmetic id)
         {
+            var definition=Find(id);
+            if(definition!=null&&definition.Headwear)return definition.PurchaseSku;
+            return id switch
+            {
             UniversalHeroCosmetic.Voidfall=>"voidfall",
             UniversalHeroCosmetic.PlagueWings=>"plague_wings",
             UniversalHeroCosmetic.BetaSupporterWings=>"beta_supporter_wings",
             UniversalHeroCosmetic.DeluxeWings=>"deluxe_wings",
             UniversalHeroCosmetic.AngelWings=>"angel_wings",
             UniversalHeroCosmetic.RgbRiftWings=>"rgb_rift_wings",
-            UniversalHeroCosmetic.UfoTestHat=>"ufo_test_hat",
             _=>""
-        };
+            };
+        }
         public static AvatarPurchaseResult Purchase(UniversalHeroCosmetic id)
         {
             CosmeticProfile.Recover();

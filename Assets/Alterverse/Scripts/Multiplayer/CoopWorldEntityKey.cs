@@ -34,7 +34,7 @@ namespace Alterverse.Multiplayer
                 key=$"{gameObject.name}|T{teamId}|X{x}|Z{z}";
             }
             presentation.Clear();hasTarget=false;
-            CachePresentation();
+            if(!configured)CachePresentation();
             configured=true;
         }
 
@@ -45,7 +45,7 @@ namespace Alterverse.Multiplayer
             if(float.IsNaN(sampledAt))presentation.Push(position,rotation,Time.unscaledTime,reset);
             else presentation.PushRemote(position,rotation,sampledAt,Time.unscaledTime,reset);
             hasTarget=true;
-            if(reset)transform.SetPositionAndRotation(position,rotation);
+            if(reset){transform.SetPositionAndRotation(position,rotation);GetComponent<HotZoneTank>()?.ConfirmNetworkSpawn();}
         }
 
         public void ApplyAlivePresentation(bool alive)
@@ -78,5 +78,6 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 
 

@@ -9,13 +9,14 @@ namespace Alterverse.Content
 
     public static class PlayerChallengeContent
     {
-        // Existing missions pay 45 shards; the distinct-map mission adds 15.
+        // Combat/map missions pay 60 shards; five completed store ads add a 20-shard daily bonus.
         public static readonly ChallengeDef[] Daily =
         {
-            new ChallengeDef("HUNTER","Defeat 50 enemies.",20),
-            new ChallengeDef("HOT ZONE","Win control of 20 Hot Zones.",15),
-            new ChallengeDef("SOLDIER BREAKER","Defeat 60 enemy Soldiers.",10),
-            new ChallengeDef("MAP EXPLORER","Win on 5 different maps today.",15)
+            new ChallengeDef("HUNTER","Kill 50 enemies",20),
+            new ChallengeDef("HOT ZONE","Capture 20 Hot Zones",15),
+            new ChallengeDef("SOLDIER BREAKER","Kill 60 enemy soldiers",10),
+            new ChallengeDef("MAP EXPLORER","Win on 5 different maps",15),
+            new ChallengeDef("STORE ADS","Watch 5 ads in the Store",20)
         };
         public static readonly ChallengeDef[] Weekly =
         {

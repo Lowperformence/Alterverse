@@ -1,0 +1,706 @@
+[
+  {
+    "name": "NA-TORSO-frame-0",
+    "bone": "Chest",
+    "group": 0,
+    "material": 0,
+    "vertices": 12,
+    "polygons": 8
+  },
+  {
+    "name": "NA-TORSO-inlay-0",
+    "bone": "Chest",
+    "group": 0,
+    "material": 1,
+    "vertices": 12,
+    "polygons": 8
+  },
+  {
+    "name": "NA-TORSO-copper-keel-0",
+    "bone": "Chest",
+    "group": 0,
+    "material": 2,
+    "vertices": 30,
+    "polygons": 22
+  },
+  {
+    "name": "NA-TORSO-rivet-0--1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 4,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-TORSO-rivet-0-1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 4,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-TORSO-frame-1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 0,
+    "vertices": 12,
+    "polygons": 8
+  },
+  {
+    "name": "NA-TORSO-inlay-1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 1,
+    "vertices": 12,
+    "polygons": 8
+  },
+  {
+    "name": "NA-TORSO-copper-keel-1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 2,
+    "vertices": 30,
+    "polygons": 22
+  },
+  {
+    "name": "NA-TORSO-rivet-1--1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 4,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-TORSO-rivet-1-1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 4,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-TORSO-frame-2",
+    "bone": "Chest",
+    "group": 0,
+    "material": 0,
+    "vertices": 12,
+    "polygons": 8
+  },
+  {
+    "name": "NA-TORSO-inlay-2",
+    "bone": "Chest",
+    "group": 0,
+    "material": 1,
+    "vertices": 12,
+    "polygons": 8
+  },
+  {
+    "name": "NA-TORSO-copper-keel-2",
+    "bone": "Chest",
+    "group": 0,
+    "material": 2,
+    "vertices": 30,
+    "polygons": 22
+  },
+  {
+    "name": "NA-TORSO-rivet-2--1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 4,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-TORSO-rivet-2-1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 4,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-TORSO-frame-3",
+    "bone": "Chest",
+    "group": 0,
+    "material": 0,
+    "vertices": 12,
+    "polygons": 8
+  },
+  {
+    "name": "NA-TORSO-inlay-3",
+    "bone": "Chest",
+    "group": 0,
+    "material": 1,
+    "vertices": 12,
+    "polygons": 8
+  },
+  {
+    "name": "NA-TORSO-copper-keel-3",
+    "bone": "Chest",
+    "group": 0,
+    "material": 2,
+    "vertices": 30,
+    "polygons": 22
+  },
+  {
+    "name": "NA-TORSO-rivet-3--1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 4,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-TORSO-rivet-3-1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 4,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-TORSO-side-L",
+    "bone": "Chest",
+    "group": 0,
+    "material": 0,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-TORSO-side-trim-L",
+    "bone": "Chest",
+    "group": 0,
+    "material": 2,
+    "vertices": 48,
+    "polygons": 34
+  },
+  {
+    "name": "NA-SHOULDER-frame-L0",
+    "bone": "UpperArmL",
+    "group": 0,
+    "material": 0,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-SHOULDER-inlay-L0",
+    "bone": "UpperArmL",
+    "group": 0,
+    "material": 1,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-SHOULDER-rivet-L0-0.058499999999999996",
+    "bone": "UpperArmL",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-SHOULDER-rivet-L00.058499999999999996",
+    "bone": "UpperArmL",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-SHOULDER-frame-L1",
+    "bone": "UpperArmL",
+    "group": 0,
+    "material": 0,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-SHOULDER-inlay-L1",
+    "bone": "UpperArmL",
+    "group": 0,
+    "material": 1,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-SHOULDER-rivet-L1-0.05329999999999999",
+    "bone": "UpperArmL",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-SHOULDER-rivet-L10.05329999999999999",
+    "bone": "UpperArmL",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-SHOULDER-frame-L2",
+    "bone": "UpperArmL",
+    "group": 0,
+    "material": 0,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-SHOULDER-inlay-L2",
+    "bone": "UpperArmL",
+    "group": 0,
+    "material": 1,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-SHOULDER-rivet-L2-0.0481",
+    "bone": "UpperArmL",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-SHOULDER-rivet-L20.0481",
+    "bone": "UpperArmL",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-BRACER-frame-L",
+    "bone": "ForearmL",
+    "group": 0,
+    "material": 0,
+    "vertices": 10,
+    "polygons": 7
+  },
+  {
+    "name": "NA-BRACER-inlay-L",
+    "bone": "ForearmL",
+    "group": 0,
+    "material": 1,
+    "vertices": 10,
+    "polygons": 7
+  },
+  {
+    "name": "NA-BRACER-rib-L-1",
+    "bone": "ForearmL",
+    "group": 0,
+    "material": 2,
+    "vertices": 16,
+    "polygons": 10
+  },
+  {
+    "name": "NA-BRACER-rib-L1",
+    "bone": "ForearmL",
+    "group": 0,
+    "material": 2,
+    "vertices": 16,
+    "polygons": 10
+  },
+  {
+    "name": "NA-BRACER-strap-L0.4",
+    "bone": "ForearmL",
+    "group": 0,
+    "material": 3,
+    "vertices": 264,
+    "polygons": 258
+  },
+  {
+    "name": "NA-BRACER-strap-L0.85",
+    "bone": "ForearmL",
+    "group": 0,
+    "material": 3,
+    "vertices": 264,
+    "polygons": 258
+  },
+  {
+    "name": "NA-GREAVE-frame-L0",
+    "bone": "ShinL",
+    "group": 0,
+    "material": 0,
+    "vertices": 10,
+    "polygons": 7
+  },
+  {
+    "name": "NA-GREAVE-inlay-L0",
+    "bone": "ShinL",
+    "group": 0,
+    "material": 1,
+    "vertices": 10,
+    "polygons": 7
+  },
+  {
+    "name": "NA-GREAVE-rivet-L0-1",
+    "bone": "ShinL",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-GREAVE-rivet-L01",
+    "bone": "ShinL",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-GREAVE-frame-L1",
+    "bone": "ShinL",
+    "group": 0,
+    "material": 0,
+    "vertices": 10,
+    "polygons": 7
+  },
+  {
+    "name": "NA-GREAVE-inlay-L1",
+    "bone": "ShinL",
+    "group": 0,
+    "material": 1,
+    "vertices": 10,
+    "polygons": 7
+  },
+  {
+    "name": "NA-GREAVE-rivet-L1-1",
+    "bone": "ShinL",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-GREAVE-rivet-L11",
+    "bone": "ShinL",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-TASSET-frame-L",
+    "bone": "ThighL",
+    "group": 0,
+    "material": 0,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-TASSET-inlay-L",
+    "bone": "ThighL",
+    "group": 0,
+    "material": 1,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-TORSO-side-R",
+    "bone": "Chest",
+    "group": 0,
+    "material": 0,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-TORSO-side-trim-R",
+    "bone": "Chest",
+    "group": 0,
+    "material": 2,
+    "vertices": 48,
+    "polygons": 34
+  },
+  {
+    "name": "NA-SHOULDER-frame-R0",
+    "bone": "UpperArmR",
+    "group": 0,
+    "material": 0,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-SHOULDER-inlay-R0",
+    "bone": "UpperArmR",
+    "group": 0,
+    "material": 1,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-SHOULDER-rivet-R0-0.058499999999999996",
+    "bone": "UpperArmR",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-SHOULDER-rivet-R00.058499999999999996",
+    "bone": "UpperArmR",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-SHOULDER-frame-R1",
+    "bone": "UpperArmR",
+    "group": 0,
+    "material": 0,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-SHOULDER-inlay-R1",
+    "bone": "UpperArmR",
+    "group": 0,
+    "material": 1,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-SHOULDER-rivet-R1-0.05329999999999999",
+    "bone": "UpperArmR",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-SHOULDER-rivet-R10.05329999999999999",
+    "bone": "UpperArmR",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-SHOULDER-frame-R2",
+    "bone": "UpperArmR",
+    "group": 0,
+    "material": 0,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-SHOULDER-inlay-R2",
+    "bone": "UpperArmR",
+    "group": 0,
+    "material": 1,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-SHOULDER-rivet-R2-0.0481",
+    "bone": "UpperArmR",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-SHOULDER-rivet-R20.0481",
+    "bone": "UpperArmR",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-BRACER-frame-R",
+    "bone": "ForearmR",
+    "group": 0,
+    "material": 0,
+    "vertices": 10,
+    "polygons": 7
+  },
+  {
+    "name": "NA-BRACER-inlay-R",
+    "bone": "ForearmR",
+    "group": 0,
+    "material": 1,
+    "vertices": 10,
+    "polygons": 7
+  },
+  {
+    "name": "NA-BRACER-rib-R-1",
+    "bone": "ForearmR",
+    "group": 0,
+    "material": 2,
+    "vertices": 16,
+    "polygons": 10
+  },
+  {
+    "name": "NA-BRACER-rib-R1",
+    "bone": "ForearmR",
+    "group": 0,
+    "material": 2,
+    "vertices": 16,
+    "polygons": 10
+  },
+  {
+    "name": "NA-BRACER-strap-R0.4",
+    "bone": "ForearmR",
+    "group": 0,
+    "material": 3,
+    "vertices": 264,
+    "polygons": 258
+  },
+  {
+    "name": "NA-BRACER-strap-R0.85",
+    "bone": "ForearmR",
+    "group": 0,
+    "material": 3,
+    "vertices": 264,
+    "polygons": 258
+  },
+  {
+    "name": "NA-GREAVE-frame-R0",
+    "bone": "ShinR",
+    "group": 0,
+    "material": 0,
+    "vertices": 10,
+    "polygons": 7
+  },
+  {
+    "name": "NA-GREAVE-inlay-R0",
+    "bone": "ShinR",
+    "group": 0,
+    "material": 1,
+    "vertices": 10,
+    "polygons": 7
+  },
+  {
+    "name": "NA-GREAVE-rivet-R0-1",
+    "bone": "ShinR",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-GREAVE-rivet-R01",
+    "bone": "ShinR",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-GREAVE-frame-R1",
+    "bone": "ShinR",
+    "group": 0,
+    "material": 0,
+    "vertices": 10,
+    "polygons": 7
+  },
+  {
+    "name": "NA-GREAVE-inlay-R1",
+    "bone": "ShinR",
+    "group": 0,
+    "material": 1,
+    "vertices": 10,
+    "polygons": 7
+  },
+  {
+    "name": "NA-GREAVE-rivet-R1-1",
+    "bone": "ShinR",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-GREAVE-rivet-R11",
+    "bone": "ShinR",
+    "group": 0,
+    "material": 2,
+    "vertices": 86,
+    "polygons": 96
+  },
+  {
+    "name": "NA-TASSET-frame-R",
+    "bone": "ThighR",
+    "group": 0,
+    "material": 0,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-TASSET-inlay-R",
+    "bone": "ThighR",
+    "group": 0,
+    "material": 1,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-BACK-plate--1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 0,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-BACK-trim--1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 2,
+    "vertices": 48,
+    "polygons": 34
+  },
+  {
+    "name": "NA-STRAP-shoulder--1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 3,
+    "vertices": 64,
+    "polygons": 50
+  },
+  {
+    "name": "NA-STRAP-buckle--1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 2,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-BACK-plate-1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 0,
+    "vertices": 8,
+    "polygons": 6
+  },
+  {
+    "name": "NA-BACK-trim-1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 2,
+    "vertices": 48,
+    "polygons": 34
+  },
+  {
+    "name": "NA-STRAP-shoulder-1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 3,
+    "vertices": 64,
+    "polygons": 50
+  },
+  {
+    "name": "NA-STRAP-buckle-1",
+    "bone": "Chest",
+    "group": 0,
+    "material": 2,
+    "vertices": 8,
+    "polygons": 6
+  }
+]

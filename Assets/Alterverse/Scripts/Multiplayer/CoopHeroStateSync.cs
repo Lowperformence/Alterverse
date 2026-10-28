@@ -24,7 +24,7 @@ namespace Alterverse.Multiplayer
         private const string KillSoundMessage="DF_COOP_KILL_AUDIO_V2";
         private const string CombatSoundMessage="DF_COOP_COMBAT_AUDIO_V2";
         private const string OwnerPoseMessage="DF_COOP_OWNER_POSE_V5";
-        private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V7";
+        private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V8";
         private const float OwnerSendInterval=1f/20f;
         private const float HostSnapshotInterval=1f/20f;
         private const float MinimumMovementSlack=.18f;
@@ -336,13 +336,20 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
             reader.ReadValueSafe(out float tx);reader.ReadValueSafe(out float ty);reader.ReadValueSafe(out float tz);
             reader.ReadValueSafe(out float radius);reader.ReadValueSafe(out float duration);reader.ReadValueSafe(out double sent);
-            if(slot<0||slot>=slots.Length||slots[slot]==null||kind<0||kind>3||
+            if(slot<0||slot>=slots.Length||slots[slot]==null||kind<0||kind>4||
                 !TimmyFxFinite(x)||!TimmyFxFinite(y)||!TimmyFxFinite(z)||!TimmyFxFinite(tx)||!TimmyFxFinite(ty)||!TimmyFxFinite(tz)||
                 !TimmyFxFinite(radius)||radius<0||radius>6||!TimmyFxFinite(duration)||duration<0||duration>2.1f||
                 double.IsNaN(sent)||double.IsInfinity(sent))return;
             GameObject actor=slots[slot].gameObject;if(actor.GetComponent<HeroIdentity>()?.Hero!=HeroId.VoidKnight)return;
             float elapsed=Mathf.Max(0,(float)(NetworkManager.Singleton.ServerTime.Time-sent));
             if(kind==3){HeroSkillVfx.CancelVoidKnightWarnings(actor,false);return;}
+            if(kind==4)
+            {
+                (actor.GetComponent<VoidKnightState>()??actor.AddComponent<VoidKnightState>())
+                    .ApplyCloakSnapshot(duration,sent,NetworkManager.Singleton.ServerTime.Time);
+                if(duration>0&&elapsed<duration)HeroSkillVfx.VoidKnightSmoke(actor,new Vector3(x,y,z),false,elapsed);
+                return;
+            }
             if(duration<=0||elapsed>=duration)return;
             Vector3 origin=new Vector3(x,y,z),direction=new Vector3(tx-x,ty-y,tz-z);
             HeroSkillVfx.VoidKnightField(actor,direction,radius,duration,kind!=1,kind==2,false,elapsed,origin);
@@ -351,5 +358,6 @@ namespace Alterverse.Multiplayer
 
     }
 }
+
 
 

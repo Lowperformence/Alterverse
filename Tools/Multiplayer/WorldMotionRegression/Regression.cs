@@ -56,7 +56,7 @@ namespace UnityEngine
     }
     public static class Time {public static float unscaledTime,unscaledDeltaTime;}
 }
-namespace Alterverse.Combat {public class TeamMember:Component {public int Team;}}
+namespace Alterverse.Combat {public class HotZoneTank:UnityEngine.Component{public void ConfirmNetworkSpawn(){}}public class TeamMember:Component {public int Team;}}
 namespace Alterverse.Multiplayer {public static class CoopAuthority {public static bool Active=true,LocalIsHost,LocalHasServerAuthority;}}
 class Regression
 {

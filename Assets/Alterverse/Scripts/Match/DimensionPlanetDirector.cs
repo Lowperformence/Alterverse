@@ -55,7 +55,7 @@ default:return;
 }
 if(GameObject.Find(name)!=null)return;
 SpawnPlanet(name,p,type,hp,color,variant);
-if(announceNetwork&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+if(announceNetwork&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)
     NetworkPlanetSpawned?.Invoke(variant);
 }
 private static void Announce(string text){Announcement=text;AnnouncementUntil=Time.unscaledTime+4f;}private static void SpawnPlanet(string name,Vector3 p,PlanetBuffType type,float hp,Color color,int variant){GameObject root=GameObject.CreatePrimitive(PrimitiveType.Sphere);root.name=name;GameObject world=GameObject.Find("DF_MatchWorld");if(world!=null)root.transform.SetParent(world.transform,true);root.transform.position=p;root.transform.localScale=Vector3.one*(variant==2?1.82f:1.65f);root.AddComponent<PlanetVisualPresentation>().Build(color,variant);Health h=root.AddComponent<Health>();h.Configure(hp);DimensionPlanet planet=root.AddComponent<DimensionPlanet>();planet.Initialize(type);PlanetPulseAttack pulse=root.AddComponent<PlanetPulseAttack>();if(type==PlanetBuffType.Guard){pulse.enabled=false;root.AddComponent<PlanetMeteorShower>();}PlanetArrived?.Invoke(p);}

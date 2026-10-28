@@ -252,6 +252,9 @@ namespace Alterverse.Combat
             Material recess = Mat(recessColor, .10f, .05f);
             Material sandbag = Mat(sandbagColor, .01f, .13f);
             Material teamGlow = Mat(teamEnergy, .08f, .62f, true);
+            StructureSurfaceMaterials.Apply(armor,StructureFinish.Concrete);
+            StructureSurfaceMaterials.Apply(armorLight,StructureFinish.Concrete);
+            StructureSurfaceMaterials.Apply(metal,StructureFinish.Metal);
 
             BuildExcavation(soil, deep);
             BuildArmoredWalls(armor, armorLight, metal, recess, variant);
@@ -550,4 +553,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 

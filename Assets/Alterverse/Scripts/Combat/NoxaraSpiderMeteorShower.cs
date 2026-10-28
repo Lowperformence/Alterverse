@@ -30,8 +30,10 @@ namespace Alterverse.Combat
         {
             owner=GetComponent<HotZoneTank>();
             self=GetComponent<Health>();
-            nextAttack=Time.time+3f;
+            ResetForSpawn();
         }
+
+        public void ResetForSpawn(){nextAttack=Time.time+3f;nextScan=0f;enemyNearby=false;}
 
         private void Update()
         {
@@ -140,6 +142,8 @@ namespace Alterverse.Combat
 
         private void BuildVisuals(Transform world)
         {
+            // Keep the strike and its original deadline; headless servers need no art.
+            if(Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested)return;
             Shader ink=Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
             Shader rock=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
             if(ink==null||rock==null)return;
@@ -230,7 +234,8 @@ namespace Alterverse.Combat
 
             Vector3 impact=new(impactPosition.x,impactPosition.y+.3f,impactPosition.z);
             Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Explosion,impact,.52f);
-            BomberExplosionVfx.Play(impact,PoisonGreenHot,ImpactRadius);
+            if(!AttackExplosionVfx.TryMeteor(impact,PoisonGreenHot))
+                BomberExplosionVfx.Play(impact,PoisonGreenHot,ImpactRadius);
             PrototypeVfx.Ring(impact,PoisonGreen,ImpactRadius*1.05f,.3f);
 
             int hits=Physics.OverlapSphereNonAlloc(impactPosition,ImpactRadius,hitBuffer);
@@ -278,4 +283,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 

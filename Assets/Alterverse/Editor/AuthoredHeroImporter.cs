@@ -13,9 +13,8 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        // Version 22 clears incompatible cached normal bindings during the URP conversion.
-        // Changing AuthoredHeroDetailPass alone does not refresh imported FBX data.
-        public override uint GetVersion() => 22;
+        // Reimport cached FBXs with the restored pre-consolidation material response.
+        public override uint GetVersion() => 23;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;

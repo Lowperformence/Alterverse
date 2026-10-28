@@ -55,7 +55,7 @@ partial class Regression
  {
   Reset();
   Check(AimingSettings.Current.For(HeroId.Nyra,0).aimType==AimType.Beam,"Prism Shot is a laser");
-  Check(AimingSettings.Current.For(HeroId.Traveler,0).aimType==AimType.Projectile,"Temporal Beam retains existing orb flight");
+  Check(AimingSettings.Current.For(HeroId.Traveler,0).aimType==AimType.Beam,"Temporal Beam resolves as a laser on release");
   foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))for(int slot=0;slot<4;slot++)
   {
    var entry=AimingSettings.Current.For(hero,slot);var baseline=HeroAbilityKit.LoadoutFor(hero).Spec(slot);

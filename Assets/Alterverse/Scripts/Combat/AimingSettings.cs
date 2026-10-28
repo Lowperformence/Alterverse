@@ -87,6 +87,7 @@ namespace Alterverse.Combat
                 castOnRelease = true, allowTapCast = true
             };
             if (hero == HeroId.Nerok && slot == 0) { spec.projectileSpeed = 18f; spec.projectileWidth = .35f; }
+            if(hero==HeroId.Bolt7&&slot==1)spec.coneAngle=Bolt7Balance.RamAngle;
             if(hero==HeroId.VoidKnight){spec.coneAngle=80f;if(slot==3)spec.aoeRadius=ability.Range;}
             if (hero == HeroId.Timmy && slot == 3) spec.targetingMode = TargetingMode.Cone;
             if (hero == HeroId.Kaelon && slot == 0) { spec.projectileSpeed = 14f; spec.projectileWidth = .86f; }
@@ -96,6 +97,13 @@ namespace Alterverse.Combat
                     if (overrides[i].hero == hero && overrides[i].slot == slot) { spec = overrides[i].spec; break; }
             // Projectile/beam/homing describe presentation only. Even legacy serialized
             // overrides must resolve damage through the same cone shown to the player.
+            // Sightline Break keeps its needle-thin, doubled field even with an old serialized override.
+            if(hero==HeroId.Nyra&&slot==3)
+            {
+                spec.castRange=HeroAbilityKit.SivraUltimateRange;
+                spec.coneAngle=HeroAbilityKit.SivraUltimateConeAngle;
+                spec.aimType=AimType.Projectile;
+            }
             if (spec.aimType == AimType.Projectile || spec.aimType == AimType.Beam || spec.aimType == AimType.Homing)
                 spec.targetingMode = slot < 0 ? TargetingMode.AutoBasic : TargetingMode.Cone;
             spec.castRange = Mathf.Max(0f, spec.castRange);
@@ -109,6 +117,7 @@ namespace Alterverse.Combat
 
         private static AimType Classify(HeroId hero, int slot, AbilitySpec ability)
         {
+            if(hero==HeroId.Bolt7)return slot==1?AimType.Melee:AimType.Area;
             if(hero==HeroId.VoidKnight)return slot==1?AimType.Self:slot==2?AimType.Dash:slot==3?AimType.AreaCone:AimType.Melee;
             if (hero == HeroId.Timmy && (slot == 2 || slot == 3)) return AimType.Dash;
             if ((hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) ||
@@ -116,10 +125,12 @@ namespace Alterverse.Combat
             if (hero == HeroId.Mira && (slot == 1 || slot == 2)) return AimType.Ally;
             if ((hero == HeroId.Kaelon || hero == HeroId.Rook || hero == HeroId.Nerok) && slot == 1) return AimType.Self;
             if (ability.Radius > 0f) return ability.Range > 0f ? AimType.Area : AimType.SelfArea;
-            if (hero == HeroId.Nyra && slot == 0) return AimType.Beam;
+            if ((hero == HeroId.Nyra || hero == HeroId.Traveler) && slot == 0) return AimType.Beam;
             if ((hero == HeroId.Nerok && slot == 0) || (hero == HeroId.Kaelon && slot == 0) ||
                 (hero == HeroId.Veyr && slot == 1) || HeroAttackDelivery.IsRanged(hero)) return AimType.Projectile;
             return AimType.Melee;
         }
     }
 }
+
+

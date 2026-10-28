@@ -20,7 +20,10 @@ namespace UnityEngine
  {
   public class Settings {public string mAppId="123",mWebClientId="web-client";}
   public static object Load(string path)=>new Settings();
-  public static T Load<T>(string path) where T:class=>path=="Social/SafeIdentityCatalog"?new TextAsset{text=System.IO.File.ReadAllText(Environment.GetEnvironmentVariable("DF_TEST_IDENTITY_CATALOG"))} as T:null;
+  public static bool AccountConfigured;
+  public static T Load<T>(string path) where T:class=>
+   path=="Commerce/AccountServerConfig"&&AccountConfigured?new TextAsset{text="{\"httpsEndpoint\":\"https://accounts.example.invalid\"}"} as T:
+   path=="Social/SafeIdentityCatalog"?new TextAsset{text=System.IO.File.ReadAllText(Environment.GetEnvironmentVariable("DF_TEST_IDENTITY_CATALOG"))} as T:null;
  }
  public static class JsonUtility
  {
@@ -59,11 +62,26 @@ namespace Unity.Services.Authentication
   public string PlayerId="unity-a",AccessToken="token",Provider="google-a";public Func<Task<PlayerInfo>> Info;
   public event Action SignedIn,SignedOut,Expired;
   public Task<PlayerInfo> GetPlayerInfoAsync()=>Info?.Invoke()??Task.FromResult(new PlayerInfo{Google=Provider});
-  public Task SignInAnonymouslyAsync(){IsSignedIn=IsAuthorized=true;SignedIn?.Invoke();return Task.CompletedTask;}
-  public Task SignInWithGooglePlayGamesAsync(string code,SignInOptions options=null)=>SignInAnonymouslyAsync();
-  public Task SignInWithUsernamePasswordAsync(string user,string password)=>SignInAnonymouslyAsync();
+  public int AnonymousSignIns,AnonymousCreates,GoogleSignIns,UsernameSignIns,Links;
+  public bool FailGoogle,LastCreateAccount;
+  public string GooglePlayerId="unity-play",CachedPlayerId="unity-legacy",CachedProvider;
+  Task SignedInNow(){IsSignedIn=IsAuthorized=true;SignedIn?.Invoke();return Task.CompletedTask;}
+  public Task SignInAnonymouslyAsync()
+  {
+   AnonymousSignIns++;if(!SessionTokenExists)AnonymousCreates++;
+   PlayerId=CachedPlayerId;Provider=CachedProvider;return SignedInNow();
+  }
+  public Task SignInWithGooglePlayGamesAsync(string code,SignInOptions options=null)
+  {
+   GoogleSignIns++;LastCreateAccount=options?.CreateAccount??true;
+   if(FailGoogle)throw new InvalidOperationException("existing Google identity unavailable");
+   PlayerId=GooglePlayerId;Provider=GooglePlayGames.PlayGamesPlatform.Instance.localUser.id;
+   SessionTokenExists=true;return SignedInNow();
+  }
+  public Task SignInWithUsernamePasswordAsync(string user,string password){UsernameSignIns++;return SignedInNow();}
   public Task AddUsernamePasswordAsync(string user,string password)=>Task.CompletedTask;
-  public Task LinkWithGooglePlayGamesAsync(string code)=>Task.CompletedTask;
+  public Task LinkWithGooglePlayGamesAsync(string code)
+  {Links++;Provider=GooglePlayGames.PlayGamesPlatform.Instance.localUser.id;return Task.CompletedTask;}
   public void SignOut(){IsSignedIn=IsAuthorized=false;SignedOut?.Invoke();}
  }
 }
@@ -89,11 +107,17 @@ namespace Alterverse.Shop
  public class GooglePlayShardStore {public static GooglePlayShardStore Instance;public bool Busy,PendingRecovery;public void Reconnect(){}}
  public class PaidShardCommerce
  {
-  public static PaidShardCommerce Instance;public static bool Spending;public bool Ready=true,HasPaidHistory;public int FlushCalls;public string AccountHash;
+  public static PaidShardCommerce Instance;public static bool Spending;public bool Ready=true,HasPaidHistory,SaveOnFlush;public int FlushCalls;public string AccountHash;
   public static event Action EntitlementsChanged;public static void Raise()=>EntitlementsChanged?.Invoke();
-  public static void Connect(string endpoint,Func<string> token,string account){Instance=new(){AccountHash=account};}
+  public static int Connections;public static Action<string> OnConnect;
+  public static void Connect(string endpoint,Func<string> token,string account){Connections++;OnConnect?.Invoke(account);Instance=new(){AccountHash=account};}
   public static void Disconnect(){Instance=null;Alterverse.Profile.AccountProfilePrefs.Detach();Raise();}
-  public void Refresh(){}public Task<bool> FlushProfileAsync(){FlushCalls++;return Task.FromResult(true);}
+  public void Refresh(){}public Task<bool> FlushProfileAsync()
+  {
+   FlushCalls++;
+   if(SaveOnFlush){var profile=Alterverse.Profile.AccountProfilePrefs.Capture();Alterverse.Profile.AccountProfilePrefs.ApplyRemote(Alterverse.Profile.AccountProfilePrefs.Revision+1,profile,profile);}
+   return Task.FromResult(true);
+  }
  }
 }
 namespace Alterverse.Profile

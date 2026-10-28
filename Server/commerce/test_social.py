@@ -280,7 +280,8 @@ class SocialTests(unittest.TestCase):
         clan=self.create()
         self.call('b','/social/clan/join',clanId=clan)
         with self.assertRaises(ValueError): self.call('a','/social/clan/icon',avatar=11)
-        with self.assertRaises(ValueError): self.call('a','/social/clan/icon',avatar=0)
+        self.call('a','/social/clan/icon',avatar=0)
+        self.assertEqual(self.call('a')['clan']['avatar'],0)
         with self.assertRaises(SocialForbidden): self.call('b','/social/clan/icon',avatar=10)
         self.call('a','/social/clan/icon',avatar=10)
         self.assertEqual(self.call('b')['clan']['avatar'],10)
@@ -289,6 +290,26 @@ class SocialTests(unittest.TestCase):
         self.call('a','/social/clan/transfer',playerId=self.ids['b'])
         self.assertEqual(self.call('b')['clan']['avatar'],10)
         with self.assertRaises(ValueError): self.call('b','/social/clan/icon',avatar=10)
+
+    def test_clan_icon_starter_founder_reward_and_ownership_guards(self):
+        clan=self.create()
+        for avatar in range(6):
+            self.call('a','/social/clan/icon',avatar=avatar)
+            self.assertEqual(self.call('a')['clan']['avatar'],avatar)
+        for avatar in (6,16,10,-1,1001,True,'0'):
+            with self.subTest(avatar=avatar),self.assertRaises(ValueError):
+                self.call('a','/social/clan/icon',avatar=avatar)
+        state=self.ledger.wallet('a')
+        self.ledger.save_profile('a',state['profile']+[
+            {'key':'DF_FoundersPack_Owned','kind':0,'number':1},
+            {'key':'DF_AvatarOwned_16','kind':0,'number':1}],state['profileRevision'])
+        wallet=self.ledger.wallet('a')
+        for avatar in (6,16):
+            self.call('a','/social/clan/icon',avatar=avatar)
+            self.assertEqual(self.make_social(self.make_ledger()).dispatch('a','/social/state',{})['clan']['avatar'],avatar)
+        self.assertEqual(self.ledger.wallet('a'),wallet)
+        self.call('b','/social/clan/join',clanId=clan)
+        with self.assertRaises(SocialForbidden):self.call('b','/social/clan/icon',avatar=0)
 
     def test_all_communication_routes_are_disabled_for_every_player(self):
         clan=self.create()
@@ -448,4 +469,5 @@ class SocialHttpTests(unittest.TestCase):
         b=self.request('b','/social/state')['body']['social']
         self.assertNotIn('wallet',b)
         self.assertIsNone(b['clan'])
+
 

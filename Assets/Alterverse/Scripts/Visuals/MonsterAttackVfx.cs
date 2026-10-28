@@ -160,6 +160,7 @@ namespace Alterverse.Visuals
         {
             if(actor==null)return;
             bool guard=actor.GetComponent<HealingGuardMech>()!=null;
+            if(guard&&SmallBulletGuard(actor,from,to,elapsed))return;
             // Base guardians retain their existing immediate damage timing; only the cosmetic shot travels.
             float delay=guard?.16f:0;
             if(guard)Launch(actor,from,to,delay,elapsed);
@@ -196,6 +197,19 @@ namespace Alterverse.Visuals
             }
         }
         public static void PublishLaser(GameObject actor,Health target,float duration)=>LaserChanged?.Invoke(actor,target,duration);
+        private static bool SmallBulletGuard(GameObject actor,Vector3 from,Vector3 to,float elapsed)
+        {
+            if(!SmallBulletVfx.Launch(actor,from,to,.16f,elapsed:elapsed,confirmedHit:true))return false;
+            // Preserve the existing mech burst/audio; each cosmetic round owns its native hit.
+            if(StyleFor(actor)==MonsterAttackStyle.Mech)
+            {
+                var gun=actor.GetComponentInChildren<MechMachineGunVisual>();gun?.MarkBurstPresented();
+                DimensionAudio.PlayAt(DimensionSound.MechGun,from,.5f,elapsed);
+                SmallBulletVfx.Launch(actor,from,to,.1072f,elapsed:elapsed,confirmedHit:true,delay:.0528f);
+                SmallBulletVfx.Launch(actor,from,to,.0544f,elapsed:elapsed,confirmedHit:true,delay:.1056f);
+            }
+            return true;
+        }
         public static void PresentLaser(GameObject actor,Transform target,float duration,float elapsed)
         {
             if(actor==null)return;

@@ -55,6 +55,8 @@ namespace UnityEngine
         public static Vector3 operator -(Vector3 a,Vector3 b)=>new(a.x-b.x,a.y-b.y,a.z-b.z);
         public static Vector3 operator *(Vector3 a,float b)=>new(a.x*b,a.y*b,a.z*b);
         public static Vector3 Scale(Vector3 a,Vector3 b)=>new(a.x*b.x,a.y*b.y,a.z*b.z);
+        public float magnitude=>(float)Math.Sqrt(x*x+y*y+z*z);
+        public static Vector3 Cross(Vector3 a,Vector3 b)=>new(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x);
     }
     public struct Quaternion
     {
@@ -141,8 +143,8 @@ namespace UnityEngine
 namespace UnityEditor{public sealed class MenuItem:Attribute{public MenuItem(string label){}}}
 namespace Alterverse.Characters
 {
-    public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok,Timmy,VoidKnight}
-    public sealed class HeroIdentity:UnityEngine.Component{public const int HeroCount=10;public HeroId Hero;public void Configure(HeroId id){Hero=id;}}
+    public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok,Timmy,VoidKnight,Bolt7}
+    public sealed class HeroIdentity:UnityEngine.Component{public const int HeroCount=11;public HeroId Hero;public void Configure(HeroId id){Hero=id;}}
     public static class PlayerHeroSelection{public static HeroId Selected;public static void Select(HeroId h)=>Selected=h;}
 }
 namespace Alterverse.Profile

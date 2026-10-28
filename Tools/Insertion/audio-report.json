@@ -1,0 +1,10 @@
+{
+  "title": "SpaceShip Land.wav",
+  "author": "thepodcastdoctor",
+  "license": "CC0 1.0",
+  "source": "https://freesound.org/people/thepodcastdoctor/sounds/534692/",
+  "source_sha256": "3d11f0adb071719d1153b02c2df97a2a68864cffcef684247af350c38c9b5b6d",
+  "runtime_file": "Assets/Alterverse/Resources/Audio/SFX/InsertionTransport/R35Arrival.wav",
+  "runtime_sha256": "087859a35383727c534425f8d8cfa685c69179506595df023695d17eaa40d809",
+  "conversion": "44.1 kHz stereo PCM16; original duration, playback speed and pitch preserved"
+}

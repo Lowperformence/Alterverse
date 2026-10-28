@@ -27,6 +27,10 @@ namespace Alterverse.Characters
         // Sivra's Vector Shift grants a brief movement-speed passive after the dash ends.
         public const float SivraDashSpeedMultiplier = 1.10f;
         public const float SivraDashSpeedSeconds = 1.8f;
+        public const float SivraPrismShieldAbsorb = 15f;
+        public const float SivraPrismOvershieldSeconds = 3f;
+        public const float SivraUltimateRange = 15.6f;
+        public const float SivraUltimateConeAngle = 3f;
         public HeroId Hero { get; private set; }
         public AbilitySpec Passive { get; private set; }
         public AbilitySpec Q { get; private set; }
@@ -43,11 +47,17 @@ namespace Alterverse.Characters
         {
             return id switch
             {
+                HeroId.Bolt7=>new HeroAbilityLoadout(
+                    new("Compact frame",0,0,0),
+                    new("Frag Arc",Bolt7Balance.GrenadeCooldown,Bolt7Balance.GrenadeDamage,Bolt7Balance.GrenadeRange,Bolt7Balance.GrenadeRadius,Bolt7Balance.GrenadeWindup),
+                    new("Piston Ram",Bolt7Balance.RamCooldown,Bolt7Balance.RamDamage,Bolt7Balance.RamRange,0,Bolt7Balance.RamWindup),
+                    new("Impulse Grenade",Bolt7Balance.ImpulseCooldown,Bolt7Balance.ImpulseDamage,Bolt7Balance.ImpulseRange,Bolt7Balance.ImpulseRadius,Bolt7Balance.ImpulseWindup),
+                    new("Null Field",Bolt7Balance.UltimateCooldown,0,Bolt7Balance.UltimateRange,Bolt7Balance.UltimateRadius,Bolt7Balance.UltimateWindup)),
                 HeroId.VoidKnight=>new HeroAbilityLoadout(
                     new("Void Resonance",0,30,0),
                     new("Rift Sweep",7,24,3.4f,0,.28f),
                     new("Null Guard",12,0,0),
-                    new("Rift Lunge",9,16,4f,0,.18f),
+                    new("Rift Lunge",9,22,4f,0,.18f),
                     new("Eventide Cleave",40,42,3.8f,0,.65f)),
                 HeroId.Timmy=>new HeroAbilityLoadout(
                     new("Light Paws",0,0,0),
@@ -74,8 +84,8 @@ namespace Alterverse.Characters
                     new("Calibrated edge",0,0,0),
                     new("Prism Shot",7,32,7.8f),
                     new("Vector Shift",14,0,3f),
-                    new("Light Snare",12,20,6.8f),
-                    new("Sightline Break",50,64,7.8f)),
+                    new("Light Snare",12,25,6.8f),
+                    new("Sightline Break",50,64,SivraUltimateRange)),
                 HeroId.Elyra=>new HeroAbilityLoadout(
                     new("Field geometry",0,0,0),
                     new("Orbit Fracture",8,35,7.3f,2f,.38f),
@@ -119,3 +129,4 @@ namespace Alterverse.Characters
         }
     }
 }
+

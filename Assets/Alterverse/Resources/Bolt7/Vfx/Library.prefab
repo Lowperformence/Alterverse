@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7808452912600297372
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 648672519820025104}
+  - component: {fileID: 5378009523310058157}
+  m_Layer: 0
+  m_Name: Library
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &648672519820025104
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7808452912600297372}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5378009523310058157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7808452912600297372}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e97f879bb1f9515ebaa2c7be53318276, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Alterverse.Visuals.Bolt7VfxLibrary
+  muzzle: {fileID: 3577118427082930850, guid: f21142589b806da4287aa193150c2f5c, type: 3}
+  grenade: {fileID: 908946382620822592, guid: 6d34caff655f8524b85a3d6f5d3def41, type: 3}
+  explosion: {fileID: 5628761499359665326, guid: 1b2b07103edf4684b98aff16e5797418, type: 3}
+  lightningOrb: {fileID: 7606297866026306044, guid: 93a191fc9cb84ec4082e8278f3dbb413, type: 3}
+  starFog: {fileID: 5595322832752691049, guid: 9520617ee4b00f94eb34ce26d654b63b, type: 3}
+  heavyPunch: {fileID: 2089640493151426361, guid: 99356476684e5c942a229c96be1211c6, type: 3}
+  lightningNova: {fileID: 5709066314543360907, guid: b93bf988794215e43b70bb045a07544b, type: 3}
+  bulletMuzzle: {fileID: 8427429661824256885, guid: 5e956a85859f8fc48a4c9f00a0279c3f, type: 3}
+  bulletProjectile: {fileID: 7108100038559624693, guid: 5c1a71898ac82e440a036af69f9c1fdd, type: 3}
+  bulletImpact: {fileID: 7577422457188745442, guid: aec3ac6ebfde09e49bb817da9914c2a6, type: 3}
+  heavyPunchRadius: 4.7608128
+  novaRadius: 6.482301
+  nativeAudioGain: 1.4
+  sourceSignature: BOLT7 native Grenade chain / Lightning Orb / Star Fog, Cartoony Punch Heavy, Lightning Nova, original audio, complete bullet chain v4:Renderer material slots 2:Assets/Epic Toon FX/Prefabs/Combat/Muzzleflash/GrenadeMuzzle/GrenadeMuzzleBlue.prefab=1b6096f895220334a4f9fffe2f8804d0;Assets/Epic Toon FX/Prefabs/Combat/Missiles/Grenade/GrenadeMissileBlue.prefab=3ccbfbddca9743d779e01c641d0b789d;Assets/Epic Toon FX/Prefabs/Combat/Explosions/GrenadeExplosion/GrenadeExplosionBlue.prefab=936d94985020b8c03991784be2e2d9f9;Assets/Epic Toon FX/Prefabs/Environment/Lightning/Sharp Orb/LightningOrbSharpBlue.prefab=084f0bb3ad892c26b152330812c6d3a1;Assets/Epic Toon FX/Prefabs/Environment/Stars/StarFog/StarFogBlue.prefab=9dc14569dd322933e448dd4f4194bef5;Assets/Epic Toon FX/Prefabs/Combat/Brawling/Soft/Directional/SoftPunchHeavy.prefab=735b2df7a5a2a71f2aea13775999621d;Assets/Epic Toon FX/Prefabs/Combat/Nova/Lightning/NovaLightningPurple.prefab=03beddb7d678935e2317fc7a30cd145c;Assets/Epic Toon FX/Prefabs/Combat/Muzzleflash/BulletFatMuzzle/BulletFatMuzzleBlue.prefab=ee519b654bcf440710a80b9eceecdbe2;Assets/Epic Toon FX/Prefabs/Combat/Missiles/Bullet/BulletMeshSmallFire.prefab=03e1324bd778d3c87773e25dd4622f11;Assets/Epic Toon FX/Prefabs/Combat/Explosions/BulletExplosion/BulletExplosionBlue.prefab=7df1babe62adcd005ce1e2b3c800df54:Assets/Epic Toon FX/Sound/etfx_shoot_grenade.wav=e16caa0ef36852ae7ebf85e3da524c6d;Assets/Epic Toon FX/Sound/etfx_shoot_grenade.wav=e16caa0ef36852ae7ebf85e3da524c6d;Assets/Epic Toon FX/Sound/etfx_explosion_grenade.wav=26f4c7f1b6b38eb3c86b28dc3910b5ca;Assets/Epic Toon FX/Sound/etfx_explosion_lightning.wav=04b7d24459871526b3548f19e3e8862d;none;none;Assets/Epic Toon FX/Sound/etfx_shoot_lightning2.wav=83f48276cbc696282cb99a06373cdbdb;none;Assets/Epic Toon FX/Sound/etfx_shoot_pistol02.wav=e81ef638e464ab36ca4ad06a0d9b05b9;Assets/Epic Toon FX/Sound/etfx_explosion_bullet.wav=754be373ad8182672138bdce93ba3a01

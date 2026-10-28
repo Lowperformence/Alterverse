@@ -50,7 +50,8 @@ def main():
         constants = re.findall(r'private const (?:string|float) (?:OwnerPoseMessage|HeroSnapshotMessage|OwnerSendInterval|HostSnapshotInterval|MinimumMovementSlack)=[^;]+;', main_source)
         assert len(constants) == 5
         declarations = directory / 'TransportConstants.cs'
-        declarations.write_text('using UnityEngine;using Unity.Netcode;namespace Alterverse.Multiplayer {public sealed partial class CoopHeroStateSync {' + ''.join(constants) + block(main_source, 'private void Update()') + '}}')
+        finite=re.search(r'private static bool TimmyFxFinite[^;]+;',main_source)[0]
+        declarations.write_text('using UnityEngine;using Unity.Netcode;using Alterverse.Characters;using Alterverse.Visuals;namespace Alterverse.Multiplayer {public sealed partial class CoopHeroStateSync {' + ''.join(constants) + block(main_source, 'private void Update()') + block(main_source,'private void OnVoidKnightEffect(') + finite + '}}')
         pickup = (source / 'Combat/CentralHealingPickup.cs').read_text()
         a = pickup.index('private void Update()')
         b = pickup.index('private void AnimateAvailable()', a)
@@ -84,4 +85,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 

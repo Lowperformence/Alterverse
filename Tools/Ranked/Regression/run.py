@@ -16,7 +16,7 @@ if not a.dotnet_root and not (a.mono_root and a.roslyn):
 here=Path(__file__).resolve().parent
 root=here.parents[2]
 source=root/'Assets/Alterverse/Scripts'
-names=['Profile/SafeIdentityCatalog.cs','Profile/PlayerProfile.cs','Profile/AccountProfilePrefs.cs','Profile/SocialService.cs','Multiplayer/MatchSession.cs','Multiplayer/CoopLobbyService.cs','Multiplayer/OnlinePartyService.cs','Multiplayer/OnlinePlanHandshake.cs','Multiplayer/EdgegapOnlineFlow.cs','Multiplayer/MultiplayerGate.cs','Multiplayer/CoopMatchPlan.cs','Multiplayer/OnlineMatchPlan.cs','Prototype/FiveVsFiveTestRoster.cs','Combat/TeamMember.cs','Multiplayer/CoopPlanHandshake.cs',
+names=['AI/BotHeroPool.cs','Profile/SafeIdentityCatalog.cs','Profile/PlayerProfile.cs','Profile/AccountProfilePrefs.cs','Profile/SocialService.cs','Multiplayer/MatchSession.cs','Multiplayer/CoopLobbyService.cs','Multiplayer/OnlinePartyService.cs','Multiplayer/OnlinePlanHandshake.cs','Multiplayer/EdgegapOnlineFlow.cs','Multiplayer/MultiplayerGate.cs','Multiplayer/CoopMatchPlan.cs','Multiplayer/OnlineMatchPlan.cs','Prototype/FiveVsFiveTestRoster.cs','Combat/TeamMember.cs','Multiplayer/CoopPlanHandshake.cs',
        'Multiplayer/RankedAvailability.cs','Multiplayer/RankedService.cs','Multiplayer/RankedMatchReporter.cs','Multiplayer/EdgegapMatchmakerClient.cs',
        'Multiplayer/DedicatedOnlineMatchHandshake.cs','Multiplayer/EdgegapDedicatedServerLifecycle.cs','UI/RankedPanel.cs','Match/MatchExit.cs','Match/PostMatchAutoLoop.cs','Multiplayer/NetworkRoundLoop.cs','Multiplayer/CoopConnectionWatchdog.cs','Multiplayer/CoopWorldStateSync.cs','Multiplayer/WorldSnapshotHistory.cs','Multiplayer/SnapshotCadence.cs']
 with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:

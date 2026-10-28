@@ -1,10 +1,36 @@
 {
   "dependencies": {
+    "com.google.ads.mobile": {
+      "version": "11.5.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.google.external-dependency-manager": "1.2.187",
+        "com.unity.modules.androidjni": "1.0.0"
+      },
+      "url": "https://package.openupm.com"
+    },
     "com.google.external-dependency-manager": {
       "version": "1.2.188",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
+      "url": "https://package.openupm.com"
+    },
+    "com.google.play.common": {
+      "version": "1.9.2",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://package.openupm.com"
+    },
+    "com.google.play.core": {
+      "version": "1.8.6",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {
+        "com.google.external-dependency-manager": "1.2.185"
+      },
       "url": "https://package.openupm.com"
     },
     "com.google.play.games": {
@@ -15,6 +41,16 @@
         "com.google.external-dependency-manager": "1.2.182"
       },
       "hash": "050198623594baf4d333ab99095ae41244f64335"
+    },
+    "com.google.play.review": {
+      "version": "1.8.4",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.google.play.common": "1.9.2",
+        "com.google.play.core": "1.8.6"
+      },
+      "url": "https://package.openupm.com"
     },
     "com.unity.ai.navigation": {
       "version": "2.0.14",
@@ -48,6 +84,12 @@
         "com.unity.test-framework": "1.4.6",
         "com.unity.test-framework.performance": "3.2.0"
       }
+    },
+    "com.unity.dedicated-server": {
+      "version": "3.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
     },
     "com.unity.ext.nunit": {
       "version": "2.1.0",
@@ -173,6 +215,24 @@
         "com.unity.render-pipelines.core": "17.6.0"
       }
     },
+    "com.unity.sdk.linux-arm64": {
+      "version": "1.1.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.sysroot.base": "1.1.0"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.sdk.linux-x86_64": {
+      "version": "1.1.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.sysroot.base": "1.1.0"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.searcher": {
       "version": "4.9.5",
       "depth": 2,
@@ -261,13 +321,6 @@
       },
       "url": "https://packages.unity.com"
     },
-    "com.unity.settings-manager": {
-      "version": "2.1.1",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
     "com.unity.shadergraph": {
       "version": "17.6.0",
       "depth": 1,
@@ -277,6 +330,13 @@
         "com.unity.searcher": "4.9.3",
         "com.unity.graph-authoring": "1.0.0"
       }
+    },
+    "com.unity.sysroot.base": {
+      "version": "1.1.0",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
     },
     "com.unity.test-framework": {
       "version": "1.8.0",
@@ -307,6 +367,15 @@
         "com.unity.modules.audio": "1.0.0",
         "com.unity.modules.particlesystem": "1.0.0"
       }
+    },
+    "com.unity.toolchain.win-x86_64-linux": {
+      "version": "1.1.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.sysroot.base": "1.1.0"
+      },
+      "url": "https://packages.unity.com"
     },
     "com.unity.transport": {
       "version": "6.6.0",

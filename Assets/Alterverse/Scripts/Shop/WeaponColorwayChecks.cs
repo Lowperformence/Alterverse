@@ -11,7 +11,7 @@ namespace Alterverse.Shop
         [MenuItem("DIMENSIONS FRONT/Checks/Weapon colorways (non-destructive)")]
         public static void Run()
         {
-            HeroId[] heroes={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,HeroId.Mira,HeroId.Rook,HeroId.Traveler,HeroId.Nerok,HeroId.VoidKnight};
+            HeroId[] heroes={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,HeroId.Mira,HeroId.Rook,HeroId.Traveler,HeroId.Nerok,HeroId.VoidKnight,HeroId.Bolt7};
 
             Assert(WeaponSkinCatalog.Items!=null,"Weapon colorway catalog is missing.");
             Assert(WeaponSkinCatalog.Items.Length==heroes.Length*2,"Weapon shop must contain exactly two purchasable colorways per hero.");
@@ -42,3 +42,4 @@ namespace Alterverse.Shop
     }
 }
 #endif
+

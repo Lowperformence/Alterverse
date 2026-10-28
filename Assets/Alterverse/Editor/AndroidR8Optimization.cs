@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Build;
 #if UNITY_ANDROID
@@ -73,7 +74,59 @@ namespace Alterverse.EditorChecks
             UpgradeDefaultRules(launcher);
             if (!File.ReadAllText(launcher).Contains("proguard-android-optimize.txt"))
                 throw new BuildFailedException("R8 release requires an optimized default ProGuard configuration in launcher/build.gradle. Inspect the launcher Gradle template.");
+            ConfigureOptionalGoogleAdsRules(path, File.ReadAllText(library));
         }
+
+        private const string OptionalAdsStart = "# DF_OPTIONAL_GMA_NEXTGEN_START";
+        private const string OptionalAdsEnd = "# DF_OPTIONAL_GMA_NEXTGEN_END";
+
+        private static void ConfigureOptionalGoogleAdsRules(string libraryPath, string gradle)
+        {
+            bool standard = HasDependency(gradle, "com.google.android.gms:play-services-ads");
+            bool nextGen = HasDependency(gradle, "com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk");
+            string rulesPath = Path.Combine(libraryPath, "proguard-user.txt");
+            if (!File.Exists(rulesPath))
+            {
+                if (standard && !nextGen)
+                    throw new BuildFailedException("Standard Google Mobile Ads requires the generated unityLibrary/proguard-user.txt for optional Next-Gen bridge rules.");
+                return;
+            }
+
+            string source = File.ReadAllText(rulesPath);
+            string updated = source;
+            int start = updated.IndexOf(OptionalAdsStart, StringComparison.Ordinal);
+            if (start >= 0)
+            {
+                int end = updated.IndexOf(OptionalAdsEnd, start, StringComparison.Ordinal);
+                if (end < 0 || updated.IndexOf(OptionalAdsStart, start + OptionalAdsStart.Length, StringComparison.Ordinal) >= 0)
+                    throw new BuildFailedException("Malformed optional Google Ads rules block in generated proguard-user.txt.");
+                end += OptionalAdsEnd.Length;
+                if (end < updated.Length && updated[end] == '\r') end++;
+                if (end < updated.Length && updated[end] == '\n') end++;
+                updated = updated.Remove(start, end - start);
+            }
+            // GMA 11.5.0 packages both JNI bridges and keeps com.google.unity.ads.**.
+            // Its factory probes for the Next-Gen SDK before using that bridge.
+            // Only Standard-only builds may omit these optional SDK definitions.
+            // Never hide missing active SDK classes, or apply this to a Next-Gen build.
+            if (standard && !nextGen)
+            {
+                if (updated.Length > 0 && !updated.EndsWith("\n", StringComparison.Ordinal)) updated += "\n";
+                updated += OptionalAdsStart + "\n" +
+                    "# Standard SDK selected; Next-Gen JNI bridge is inactive.\n" +
+                    "-dontwarn com.google.android.libraries.ads.mobile.sdk.**\n" +
+                    OptionalAdsEnd + "\n";
+            }
+            if (!string.Equals(source, updated, StringComparison.Ordinal))
+            {
+                File.WriteAllText(rulesPath, updated);
+                UnityEngine.Debug.Log("DIMENSIONS FRONT: generated optional Google Ads rules updated (Standard=" + standard + ", NextGen=" + nextGen + ").");
+            }
+        }
+
+        private static bool HasDependency(string gradle, string coordinate) =>
+            Regex.IsMatch(gradle, @"(?m)^\s*(?:implementation|api)\s*\(?\s*['""]" +
+                Regex.Escape(coordinate) + @":[^'""]+['""]");
 
         private static void UpgradeDefaultRules(string path)
         {

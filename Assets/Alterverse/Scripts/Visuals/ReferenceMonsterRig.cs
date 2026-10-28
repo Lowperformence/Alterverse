@@ -38,7 +38,7 @@ namespace Alterverse.Visuals
                 resource == "GreenStalker" ? new[] { new Color(.041f,.063f,.056f),new Color(.23f,.32f,.26f),new Color(.46f,.51f,.39f),new Color(.43f,.62f,.24f),new Color(.095f,.13f,.10f) } :
                 new[] { new Color(.045f,.085f,.12f),new Color(.44f,.59f,.65f),new Color(.74f,.84f,.88f),new Color(.06f,.77f,1f),new Color(.23f,.38f,.46f) };
             rig.EnergyColor=colors[3];
-            if (ResourceCreatureMesh.Apply(root,resource,colors) == null) { Destroy(root.gameObject); return null; }
+            if (ResourceCreatureMesh.Apply(root,resource,colors,shareGeometry:true) == null) { Destroy(root.gameObject); return null; }
             rig.chest = rig.joints["Hips/Chest"]; rig.head = rig.joints["Hips/Chest/Head"];
             rig.Muzzle = new GameObject("DF_ReferenceMonsterMuzzle").transform;
             rig.Muzzle.SetParent(rig.joints["Hips/Chest/ArmR/ElbowR/HandR"],false);
@@ -56,6 +56,13 @@ namespace Alterverse.Visuals
             Vector3 p = host.position;
             p.y = LunarSurfaceField.Surface(p.x,p.z).y + .035f;
             transform.position = p; transform.rotation = host.rotation;
+        }
+        private void OnEnable()
+        {
+            if(host==null)return;
+            previous=host.position;phase=moving=0f;planted=false;
+            attackStarted=-100f;attackUntil=0f;attackSerial=0;
+            PlaceOnSurface();
         }
         private Vector3 Ground(Vector3 p) { p.y = LunarSurfaceField.Surface(p.x,p.z).y + .16f; return p; }
         private void LateUpdate()
@@ -118,4 +125,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

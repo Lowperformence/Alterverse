@@ -110,8 +110,9 @@ namespace Alterverse.EditorChecks
                         Check(Mathf.Approximately(Total(target),baseline),"grace allowed an initially invalid attack");
                         victim.transform.position=new Vector3(1,80,0);
                     }
-                    // Ione Q uses the fixed-centre area coroutine.
-                    if((HeroId)hero!=HeroId.Elyra)
+                    // Ione and BOLT-7 Q use area coroutines, not delivery timestamps.
+                    // The skill-entry and BOLT-7 runners advance those windups separately.
+                    if((HeroId)hero!=HeroId.Elyra&&(HeroId)hero!=HeroId.Bolt7)
                     {
                         var execution=source.AddComponent<HeroAbilityExecution>();
                         Check(execution.TryCast(0,target,Vector3.forward),"Q rejected");
@@ -185,3 +186,4 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+

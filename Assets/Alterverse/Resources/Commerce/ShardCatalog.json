@@ -22,7 +22,50 @@
     }
   ],
   "cosmetics": [
-    {"id":"ufo_test_hat","price":1,"writes":[{"key":"DF_HeadwearOwned_UfoTestHat","kind":0,"number":1}]},
+    {
+      "id": "ufo_test_hat",
+      "price": 100,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_UfoTestHat",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "wizard_hat",
+      "price": 100,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_WizardHat",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "propeller_cap",
+      "price": 100,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_PropellerCap",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "mushroom_hat",
+      "price": 100,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_MushroomHat",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
     {
       "id": "angel_wings",
       "price": 11000,
@@ -438,7 +481,7 @@
     },
     {
       "id": "hero_nerok",
-      "price": 2200,
+      "price": 1900,
       "writes": [
         {
           "key": "DF_HeroOwned_Nerok",
@@ -466,6 +509,17 @@
       "writes": [
         {
           "key": "DF_HeroOwned_VoidKnight",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "hero_bolt7",
+      "price": 1800,
+      "writes": [
+        {
+          "key": "DF_HeroOwned_Bolt7",
           "kind": 0,
           "number": 1
         }
@@ -508,7 +562,7 @@
     },
     {
       "id": "arena_GreenPlanet",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_GreenPlanet",
@@ -519,7 +573,7 @@
     },
     {
       "id": "arena_Noxara",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_Noxara",
@@ -530,7 +584,7 @@
     },
     {
       "id": "arena_Earth",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_Earth",
@@ -541,7 +595,7 @@
     },
     {
       "id": "arena_Pyraxis",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_Pyraxis",
@@ -552,7 +606,7 @@
     },
     {
       "id": "arena_Dark00",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_Dark00",
@@ -563,7 +617,7 @@
     },
     {
       "id": "arena_DiamondCore",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_DiamondCore",
@@ -574,7 +628,7 @@
     },
     {
       "id": "arena_Wasp76b",
-      "price": 900,
+      "price": 600,
       "available": false,
       "writes": [
         {
@@ -586,7 +640,7 @@
     },
     {
       "id": "arena_Trappist1e",
-      "price": 900,
+      "price": 600,
       "writes": [
         {
           "key": "DF_ArenaOwned_Trappist1e",
@@ -1253,6 +1307,53 @@
         }
       ],
       "available": false
+    },
+    {
+      "id": "weapon_10_0",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_10_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_10",
+          "kind": 0,
+          "number": 0
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_10",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinOwned_10",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_10_1",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_10_1",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_10",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_10",
+          "kind": 0,
+          "number": 1
+        }
+      ]
     }
   ],
   "subscription": {
@@ -1262,3 +1363,4 @@
     "basePlanId": "monthly"
   }
 }
+

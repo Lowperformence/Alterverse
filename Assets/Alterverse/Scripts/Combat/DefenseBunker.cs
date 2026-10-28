@@ -206,6 +206,10 @@ namespace Alterverse.Combat
             Material recess = Mat(recessColor, .12f, .07f);
             Material glow = Mat(energy, .10f, .68f, true);
             Material dust = Mat(dustColor, .01f, .08f);
+            StructureSurfaceMaterials.Apply(concrete,StructureFinish.Concrete);
+            StructureSurfaceMaterials.Apply(concreteLight,StructureFinish.Concrete);
+            StructureSurfaceMaterials.Apply(concreteDark,StructureFinish.Concrete);
+            StructureSurfaceMaterials.Apply(metal,StructureFinish.Metal);
 
             // Buried foundation and heavy tapered concrete shell.
             Slab("DF_Bunker_RegolithSeat", visualRoot, new Vector3(0, -.16f, .08f), 9.2f, 7.7f, .34f, .74f, dust);
@@ -539,5 +543,6 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 

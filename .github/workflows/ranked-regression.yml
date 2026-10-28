@@ -2,9 +2,9 @@ name: Ranked and account regression
 on:
   push:
     branches: ['dev/vertical-slice']
-    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Editor/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Ranked/**', 'Tools/Profile/GoogleNameRegression/**', 'Tools/DedicatedServer/**', 'Tools/Multiplayer/**', '.github/workflows/ranked-regression.yml']
+    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Editor/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Integration/**', 'Tools/Ranked/**', 'Tools/Profile/GoogleNameRegression/**', 'Tools/Profile/GoogleLeaderboardRegression/**', 'Tools/ClanChat/**', 'Tools/UI/MenuPreviewRegression/**', 'Tools/DedicatedServer/**', 'Tools/Multiplayer/**', 'Tools/SpaceBomber/**', 'Tools/HotZone/**', 'Tools/Performance/HotZoneArtRegression/**', 'Tools/Visuals/SmallBulletRegression/**', 'Tools/Visuals/SivraNovaRegression/**', 'Tools/Visuals/UltimateLightningRegression/**', 'Tools/Visuals/ThalaHealingRegression/**', 'Tools/Visuals/SelectedAbilityRegression/**', 'Tools/Visuals/TravelerLightningRegression/**', '.github/workflows/ranked-regression.yml']
   pull_request:
-    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Editor/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Ranked/**', 'Tools/Profile/GoogleNameRegression/**', 'Tools/DedicatedServer/**', 'Tools/Multiplayer/**', '.github/workflows/ranked-regression.yml']
+    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Editor/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Integration/**', 'Tools/Ranked/**', 'Tools/Profile/GoogleNameRegression/**', 'Tools/Profile/GoogleLeaderboardRegression/**', 'Tools/ClanChat/**', 'Tools/UI/MenuPreviewRegression/**', 'Tools/DedicatedServer/**', 'Tools/Multiplayer/**', 'Tools/SpaceBomber/**', 'Tools/HotZone/**', 'Tools/Performance/HotZoneArtRegression/**', 'Tools/Visuals/SmallBulletRegression/**', 'Tools/Visuals/SivraNovaRegression/**', 'Tools/Visuals/UltimateLightningRegression/**', 'Tools/Visuals/ThalaHealingRegression/**', 'Tools/Visuals/SelectedAbilityRegression/**', 'Tools/Visuals/TravelerLightningRegression/**', '.github/workflows/ranked-regression.yml']
 jobs:
   regression:
     runs-on: ubuntu-latest
@@ -16,19 +16,40 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-      - run: python -m pip install -r Server/commerce/requirements.txt
+      - run: python Tools/Integration/VisualCompileRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python -m pip install -r Server/commerce/requirements.txt Pillow==12.3.0
       - run: python -m unittest discover -s Server/commerce -q
       - run: python -m unittest discover -s Tools/Ranked -p 'test_*.py' -q
       - run: python Tools/Aiming/Regression/run_entry.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Ranked/Regression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Profile/GoogleNameRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Profile/GoogleLeaderboardRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/ClanChat/Regression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/UI/MenuPreviewRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/DedicatedServer/Regression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Multiplayer/Regression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Multiplayer/RespawnHudRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Multiplayer/RosterCacheRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Multiplayer/WorldMotionRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Multiplayer/HotZoneResultRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Performance/HotZoneArtRegression/run.py --dotnet-root "$DOTNET_ROOT"
 
 
       - run: python Tools/Multiplayer/VfxRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/SpaceBomber/NukeRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/HotZone/SpawnRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Visuals/SmallBulletRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Visuals/SivraNovaRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Visuals/SivraNovaRegression/run_audio.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Visuals/UltimateLightningRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Visuals/ThalaHealingRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Visuals/SelectedAbilityRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Visuals/TravelerLightningRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Visuals/TravelerLightningRegression/run_audio.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Multiplayer/LoadingRegression/run.py --dotnet-root "$DOTNET_ROOT"
+
+
+
+
+
 

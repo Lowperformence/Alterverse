@@ -20,10 +20,25 @@ namespace Alterverse.Visuals
             [NonSerialized] public CreatureSurfaceUV.Mapping surface;
         }
         private static readonly Dictionary<string, Data> cache = new Dictionary<string, Data>();
+        private sealed class SharedGeometry
+        {
+            public Mesh mesh;
+            public Matrix4x4[] frames,binds;
+            public int owners;
+        }
+        private static readonly Dictionary<Data,List<SharedGeometry>> geometryCache=new();
+        private SharedGeometry sharedGeometry;
+        private Data geometryData;
         private Mesh mesh;
         private readonly List<Material> materials = new List<Material>();
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetCache() => cache.Clear();
+        private static void ResetCache()
+        {
+            foreach(var group in geometryCache.Values)
+                foreach(var geometry in group)
+                    if(geometry.mesh!=null){Destroy(geometry.mesh);geometry.mesh=null;}
+            geometryCache.Clear();cache.Clear();
+        }
         public static Data Load(string resource)
         {
             if (cache.TryGetValue(resource, out Data data)) return data;
@@ -47,7 +62,7 @@ namespace Alterverse.Visuals
             }
             catch (Exception e) { Debug.LogError("DF: creature resource " + resource + ": " + e.Message); return null; }
         }
-        public static ResourceCreatureMesh Apply(Transform root, string resource, Color[] colors)
+        public static ResourceCreatureMesh Apply(Transform root, string resource, Color[] colors,bool shareGeometry=false)
         {
             Data data = Load(resource);
             if (data == null || colors.Length != data.submeshes.Length || RuntimeShaderLibrary.Lit == null) return null;
@@ -59,11 +74,11 @@ namespace Alterverse.Visuals
             }
             Renderer[] old = root.GetComponentsInChildren<Renderer>(true);
             var owner = root.gameObject.AddComponent<ResourceCreatureMesh>();
-            owner.Build(root, data, bones, colors,CreatureSurfaceUV.Family(resource));
+            owner.Build(root, data, bones, colors,CreatureSurfaceUV.Family(resource),shareGeometry);
             foreach (Renderer renderer in old) renderer.enabled = false;
             return owner;
         }
-        private void Build(Transform root, Data data, Transform[] bones, Color[] colors,string family)
+        private void Build(Transform root, Data data, Transform[] bones, Color[] colors,string family,bool shareGeometry)
         {
             Matrix4x4[] frames = new Matrix4x4[bones.Length], normals = new Matrix4x4[bones.Length], binds = new Matrix4x4[bones.Length];
             for (int i = 0; i < bones.Length; i++)
@@ -72,6 +87,45 @@ namespace Alterverse.Visuals
                 normals[i] = frames[i].inverse.transpose;
                 binds[i] = bones[i].worldToLocalMatrix * root.localToWorldMatrix;
             }
+            // Reference monster rigs share immutable geometry only when their rest frames and
+            // bind poses match. Bones, materials, damage tint and animation remain per actor.
+            if(shareGeometry&&geometryCache.TryGetValue(data,out var candidates))
+                foreach(var candidate in candidates)
+                    if(candidate.mesh!=null&&SameFrames(candidate.frames,frames)&&SameFrames(candidate.binds,binds))
+                    {sharedGeometry=candidate;geometryData=data;mesh=candidate.mesh;candidate.owners++;break;}
+            if(mesh==null)
+            {
+                mesh=BuildMesh(data,frames,normals,binds,colors.Length);
+                if(shareGeometry)
+                {
+                    sharedGeometry=new SharedGeometry{mesh=mesh,frames=frames,binds=binds,owners=1};geometryData=data;
+                    if(!geometryCache.TryGetValue(data,out var entries))geometryCache.Add(data,entries=new());
+                    entries.Add(sharedGeometry);
+                }
+            }
+            for (int i = 0; i < colors.Length; i++)
+            {
+                Material m = RuntimeShaderLibrary.Create(colors[i], colors[i].a < .99f, i == 2 ? .7f : .25f, i == 0 ? .25f : .42f, i == 3 ? colors[i] * .25f : Color.black);
+                m.name = "DF_ReferenceCreatureSurface_" + i;
+                if(family!=null&&i!=3)AuthoredHotZoneArt.ConfigureSurface(m,family);
+                if (i == 3) m.EnableKeyword("_EMISSION"); materials.Add(m);
+            }
+            var renderer = root.gameObject.AddComponent<SkinnedMeshRenderer>();
+            renderer.sharedMesh = mesh; renderer.bones = bones; renderer.rootBone = root; renderer.sharedMaterials = materials.ToArray();
+            Bounds bounds = mesh.bounds; bounds.Expand(bounds.size * .40f); renderer.localBounds = bounds;
+            renderer.shadowCastingMode = ShadowCastingMode.On; renderer.receiveShadows = true;
+        }
+
+        private static bool SameFrames(Matrix4x4[] a,Matrix4x4[] b)
+        {
+            if(a.Length!=b.Length)return false;
+            for(int i=0;i<a.Length;i++)for(int j=0;j<16;j++)
+                if(Mathf.Abs(a[i][j]-b[i][j])>.000001f)return false;
+            return true;
+        }
+
+        private static Mesh BuildMesh(Data data,Matrix4x4[] frames,Matrix4x4[] normals,Matrix4x4[] binds,int submeshCount)
+        {
             int count = data.surface!=null?data.surface.sourceVertices.Length:data.boneIndices.Length;
             var vertices = new Vector3[count]; var normal = new Vector3[count]; var weights = new BoneWeight[count];
             for (int i = 0; i < count; i++)
@@ -82,30 +136,33 @@ namespace Alterverse.Visuals
                 normal[i] = normals[bone].MultiplyVector(new Vector3(data.normals[j], data.normals[j+1], data.normals[j+2])).normalized;
                 weights[i] = new BoneWeight { boneIndex0 = bone, weight0 = 1f };
             }
-            mesh = new Mesh { name = "DF_ReferenceCreatureMesh", indexFormat = count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16 };
+            Mesh mesh = new Mesh { name = "DF_ReferenceCreatureMesh", indexFormat = count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16 };
             mesh.vertices = vertices; mesh.normals = normal; mesh.boneWeights = weights; mesh.bindposes = binds;
             if(data.surface!=null)mesh.uv=data.surface.uv;
-            mesh.subMeshCount = colors.Length;
-            for (int i = 0; i < colors.Length; i++)
+            mesh.subMeshCount = submeshCount;
+            for (int i = 0; i < submeshCount; i++)
             {
                 mesh.SetTriangles(data.surface!=null?data.surface.submeshes[i].triangles:data.submeshes[i].triangles, i, false);
-                Material m = RuntimeShaderLibrary.Create(colors[i], colors[i].a < .99f, i == 2 ? .7f : .25f, i == 0 ? .25f : .42f, i == 3 ? colors[i] * .25f : Color.black);
-                m.name = "DF_ReferenceCreatureSurface_" + i;
-                if(family!=null&&i!=3)AuthoredHotZoneArt.ConfigureSurface(m,family);
-                if (i == 3) m.EnableKeyword("_EMISSION"); materials.Add(m);
             }
             mesh.RecalculateBounds();
             if(data.surface!=null)mesh.RecalculateTangents();
-            var renderer = root.gameObject.AddComponent<SkinnedMeshRenderer>();
-            renderer.sharedMesh = mesh; renderer.bones = bones; renderer.rootBone = root; renderer.sharedMaterials = materials.ToArray();
-            Bounds bounds = mesh.bounds; bounds.Expand(bounds.size * .40f); renderer.localBounds = bounds;
-            renderer.shadowCastingMode = ShadowCastingMode.On; renderer.receiveShadows = true;
+            return mesh;
         }
         private void OnDestroy()
         {
-            if (mesh != null){if(Application.isPlaying)Destroy(mesh);else DestroyImmediate(mesh);}
+            if(sharedGeometry!=null)
+            {
+                if(--sharedGeometry.owners==0)
+                {
+                    if(sharedGeometry.mesh!=null){if(Application.isPlaying)Destroy(sharedGeometry.mesh);else DestroyImmediate(sharedGeometry.mesh);sharedGeometry.mesh=null;}
+                    if(geometryCache.TryGetValue(geometryData,out var entries))
+                    {entries.Remove(sharedGeometry);if(entries.Count==0)geometryCache.Remove(geometryData);}
+                }
+            }
+            else if (mesh != null){if(Application.isPlaying)Destroy(mesh);else DestroyImmediate(mesh);}
             foreach (Material material in materials) if (material != null){if(Application.isPlaying)Destroy(material);else DestroyImmediate(material);}
         }
     }
 }
+
 

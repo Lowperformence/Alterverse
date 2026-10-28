@@ -47,10 +47,11 @@ namespace Alterverse.EditorChecks
                 Require(corpse.gameObject.scene.GetPhysicsScene() != Physics.defaultPhysicsScene,
                     "Ragdoll leaked into gameplay physics.");
                 Rigidbody[] limbs = corpse.GetComponentsInChildren<Rigidbody>(true);
-                Require(limbs.Length == 16, "Missing articulated ragdoll bodies: " + hero);
-                Require(corpse.GetComponentsInChildren<CharacterJoint>(true).Length == 15, "Missing ragdoll joints.");
-                Rigidbody hips = Array.Find(limbs, limb => limb.name == "DF_Ragdoll_Hips" || limb.name == "DF_Ragdoll_DF_PelvisJoint");
-                Rigidbody arm = Array.Find(limbs, limb => limb.name == "DF_Ragdoll_ForearmL" || limb.name == "DF_Ragdoll_DF_ElbowJointL");
+                int expectedBodies = hero == HeroId.Bolt7 ? 13 : 16;
+                Require(limbs.Length == expectedBodies, "Missing articulated ragdoll bodies: " + hero);
+                Require(corpse.GetComponentsInChildren<CharacterJoint>(true).Length == expectedBodies - 1, "Missing ragdoll joints.");
+                Rigidbody hips = Array.Find(limbs, limb => limb.name == "DF_Ragdoll_Hips" || limb.name == "DF_Ragdoll_DF_PelvisJoint" || limb.name == "DF_Ragdoll_Pelvis");
+                Rigidbody arm = Array.Find(limbs, limb => limb.name == "DF_Ragdoll_ForearmL" || limb.name == "DF_Ragdoll_DF_ElbowJointL" || limb.name == "DF_Ragdoll_Weapon.L");
                 Require(hips != null && arm != null, "Missing pelvis/arm bodies.");
                 float initialHipY = hips.position.y;
                 Quaternion initialRelativeArm = Quaternion.Inverse(hips.rotation) * arm.rotation;
@@ -69,6 +70,13 @@ namespace Alterverse.EditorChecks
                 foreach (SkinnedMeshRenderer skin in corpse.GetComponentsInChildren<SkinnedMeshRenderer>(true))
                     foreach (Transform bone in skin.bones)
                         Require(bone == null || bone.IsChildOf(corpse.transform), "Corpse references living skeleton.");
+                if (hero == HeroId.Bolt7)
+                {
+                    SkinnedMeshRenderer[] skins = corpse.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+                    Require(skins.Length == 1 && skins[0].bones.Length == 19, "Incomplete BOLT-7 death skin.");
+                    Require(skins[0].sharedMesh.vertexCount == 62113, "BOLT-7 death lost authored geometry.");
+                    Require(corpse.GetComponentsInChildren<Bolt7Visual>(true).Length == 0, "Corpse copied the live pose sampler.");
+                }
 
                 var elapsed = typeof(HeroDeathBody).GetField("elapsed", BindingFlags.NonPublic | BindingFlags.Instance);
                 elapsed.SetValue(corpse, HeroDeathBody.CollapseSeconds + HeroDeathBody.HoldSeconds + HeroDeathBody.FadeSeconds * .5f);

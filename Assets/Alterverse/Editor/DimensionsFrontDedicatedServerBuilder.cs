@@ -88,9 +88,64 @@ namespace Alterverse.EditorTools
         private static void RestorePlayGamesSettings()
         {
             if(!AssetFileExists(HeldPlayGamesSettingsPath)) return;
-            if(AssetFileExists(PlayGamesSettingsPath))
-                throw new InvalidOperationException("Both original and held PlayGamesSettings assets exist. Resolve the duplicate before building; neither file was overwritten.");
-            MoveSettingsAsset(HeldPlayGamesSettingsPath,PlayGamesSettingsPath);
+            if(!AssetFileExists(PlayGamesSettingsPath))
+            {
+                MoveSettingsAsset(HeldPlayGamesSettingsPath,PlayGamesSettingsPath);
+                return;
+            }
+
+            // An Editor/plugin import can recreate the Resources asset while the local
+            // original is held for the server build. Archive BOTH versions and GUIDs
+            // before touching either. The held file is the pre-build configuration.
+            string recovery=Path.GetFullPath(Path.Combine(Application.dataPath,"..",
+                "Builds/ServerBuildRecovery",DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")+"-"+Guid.NewGuid().ToString("N")));
+            Directory.CreateDirectory(recovery);
+            BackupSettingsAsset(PlayGamesSettingsPath,Path.Combine(recovery,"ResourceCopy.asset"));
+            BackupSettingsAsset(HeldPlayGamesSettingsPath,Path.Combine(recovery,"HeldOriginal.asset"));
+            string quarantined="Assets/Alterverse/Editor/PlayGamesSettings.regenerated-"+Guid.NewGuid().ToString("N")+".asset";
+            // Import callbacks must not recreate Resources settings between the moves.
+            AssetDatabase.StartAssetEditing();
+            try
+            {
+                MoveSettingsAsset(PlayGamesSettingsPath,quarantined);
+                try
+                {
+                    MoveSettingsAsset(HeldPlayGamesSettingsPath,PlayGamesSettingsPath);
+                }
+                catch(Exception restoreError)
+                {
+                    // Put the displaced copy back if restoration failed. Never
+                    // overwrite a file that a plugin may have recreated again.
+                    if(!AssetFileExists(PlayGamesSettingsPath))
+                    {
+                        try { MoveSettingsAsset(quarantined,PlayGamesSettingsPath); }
+                        catch(Exception rollbackError)
+                        {
+                            throw new AggregateException("Settings recovery failed; both copies and metadata are backed up at "+recovery,
+                                restoreError,rollbackError);
+                        }
+                    }
+                    throw new InvalidOperationException("Settings recovery failed; both copies and metadata are backed up at "+recovery+": "+restoreError.Message,restoreError);
+                }
+                // Only the displaced duplicate is removed after both byte-for-byte
+                // backups exist and the original has been restored with its GUID.
+                if(!AssetDatabase.DeleteAsset(quarantined))
+                    Debug.LogWarning("DIMENSIONS FRONT: restored Play Games settings; could not remove quarantined duplicate at "+quarantined);
+            }
+            finally { AssetDatabase.StopAssetEditing(); }
+            Debug.LogWarning("DIMENSIONS FRONT: restored the pre-build Play Games settings. Both versions and metadata were archived at "+recovery);
+        }
+
+        private static void BackupSettingsAsset(string assetPath,string destination)
+        {
+            string source=Path.GetFullPath(Path.Combine(Application.dataPath,"..",assetPath));
+            foreach(string suffix in new[]{"",".meta"})
+            {
+                if(!File.Exists(source+suffix)) continue;
+                File.Copy(source+suffix,destination+suffix);
+                if(!File.ReadAllBytes(source+suffix).SequenceEqual(File.ReadAllBytes(destination+suffix)))
+                    throw new IOException("Settings backup verification failed: "+destination+suffix);
+            }
         }
 
         private static void MoveSettingsAsset(string from,string to)
@@ -126,5 +181,3 @@ namespace Alterverse.EditorTools
         }
     }
 }
-
-

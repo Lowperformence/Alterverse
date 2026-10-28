@@ -309,7 +309,7 @@ namespace Alterverse.Characters
             // whenever the held target oscillates just outside acquisition range.
             // Never acquire, attack, or refresh a dead/far-away target here.
             if (!HeroCombatRules.Enemy(gameObject, basicFacingTarget) ||
-                HeroCombatRules.TargetDistance(transform.position, basicFacingTarget) > range + .2f) return;
+                HeroCombatRules.TargetDistance(transform.position, basicFacingTarget) > range + SoftTargeting.BasicFocusEdge) return;
             basicFacingUntil = Mathf.Max(basicFacingUntil, Time.time + .12f);
         }
 
@@ -355,4 +355,3 @@ namespace Alterverse.Characters
         }
     }
 }
-

@@ -13,7 +13,7 @@ namespace UnityEngine
  public static class Debug{public static void LogWarning(string text){}}
  public class TextAsset{public string text;}
  public static class Resources{public static T Load<T>(string path)where T:class=>null;}
- public static class Mathf{public static int Max(int a,int b)=>Math.Max(a,b);public static int Min(int a,int b)=>Math.Min(a,b);}
+ public static class Mathf{public static int Max(int a,int b)=>Math.Max(a,b);public static int Min(int a,int b)=>Math.Min(a,b);public static int Clamp(int value,int min,int max)=>Math.Min(max,Math.Max(min,value));}
  public static class JsonUtility
  {
   sealed class JournalWriteConverter:System.Text.Json.Serialization.JsonConverter<Alterverse.Profile.ProfileTransaction.Write>
@@ -79,7 +79,7 @@ namespace UnityEngine.Networking
 namespace Alterverse.Profile
 {
  public static class SafeIdentityCatalog{public static bool IsPlayerName(string name)=>name!=null&&name.StartsWith("SolarFox",StringComparison.Ordinal);}
- public class AccountServerBootstrap{public static AccountServerBootstrap Instance;public bool Busy;}
+ public class AccountServerBootstrap{public static AccountServerBootstrap Instance;public bool Busy;public static bool CloudProfileReady=true;}
 }
 namespace Alterverse.Shop{public static class ShardPacks{public static bool IsSubscription(string id)=>id=="dimensions_shards_monthly";
         public static bool IsProduct(string id)=>Contains(id)||IsSubscription(id);

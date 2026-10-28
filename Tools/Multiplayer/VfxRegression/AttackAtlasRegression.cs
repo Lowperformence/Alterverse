@@ -20,7 +20,9 @@ static partial class VfxRegression
         {
             var plain=Scenario(hero,action,false,60);
             var textured=Scenario(hero,action,false,60,true);
-            Check(textured.AtlasSeen,"Actual action uses imported VFX: "+hero+" / "+action);
+            if(hero==HeroId.Bolt7)
+                Check(textured.NativeBackendSeen,"BOLT-7 routes to its separately tested native backend: "+action);
+            else Check(textured.AtlasSeen,"Actual action uses imported VFX: "+hero+" / "+action);
             Check(plain.ActorHealth==textured.ActorHealth&&plain.ActorShield==textured.ActorShield&&
                 plain.TargetHealth==textured.TargetHealth&&plain.TargetShield==textured.TargetShield&&
                 plain.AllyHealth==textured.AllyHealth&&plain.AllyShield==textured.AllyShield,
@@ -161,3 +163,4 @@ static partial class VfxRegression
         Check(Visible().Length==0&&GameObject.All.Count<=1,"Shared effects construct no graphics objects on a headless server");
     }
 }
+

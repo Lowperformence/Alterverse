@@ -222,19 +222,54 @@ static class Regression
                 if(a.z>.7f&&b.z>.7f&&c.z>.7f&&a.y>.2f&&b.y>.2f&&c.y>.2f)
                     Check(z>0,"Front panel or BETA embroidery faces inward.");
             }
-        AttachmentChecks();NetworkChecks();UfoChecks();FreeHatChecks();HatVisibilityChecks();MergedHaloChecks();HatSizeChecks();HatIconChecks();ModernNetworkChecks();
+        CollectionCategoryChecks();AttachmentChecks();NetworkChecks();UfoChecks();ShopHatChecks();HatVisibilityChecks();MergedHaloChecks();HatSizeChecks();HatIconChecks();ModernNetworkChecks();NerokSkullChecks();BoltHeadBindChecks();
         Console.WriteLine("PASS "+checks+" headwear, battle-pass, persistence, mesh and message checks; Unity fit/device/live multiplayer validation remains required.");
+    }
+    static void CollectionCategoryChecks()
+    {
+        int commits=ProfileTransaction.Commits.Count;
+        Check(Alterverse.UI.CosmeticCollectionCategories.Count==2&&
+            Alterverse.UI.CosmeticCollectionCategories.Label(0)=="WINGS"&&Alterverse.UI.CosmeticCollectionCategories.Label(1)=="HATS",
+            "Collection still exposes All/Skins or lacks separate Wings/Hats tabs.");
+        foreach(var definition in CosmeticCatalog.All)
+        {
+            bool wings=Alterverse.UI.CosmeticCollectionCategories.Matches(definition,0);
+            bool hats=Alterverse.UI.CosmeticCollectionCategories.Matches(definition,1);
+            Check(!(wings&&hats)&&wings==(definition.Category==CosmeticCategory.Wings&&!definition.Headwear)&&hats==definition.Headwear,
+                "Wings and hats leak into each other's collection.");
+            Check(!Alterverse.UI.CosmeticCollectionCategories.Matches(definition,-1)&&!Alterverse.UI.CosmeticCollectionCategories.Matches(definition,2),
+                "Invalid category exposes an All view.");
+        }
+        var shop=CosmeticCatalog.All.Where(x=>x.Purchasable).ToArray();
+        Check(Alterverse.UI.CosmeticCollectionCategories.Choose(shop,1,UniversalHeroCosmetic.Voidfall)==UniversalHeroCosmetic.UfoTestHat,
+            "Switching to Hats retained a wing preview instead of selecting the first available hat.");
+        Check(Alterverse.UI.CosmeticCollectionCategories.Choose(shop,0,UniversalHeroCosmetic.WizardHat)==UniversalHeroCosmetic.Voidfall,
+            "Switching to Wings retained a hat preview.");
+        Check(Alterverse.UI.CosmeticCollectionCategories.Choose(shop,1,UniversalHeroCosmetic.MushroomHat)==UniversalHeroCosmetic.MushroomHat,
+            "A valid selection was lost on refresh.");
+        var owned=new[]{CosmeticCatalog.Find(UniversalHeroCosmetic.PropellerCap)};
+        Check(Alterverse.UI.CosmeticCollectionCategories.Choose(owned,1,UniversalHeroCosmetic.WizardHat)==UniversalHeroCosmetic.PropellerCap&&
+            Alterverse.UI.CosmeticCollectionCategories.Choose(owned,0,UniversalHeroCosmetic.PropellerCap)==UniversalHeroCosmetic.Original,
+            "Inventory selected an unavailable item or the empty category retained a preview from the other tab.");
+        Check(Alterverse.UI.CosmeticCollectionCategories.Choose(System.Array.Empty<CosmeticDefinition>(),1,UniversalHeroCosmetic.WizardHat)==UniversalHeroCosmetic.Original,
+            "Empty hat collection did not clear its selection.");
+        var future=new List<CosmeticDefinition>();
+        for(int i=0;i<150;i++)future.Add(new CosmeticDefinition((UniversalHeroCosmetic)(1000+i),"FUTURE HAT "+i,100,"",CosmeticCategory.Skins,"",default,headwear:true));
+        Check(future.All(x=>Alterverse.UI.CosmeticCollectionCategories.Matches(x,1)&&!Alterverse.UI.CosmeticCollectionCategories.Matches(x,0))&&
+            Alterverse.UI.CosmeticCollectionCategories.Choose(future,1,future[149].Id)==future[149].Id,
+            "Future hats depend on a fixed item count or hardcoded current IDs.");
+        Check(ProfileTransaction.Commits.Count==commits,"Changing category modified ownership, equipment or currency.");
     }
     static void UfoChecks()
     {
         Reset(1,false);
         var item=CosmeticCatalog.Find(UniversalHeroCosmetic.UfoTestHat);
-        Check(item.Headwear&&item.Purchasable&&item.Price==1&&item.PriceLabel=="1 SHARD","UFO is not the requested 1-shard shop item.");
+        Check(item.Headwear&&item.Purchasable&&item.Price==100&&item.PriceLabel=="100 SHARDS","UFO is not the requested 100-shard shop item.");
         Check(CosmeticCatalog.Sku(item.Id)=="ufo_test_hat","UFO client/server SKU mismatch.");
         Check(CosmeticCatalog.Purchase(item.Id)==AvatarPurchaseResult.InsufficientShards&&!CosmeticCatalog.IsOwned(item.Id),"Zero-shard account received the UFO.");
-        AccountProfilePrefs.SetInt("DF_Shards",1);AccountProfilePrefs.SetInt("DF_AccountXP",777);
-        Check(CosmeticCatalog.Purchase(item.Id)==AvatarPurchaseResult.Purchased,"Exact 1-shard purchase failed.");
-        Check(PlayerWallet.Balance==0&&CosmeticCatalog.IsOwned(item.Id),"Purchase did not charge exactly one shard and grant ownership.");
+        AccountProfilePrefs.SetInt("DF_Shards",100);AccountProfilePrefs.SetInt("DF_AccountXP",777);
+        Check(CosmeticCatalog.Purchase(item.Id)==AvatarPurchaseResult.Purchased,"Exact 100-shard purchase failed.");
+        Check(PlayerWallet.Balance==0&&CosmeticCatalog.IsOwned(item.Id),"Purchase did not charge exactly 100 shards and grant ownership.");
         Check(HeadwearSelection.EquippedFor(HeroId.Rook)==UniversalHeroCosmetic.Original,"Purchase auto-equipped the UFO.");
         Check(CosmeticCatalog.Purchase(item.Id)==AvatarPurchaseResult.AlreadyOwned&&PlayerWallet.Balance==0,"Repeated purchase charged twice.");
         AccountProfilePrefs.SetInt(UniversalSkin.OwnedKey,1);
@@ -282,10 +317,110 @@ static class Regression
         mesh.SetTriangles(new List<int>{0,1,3,0,3,2,4,6,7,4,7,5,0,4,5,0,5,1,2,3,7,2,7,6,0,2,6,0,6,4,1,5,7,1,7,3},0);
         mesh.RecalculateBounds();return mesh;
     }
+    static GameObject HeadFixture(bool fin,HeroId hero=HeroId.Nerok)
+    {
+        var actor=Actor(true);actor.GetComponent<HeroIdentity>().Hero=hero;
+        var skin=actor.GetComponentsInChildren<SkinnedMeshRenderer>()[0];
+        var vertices=new List<Vector3>();var triangles=new List<int>();
+        void Surface(Vector3 center,Vector3 radius,int segments,int rings)
+        {
+            var points=new Vector3[(rings+1)*segments];
+            for(int ring=0;ring<=rings;ring++)for(int side=0;side<segments;side++)
+            {
+                float a=ring*Mathf.PI/rings,b=side*2*Mathf.PI/segments;
+                // Exact common pole positions also exercise duplicate normal seams.
+                points[ring*segments+side]=center+new Vector3(
+                    ring==0||ring==rings?0:radius.x*Mathf.Sin(a)*Mathf.Cos(b),
+                    ring==0?radius.y:ring==rings?-radius.y:radius.y*Mathf.Cos(a),
+                    ring==0||ring==rings?0:radius.z*Mathf.Sin(a)*Mathf.Sin(b));
+            }
+            void Triangle(int a,int b,int c)
+            {
+                // Runtime flat shading duplicates every triangle corner. Index-only
+                // component detection would select a single face instead of the skull.
+                foreach(int index in new[]{a,b,c}){triangles.Add(vertices.Count);vertices.Add(points[index]);}
+            }
+            for(int ring=0;ring<rings;ring++)for(int side=0;side<segments;side++)
+            {
+                int a=ring*segments+side,b=ring*segments+(side+1)%segments,c=a+segments,d=b+segments;
+                Triangle(a,b,c);Triangle(b,d,c);
+            }
+        }
+        Surface(new Vector3(0,1.757f,.08975f),new Vector3(.2156875f,.193f,.23275f),24,16);
+        // More vertices than the skull, less surface area; the tallest 20% is all fin.
+        if(fin)Surface(new Vector3(0,2.0005f,-.0915f),new Vector3(.014f,.0745f,.0485f),40,40);
+        var source=new Mesh{name=hero==HeroId.Nerok?"DF_Nerok_Siege_0_SkinOrnaments_HeadAdornment":"BOLT7_AuthoredRuntimeMesh",
+            vertices=vertices.ToArray(),boneWeights=vertices.Select(p=>new BoneWeight{boneIndex0=1,weight0=1}).ToArray(),
+            bindposes=new[]{Matrix4x4.identity,Matrix4x4.identity},subMeshCount=1};
+        source.SetTriangles(triangles,0);source.RecalculateBounds();skin.sharedMesh=source;
+        var root=actor.transform.Find("DF_VisualRoot");
+        HeadwearPresentation.Configure(actor,root,hero,new SkinPreviewSelection());
+        return actor;
+    }
+    static readonly UniversalHeroCosmetic[] AllHats={UniversalHeroCosmetic.BetaCap,UniversalHeroCosmetic.UfoTestHat,
+        UniversalHeroCosmetic.WizardHat,UniversalHeroCosmetic.PropellerCap,UniversalHeroCosmetic.MushroomHat};
+    static void NerokSkullChecks()
+    {
+        int commits=ProfileTransaction.Commits.Count;
+        var plain=HeadFixture(false).GetComponent<HeadwearPresentation>();
+        var finActor=HeadFixture(true);var fitted=finActor.GetComponent<HeadwearPresentation>();
+        Mesh anatomy=finActor.GetComponentsInChildren<SkinnedMeshRenderer>()[0].sharedMesh;
+        var vertices=(Vector3[])anatomy.vertices.Clone();var triangles=anatomy.GetTriangles(0).ToArray();
+        Check(anatomy.bounds.max.y>2.07f,"Fin fixture does not reproduce the high original contact surface.");
+        foreach(var hat in AllHats)
+        {
+            Check(plain.Apply(hat)&&fitted.Apply(hat),"Nerok hat failed to fit: "+fitted.LastFitError);
+            Check(Math.Abs(fitted.HeadBounds.max.y-1.95f)<.00001f,"The fin is still measured as Nerok's skull apex.");
+            Check(fitted.HeadBounds.size==plain.HeadBounds.size&&fitted.CrownSection.center==plain.CrownSection.center,
+                "A detached fin/flat-shading seam changed Nerok's true head measurements.");
+            string name="DF_Headwear_"+HeadwearSelection.ResourceFor(hat);
+            var expected=plain.Head.Find(name).GetComponent<MeshFilter>().sharedMesh;
+            var actual=fitted.Head.Find(name).GetComponent<MeshFilter>().sharedMesh;
+            Check(actual.vertices.SequenceEqual(expected.vertices)&&fitted.SeatInHeadSpace==plain.SeatInHeadSpace,
+                "Nerok's hat width/seat is still determined by the narrow fin.");
+            fitted.Apply(UniversalHeroCosmetic.Original);
+            fitted.Head.localToWorldMatrix=Matrix4x4.TRS(new Vector3(.3f,.2f,-.1f),Quaternion.identity,new Vector3(.9f,1.1f,.8f));
+            fitted.Head.worldToLocalMatrix=fitted.Head.localToWorldMatrix.inverse;
+            Check(fitted.Apply(hat)&&fitted.Head.Find(name).GetComponent<MeshFilter>().sharedMesh.vertices.SequenceEqual(expected.vertices),
+                "A late Nerok equip baked the currently animated head pose into the hat.");
+            Check(anatomy.vertices.SequenceEqual(vertices)&&anatomy.GetTriangles(0).SequenceEqual(triangles),
+                "Measuring the skull modified Nerok's visible head/fin geometry.");
+        }
+        Check(ProfileTransaction.Commits.Count==commits,"Nerok's fit correction changed ownership or progression.");
+        // The same detached geometry on a different model must retain the old fit.
+        var unrelated=HeadFixture(true,HeroId.Bolt7).GetComponent<HeadwearPresentation>();
+        Check(unrelated.Apply(UniversalHeroCosmetic.MushroomHat)&&unrelated.HeadBounds.max.y>2.07f,
+            "The Nerok-only contact correction changed an unrelated hero.");
+    }
+    static void BoltHeadBindChecks()
+    {
+        var actor=HeadFixture(false,HeroId.Bolt7);var view=actor.GetComponent<HeadwearPresentation>();
+        var skin=actor.GetComponentsInChildren<SkinnedMeshRenderer>()[0];
+        // BOLT's authored rest geometry is measured in the visual-root frame and
+        // attached through its actual Head bind matrix, including the model scale.
+        skin.transform.localToWorldMatrix=Matrix4x4.TRS(new Vector3(.4f,-.98f,0),Quaternion.identity,new Vector3(.85f,.85f,.85f));
+        skin.transform.worldToLocalMatrix=skin.transform.localToWorldMatrix.inverse;
+        skin.sharedMesh.bindposes[1]=Matrix4x4.TRS(new Vector3(0,-1.757f,0),Quaternion.identity,Vector3.one);
+        HeadwearPresentation.Configure(actor,actor.transform.Find("DF_VisualRoot"),HeroId.Bolt7,new SkinPreviewSelection{Headwear=UniversalHeroCosmetic.MushroomHat});
+        Check(view.Current==UniversalHeroCosmetic.MushroomHat,"BOLT's selected preview hat did not use its authored Head bind frame.");
+        foreach(var hat in AllHats)
+        {
+            Check(view.Apply(hat)&&view.Head==skin.bones[1],"BOLT hat did not attach to the actual animated Head bone.");
+            string name="DF_Headwear_"+HeadwearSelection.ResourceFor(hat);
+            var expected=view.Head.Find(name).GetComponent<MeshFilter>().sharedMesh.vertices.ToArray();
+            view.Apply(UniversalHeroCosmetic.Original);
+            view.Head.localToWorldMatrix=Matrix4x4.TRS(new Vector3(2,1.5f,-3),Quaternion.identity,new Vector3(.7f,1.2f,.9f));
+            view.Head.worldToLocalMatrix=view.Head.localToWorldMatrix.inverse;
+            Check(view.Apply(hat)&&view.Head.Find(name).GetComponent<MeshFilter>().sharedMesh.vertices.SequenceEqual(expected),
+                "Equipping BOLT's hat after animation/network delivery changed its bind-space fit.");
+            Check(view.Apply(UniversalHeroCosmetic.Original)&&view.Head.Find(name)==null,"BOLT unequip left an old hat on its animated head.");
+        }
+    }
     static void HatSizeChecks()
     {
         // Recorded before the size corrections. The UFO must grow exactly 25%
-        // from its one-third version, and all other hats must match its full width.
+        // from its one-third version. Relative to that shared width, the wizard
+        // is 25% larger and the propeller/mushroom hats are 25% smaller.
         var originalSizes=new Dictionary<UniversalHeroCosmetic,Vector3>
         {
             {UniversalHeroCosmetic.BetaCap,new Vector3(.6413307f,.25305986f,.9218707f)},
@@ -302,11 +437,13 @@ static class Regression
             var model=view.Head.Find("DF_Headwear_"+HeadwearSelection.ResourceFor(entry.Key));
             Bounds actual=model.GetComponent<MeshFilter>().sharedMesh.bounds;
             bool ufo=entry.Key==UniversalHeroCosmetic.UfoTestHat;
-            float referenceWidth=originalSizes[UniversalHeroCosmetic.UfoTestHat].x/3f*1.25f;
+            float referenceWidth=originalSizes[UniversalHeroCosmetic.UfoTestHat].x/3f*1.25f*1.15f;
+            if(entry.Key==UniversalHeroCosmetic.WizardHat)referenceWidth*=1.25f;
+            if(entry.Key==UniversalHeroCosmetic.PropellerCap||entry.Key==UniversalHeroCosmetic.MushroomHat)referenceWidth*=.75f;
             Vector3 expected=entry.Value*(referenceWidth/entry.Value.x);
             Check(Math.Abs(actual.size.x-expected.x)<.00001f&&
                 Math.Abs(actual.size.y-expected.y)<.00001f&&Math.Abs(actual.size.z-expected.z)<.00001f,
-                ufo?"UFO did not grow exactly 25% from the one-third version.":"Hat does not match the UFO reference width or its previous proportions changed.");
+                ufo?"UFO reference size changed.":"Hat does not match its requested size adjustment or its previous proportions changed.");
             float expectedSeat=1.25f-.1f*(referenceWidth/entry.Value.x);
             Check(Math.Abs(view.SeatInHeadSpace.y-expectedSeat)<.00001f,
                 "Hat size correction lost the crown contact position.");
@@ -353,7 +490,10 @@ static class Regression
         {
             Check(view.Apply(id),"Hat failed on the helmet plus merged-halo fixture.");
             float width=view.Head.Find("DF_Headwear_"+HeadwearSelection.ResourceFor(id)).GetComponent<MeshFilter>().sharedMesh.bounds.size.x;
-            Check(Math.Abs(width-helmetWidth)<.00001f,"Hat width matching failed on a differently shaped, helmeted head.");
+            float target=helmetWidth;
+            if(id==UniversalHeroCosmetic.WizardHat)target*=1.25f;
+            if(id==UniversalHeroCosmetic.PropellerCap||id==UniversalHeroCosmetic.MushroomHat)target*=.75f;
+            Check(Math.Abs(width-target)<.00001f,"Hat size adjustment failed on a differently shaped, helmeted head.");
         }
         Check(skin.sharedMesh==source&&source.GetTriangles(1).Length>0&&skin.enabled,
             "Headwear fitting removed or hid Tahla's halo instead of excluding it from measurement.");
@@ -403,7 +543,10 @@ static class Regression
     }
     static void ModernNetworkChecks()
     {
-        Reset(1,false);HeadwearSelection.EquipFor(HeroId.Rook,UniversalHeroCosmetic.MushroomHat);
+        Reset(1,false);
+        AccountProfilePrefs.SetInt(CosmeticCatalog.Find(UniversalHeroCosmetic.MushroomHat).OwnedKey,1);
+        AccountProfilePrefs.SetInt(CosmeticCatalog.Find(UniversalHeroCosmetic.PropellerCap).OwnedKey,1);
+        HeadwearSelection.EquipFor(HeroId.Rook,UniversalHeroCosmetic.MushroomHat);
         int commits=ProfileTransaction.Commits.Count;
         var manager=new Unity.Netcode.NetworkManager{IsServer=true};Unity.Netcode.NetworkManager.Singleton=manager;
         Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority=true;Time.unscaledTime=0;
@@ -449,15 +592,44 @@ static class Regression
         Check(remote.GetComponent<HeadwearPresentation>().Current==UniversalHeroCosmetic.BetaCap,"New round retained old protocol capability state.");
         client.Stop();Check(client.Messages.Handlers.Count==0&&ProfileTransaction.Commits.Count==commits,"V2 renderer wrote to the account or leaked handlers.");
     }
-    static void FreeHatChecks()
+    static void ShopHatChecks()
     {
+        using(var shared=JsonDocument.Parse(System.IO.File.ReadAllText("Assets/Alterverse/Resources/Commerce/ShardCatalog.json")))
+        {
+            var items=shared.RootElement.GetProperty("cosmetics").EnumerateArray().ToArray();
+            var skus=new HashSet<string>();int hats=0;
+            foreach(var definition in CosmeticCatalog.All.Where(x=>x.Headwear&&x.Purchasable))
+            {
+                hats++;string sku=CosmeticCatalog.Sku(definition.Id);
+                Check(!string.IsNullOrEmpty(sku)&&skus.Add(sku),"Shop hats share an empty or duplicate purchase SKU.");
+                Check(definition.Name.IndexOf("test",StringComparison.OrdinalIgnoreCase)<0&&definition.Description.IndexOf("test",StringComparison.OrdinalIgnoreCase)<0,
+                    "Prototype name or description is exposed in the shop.");
+                var matches=items.Where(x=>x.GetProperty("id").GetString()==sku).ToArray();
+                Check(matches.Length==1&&matches[0].GetProperty("price").GetInt32()==definition.Price,"Client/server hat prices or SKUs differ.");
+                var writes=matches[0].GetProperty("writes").EnumerateArray().ToArray();
+                Check(writes.Length==1&&writes[0].GetProperty("key").GetString()==definition.OwnedKey&&
+                    writes[0].GetProperty("number").GetInt32()==1,"Client/server hat ownership keys differ.");
+            }
+            Check(hats==4,"Not all four hats are in the Skins shop.");
+            Check(!items.Any(x=>x.TryGetProperty("writes",out var w)&&w.EnumerateArray().Any(e=>e.GetProperty("key").GetString()==HeadwearSelection.BetaCapOwnedKey)),"BETA cap leaked into the shard shop.");
+        }
         Reset(1,false);int commits=ProfileTransaction.Commits.Count;
         foreach(var id in new[]{UniversalHeroCosmetic.WizardHat,UniversalHeroCosmetic.PropellerCap,UniversalHeroCosmetic.MushroomHat})
         {
+            Reset(1,false);
             string resource=HeadwearSelection.ResourceFor(id);
             var definition=CosmeticCatalog.Find(id);
-            Check(definition!=null&&definition.Headwear&&!definition.Purchasable&&definition.Price==0&&CosmeticCatalog.IsOwned(id),"Free test hat is missing from inventory.");
-            Check(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.AlreadyOwned,"Free test hat attempted a shard purchase.");
+            Check(definition!=null&&definition.Headwear&&definition.Purchasable&&definition.Category==CosmeticCategory.Skins&&
+                definition.Price==100&&definition.PriceLabel=="100 SHARDS"&&!CosmeticCatalog.IsOwned(id),"Shop hat has a wrong price/category or is still automatically free.");
+            Check(!string.IsNullOrEmpty(CosmeticCatalog.Sku(id))&&definition.HeadwearResource==resource,"Shop hat has no purchase SKU or art mapping.");
+            Check(!HeadwearSelection.EquipFor(HeroId.Rook,id),"Unpurchased shop hat can be equipped.");
+            AccountProfilePrefs.SetInt("DF_Shards",99);
+            Check(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.InsufficientShards&&PlayerWallet.Balance==99&&!CosmeticCatalog.IsOwned(id),"Underfunded purchase debited or granted a shop hat.");
+            AccountProfilePrefs.SetInt("DF_Shards",100);
+            Check(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.Purchased&&CosmeticCatalog.IsOwned(id)&&PlayerWallet.Balance==0,"100-shard hat purchase failed.");
+            Check(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.AlreadyOwned&&PlayerWallet.Balance==0,"Shop hat charged twice.");
+            Check(HeadwearSelection.EquippedFor(HeroId.Rook)==UniversalHeroCosmetic.Original,"Shop purchase silently equipped the hat.");
+            commits=ProfileTransaction.Commits.Count;
             Check(UfoHatMesh.TryBuildResource(resource,Matrix4x4.identity,Shader.Find("fixture"),out Mesh mesh,out Material[] materials,out string error),resource+": "+error);
             Check(mesh.vertexCount>0&&mesh.vertexCount<6000&&mesh.subMeshCount==6&&materials.Length==6,"Prototype mesh/material budget invalid.");
             foreach(bool authored in new[]{false,true})
@@ -478,25 +650,25 @@ static class Regression
             for(int i=0;i<HeroIdentity.HeroCount;i++)
             {
                 var hero=(HeroId)i;UniversalCosmeticSelection.EquipFor(hero,UniversalHeroCosmetic.Voidfall);
-                Check(HeadwearSelection.EquipFor(hero,id)&&HeadwearSelection.EquippedFor(hero)==id,"Free hat failed per-hero equip.");
-                Check(UniversalCosmeticSelection.EquippedFor(hero)==UniversalHeroCosmetic.Voidfall,"Free hat displaced the wing slot.");
+                Check(HeadwearSelection.EquipFor(hero,id)&&HeadwearSelection.EquippedFor(hero)==id,"Purchased hat failed per-hero equip.");
+                Check(UniversalCosmeticSelection.EquippedFor(hero)==UniversalHeroCosmetic.Voidfall,"Purchased hat displaced the wing slot.");
             }
             Check(HeadwearSelection.EquipFor(HeroId.Veyr,UniversalHeroCosmetic.Original)&&HeadwearSelection.EquippedFor(HeroId.Rook)==id&&
                 UniversalCosmeticSelection.EquippedFor(HeroId.Veyr)==UniversalHeroCosmetic.Voidfall,"Unequipping a test hat affected another hero or removed wings.");
             string saved=JsonSerializer.Serialize(AccountProfilePrefs.Ints);
             AccountProfilePrefs.Ints=JsonSerializer.Deserialize<Dictionary<string,int>>(saved);
             Check(HeadwearSelection.EquippedFor(HeroId.Rook)==id,"New test hat did not survive save/reload.");
-            Check(PlayerWallet.Balance==0,"Equipping a free test hat changed shards.");
+            Check(PlayerWallet.Balance==0,"Equipping a purchased hat changed shards.");
             commits=ProfileTransaction.Commits.Count;
         }
         Check(ProfileTransaction.Commits.Count==commits,"Prototype preview changed the account.");
         Check(!Actor().GetComponent<HeadwearPresentation>().ApplyPrototype("../OtherAsset"),"Unknown prototype path accepted.");
         Check(!UfoHatMesh.TryBuildResource("../OtherAsset",Matrix4x4.identity,Shader.Find("fixture"),out _,out _,out _),"Unknown serialized mesh path accepted.");
         Reset(1,false);
-        Check(!CosmeticCatalog.IsOwned(UniversalHeroCosmetic.BetaCap)&&!HeadwearSelection.EquipFor(HeroId.Rook,UniversalHeroCosmetic.BetaCap),"Free test hats bypassed the premium Battle Pass reward.");
-        Check(!CosmeticCatalog.IsOwned(UniversalHeroCosmetic.UfoTestHat),"Free test hats granted the paid UFO.");
+        Check(!CosmeticCatalog.IsOwned(UniversalHeroCosmetic.BetaCap)&&!HeadwearSelection.EquipFor(HeroId.Rook,UniversalHeroCosmetic.BetaCap),"Shop hats bypassed the premium Battle Pass reward.");
+        Check(!CosmeticCatalog.IsOwned(UniversalHeroCosmetic.UfoTestHat),"Another profile inherited UFO ownership.");
         foreach(var id in new[]{UniversalHeroCosmetic.WizardHat,UniversalHeroCosmetic.PropellerCap,UniversalHeroCosmetic.MushroomHat})
-            Check(CosmeticCatalog.IsOwned(id)&&HeadwearSelection.EquippedFor(HeroId.Rook)==UniversalHeroCosmetic.Original,"Another profile inherited an equipped hat.");
+            Check(!CosmeticCatalog.IsOwned(id)&&HeadwearSelection.EquippedFor(HeroId.Rook)==UniversalHeroCosmetic.Original,"Another profile inherited a purchased hat.");
     }
 }
 

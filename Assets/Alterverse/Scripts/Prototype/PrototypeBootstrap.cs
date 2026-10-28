@@ -16,7 +16,7 @@ private int revealArenaFrame;
 /// </summary>
 public static void PrepareTransitionFrame()
 {
-foreach(UnityEngine.Camera camera in FindObjectsByType<UnityEngine.Camera>(FindObjectsInactive.Exclude))
+foreach(UnityEngine.Camera camera in FindObjectsByType<UnityEngine.Camera>(FindObjectsInactive.Exclude,FindObjectsSortMode.None))
 {
 if(camera==null||camera.cameraType!=CameraType.Game||camera.targetTexture!=null)continue;
 camera.clearFlags=CameraClearFlags.SolidColor;
@@ -26,7 +26,7 @@ camera.cullingMask=0;
 }
 public static void RestoreTransitionFrame()
 {
-foreach(UnityEngine.Camera camera in FindObjectsByType<UnityEngine.Camera>(FindObjectsInactive.Exclude))
+foreach(UnityEngine.Camera camera in FindObjectsByType<UnityEngine.Camera>(FindObjectsInactive.Exclude,FindObjectsSortMode.None))
 {
 if(camera==null||camera.cameraType!=CameraType.Game||camera.targetTexture!=null)continue;
 if(camera.cullingMask==0)camera.cullingMask=~(1<<MenuShowcaseLayer);
@@ -46,11 +46,15 @@ private System.Collections.IEnumerator Start(){if(!buildOnStart)yield break;yiel
 private void LateUpdate()
 {
 if(pendingArenaCamera==null||Time.frameCount<revealArenaFrame)return;
+if(!HotZoneTank.FinishMatchPreparation())return;
 // Terrain, lighting and the panorama are built in Start; planet themes run in
 // Update. Reveal only after the next frame has run those initialization steps.
 if(pendingArenaWorld!=null&&pendingArenaWorld.activeInHierarchy)
 {
+MatchInsertionTransport.PrepareForReveal(pendingArenaWorld);
+CoopMatchStateSync.MarkLocalArenaReady();
 pendingArenaCamera.cullingMask=~(1<<MenuShowcaseLayer);
+MatchEntryCurtain.Reveal();
 OnlineMatchLoadingScreen.Complete();
 }
 else
@@ -70,7 +74,21 @@ if(!IsServerOnlyMatch())PrepareTransitionFrame();
 GameObject previous=GameObject.Find("DF_MatchWorld");
 if(previous!=null){previous.SetActive(false);Destroy(previous);}
 yield return null;
+try
+{
 BuildPrototype();
+if(!IsServerOnlyMatch()&&(GameObject.Find("AV_Player")==null||GameObject.Find("DF_MatchWorld")==null))
+throw new System.InvalidOperationException("Restart returned without a player or world for arena "+ArenaVariantRuntime.Current);
+}
+catch(System.Exception error)
+{
+Debug.LogError("DIMENSIONS FRONT: arena restart failed for "+ArenaVariantRuntime.Current);
+Debug.LogException(error);
+pendingArenaCamera=null;
+pendingArenaWorld=null;
+RestoreTransitionFrame();
+MainMenuController.ShowHome();
+}
 }
 finally{MatchClock.Set(PauseReason.Transition,false);}
 }
@@ -95,9 +113,12 @@ if(!serverOnly)PlayerHeroSelection.Select(selected);
 }
 else ArenaVariantRuntime.BeginMatch();
 
-if(!serverOnly)WingMatchRewardBonus.BeginMatch(selected);
+if(!serverOnly){MatchEntryCurtain.Begin();WingMatchRewardBonus.BeginMatch(selected);}
 var existing=new System.Collections.Generic.HashSet<GameObject>(gameObject.scene.GetRootGameObjects());
 GameObject world=new GameObject("DF_MatchWorld");
+// Own the pause before any actor's first Update, including on a dedicated server.
+var opening=new GameObject("AV_MatchOpening").AddComponent<MatchOpening>();
+opening.transform.SetParent(world.transform,false);
 bool completed=false;
 string stage="arena and base guards";
 try
@@ -165,11 +186,20 @@ new GameObject("DF_HotZoneTankHUD").AddComponent<HotZoneTankHUD>();
 new GameObject("DF_OvertimePresentation").AddComponent<OvertimePresentation>();
 }
 new GameObject("DF_DimensionPlanetDirector").AddComponent<DimensionPlanetDirector>();
+new GameObject("DF_HalloweenPumpkinEvent").AddComponent<HalloweenPumpkinEvent>();
 if(!serverOnly)new GameObject("DF_PlanetHUD").AddComponent<PlanetHUD>();
 new GameObject("DF_SpaceBomberDirector").AddComponent<SpaceBomberDirector>();
 new GameObject("AV_MatchTelemetry").AddComponent<MatchTelemetry>();
 new GameObject("AV_MatchScoreboard").AddComponent<MatchScoreboard>();
-if(!serverOnly)new GameObject("AV_MatchOpening").AddComponent<MatchOpening>();
+if(!serverOnly)
+{
+new GameObject("DF_MatchInsertion").AddComponent<MatchInsertionTransport>().Prepare(opening);
+}
+
+stage="Hot Zone monster and Magic Aura preparation";
+HotZoneTank.PrepareForMatch(world.transform);
+AttackExplosionVfx.Prepare(world.transform);
+if(serverOnly)HotZoneTank.FinishMatchPreparation(true);
 
 completed=true;
 if(!serverOnly)
@@ -205,6 +235,7 @@ private static void RecoverFailedBuild()
 {
 // Use the same session/network cleanup as a normal exit. Offline recovery finishes
 // synchronously; network recovery leaves through its owner before showing the menu.
+MatchEntryCurtain.Cancel();
 RestoreTransitionFrame();
 _ = MatchExit.ReturnToMenuAsync("Could not load "+ArenaVariantRuntime.Current+". Please try again or choose another map.");
 }
@@ -268,4 +299,7 @@ DefenseTrench.Spawn(team,ArenaLayout.DefensePosition(team,false,flank),flank==0?
 }
 private static void CreateCentralHealing(){GameObject heal=new GameObject("DF_CentralHealingPickup");heal.transform.position=new Vector3(0,.12f,0);heal.AddComponent<CentralHealingPickup>();}private static void CreateBaseCore(Vector3 p,Color c,string n,bool zero,int team){GameObject g=new GameObject(n);g.layer=GameplayCollision.Structures;g.transform.position=p;CapsuleCollider body=g.AddComponent<CapsuleCollider>();body.radius=.9f;body.height=2.6f;body.center=Vector3.up*1.3f;Health h=g.AddComponent<Health>();h.Configure(5000,true);g.AddComponent<RealityCore>().Initialize(team);g.AddComponent<RealityCoreShell>().Build(zero);g.AddComponent<ProductionBaseEnvironment>().Build(zero);}private static void CreateGround(string n,Vector3 p,Vector3 s,Color c){GameObject g=new GameObject(n);g.layer=GameplayCollision.Ground;g.transform.position=p;Mesh mesh=GameplayCollision.CreateRoundedPrismMesh(Vector3.zero,s.x,s.y,s.z,4f,8);MeshCollider floor=g.AddComponent<MeshCollider>();floor.sharedMesh=mesh;floor.convex=true;g.AddComponent<GameplayCollisionMeshOwner>().Own(mesh);}
 }}
+
+
+
 

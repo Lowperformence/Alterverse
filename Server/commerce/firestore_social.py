@@ -16,7 +16,7 @@ from safe_identity import (DESCRIPTIONS, valid_clan_name, valid_clan_tag,
 from pathlib import Path
 from google.cloud import firestore
 from ledger import Ledger
-from social import Social, public_values
+from social import Social
 from social import SocialForbidden
 from clan_chat import (CHAT_TABLES, CHAT_KEYS, ChatConfig, ClanChat, CHAT_VERSION, LEADER_VERSION)
 from datetime import datetime, timezone
@@ -56,19 +56,8 @@ class FirestoreSocial:
         self.unique = self.client.collection(prefix+'-social-clan-unique')
 
     def sync_wallet(self, account, wallet=None):
-        """Read current committed profile, so an older HTTP reply cannot rewind directory XP."""
-        self.ledger.wallet(account)
-        @firestore.transactional
-        def sync(tx):
-            profile = self.ledger.accounts.document(account).get(transaction=tx)
-            ref = self.collections['social_player'].document(account)
-            snap = ref.get(transaction=tx)
-            old = snap.to_dict() if snap.exists else {}
-            values = public_values(self.ledger._data(profile)['profile'], account)
-            row = dict(zip(TABLES['social_player'], (account,old.get('player_id') or secrets.token_hex(10),*values)))
-            if row != old:
-                tx.set(ref,row)
-        sync(self.client.transaction())
+        """Repair/index from the current profile atomically, never from an old HTTP reply."""
+        return self.ledger.wallet(account)
 
     def dispatch(self, account, route, data):
         # Public discovery, friend messaging and legacy chat routes stay disabled.
@@ -376,5 +365,3 @@ if __name__ == '__main__':
     social = FirestoreSocial(ledger)
     for snapshot in ledger.accounts.stream():
         social.sync_wallet(snapshot.id)
-
-

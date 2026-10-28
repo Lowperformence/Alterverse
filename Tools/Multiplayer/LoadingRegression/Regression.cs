@@ -12,8 +12,9 @@ static class Regression {
  static void Call(object target,string method)=>target.GetType().GetMethod(method,BindingFlags.Instance|BindingFlags.NonPublic).Invoke(target,null);
  static OnlineMatchPlan Reset(bool server=false){
   typeof(OnlineMatchLoadingScreen).GetMethod("Reset",BindingFlags.Static|BindingFlags.NonPublic).Invoke(null,null);
-  GameObject.All.Clear();MatchExit.Leaving=false;MatchExit.Error=null;Time.frameCount=0;
-  FrontEndTheme.Labels.Clear();FrontEndTheme.Click=false;Screen.safeArea=new Rect(20,0,1560,720);
+  MatchEntryCurtain.Cancel();MainMenuController.IsVisible=false;MatchClock.InBackground=false;GameObject.All.Clear();MatchExit.Leaving=false;MatchExit.Error=null;Time.frameCount=0;
+  FrontEndTheme.Labels.Clear();FrontEndTheme.Actions.Clear();FrontEndTheme.Click=false;Screen.safeArea=new Rect(20,0,1560,720);
+  ArenaVariantRuntime.ShuffleEnabled=false;ArenaVariantRuntime.Selected="Moon";
   EdgegapOnlineFlow.Instance=new();EdgegapMatchmakerClient.Instance=new();
   NetworkManager.Singleton=new(){IsListening=true,IsServer=server,IsConnectedClient=!server};
   CoopRosterBuilder.LocalSlot=server?-1:0;CoopAuthority.LocalHasServerAuthority=server;
@@ -76,6 +77,46 @@ static class Regression {
   restart.MoveNext();restart.MoveNext();Time.frameCount++;Call(bootstrap,"LateUpdate");
   Check(bootstrap.Restarts==1&&bootstrap.Builds==1&&!OnlineMatchLoadingScreen.IsVisible,"Repeat match finishes loading after replacement reveal");
   Reset();Check(!OnlineMatchRuntime.Enter(null),"Unverified plan cannot enter loading");
-  Console.WriteLine("PASS: "+checks+" online loading checks (controlled engine/network fixtures, no native rendering)");
+  plan=Reset();GUI.depth=42;GUI.enabled=false;GUI.color=new Color(0,0,0,.4f);GUI.matrix=new Matrix4x4{value=18};
+  var local=new MainMenuController();Call(local,"DrawLaunch");
+  Check(FrontEndTheme.Labels.Contains("ENTERING THE FRONT")&&FrontEndTheme.Labels.Contains("PREPARING BATTLEFIELD"),"Offline entry uses shared loading surface");
+  Check(FrontEndTheme.Labels.Contains("ROOK  /  VANGUARD")&&FrontEndTheme.Labels.Contains("MATCH 4v4  /  Moon  /  ZERO TEAM"),"Offline entry retains selected hero and arena");
+  Check(FrontEndTheme.Labels.Exists(s=>Array.IndexOf(Alterverse.Content.LoadingTipContent.Tips,s)>=0),"Offline entry displays gameplay tips");
+  Check(FrontEndTheme.Actions.Count==0&&!MatchExit.Leaving&&ReferenceEquals(plan,CoopAuthority.ActivePlan)&&!OnlineMatchLoadingScreen.IsVisible,"Local presentation cannot expose online exit or change match state");
+  Check(FrontEndTheme.Cover.width==Screen.width&&FrontEndTheme.Cover.height==Screen.height,"Offline loading covers mobile unsafe area");
+  Check(GUI.depth==42&&!GUI.enabled&&GUI.color.a==.4f&&GUI.matrix.value==18,"Offline loading restores caller GUI state");
+  FrontEndTheme.Labels.Clear();ArenaVariantRuntime.ShuffleEnabled=true;Call(local,"DrawLaunch");
+  Check(FrontEndTheme.Labels.Contains("MATCH 4v4  /  RANDOM OWNED ARENA  /  ZERO TEAM"),"Shuffle mode keeps its arena description");
+  FrontEndTheme.Labels.Clear();plan.Arena="Mars";Call(new MainMenuController(true),"DrawLaunch");
+  Check(FrontEndTheme.Labels.Contains("SYNCHRONIZING BATTLEFIELD")&&FrontEndTheme.Labels.Contains("PRIVATE CO-OP  •  2 PLAYERS  /  Mars  /  ZERO TEAM"),"Private co-op retains its player count and prepared arena");
+  Screen.safeArea=new Rect(0,0,0,0);FrontEndTheme.Click=true;
+  Check(!MatchLoadingPresentation.Draw(new FrontEndTheme(),"test","test",canReturnToMenu:true)&&FrontEndTheme.Actions.Count==0,"Invalid safe area cannot create invisible actions");
+  Check(GUI.depth==42&&!GUI.enabled&&GUI.color.a==.4f&&GUI.matrix.value==18,"Invalid safe area still restores GUI state");
+  Reset();MatchEntryCurtain.Begin();
+  var curtain=GameObject.All.Find(g=>g.name=="DF_MatchEntryCurtain");
+  Check(MatchEntryCurtain.AwaitingArena&&MatchEntryCurtain.IsVisible,"Independent curtain survives the menu handoff");
+  // Invoke the actual component, not a substitute for the curtain lifecycle.
+  var curtainInstance=(MatchEntryCurtain)typeof(MatchEntryCurtain).GetField("instance",BindingFlags.Static|BindingFlags.NonPublic).GetValue(null);
+  Call(curtainInstance,"Update");
+  Check(MatchEntryCurtain.AwaitingArena,"Time alone must never expose an unready arena");
+  MatchEntryCurtain.Reveal();
+  Check(!MatchEntryCurtain.AwaitingArena&&MatchEntryCurtain.IsVisible,"Reveal retains opaque cover for first rendered arena frame");
+  Call(curtainInstance,"Update");
+  Check(MatchEntryCurtain.IsVisible,"Same-frame update cannot remove loading cover");
+  Time.frameCount=3;MatchClock.InBackground=true;
+  for(int i=0;i<10;i++)Call(curtainInstance,"Update");
+  Check(MatchEntryCurtain.IsVisible,"Backgrounding cannot consume the transition");
+  MatchClock.InBackground=false;
+  for(int i=0;i<5;i++)Call(curtainInstance,"Update");
+  Check(!MatchEntryCurtain.IsVisible,"Foreground dissolve completes");
+  MatchEntryCurtain.Begin();OnlineMatchLoadingScreen.Cancel();
+  Check(!MatchEntryCurtain.IsVisible,"Cancelled online plan also clears persistent curtain");
+  MatchEntryCurtain.Begin();MainMenuController.IsVisible=true;
+  curtainInstance=(MatchEntryCurtain)typeof(MatchEntryCurtain).GetField("instance",BindingFlags.Static|BindingFlags.NonPublic).GetValue(null);
+  Call(curtainInstance,"Update");
+  Check(!MatchEntryCurtain.IsVisible,"Recovery menu cannot be trapped beneath a loading curtain");
+  Console.WriteLine("PASS: "+checks+" online/offline loading checks (controlled engine/network fixtures, no native rendering)");
  }
 }
+
+

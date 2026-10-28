@@ -9,7 +9,7 @@ namespace Alterverse.Combat
 {
     /// <summary>Roaming reward spawned by either of the two scheduled Hot Zones.</summary>
     [RequireComponent(typeof(Health),typeof(TeamMember))]
-    public sealed class HotZoneTank:MonoBehaviour
+    public sealed partial class HotZoneTank:MonoBehaviour
     {
         private const float MaxHp=476f;
         private const float Damage=10f;
@@ -101,7 +101,7 @@ namespace Alterverse.Combat
 
         private static int coopSpawnSerial;
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetRegistry(){active.Clear();coopSpawnSerial=0;}
+        private static void ResetRegistry(){active.Clear();coopSpawnSerial=0;ResetPreparedRewards();}
         private void OnEnable(){if(!active.Contains(this))active.Add(this);}
         private void OnDisable(){active.Remove(this);shotPending=false;shotTarget=null;}
 
@@ -157,6 +157,25 @@ namespace Alterverse.Combat
                     break;
                 }
             }
+            var ready=TakePreparedReward(team);
+            GameObject go=ready!=null?ready.gameObject:CreateReward(team,spawn,GameObject.Find("DF_MatchWorld")?.transform,false).gameObject;
+            var tank=go.GetComponent<HotZoneTank>();
+            if(ready!=null)tank.ActivatePreparedReward(spawn);
+            if(Alterverse.Multiplayer.CoopAuthority.Active)
+            {
+                // Include team so an authoritative snapshot can reconstruct a missing replica.
+                // Configure after art creation so death also hides the complete visual hierarchy.
+                int occurrence=zoneOccurrence>=0?zoneOccurrence:coopSpawnSerial++;
+                string worldKey=Alterverse.Multiplayer.HotZoneRewardKey.Create(occurrence,team);
+                (go.GetComponent<Alterverse.Multiplayer.CoopWorldEntityKey>()??go.AddComponent<Alterverse.Multiplayer.CoopWorldEntityKey>()).Configure(worldKey);
+            }
+            tank.spawnAuraPending=replica;
+            if(!replica)tank.PlaySpawnAura();
+            return true;
+        }
+
+        private static HotZoneTank CreateReward(int team,Vector3 spawn,Transform world,bool reusable)
+        {
             GameObject go=GameObject.CreatePrimitive(PrimitiveType.Capsule);
             bool skeleton=ArenaVariantRuntime.IsMars,alien=ArenaVariantRuntime.IsGreenPlanet,spider=ArenaVariantRuntime.IsNoxara,bear=ArenaVariantRuntime.IsKryon;
             go.name=ArenaVariantRuntime.IsExoplanet?"DF_"+(team==0?"Zero":"Lumen")+ExoplanetArenaProfile.MonsterName(ArenaVariantRuntime.Current):ArenaVariantRuntime.IsGJ504b?(team==0?"DF_ZeroGJ504bSandBeast":"DF_LumenGJ504bSandBeast"):bear?(team==0?"DF_ZeroKryonFrostBear":"DF_LumenKryonFrostBear"):
@@ -166,21 +185,13 @@ namespace Alterverse.Combat
                 (team==0?"DF_ZeroHotZoneTank":"DF_LumenHotZoneTank");
             go.transform.position=spawn;
             go.transform.localScale=new Vector3(1.15f,.9f,1.35f);
-            GameObject world=GameObject.Find("DF_MatchWorld");if(world!=null)go.transform.SetParent(world.transform,true);
+            if(world!=null)go.transform.SetParent(world,true);
 
             Renderer baseRenderer=go.GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;
-            Health hp=go.AddComponent<Health>();hp.Configure(MaxHp,true);
+            Health hp=go.AddComponent<Health>();hp.Configure(MaxHp,!reusable);
             TeamMember member=go.AddComponent<TeamMember>();member.Initialize(team);
             go.AddComponent<HotZoneTank>().Initialize(team,spawn,skeleton,alien,spider,bear);
-            if(Alterverse.Multiplayer.CoopAuthority.Active)
-            {
-                // Include team so an authoritative snapshot can reconstruct a missing replica.
-                // Configure after art creation so death also hides the complete visual hierarchy.
-                int occurrence=zoneOccurrence>=0?zoneOccurrence:coopSpawnSerial++;
-                string worldKey=Alterverse.Multiplayer.HotZoneRewardKey.Create(occurrence,team);
-                go.AddComponent<Alterverse.Multiplayer.CoopWorldEntityKey>().Configure(worldKey);
-            }
-            return true;
+            return go.GetComponent<HotZoneTank>();
         }
 
         private ReferenceMonsterRig referenceRig;
@@ -256,6 +267,7 @@ namespace Alterverse.Combat
 
         private void Update()
         {
+            if(health!=null&&health.IsDead&&pooledReward){ReturnToRewardPool(gameObject);return;}
             if(Time.timeScale<=0f||health==null||health.IsDead)return;
             TrackRootMovement(Time.deltaTime);
             if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)
@@ -625,7 +637,7 @@ namespace Alterverse.Combat
             jointMat=MakeMaterial(shader,new Color(.16f,.19f,.23f,1),.84f,.48f,Color.black);
             energyMat=MakeMaterial(shader,energy,.10f,.55f,energy*2.3f);
 
-            // Ancient Martian war skeleton: oversized readable bones, rib cage, skull and claws.
+            // Martian robot skeleton: exposed steel ribs, dark servos and orange reactor energy.
             Part("TitanPelvis",PrimitiveType.Cube,transform,new Vector3(0,.20f,0),new Vector3(1.35f,.48f,.72f),armorMat,Quaternion.Euler(0,0,3));
             Part("TitanSpine",PrimitiveType.Cylinder,transform,new Vector3(0,1.22f,0),new Vector3(.22f,1.05f,.22f),jointMat,Quaternion.identity);
             for(int i=0;i<5;i++)
@@ -654,11 +666,24 @@ namespace Alterverse.Combat
             Part("TitanRibRunesL",PrimitiveType.Cube,transform,new Vector3(-.45f,1.15f,.18f),new Vector3(.045f,.42f,.025f),energyMat,Quaternion.Euler(0,0,-32));
             Part("TitanRibRunesR",PrimitiveType.Cube,transform,new Vector3(.45f,1.15f,.18f),new Vector3(.045f,.42f,.025f),energyMat,Quaternion.Euler(0,0,32));
         
-            // Bone-built wrist cuffs and brow plates sharpen the old Martian silhouette.
+            // Mechanical wrist cuffs and brow plates preserve the skeleton silhouette.
             Part("TitanWristCuffL",PrimitiveType.Cube,transform,new Vector3(-1.34f,.45f,.10f),new Vector3(.34f,.16f,.32f),jointMat,Quaternion.Euler(0,0,-8));
             Part("TitanWristCuffR",PrimitiveType.Cube,transform,new Vector3(1.34f,.45f,.10f),new Vector3(.34f,.16f,.32f),jointMat,Quaternion.Euler(0,0,8));
             Part("TitanBrowRidge",PrimitiveType.Cube,transform,new Vector3(0,2.49f,.39f),new Vector3(.78f,.14f,.20f),darkMat,Quaternion.Euler(0,0,-3));
             Part("TitanJawRune",PrimitiveType.Cube,transform,new Vector3(0,1.93f,.43f),new Vector3(.34f,.045f,.04f),energyMat,Quaternion.Euler(0,0,2));
+            teamMat=MakeMaterial(shader,energy,.12f,.55f,energy*1.2f);
+            Part("TitanTeamBeacon",PrimitiveType.Cube,transform,new Vector3(0,.21f,.39f),new Vector3(.28f,.07f,.03f),teamMat,Quaternion.identity);
+            Part("TitanReactorHousing",PrimitiveType.Cylinder,transform,new Vector3(0,1.24f,.32f),new Vector3(.47f,.085f,.47f),jointMat,Quaternion.Euler(90,0,0));
+            Part("TitanReactorLens",PrimitiveType.Cylinder,transform,new Vector3(0,1.24f,.415f),new Vector3(.29f,.028f,.29f),energyMat,Quaternion.Euler(90,0,0));
+            for(int i=0;i<3;i++)
+                Part("TitanSpinalCoupler"+i,PrimitiveType.Cylinder,transform,new Vector3(0,.65f+i*.45f,-.09f),new Vector3(.34f,.06f,.34f),armorMat,Quaternion.identity);
+            // Servo covers are children of the moving bones, so they cannot float during gait/attack.
+            foreach(Transform limb in new[]{skeletonLeftArm,skeletonRightArm,skeletonLeftLeg,skeletonRightLeg})
+            {
+                Part("TitanServoSleeve",PrimitiveType.Cylinder,limb,Vector3.zero,new Vector3(1.20f,.23f,1.20f),darkMat,Quaternion.identity);
+                Part("TitanServoRail",PrimitiveType.Cube,limb,new Vector3(0,.03f,.54f),new Vector3(.25f,.58f,.10f),armorMat,Quaternion.identity);
+                Part("TitanServoStatus",PrimitiveType.Cube,limb,new Vector3(0,.10f,.61f),new Vector3(.13f,.18f,.035f),energyMat,Quaternion.identity);
+            }
         }
 
         private void AnimateSkeleton()
@@ -1527,6 +1552,8 @@ namespace Alterverse.Combat
         }
     }
 }
+
+
 
 
 

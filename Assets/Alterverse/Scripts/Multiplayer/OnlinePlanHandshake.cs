@@ -20,7 +20,7 @@ namespace Alterverse.Multiplayer
         private const string PlanMessage = "DF_ONLINE_PLAN_V1";
         private const string AckMessage = "DF_ONLINE_PLAN_ACK_V1";
         private const string LaunchMessage = "DF_ONLINE_LAUNCH_V1";
-        private const int ProtocolVersion = 3;
+        private const int ProtocolVersion = 4;
 
         public static OnlinePlanHandshake Instance { get; private set; }
         public static bool Preparing => Instance != null && Instance.preparing;

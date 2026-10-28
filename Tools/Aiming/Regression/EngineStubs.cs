@@ -1,5 +1,6 @@
 // Minimal deterministic Unity/network fixtures. Production aiming/control/attack code is compiled unchanged.
 using System;
+// Rendering is exercised separately by the production-cloak presentation fixture.
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -96,7 +97,8 @@ namespace Alterverse.Characters {
  public class VeyrAbilities:UnityEngine.MonoBehaviour{}
 }
 namespace Alterverse.Combat {
- public class Health:UnityEngine.MonoBehaviour {public static List<Health> Active=new();public float Current=1000,Max=1000,Shield,TemporaryShield;public bool IsDead{get;set;}public float Normalized=>Current/Max;public event Action Died;public Func<bool> DamageGate;private void Awake()=>Active.Add(this);private void OnDisable()=>Active.Remove(this);public void Configure(float n){Max=Current=n;}public void RestoreFull(){Current=Max;Shield=TemporaryShield=0;IsDead=false;}public void TakeDamage(float n,UnityEngine.GameObject source=null){if(IsDead||DamageGate!=null&&!DamageGate())return;if(source?.GetComponent<Alterverse.Characters.HeroIdentity>()?.Hero==Alterverse.Characters.HeroId.Rook)n*=1.05f;float shield=Math.Min(Shield,n);Shield-=shield;TemporaryShield=Math.Max(0,TemporaryShield-shield);Current=Math.Max(0,Current-(n-shield));if(Current<=0){IsDead=true;Died?.Invoke();}}public void Heal(float n,bool visual=true,UnityEngine.GameObject source=null){Current=Math.Min(Max,Current+n);}public void AddShield(float n,float s,bool visual=true){Shield+=n;TemporaryShield+=n;}}
+ // Siphon behavior is tested against production Health by PrismShotRegression; this aiming-only boundary grants none.
+ public class Health:UnityEngine.MonoBehaviour {public static List<Health> Active=new();public float Current=1000,Max=1000,Shield,TemporaryShield;public bool IsDead{get;set;}public float Normalized=>Current/Max;public event Action Died;public Func<bool> DamageGate;private void Awake()=>Active.Add(this);private void OnDisable()=>Active.Remove(this);public void Configure(float n){Max=Current=n;}public void RestoreFull(){Current=Max;Shield=TemporaryShield=0;IsDead=false;}public void TakeDamage(float n,UnityEngine.GameObject source=null){if(IsDead||DamageGate!=null&&!DamageGate())return;if(source?.GetComponent<Alterverse.Characters.HeroIdentity>()?.Hero==Alterverse.Characters.HeroId.Rook)n*=1.05f;float shield=Math.Min(Shield,n);Shield-=shield;TemporaryShield=Math.Max(0,TemporaryShield-shield);Current=Math.Max(0,Current-(n-shield));if(Current<=0){IsDead=true;Died?.Invoke();}}public void Heal(float n,bool visual=true,UnityEngine.GameObject source=null){Current=Math.Min(Max,Current+n);}public float TransferShieldTo(Health recipient,float amount,float overflowDuration)=>0;public float RemoveAllShields(UnityEngine.GameObject source){if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay||IsDead||DamageGate!=null&&!DamageGate())return 0;var own=GetComponent<TeamMember>();var other=source?.GetComponent<TeamMember>();if(own!=null&&other!=null&&own.Team==other.Team)return 0;float removed=Shield;Shield=TemporaryShield=0;return removed;}public void AddShield(float n,float s,bool visual=true){Shield+=n;TemporaryShield+=n;}}
  public class TeamMember:UnityEngine.MonoBehaviour {public int Team;public void Initialize(int t)=>Team=t;}
  public class LaneMinion:UnityEngine.MonoBehaviour {public int Team;}public class LaneTower:UnityEngine.MonoBehaviour {public int Team;}public class RealityCore:UnityEngine.MonoBehaviour {public int Team;public bool IsVulnerable=true;}
  public class GameplayCollision {public const int Units=8,Structures=9,SightMask=(1<<0)|(1<<Structures);public static UnityEngine.Vector3 ClampToRoundedArena(UnityEngine.Vector3 p,float a,float b)=>new(UnityEngine.Mathf.Clamp(p.x,-a,a),p.y,UnityEngine.Mathf.Clamp(p.z,-b,b));}
@@ -114,6 +116,7 @@ namespace Alterverse.Visuals {
 
  public sealed partial class HeroSkillVfx:UnityEngine.MonoBehaviour {
   public static UnityEngine.Vector3 LastPoint;
+  public static void TimmyHold(UnityEngine.GameObject actor,Alterverse.Combat.Health target,float duration,float elapsed=0)=>SelectedAbilityVfx.TimmyHold(actor,target,duration,elapsed);
   private static Alterverse.Characters.HeroId Hero(UnityEngine.GameObject a)=>a.GetComponent<Alterverse.Characters.HeroIdentity>().Hero;
   private static UnityEngine.Color Accent(UnityEngine.GameObject a)=>StylizedArtDirection.HeroAccent(Hero(a));
   private static UnityEngine.Vector3 Chest(UnityEngine.GameObject a)=>a.transform.position+UnityEngine.Vector3.up*.25f;
@@ -125,12 +128,12 @@ namespace Alterverse.Visuals {
   public static void TargetWarning(UnityEngine.GameObject a,Alterverse.Combat.Health h,float s){}
   public static void Cast(UnityEngine.GameObject a,int s,float windup=-1){}
   public static void Impact(UnityEngine.GameObject a,Alterverse.Combat.Health h,int s){}
-  public static void Debuff(UnityEngine.GameObject a,Alterverse.Combat.Health h){}
+  public static void Debuff(UnityEngine.GameObject a,Alterverse.Combat.Health h,int slot=-1){}
   public static void Dash(UnityEngine.GameObject a,UnityEngine.Vector3 p,UnityEngine.Vector3 q,int slot=2,float duration=.16f){if(Hero(a)==Alterverse.Characters.HeroId.Timmy)TimmyEffect(a,slot==3?3:2,p,q,0,duration);}
   public static void Support(UnityEngine.GameObject a,Alterverse.Combat.Health h,bool s,float d){}
   public static void SupportLink(UnityEngine.GameObject a,Alterverse.Combat.Health h){}
   public static void Area(UnityEngine.GameObject a,UnityEngine.Vector3 p,float r,float w,bool warning,bool support,int s){LastPoint=p;if(Hero(a)==Alterverse.Characters.HeroId.Timmy&&s==1)TimmyEffect(a,warning?0:1,p,p,r,warning?w:Alterverse.Characters.TimmyBalance.DustVfxSeconds);}
-  public static void Spell(UnityEngine.GameObject a,UnityEngine.Vector3 p,int s,float f=0,UnityEngine.Transform t=null){if(t!=null)throw new Exception("unintended homing visual");LastPoint=p;if(Hero(a)==Alterverse.Characters.HeroId.Timmy&&s==1&&f>0)TimmyEffect(a,5,Chest(a),p,0,f);}
+  public static void Spell(UnityEngine.GameObject a,UnityEngine.Vector3 p,int s,float f=0,UnityEngine.Transform t=null){if(t!=null)throw new Exception("unintended homing visual");LastPoint=p;if(Hero(a)==Alterverse.Characters.HeroId.Traveler&&s==0)TemporalLaser(a,a.transform.position,p,f);if(Hero(a)==Alterverse.Characters.HeroId.Timmy&&s==1&&f>0)TimmyEffect(a,5,Chest(a),p,0,f);}
   public static void Basic(UnityEngine.GameObject a,UnityEngine.Vector3 p,float f=0,UnityEngine.Transform t=null,bool animate=true){if(t!=null&&Alterverse.Combat.AimingSettings.Current.For(Hero(a),-1).targetingMode!=Alterverse.Combat.TargetingMode.AutoBasic&&Alterverse.Combat.AimingSettings.Current.For(Hero(a),-1).targetingMode!=Alterverse.Combat.TargetingMode.Homing)throw new Exception("unintended homing basic");LastPoint=p;}
   public static void SharkAnchor(UnityEngine.GameObject a,UnityEngine.Vector3 p,float f,UnityEngine.Transform t=null){LastPoint=p;}
   public static void SharkPullChain(UnityEngine.GameObject a,Alterverse.Combat.Health t,float d){}
@@ -180,3 +183,52 @@ namespace Alterverse.Combat {public static class ArenaLayout {public const float
 
 namespace Alterverse.Multiplayer {public class CoopWorldEntityKey:UnityEngine.MonoBehaviour {public string Key;public void Configure(){Key??=gameObject.name;}}}
 
+// Existing suites exercise the unimported fallback. The focused suite compiles the real presenter.
+namespace Alterverse.Visuals {public static class ThalaHealingVfx {
+ public static bool Available;public static int Targets,Areas;public static float Elapsed,Radius;public static UnityEngine.Transform Target;public static UnityEngine.Vector3 Center;
+ public static bool TryTarget(UnityEngine.Transform target,float elapsed=0){Targets++;Target=target;Elapsed=elapsed;return Available;}
+ public static bool TryArea(UnityEngine.Vector3 center,float radius,float elapsed=0){Areas++;Center=center;Radius=radius;Elapsed=elapsed;return Available;}
+}}
+namespace Alterverse.Visuals {public static class UltimateLightningVfx {public const int Ione=0,Traveler=1;public static bool TryPlay(int kind,UnityEngine.Vector3 center,float radius,float elapsed=0)=>false;}}
+namespace Alterverse.Visuals {public static class SmallBulletVfx {public static bool Launch(UnityEngine.GameObject actor,UnityEngine.Vector3 from,UnityEngine.Vector3 to,float duration,UnityEngine.Transform target=null,int deliveryId=0,float elapsed=0,bool confirmedHit=false,float delay=0)=>false;public static bool ConfirmHit(UnityEngine.GameObject actor,UnityEngine.Vector3 point)=>false;public static void CancelOwner(UnityEngine.GameObject actor){}public static void CancelDelivery(int id){}}}
+
+namespace Alterverse.Visuals {public static class SivraNovaVfx {
+ public static bool Cast(UnityEngine.GameObject actor,int slot,UnityEngine.Vector3 muzzle,float windup,float elapsed=0)=>false;
+ public static bool Launch(UnityEngine.GameObject actor,int slot,UnityEngine.Vector3 from,UnityEngine.Vector3 to,float seconds,UnityEngine.Transform follow=null,int deliveryId=0,float elapsed=0)=>false;
+ public static bool ConfirmHit(UnityEngine.GameObject actor,Alterverse.Combat.Health target,int slot,float elapsed=0)=>false;
+ public static bool SnareStatus(UnityEngine.GameObject actor,Alterverse.Combat.Health target,float elapsed=0)=>false;
+ public static UnityEngine.AudioClip AudioFor(int slot,int phase)=>null;
+ public static bool ScheduleImpactAudio(UnityEngine.GameObject actor,int slot,UnityEngine.Vector3 point,System.Action play)=>false;
+ public static void CancelDelivery(int id){}public static void CancelOwner(UnityEngine.GameObject actor){}
+}}
+
+
+namespace Alterverse.Visuals {public static class SelectedAbilityVfx {
+ public const int Smoke=0,Blood=1,Strike=2,Circle=3,Fire=4,Stars=5;public const float SizeMultiplier=3.5f;
+ public static bool Available;public static UnityEngine.AudioClip StarsSound;public static int SmokeCalls,HoldStarts,HoldStops,Areas,Echoes,Shots;public static int LastKind;public static float LastRadius;
+ public static bool Ready(int k)=>Available;public static UnityEngine.AudioClip StarsClip()=>StarsSound;
+ public static bool TryArea(int k,UnityEngine.Vector3 p,float r,float elapsed=0){Areas++;LastKind=k;LastRadius=r;return Available;}
+ public static void RememberEcho(UnityEngine.GameObject a,UnityEngine.Vector3 o,UnityEngine.Vector3 d,float r,float angle){}
+ public static bool TryEchoImpact(UnityEngine.GameObject a,UnityEngine.Vector3 p,float elapsed=0){Echoes++;return Available;}
+ public static bool TryRiftScar(UnityEngine.GameObject a,UnityEngine.Vector3 f,UnityEngine.Vector3 t,float d,float w,int id,float elapsed=0){Shots++;return Available;}
+ public static bool JetSmoke(UnityEngine.GameObject a,UnityEngine.Transform nozzle,UnityEngine.Vector3 p,UnityEngine.Quaternion q,UnityEngine.Vector3 end,float d,float elapsed=0){SmokeCalls++;return Available;}
+ public static bool TimmyHold(UnityEngine.GameObject a,Alterverse.Combat.Health t,float d,float elapsed=0){if(d>0)HoldStarts++;else HoldStops++;return Available;}
+ public static void CancelSmoke(UnityEngine.GameObject a){}public static void CancelDelivery(int id){}public static void CancelOwner(UnityEngine.GameObject a){}
+}}
+
+namespace Alterverse.Visuals {public static class TravelerLightningVfx {
+ public static bool Available;public static int Casts,Launches,Hits,Areas;public static float Radius;public static bool Defer;public static System.Action Pending;
+ public static System.Collections.Generic.Dictionary<int,UnityEngine.AudioClip> NativeClips=new();
+ public static bool Ready(int skill)=>Available;public static bool Cast(UnityEngine.GameObject a,int skill){Casts++;return Available;}
+ public static bool Launch(UnityEngine.GameObject a,int s,UnityEngine.Vector3 f,UnityEngine.Vector3 t,float sec,float width,int deliveryId=0,float elapsed=0){Launches++;return Available;}
+ public static bool ConfirmHit(UnityEngine.GameObject a,Alterverse.Combat.Health h,int s,float elapsed=0){Hits++;return Available;}
+ public static bool ResolveArea(UnityEngine.GameObject a,UnityEngine.Vector3 p,float r,System.Action play,float elapsed=0){Areas++;Radius=r;if(Available)play?.Invoke();return Available;}
+ public static UnityEngine.AudioClip AudioFor(int skill,int phase)=>NativeClips.GetValueOrDefault(skill*3+phase);
+ public static bool ScheduleImpactAudio(UnityEngine.GameObject a,int s,UnityEngine.Vector3 p,System.Action play){if(!Defer)return false;Pending=play;return true;}
+ public static void CancelOwner(UnityEngine.GameObject a){}public static void CancelDelivery(int id){}
+}}
+
+namespace Alterverse.Visuals {public sealed class Bolt7Visual:UnityEngine.MonoBehaviour {public bool HasNetworkPresentation;public UnityEngine.Vector3 PresentedPosition;public UnityEngine.Quaternion PresentedRotation=UnityEngine.Quaternion.identity;}}
+
+
+namespace Alterverse.Visuals {public class VoidKnightStealth:UnityEngine.MonoBehaviour {}}

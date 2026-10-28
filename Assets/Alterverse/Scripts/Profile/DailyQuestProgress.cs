@@ -13,6 +13,7 @@ namespace Alterverse.Profile
         private const string KillsKey = "DF_DailyQuestKills_v2";
         private const string HotZonesKey = "DF_DailyQuestHotZones_v2";
         private const string SoldierKillsKey = "DF_DailyQuestSoldierKills_v2";
+        private const string RewardedAdsKey = "DF_DailyQuestRewardedAds_v1";
         private const string ClaimedKey = "DF_DailyQuestClaimed_v2";
 
         private const string MapsKey = "DF_DailyQuestWonMaps_v1";
@@ -26,6 +27,7 @@ namespace Alterverse.Profile
             1 => 20,
             2 => 60,
             3 => 5,
+            4 => 5,
             _ => 0
         };
 
@@ -40,6 +42,7 @@ namespace Alterverse.Profile
             {
                 0 => KillsKey,
                 1 => HotZonesKey,
+                4 => RewardedAdsKey,
                 _ => SoldierKillsKey
             };
             return Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(key, 0), 0, Target(index));
@@ -50,8 +53,20 @@ namespace Alterverse.Profile
             Current && (Alterverse.Profile.AccountProfilePrefs.GetInt(ClaimedKey, 0) & (1 << index)) != 0;
 
         public static ProfileTransaction.Write[] MatchWrites(int kills, int hotZoneCaptures, int soldierKills, bool won = false, ArenaVariant arena = ArenaVariant.Moon)
+            => ProgressWrites(Today, kills, hotZoneCaptures, soldierKills, 0, won, arena);
+
+        // Receipt day is recorded on the earned callback, so collecting an old saved
+        // reward after midnight never advances today's ad quest.
+        public static ProfileTransaction.Write[] RewardedAdWrites(int completedDay)
         {
             int today = Today;
+            return completedDay == today
+                ? ProgressWrites(today, 0, 0, 0, 1, false, ArenaVariant.Moon)
+                : Array.Empty<ProfileTransaction.Write>();
+        }
+
+        private static ProfileTransaction.Write[] ProgressWrites(int today, int kills, int hotZoneCaptures, int soldierKills, int rewardedAds, bool won, ArenaVariant arena)
+        {
             int stored = Alterverse.Profile.AccountProfilePrefs.GetInt(DayKey, 0);
             if (stored > today)
                 return Array.Empty<ProfileTransaction.Write>();
@@ -60,6 +75,7 @@ namespace Alterverse.Profile
             int priorKills = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(KillsKey, 0) : 0;
             int priorHotZones = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(HotZonesKey, 0) : 0;
             int priorSoldierKills = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(SoldierKillsKey, 0) : 0;
+            int priorRewardedAds = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(RewardedAdsKey, 0) : 0;
             int claimed = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(ClaimedKey, 0) : 0;
 
             int maps = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(MapsKey, 0) : 0;
@@ -71,6 +87,7 @@ namespace Alterverse.Profile
                 new ProfileTransaction.Write(KillsKey, Mathf.Min(Target(0), ProfileTransaction.Add(priorKills, Mathf.Max(0, kills)))),
                 new ProfileTransaction.Write(HotZonesKey, Mathf.Min(Target(1), ProfileTransaction.Add(priorHotZones, Mathf.Max(0, hotZoneCaptures)))),
                 new ProfileTransaction.Write(SoldierKillsKey, Mathf.Min(Target(2), ProfileTransaction.Add(priorSoldierKills, Mathf.Max(0, soldierKills)))),
+                new ProfileTransaction.Write(RewardedAdsKey, Mathf.Min(Target(4), ProfileTransaction.Add(priorRewardedAds, Mathf.Max(0, rewardedAds)))),
                 new ProfileTransaction.Write(ClaimedKey, claimed),
                 new ProfileTransaction.Write(MapsKey, maps)
             };

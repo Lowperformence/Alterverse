@@ -19,11 +19,14 @@ namespace Alterverse.Visuals
             public string[] boneNames;
             public Anchor[] anchors;
             public float[] vertices, normals;
+            public float[] uvs;
             public int[] boneIndices;
             public Submesh[] submeshes;
+            public bool legEquipmentAuthored;
         }
         private static Geometry geometry;
         private Mesh ownedMesh;
+        private Texture2D carbonWeave;
         private readonly List<Material> ownedMaterials = new List<Material>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -58,7 +61,9 @@ namespace Alterverse.Visuals
                 data.vertices.Length % 3 != 0 || data.vertices.Length != data.normals.Length ||
                 data.boneIndices == null || data.boneIndices.Length != data.vertices.Length / 3 ||
                 data.boneNames == null || data.anchors == null || data.anchors.Length != data.boneNames.Length ||
-                data.submeshes == null || data.submeshes.Length != 6) return false;
+                data.submeshes == null || (data.submeshes.Length != 6 && data.submeshes.Length != 7)) return false;
+            if (data.uvs != null && data.uvs.Length != data.boneIndices.Length * 2) return false;
+            if (data.submeshes.Length == 7 && data.uvs == null) return false;
             foreach (Anchor a in data.anchors)
                 if (a == null || a.head == null || a.tail == null || a.head.Length != 3 || a.tail.Length != 3) return false;
             foreach (int b in data.boneIndices) if (b < 0 || b >= data.boneNames.Length) return false;
@@ -150,6 +155,12 @@ namespace Alterverse.Visuals
             ownedMesh.normals = normals;
             ownedMesh.boneWeights = weights;
             ownedMesh.bindposes = bindposes;
+            if (data.uvs != null)
+            {
+                var uvs = new Vector2[count];
+                for (int i = 0; i < count; i++) uvs[i] = new Vector2(data.uvs[i * 2], data.uvs[i * 2 + 1]);
+                ownedMesh.uv = uvs;
+            }
             ownedMesh.subMeshCount = data.submeshes.Length;
             for (int i = 0; i < data.submeshes.Length; i++) ownedMesh.SetTriangles(data.submeshes[i].triangles, i, false);
             ownedMesh.RecalculateBounds();
@@ -161,6 +172,11 @@ namespace Alterverse.Visuals
                 Surface("Optical recess", new Color(.007f,.018f,.016f), .40f,.74f),
                 Surface("Blue shoulder stripes", new Color(.025f,.18f,1f), .25f,.5f, true)
             };
+            if (data.submeshes.Length == 7)
+            {
+                Array.Resize(ref materials, 7);
+                materials[6] = CarbonSurface();
+            }
             // Replace the existing instance renderer so death/respawn, portrait lighting,
             // bounds consumers and hit-flash code continue to address the same object.
             anatomy.sharedMesh = ownedMesh;
@@ -175,7 +191,8 @@ namespace Alterverse.Visuals
             anatomy.localBounds = bounds;
             foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>(true))
                 if (renderer.name == "DF_WeaponR" || renderer.name == "DF_WeaponL") RefinishWeapon(renderer);
-            AddLegEquipment(model, anatomy, data, bones, map, heads, lookup, vertices, unitScale);
+            if (!data.legEquipmentAuthored)
+                AddLegEquipment(model, anatomy, data, bones, map, heads, lookup, vertices, unitScale);
             return true;
         }
 
@@ -250,6 +267,36 @@ namespace Alterverse.Visuals
             return part.transform;
         }
 
+        private Material CarbonSurface()
+        {
+            // Small repeating 2/2 twill, only sampled by the new thigh-plate slot.
+            // A single 64px texture serves both plates, including Android builds.
+            carbonWeave = new Texture2D(64, 64, TextureFormat.RGBA32, true)
+            {
+                name = "DF_Traveler_CarbonTwill",
+                wrapMode = TextureWrapMode.Repeat,
+                filterMode = FilterMode.Bilinear,
+                anisoLevel = 2
+            };
+            var pixels = new Color[64 * 64];
+            for (int y = 0; y < 64; y++)
+                for (int x = 0; x < 64; x++)
+                {
+                    bool warp = ((x / 8 + y / 8) % 4) < 2;
+                    int across = (warp ? x : y) % 8;
+                    int along = warp ? y : x;
+                    float crest = Mathf.Sin((across + .5f) * Mathf.PI / 8f);
+                    float value = .052f + .034f * crest * crest + (along % 2) * .005f;
+                    pixels[y * 64 + x] = new Color(value * .94f, value, value * 1.04f, 1f);
+                }
+            carbonWeave.SetPixels(pixels);
+            carbonWeave.Apply(true, true);
+            Material material = Surface("Carbon thigh plates", Color.white, .18f, .42f);
+            if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", carbonWeave);
+            if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", carbonWeave);
+            return material;
+        }
+
         private Material Surface(string name, Color color, float metal, float smooth, bool energy = false)
         {
             Material material = RuntimeShaderLibrary.Create(color, false, metal, smooth, energy ? color * .75f : Color.black);
@@ -299,6 +346,7 @@ namespace Alterverse.Visuals
         private void OnDestroy()
         {
             if (ownedMesh != null) Destroy(ownedMesh);
+            if (carbonWeave != null) Destroy(carbonWeave);
             foreach (Material material in ownedMaterials) if (material != null) Destroy(material);
         }
     }

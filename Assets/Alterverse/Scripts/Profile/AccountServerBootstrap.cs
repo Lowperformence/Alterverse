@@ -56,7 +56,8 @@ namespace Alterverse.Profile
         {
             if(authenticating!=null&&!authenticating.IsCompleted)return authenticating;
             if(Busy)return Task.FromResult(false);
-            if(subscribed&&UnityServices.State==ServicesInitializationState.Initialized&&AuthenticationService.Instance.IsSignedIn)return Task.FromResult(true);
+            if(subscribed&&UnityServices.State==ServicesInitializationState.Initialized&&AuthenticationService.Instance.IsSignedIn&&
+                (!GooglePlayAccountSession.Supported||GooglePlayAccountReady))return Task.FromResult(true);
             return authenticating=InitializeAsync();
         }
         async Task<bool> InitializeAsync()
@@ -114,10 +115,12 @@ namespace Alterverse.Profile
                                 GoogleStatus="Google account sign-in failed. Reconnect Google Play to retry.";
                             }
                         }
-                        if(!auth.IsSignedIn&&cachedSession&&auth.SessionTokenExists)
+                        if(!auth.IsSignedIn&&cachedSession&&auth.SessionTokenExists&&
+                            GooglePlayAccountSession.IsAuthenticated&&!string.IsNullOrEmpty(code))
                         {
-                            // SignInAnonymously restores the cached Unity session here;
-                            // it must never run without a token on Android.
+                            // Legacy migration only: restore this existing session after
+                            // native Google authorization, then link it in place. It cannot
+                            // connect any profile/wallet until the Google link is verified.
                             await auth.SignInAnonymouslyAsync();
                         }
                         if(!auth.IsSignedIn)
@@ -136,13 +139,18 @@ namespace Alterverse.Profile
                 }
                 OnSignedIn();
                 if(GooglePlayAccountSession.Supported)await ConnectGoogleCoreAsync(false,false);
-                return auth.IsAuthorized;
+                return auth.IsAuthorized&&(!GooglePlayAccountSession.Supported||GooglePlayAccountReady);
             }
             catch(Exception){Status="Account sign-in unavailable. Retry from Profile.";return false;}
             finally{Busy=false;}
         }
         void OnSignedIn()
         {
+            if(GooglePlayAccountSession.Supported&&!GooglePlayAccountReady)
+            {
+                Status="Verifying Google Play account...";
+                return;
+            }
             var auth=AuthenticationService.Instance;
             if(string.IsNullOrEmpty(endpoint)||!auth.IsAuthorized||connectedPlayer==auth.PlayerId&&PaidShardCommerce.Instance!=null)return;
             connectedPlayer=auth.PlayerId;
@@ -182,6 +190,8 @@ namespace Alterverse.Profile
         }
         public async Task<bool> SignInAsync(string username,string password,bool register)
         {
+            if(GooglePlayAccountSession.Supported)
+            {Status="Use Google Play Games to sign in on Android.";return false;}
             if (Alterverse.Multiplayer.RankedService.Instance?.Searching == true || Alterverse.Multiplayer.RankedService.Instance?.Busy == true)
             {Status="Cancel Ranked matchmaking before changing accounts.";return false;}
             if(Busy||string.IsNullOrWhiteSpace(username)||string.IsNullOrEmpty(password))return false;
@@ -243,10 +253,21 @@ namespace Alterverse.Profile
                 // cached Unity session. Only sign in to an EXISTING Google-linked Unity
                 // account; never create a replacement identity during recovery.
                 if(UnityServices.State!=ServicesInitializationState.Initialized ||
-                    AuthenticationService.Instance.IsSignedIn || !GooglePlayAccountSession.Supported)return false;
+                    !GooglePlayAccountSession.Supported)return false;
                 Busy=true;
                 try
                 {
+                    var auth=AuthenticationService.Instance;
+                    if(auth.IsSignedIn)
+                    {
+                        if(!restore||!GoogleRestoreAvailable)return false;
+                        // Keep the existing save/paid-history checks when a cloud profile
+                        // is already active. An unverified startup session has no active
+                        // cloud state to flush, so select the existing Google account directly.
+                        if(connectedPlayer!=null||AccountProfilePrefs.Attached)
+                            return await ConnectGoogleCoreAsync(true,true);
+                        auth.SignOut();
+                    }
                     string configuration=GooglePlayAccountSession.ConfigurationError;
                     if(!string.IsNullOrEmpty(configuration))
                     {
@@ -263,7 +284,8 @@ namespace Alterverse.Profile
                     // A genuinely fresh installation may create its first Google-linked
                     // account here after an earlier network retry. Previously used
                     // installations may only recover an existing account.
-                    bool firstAccountOnDevice=PlayerPrefs.GetInt(KnownAccountOnDeviceKey,0)==0;
+                    bool firstAccountOnDevice=!restore&&!auth.SessionTokenExists&&
+                        PlayerPrefs.GetInt(KnownAccountOnDeviceKey,0)==0;
                     await AuthenticationService.Instance.SignInWithGooglePlayGamesAsync(code,
                         new SignInOptions{CreateAccount=firstAccountOnDevice});
                     OnSignedIn();
@@ -293,6 +315,7 @@ namespace Alterverse.Profile
             if(string.IsNullOrEmpty(provider)||provider!=google||google!=GooglePlayAccountSession.PlayerId||
                 !AuthenticationService.Instance.IsAuthorized||player!=AuthenticationService.Instance.PlayerId)return false;
             linkedUnityPlayer=player;linkedGooglePlayer=provider;
+            OnSignedIn(); // Only the verified identity may start profile, wallet and social sync.
             ApplyGooglePlayDisplayName();
             GoogleRestoreAvailable=false;
             GoogleStatus="Google Play account linked. Progress and purchases use your cloud account.";

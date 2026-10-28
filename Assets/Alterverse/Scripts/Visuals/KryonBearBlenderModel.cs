@@ -20,7 +20,7 @@ namespace Alterverse.Visuals
                 bone.localPosition=new Vector3(joint.position[0],joint.position[1],joint.position[2]);
             }
             Color[] palette={new(.065f,.105f,.13f),new(.53f,.72f,.81f),new(.83f,.93f,.96f),new(.015f,.75f,1f),new(.24f,.48f,.62f)};
-            if(ResourceCreatureMesh.Apply(root.transform,"KryonBear",palette)==null){root.SetActive(false);Destroy(root);return false;}
+            if(ResourceCreatureMesh.Apply(root.transform,"KryonBear",palette,shareGeometry:true)==null){root.SetActive(false);Destroy(root);return false;}
             body=root.transform;head=body.Find("DF_KryonBearHeadPivot");legs=new Transform[4];
             var motion=root.AddComponent<KryonBearBlenderModel>();motion.body=body;motion.head=head;motion.tail=body.Find("Tail");motion.previous=host.position;
             for(int i=0;i<4;i++)
@@ -33,6 +33,7 @@ namespace Alterverse.Visuals
             if(skin!=null&&skin.sharedMaterials.Length>3)skin.sharedMaterials[3].SetColor("_EmissionColor",palette[3]*2.2f);
             return true;
         }
+        void OnEnable(){if(transform.parent!=null)previous=transform.parent.position;phase=blend=0f;}
         void LateUpdate()
         {
             if(body==null||Time.deltaTime<=0)return;
@@ -49,3 +50,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

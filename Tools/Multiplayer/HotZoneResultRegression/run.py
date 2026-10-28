@@ -16,7 +16,7 @@ score=(src/'Match/MatchScoreboard.cs').read_text()
 # Also ensure resolve events cannot create unconfirmed rewards.
 assert 'HotZoneTank.Spawn(' not in block((src/'Match/HotZoneDirector.cs').read_text(),'public void ApplyNetworkResolve(')
 parts=['using System;using System.Collections.Generic;using UnityEngine;using Unity.Netcode;using Unity.Collections;using Alterverse.Combat;using Alterverse.Characters;using Alterverse.Match;using Alterverse.Multiplayer;']
-parts.append('namespace Alterverse.Combat {public sealed partial class HotZoneTank {'+''.join(block(hot,d) for d in ['public static bool Spawn(', 'public static HotZoneTank EnsureNetworkReplica(', 'private static bool SpawnReward('])+'}}')
+parts.append('namespace Alterverse.Combat {public sealed partial class HotZoneTank {'+''.join(block(hot,d) for d in ['public static bool Spawn(', 'public static HotZoneTank EnsureNetworkReplica(', 'private static bool SpawnReward(', 'private static HotZoneTank CreateReward('])+'}}')
 parts.append('namespace Alterverse.Multiplayer {public sealed partial class CoopWorldStateSync {'+''.join(block(world,d) for d in ['private void RefreshEntities(', 'private void OnState('])+'}}')
 parts.append('namespace Alterverse.Multiplayer {public sealed partial class CoopMatchResultSync {'+block(result,'public readonly struct SlotResult')+block(result,'private void CaptureHostResult(')+'}}')
 parts.append('namespace Alterverse.Match {public sealed partial class MatchScoreboard {'+block(score,'public void GetNetworkScore(')+'}}')
@@ -27,3 +27,4 @@ with tempfile.TemporaryDirectory(prefix='df-hotzone-result-') as d:
  subprocess.run([str(a.dotnet_root/'dotnet'),str(csc),'-nologo','-langversion:9','-nowarn:0649','-out:'+str(out),*['-r:'+str(x) for x in refs.glob('*.dll')],*map(str,files)],check=True)
  out.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime}}}))
  subprocess.run([str(a.dotnet_root/'dotnet'),str(out)],check=True)
+

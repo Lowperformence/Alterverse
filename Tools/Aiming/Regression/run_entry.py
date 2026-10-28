@@ -24,7 +24,8 @@ def main():
     runtime = sorted((dotnet / 'shared/Microsoft.NETCore.App').iterdir())[-1]
     names = ast.literal_eval(re.search(r'^names=(\[[^\n]+\])', (here / 'run.py').read_text(), re.M)[1])
     names += ['Characters/VoidKnightBalance.cs', 'Characters/VoidKnightState.cs',
-              'Characters/HeroAbilityExecution.VoidKnight.cs']
+              'Characters/HeroAbilityExecution.VoidKnight.cs',
+              'Characters/HeroAbilityExecution.Bolt7.cs', 'Combat/Bolt7Combat.cs']
     # Extend the shared fixtures for the appended hero. Combat sources stay unchanged.
     stubs = (here / 'EngineStubs.cs').read_text().replace(
         'public class SerializeField:Attribute{}',
@@ -52,6 +53,7 @@ def main():
         presentation.write_text('''namespace Alterverse.Visuals {
 public class VoidKnightPresentation:UnityEngine.MonoBehaviour {public void BeginCounter(){}}
 public sealed partial class HeroSkillVfx {
+ public static void VoidKnightSmoke(UnityEngine.GameObject a,UnityEngine.Vector3 p){}
  public static void CancelVoidKnightWarnings(UnityEngine.GameObject a){}
  public static void VoidKnightField(UnityEngine.GameObject a,UnityEngine.Vector3 d,float r,float s,bool w,bool dash=false){}
 }}
@@ -59,7 +61,7 @@ public sealed partial class HeroSkillVfx {
         output = directory / 'Regression.dll'
         tests = ['Regression.cs', 'TimmyRegression.cs', 'TimmyVfxRegression.cs', 'ConnectionTiming.cs',
                  'ConeCaptureRegression.cs', 'MovingConnectionRegression.cs', 'EntryRegression.cs',
-                 'RangedConeRegression.cs']
+                 'RangedConeRegression.cs', 'TemporalBeamRegression.cs']
         if args.aim_jitter:
             tests.append('JitterRegression.cs')
         files = [fixtures, presentation, *[here / n for n in tests],
@@ -84,5 +86,4 @@ public sealed partial class HeroSkillVfx {
 
 if __name__ == '__main__':
     main()
-
 

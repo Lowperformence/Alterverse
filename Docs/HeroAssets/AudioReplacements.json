@@ -1,0 +1,646 @@
+{
+  "schemaVersion": 1,
+  "generated": "2026-10-12",
+  "referenceCommit": "9c6c0a395504d268adc180c71916d66edfaaf976",
+  "referenceUse": "timing and loudness measurements only; no reference samples copied",
+  "generator": "Tools/HeroConcepts/close_audio_gaps.py",
+  "ffmpegVersion": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+  "numpyVersion": "2.2.6",
+  "replacements": [
+    {
+      "label": "Veyr",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Ultimate_Selected.ogg",
+      "oldSha256": "30c2a344be162b00b6f05caaffa3a24c9ea2a68d03c6c48b258933a88e22ef2b",
+      "oldStatus": "source unverified; retired from current revision",
+      "reference": {
+        "seconds": 1.5653514739229024,
+        "frames": 69032,
+        "channels": 2,
+        "rms": 0.04402423513238394,
+        "peak": 0.43298932909965515
+      },
+      "inputs": [
+        {
+          "assetId": 393847,
+          "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-sword-slice-393847(1).mp3",
+          "sha256": "f8f92bb55fd1e0b9c45b131f323fdfd705e01ba3bb87ca42a1d52d9e73fd3d8b",
+          "title": "Sword Slice",
+          "creator": "DRAGON-STUDIO",
+          "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sword-slice-393847/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        }
+      ],
+      "recipe": [
+        {
+          "assetId": 393847,
+          "startSeconds": 0,
+          "durationSeconds": 1.5653514739229024,
+          "gain": 1.0,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        }
+      ],
+      "masterGain": 0.9368212556498731,
+      "codec": "vorbis",
+      "output": {
+        "seconds": 1.5653514739229024,
+        "frames": 69032,
+        "channels": 2,
+        "rms": 0.035602780136948,
+        "peak": 0.6810757517814636
+      },
+      "sha256": "618324bc7958ae63c09419e79df7b1c0d8b1c0fdeb2872e0cb5902df06cf93e6",
+      "metaSha256": "1371bf1df8214377018e2d352c8f064fac42063d978e7f6cf7341e0314675e59",
+      "validation": "decoded finite audio, duration contract, no clipping, non-silent, existing meta unchanged"
+    },
+    {
+      "label": "Kaelon",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Ultimate_Selected.ogg",
+      "oldSha256": "3539487b57f1d8ba88c4cd987955a720020d8e36e05eff881f795e3fd3a67aa8",
+      "oldStatus": "source unverified; retired from current revision",
+      "reference": {
+        "seconds": 2.710612244897959,
+        "frames": 119538,
+        "channels": 2,
+        "rms": 0.0966704280406487,
+        "peak": 0.818821132183075
+      },
+      "inputs": [
+        {
+          "assetId": 442015,
+          "path": "ArtSource/Audio/HeroSelections/Originals/soundreality-cinematic-hit-shot-442015(1).mp3",
+          "sha256": "b8ce670d121a46265231d53223deba4ed9456804caf5a4b44e3168ea48ddf2a1",
+          "title": "Cinematic Hit Shot",
+          "creator": "SoundReality",
+          "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-cinematic-hit-shot-442015/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        },
+        {
+          "assetId": 234631,
+          "path": "ArtSource/Audio/HeroSelections/Originals/floraphonic-swing-whoosh-metal-hit-14-234631.mp3",
+          "sha256": "53d0e74685f4594f99b4b3708e369c7d9f2830943cc82bd68baec1cf248fff0f",
+          "title": "Swing Whoosh Metal Hit 14",
+          "creator": "floraphonic",
+          "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-metal-hit-14-234631/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        }
+      ],
+      "recipe": [
+        {
+          "assetId": 442015,
+          "startSeconds": 0,
+          "durationSeconds": 2.710612244897959,
+          "gain": 1.0,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        },
+        {
+          "assetId": 234631,
+          "startSeconds": 0.015,
+          "durationSeconds": 1.1,
+          "gain": 0.22,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        }
+      ],
+      "masterGain": 0.5917378481329462,
+      "codec": "vorbis",
+      "output": {
+        "seconds": 2.710612244897959,
+        "frames": 119538,
+        "channels": 2,
+        "rms": 0.09701291374555528,
+        "peak": 0.6957042813301086
+      },
+      "sha256": "1ea479178830d2d59f6ec11089f69237d78bc472f961f8aa6b3cffc4abcdb598",
+      "metaSha256": "6dc031688157b80e33f654d327cd5efb91fcbf61bb7f827275f11886c380c4a2",
+      "validation": "decoded finite audio, duration contract, no clipping, non-silent, existing meta unchanged"
+    },
+    {
+      "label": "Nyra",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Ultimate_Selected.ogg",
+      "oldSha256": "fad998ab6857c604c709c409dcc5da3ddb55163c17cd9b5618015f88e45a6103",
+      "oldStatus": "source unverified; retired from current revision",
+      "reference": {
+        "seconds": 6.0345124716553284,
+        "frames": 266122,
+        "channels": 2,
+        "rms": 0.06246670394615904,
+        "peak": 0.4990803599357605
+      },
+      "inputs": [
+        {
+          "assetId": 229313,
+          "path": "ArtSource/Audio/HeroSelections/Originals/universfield-sci-fi-blaster-shot-229313(1).mp3",
+          "sha256": "2816aa3a9e943f668b99850494401c0dbb73c351eb6546cbc3663c10040006a8",
+          "title": "Sci-Fi Blaster Shot",
+          "creator": "Universfield",
+          "sourceUrl": "https://pixabay.com/de/sound-effects/film-spezialeffekte-sci-fi-blaster-shot-229313/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        },
+        {
+          "assetId": 7103,
+          "path": "ArtSource/Audio/HeroSelections/Originals/freesound_community-power-down-7103.mp3",
+          "sha256": "0306117013c4d78cd3ee99b2fdadd478fbe12a7f18a46f533ac599e31c8854e7",
+          "title": "Power Down",
+          "creator": "noirenex (Freesound), via freesound_community",
+          "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-power-down-7103/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        }
+      ],
+      "recipe": [
+        {
+          "assetId": 7103,
+          "startSeconds": 0,
+          "durationSeconds": 1.5,
+          "gain": 0.16,
+          "reverse": true,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        },
+        {
+          "assetId": 229313,
+          "startSeconds": 0.13,
+          "durationSeconds": 1.65,
+          "gain": 1.0,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        },
+        {
+          "assetId": 229313,
+          "startSeconds": 0.55,
+          "durationSeconds": 1.65,
+          "gain": 0.92,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        },
+        {
+          "assetId": 229313,
+          "startSeconds": 0.97,
+          "durationSeconds": 1.65,
+          "gain": 0.82,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        },
+        {
+          "assetId": 229313,
+          "startSeconds": 1.8,
+          "durationSeconds": 4.234512471655329,
+          "gain": 0.07,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        },
+        {
+          "assetId": 229313,
+          "startSeconds": 2.3,
+          "durationSeconds": 3.7345124716553286,
+          "gain": 0.035,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        },
+        {
+          "assetId": 229313,
+          "startSeconds": 2.8,
+          "durationSeconds": 3.2345124716553286,
+          "gain": 0.023333333333333334,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        }
+      ],
+      "masterGain": 1.0592130106614053,
+      "codec": "vorbis",
+      "output": {
+        "seconds": 6.0345124716553284,
+        "frames": 266122,
+        "channels": 2,
+        "rms": 0.0549324873435033,
+        "peak": 0.7288597226142883
+      },
+      "sha256": "4f479c9c8c5481f202ef13d0f0668052b2b398ec5f07abe420a90b63f2071437",
+      "metaSha256": "0d91d256bc8c370feaee1cc9f1b51aa931b572069d952665dc851c464b830fc9",
+      "validation": "decoded finite audio, duration contract, no clipping, non-silent, existing meta unchanged"
+    },
+    {
+      "label": "Elyra",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Ultimate_Selected.ogg",
+      "oldSha256": "b04b144f24e589d621def1d4ea6163fc728785d7b7ddbf00a03f5f8c9dadd7d4",
+      "oldStatus": "source unverified; retired from current revision",
+      "reference": {
+        "seconds": 3.4694331065759636,
+        "frames": 153002,
+        "channels": 2,
+        "rms": 0.08795381087369251,
+        "peak": 0.8334541916847229
+      },
+      "inputs": [
+        {
+          "assetId": 482500,
+          "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-4-482500 (1).mp3",
+          "sha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba",
+          "title": "Short energy beam shot (4)",
+          "creator": "Yodguard",
+          "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-short-energy-beam-shot-4-482500/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        },
+        {
+          "assetId": 7103,
+          "path": "ArtSource/Audio/HeroSelections/Originals/freesound_community-power-down-7103.mp3",
+          "sha256": "0306117013c4d78cd3ee99b2fdadd478fbe12a7f18a46f533ac599e31c8854e7",
+          "title": "Power Down",
+          "creator": "noirenex (Freesound), via freesound_community",
+          "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-power-down-7103/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        }
+      ],
+      "recipe": [
+        {
+          "assetId": 482500,
+          "startSeconds": 0,
+          "durationSeconds": 3.4694331065759636,
+          "gain": 1.0,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        },
+        {
+          "assetId": 7103,
+          "startSeconds": 0.015,
+          "durationSeconds": 1.1,
+          "gain": 0.22,
+          "reverse": true,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        }
+      ],
+      "masterGain": 0.7722531783175909,
+      "codec": "vorbis",
+      "output": {
+        "seconds": 3.4694331065759636,
+        "frames": 153002,
+        "channels": 2,
+        "rms": 0.08829529803855284,
+        "peak": 0.5242620706558228
+      },
+      "sha256": "8c2480e413b41f4dd584ce2862bf3abd7456b62db667595cf0bf9a3a02078397",
+      "metaSha256": "bd8228bedcf9e59885c9e7847234795eb0a5123d95bb07f6b34cb166531ce2c3",
+      "validation": "decoded finite audio, duration contract, no clipping, non-silent, existing meta unchanged"
+    },
+    {
+      "label": "Mira",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Ultimate_Selected.ogg",
+      "oldSha256": "99a7023ad5f5c0e44d7aacf1e63572b67a4f561e69a3f2458abcb5120dbb9d7f",
+      "oldStatus": "source unverified; retired from current revision",
+      "reference": {
+        "seconds": 3.751995464852608,
+        "frames": 165463,
+        "channels": 2,
+        "rms": 0.08903467902143689,
+        "peak": 0.7151597738265991
+      },
+      "inputs": [
+        {
+          "assetId": 378663,
+          "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-healing-magic-2-378663(1).mp3",
+          "sha256": "2285c7be860fc2f563298e3cd930acf24d0533dcec528d4881cb3735c1d898fb",
+          "title": "Healing Magic (2)",
+          "creator": "Yodguard",
+          "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-healing-magic-2-378663/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        }
+      ],
+      "recipe": [
+        {
+          "assetId": 378663,
+          "startSeconds": 0,
+          "durationSeconds": 3.751995464852608,
+          "gain": 1.0,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        }
+      ],
+      "masterGain": 1.8565511971737785,
+      "codec": "vorbis",
+      "output": {
+        "seconds": 3.751995464852608,
+        "frames": 165463,
+        "channels": 2,
+        "rms": 0.03610530896210037,
+        "peak": 0.6928865313529968
+      },
+      "sha256": "516e6764ce69c4f24f4bceb5bab05dc15a1950deded2f61ce05cc5d70311f16e",
+      "metaSha256": "c7f0c233210eccdd870a366ef5c2bc6e2f745d67137c638be89d47877be8f578",
+      "validation": "decoded finite audio, duration contract, no clipping, non-silent, existing meta unchanged"
+    },
+    {
+      "label": "Rook",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Ultimate_Selected.ogg",
+      "oldSha256": "c7b442b078b55d4a36ed880987055f954c622bb08d3427e0c30d949ce68abfba",
+      "oldStatus": "source unverified; retired from current revision",
+      "reference": {
+        "seconds": 1.9980045351473923,
+        "frames": 88112,
+        "channels": 2,
+        "rms": 0.05519227115319458,
+        "peak": 0.7697822451591492
+      },
+      "inputs": [
+        {
+          "assetId": 416172,
+          "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-boom-swoosh-01-416172(1).mp3",
+          "sha256": "c3d99885f1177d1af1fcac0454a5e0e1f5be0939a5c4308510d604845c240ca0",
+          "title": "Boom Swoosh 01",
+          "creator": "DRAGON-STUDIO",
+          "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-boom-swoosh-01-416172/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        },
+        {
+          "assetId": 234631,
+          "path": "ArtSource/Audio/HeroSelections/Originals/floraphonic-swing-whoosh-metal-hit-14-234631.mp3",
+          "sha256": "53d0e74685f4594f99b4b3708e369c7d9f2830943cc82bd68baec1cf248fff0f",
+          "title": "Swing Whoosh Metal Hit 14",
+          "creator": "floraphonic",
+          "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-metal-hit-14-234631/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        }
+      ],
+      "recipe": [
+        {
+          "assetId": 416172,
+          "startSeconds": 0,
+          "durationSeconds": 1.9980045351473923,
+          "gain": 1.0,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        },
+        {
+          "assetId": 234631,
+          "startSeconds": 0.015,
+          "durationSeconds": 1.1,
+          "gain": 0.22,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        }
+      ],
+      "masterGain": 0.18715643585406064,
+      "codec": "vorbis",
+      "output": {
+        "seconds": 1.9980045351473923,
+        "frames": 88112,
+        "channels": 2,
+        "rms": 0.055244490244456754,
+        "peak": 0.21046508848667145
+      },
+      "sha256": "abc809e990a74a4c24d465f22cdc50979e71cb95da870c8aca22344a64ea3903",
+      "metaSha256": "adcd8ca7dd9c7dc05af05e0c1859c7bc7ad16e275ff080c8e21d3cd38dac2773",
+      "validation": "decoded finite audio, duration contract, no clipping, non-silent, existing meta unchanged"
+    },
+    {
+      "label": "Traveler",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Ultimate_Selected.ogg",
+      "oldSha256": "d37093c79c254320edb98ea01b782dd643a97539b49cfacb53e82372c160b153",
+      "oldStatus": "source unverified; retired from current revision",
+      "reference": {
+        "seconds": 7.248004535147392,
+        "frames": 319637,
+        "channels": 2,
+        "rms": 0.039343889586002864,
+        "peak": 0.5780602097511292
+      },
+      "inputs": [
+        {
+          "assetId": 482495,
+          "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-1-482495.mp3",
+          "sha256": "f929dccdff1dc1a3f406179a53c9341bc3fe76d4084de374a617cdae69657a6a",
+          "title": "Short energy beam shot (1)",
+          "creator": "Yodguard",
+          "sourceUrl": "https://pixabay.com/sound-effects/technology-short-energy-beam-shot-1-482495/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        },
+        {
+          "assetId": 482500,
+          "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-4-482500 (1).mp3",
+          "sha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba",
+          "title": "Short energy beam shot (4)",
+          "creator": "Yodguard",
+          "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-short-energy-beam-shot-4-482500/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        }
+      ],
+      "recipe": [
+        {
+          "assetId": 482495,
+          "startSeconds": 0,
+          "durationSeconds": 7.248004535147392,
+          "gain": 0.4,
+          "reverse": true,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        },
+        {
+          "assetId": 482500,
+          "startSeconds": 0.55,
+          "durationSeconds": 6.698004535147392,
+          "gain": 1.0,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        },
+        {
+          "assetId": 482495,
+          "startSeconds": 2.1,
+          "durationSeconds": 5.148004535147392,
+          "gain": 0.25,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        }
+      ],
+      "masterGain": 0.300228997201098,
+      "codec": "vorbis",
+      "output": {
+        "seconds": 7.248004535147392,
+        "frames": 319637,
+        "channels": 2,
+        "rms": 0.03948890907371701,
+        "peak": 0.19949916005134583
+      },
+      "sha256": "efcb30ae41acab401de9c845b85e745293fdbf0ed1c362824c6e7bc710bbda08",
+      "metaSha256": "0d8a9ad7b4f703e2b55d753669bb71fea7b1668822cb1a01c36aeb998a7dde29",
+      "validation": "decoded finite audio, duration contract, no clipping, non-silent, existing meta unchanged"
+    },
+    {
+      "label": "NerokHit",
+      "path": "ArtSource/Audio/Nerok/BasicHit.mp3",
+      "oldSha256": "d1049baadd775504482c73b8d0d0af39e37d274e935757bcf99c6ce7780edb2d",
+      "oldStatus": "source unverified; retired from current revision",
+      "reference": {
+        "seconds": 1.7759863945578231,
+        "frames": 78321,
+        "channels": 1,
+        "rms": 0.15041604273935166,
+        "peak": 1.4905190467834473
+      },
+      "inputs": [
+        {
+          "assetId": 234631,
+          "path": "ArtSource/Audio/HeroSelections/Originals/floraphonic-swing-whoosh-metal-hit-14-234631.mp3",
+          "sha256": "53d0e74685f4594f99b4b3708e369c7d9f2830943cc82bd68baec1cf248fff0f",
+          "title": "Swing Whoosh Metal Hit 14",
+          "creator": "floraphonic",
+          "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-metal-hit-14-234631/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        }
+      ],
+      "recipe": [
+        {
+          "assetId": 234631,
+          "startSeconds": 0,
+          "durationSeconds": 1.7759863945578231,
+          "gain": 1.0,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        }
+      ],
+      "masterGain": 0.700518053518334,
+      "codec": "mp3",
+      "output": {
+        "seconds": 1.7759863945578231,
+        "frames": 78321,
+        "channels": 1,
+        "rms": 0.08268845539487041,
+        "peak": 0.7131037712097168
+      },
+      "sha256": "bdaa72316665df9e98fecd868a575402dab9f77e1bdca090f44718ce01c1f95e",
+      "metaSha256": null,
+      "validation": "decoded finite audio, duration contract, no clipping, non-silent, existing meta unchanged"
+    },
+    {
+      "label": "Explosion",
+      "path": "ArtSource/Audio/Combat/Explosion.wav",
+      "oldSha256": "864acabf77381af337e995049de939f1f5129163d0eb8e395d5cba7c09853444",
+      "oldStatus": "source unverified; retired from current revision",
+      "reference": {
+        "seconds": 2.4936054421768707,
+        "frames": 109968,
+        "channels": 1,
+        "rms": 0.1365735660104925,
+        "peak": 1.2860115766525269
+      },
+      "inputs": [
+        {
+          "assetId": 442015,
+          "path": "ArtSource/Audio/HeroSelections/Originals/soundreality-cinematic-hit-shot-442015(1).mp3",
+          "sha256": "b8ce670d121a46265231d53223deba4ed9456804caf5a4b44e3168ea48ddf2a1",
+          "title": "Cinematic Hit Shot",
+          "creator": "SoundReality",
+          "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-cinematic-hit-shot-442015/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        },
+        {
+          "assetId": 416172,
+          "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-boom-swoosh-01-416172(1).mp3",
+          "sha256": "c3d99885f1177d1af1fcac0454a5e0e1f5be0939a5c4308510d604845c240ca0",
+          "title": "Boom Swoosh 01",
+          "creator": "DRAGON-STUDIO",
+          "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-boom-swoosh-01-416172/",
+          "license": "Pixabay Content License",
+          "licenseUrl": "https://pixabay.com/service/terms/",
+          "licenseChecked": "2026-10-12",
+          "remoteDownloadByteComparison": false
+        }
+      ],
+      "recipe": [
+        {
+          "assetId": 442015,
+          "startSeconds": 0,
+          "durationSeconds": 2.4936054421768707,
+          "gain": 1.0,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        },
+        {
+          "assetId": 416172,
+          "startSeconds": 0.015,
+          "durationSeconds": 1.1,
+          "gain": 0.22,
+          "reverse": false,
+          "method": "linear constant-rate resampling; 8 ms endpoint fades"
+        }
+      ],
+      "masterGain": 0.7200096581724563,
+      "codec": "wav",
+      "output": {
+        "seconds": 2.4936054421768707,
+        "frames": 109968,
+        "channels": 1,
+        "rms": 0.11889058039544682,
+        "peak": 0.720001220703125
+      },
+      "sha256": "57165633761f49a726049977c95cd7e8b97ec8d9af0157c9e88dbf8f07c784e3",
+      "metaSha256": null,
+      "validation": "decoded finite audio, duration contract, no clipping, non-silent, existing meta unchanged"
+    }
+  ],
+  "derivedRuntime": [
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Basic_Impact.wav",
+      "sha256": "22083f31060e4ef9a63fd97a94a14849e3f17596ad697702bd6b9cc30b26c9ce",
+      "audio": {
+        "seconds": 1.7759863945578231,
+        "frames": 78321,
+        "channels": 1,
+        "rms": 0.03307540901646353,
+        "peak": 0.285247802734375
+      },
+      "processor": "Tools/CyberShark/import_selected_audio.py"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Explosion.wav",
+      "sha256": "3d60e80558f1389fcc08af70410be3a67209307118b5a47b564ddaa2e2473248",
+      "audio": {
+        "seconds": 2.4936054421768707,
+        "frames": 109968,
+        "channels": 1,
+        "rms": 0.10105697650958226,
+        "peak": 0.61199951171875
+      },
+      "processor": "Tools/CyberShark/import_selected_audio.py"
+    }
+  ]
+}

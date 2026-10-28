@@ -15,7 +15,7 @@ namespace Alterverse.Multiplayer
         private const string ProbeMessage="DF_COOP_PLAN_PROBE_V1";
         private const string AckMessage="DF_COOP_PLAN_ACK_V1";
         // Reject older combat/snapshot formats before a Relay match can launch.
-        private const int ProtocolVersion=5;
+        private const int ProtocolVersion=6;
 
         public static CoopPlanHandshake Instance { get; private set; }
         public static bool PlanHandshakeReady=>Instance!=null&&Instance.planHandshakeReady;

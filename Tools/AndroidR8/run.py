@@ -25,7 +25,8 @@ with tempfile.TemporaryDirectory(prefix='df-r8-regression-') as tmp:
         str(editor / 'AndroidReleaseBuild.cs'), str(editor / 'AndroidR8Optimization.cs')]))
     subprocess.run([str(a.dotnet_root / 'dotnet'), str(sdk / 'Roslyn/bincore/csc.dll'), '@' + str(response)], check=True)
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions': {'tfm': 'net8.0', 'framework': {'name': 'Microsoft.NETCore.App', 'version': runtime.name}}}))
-    subprocess.run([str(a.dotnet_root / 'dotnet'), str(output)], cwd=root, check=True)
+    optional_rules = tmp / 'standard-google-ads-rules.pro'
+    subprocess.run([str(a.dotnet_root / 'dotnet'), str(output), str(optional_rules)], cwd=root, check=True)
     if a.r8_jar:
         classes = tmp / 'classes'
         classes.mkdir()
@@ -64,3 +65,84 @@ with tempfile.TemporaryDirectory(prefix='df-r8-regression-') as tmp:
             assert ('onResponse' if name.endswith('FixtureListener') else 'entryPoint') in public_api, name
         assert 'game/internal/Unused.class' not in actual, 'unreferenced code must still be removed'
         print('Real R8 check passed: 5 JNI API/bridge classes and callback names retained; unrelated unused class removed.')
+        # Reproduce all 47 absent optional SDK types from the native failure.
+        # The Unity plugin's upstream consumer rule keeps both bridge namespaces.
+        optional_types = [line.strip() for line in (here / 'fixtures/nextgen-missing-classes.txt').read_text().splitlines()
+                          if line.strip() and not line.startswith('#')]
+        assert len(optional_types) == 47
+        ads_sources = []
+        def java_source(name, body):
+            package, _, short = name.rpartition('.')
+            path = tmp / 'ads-src' / (name.replace('.', '/') + '.java')
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('package ' + package + ';\n' + body)
+            ads_sources.append(str(path))
+        for name in optional_types:
+            java_source(name, 'public class ' + name.rsplit('.', 1)[1] + ' {}')
+        java_source('com.google.unity.ads.nextgen.FixtureBridge',
+                    'public class FixtureBridge {\n' + '\n'.join(
+                        'public ' + name + ' optional' + str(i) + ';'
+                        for i, name in enumerate(optional_types)) + '\n}')
+        java_source('com.google.android.gms.ads.MobileAds',
+                    'public class MobileAds { public static int version() { return 35; } }')
+        java_source('com.google.android.gms.ads.rewarded.RewardedAd',
+                    'public class RewardedAd { public static int load() { return 7; } }')
+        java_source('com.google.unity.ads.UnityRewardedAdCallback',
+                    'public interface UnityRewardedAdCallback { void onUserEarnedReward(); }')
+        java_source('com.google.unity.ads.UnityRewardedAd', '''public class UnityRewardedAd {
+            public int load() { return com.google.android.gms.ads.MobileAds.version()
+                + com.google.android.gms.ads.rewarded.RewardedAd.load(); }
+            public void show(UnityRewardedAdCallback callback) { callback.onUserEarnedReward(); }
+        }''')
+        java_source('regression.Smoke', '''public class Smoke {
+            public static void main(String[] args) throws Exception {
+                Class<?> bridgeClass = Class.forName("com.google.unity.ads.UnityRewardedAd");
+                Object bridge = bridgeClass.getConstructor().newInstance();
+                if (((Integer) bridgeClass.getMethod("load").invoke(bridge)) != 42)
+                    throw new AssertionError("Standard SDK entry point");
+                Class<?> callbackClass = Class.forName("com.google.unity.ads.UnityRewardedAdCallback");
+                final int[] rewards = {0};
+                Object callback = java.lang.reflect.Proxy.newProxyInstance(
+                    callbackClass.getClassLoader(), new Class<?>[]{callbackClass},
+                    (proxy, method, arguments) -> {
+                        if (method.getName().equals("onUserEarnedReward")) rewards[0]++;
+                        return null;
+                    });
+                bridgeClass.getMethod("show", callbackClass).invoke(bridge, callback);
+                if (rewards[0] != 1) throw new AssertionError("JNI callback name");
+                System.out.println("PASS Standard SDK JNI names and reward callback; inactive Next-Gen bridge not loaded.");
+            }
+        }''')
+        ads_classes = tmp / 'ads-classes'
+        ads_classes.mkdir()
+        subprocess.run([*compiler, '-d', str(ads_classes), *ads_sources], check=True)
+        ads_input, missing_active = tmp / 'ads-input.jar', tmp / 'missing-active.jar'
+        for jar, omit_active in ((ads_input, False), (missing_active, True)):
+            with zipfile.ZipFile(jar, 'w') as z:
+                for path in ads_classes.rglob('*.class'):
+                    name = path.relative_to(ads_classes).as_posix()
+                    if name.startswith('com/google/android/libraries/ads/mobile/sdk/'):
+                        continue
+                    if omit_active and name == 'com/google/android/gms/ads/MobileAds.class':
+                        continue
+                    z.write(path, name)
+        consumer = tmp / 'google-consumer.pro'
+        consumer.write_text('-keep class com.google.unity.ads.** { *; }\n'
+                            '-keep public class com.google.android.gms.ads.** { public *; }\n'
+                            '-keep class regression.Smoke { public static void main(java.lang.String[]); }\n')
+        def ads_r8(jar, config, out):
+            return subprocess.run(['java', '-cp', str(a.r8_jar.resolve()), 'com.android.tools.r8.R8',
+                '--release', '--classfile', '--lib', str(java_home), '--pg-conf', str(config),
+                '--pg-conf', str(consumer), '--output', str(out), str(jar)], capture_output=True, text=True)
+        before = ads_r8(ads_input, root / 'Assets/Plugins/Android/proguard-user.txt', tmp / 'before.jar')
+        assert before.returncode != 0, 'control must reproduce R8 missing optional definitions'
+        for name in optional_types:
+            assert name in before.stdout + before.stderr, 'missing native diagnostic: ' + name
+        optimized_ads = tmp / 'ads-optimized.jar'
+        fixed = ads_r8(ads_input, optional_rules, optimized_ads)
+        assert fixed.returncode == 0, fixed.stdout + fixed.stderr
+        subprocess.run(['java', '-cp', str(optimized_ads), 'regression.Smoke'], check=True)
+        active_error = ads_r8(missing_active, optional_rules, tmp / 'missing-active-output.jar')
+        assert active_error.returncode != 0, 'missing active Standard SDK must still fail'
+        assert 'com.google.android.gms.ads.MobileAds' in active_error.stdout + active_error.stderr
+        print('Real R8: old rules fail all 47 optional Next-Gen definitions; generated Standard-only rules pass; missing active SDK still fails.')

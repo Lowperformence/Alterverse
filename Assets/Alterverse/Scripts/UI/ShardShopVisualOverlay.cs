@@ -11,11 +11,37 @@ namespace Alterverse.UI
     {
         private static Texture2D crystal;
         private static Texture2D glow;
+        private static Texture2D sparkle;
+        public static readonly Color TabAccent = new Color(.48f, .83f, 1f);
         private static GUIStyle amountStyle;
         private static GUIStyle packStyle;
         private static GUIStyle walletAmountStyle, walletLabelStyle;
         private static readonly GUIContent walletAmountContent = new GUIContent();
         private static int walletBalance = int.MinValue;
+
+        /// <summary>Small cached UI glints. No controls, particles or input interception.</summary>
+        public static void DrawTabSparkles(Rect tab, bool selected)
+        {
+            if (Event.current == null || Event.current.type != EventType.Repaint) return;
+            if (sparkle == null) sparkle = BuildSparkleTexture();
+            Color previous = GUI.color;
+            try
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    float pulse = Mathf.Max(0f, Mathf.Sin(Time.unscaledTime * 1.6f + i * 1.7f));
+                    pulse *= pulse;
+                    if (pulse < .025f) continue;
+                    // Keep the center label clear and every glint inside this tab.
+                    float x = tab.x + tab.width * (i == 0 ? .14f : i == 1 ? .86f : i == 2 ? .68f : .36f);
+                    float y = tab.y + tab.height * (i % 2 == 0 ? .17f : .83f);
+                    float size = Mathf.Min(8f + 4f * pulse, Mathf.Min(tab.width * .14f, tab.height * .28f));
+                    GUI.color = new Color(previous.r, previous.g, previous.b, previous.a * pulse * (selected ? .95f : .80f));
+                    GUI.DrawTexture(new Rect(x - size * .5f, y - size * .5f, size, size), sparkle, ScaleMode.StretchToFill, true);
+                }
+            }
+            finally { GUI.color = previous; }
+        }
 
         /// <summary>Read-only currency display. Always shows the exact wallet value, never an animated estimate.</summary>
         public static void DrawWallet(Rect card, int balance)
@@ -152,6 +178,30 @@ namespace Alterverse.UI
 
             tex.SetPixels32(p);
             tex.Apply(false, true);
+            return tex;
+        }
+
+        private static Texture2D BuildSparkleTexture()
+        {
+            const int size = 32;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false, true)
+            {
+                name = "DF_ShardTabSparkle", filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.DontSave
+            };
+            var pixels = new Color32[size * size];
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float u = (x - (size - 1) * .5f) / (size * .5f);
+                float v = (y - (size - 1) * .5f) / (size * .5f);
+                float horizontal = Mathf.Pow(Mathf.Max(0f, 1f - Mathf.Abs(v) * 8f), 2f) * Mathf.Pow(1f - Mathf.Abs(u), 1.6f);
+                float vertical = Mathf.Pow(Mathf.Max(0f, 1f - Mathf.Abs(u) * 8f), 2f) * Mathf.Pow(1f - Mathf.Abs(v), 1.6f);
+                float core = Mathf.Pow(Mathf.Max(0f, 1f - u * u - v * v), 5f);
+                byte alpha = (byte)(Mathf.Min(1f, Mathf.Max(horizontal, vertical) + core * .7f) * 255f);
+                pixels[y * size + x] = new Color32(255, 255, 255, alpha);
+            }
+            tex.SetPixels32(pixels); tex.Apply(false, true);
             return tex;
         }
 

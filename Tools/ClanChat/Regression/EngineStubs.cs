@@ -48,8 +48,8 @@ namespace UnityEngine {
  public struct Matrix4x4 {public static Matrix4x4 TRS(Vector3 v,Quaternion q,Vector3 s)=>new();}
  public struct Rect {public float x,y,width,height;public float yMax=>y+height; public Rect(float x,float y,float w,float h){this.x=x;this.y=y;width=w;height=h;}}
  public static class Screen {public static Rect safeArea=>new(0,0,1280,720);public static int height=720;}
- public class GUIStyle {public float CalcHeight(GUIContent c,float w)=>30;}public class GUIContent {public GUIContent(string s){}}public class Texture2D {public static Texture2D whiteTexture=new();}
- public static class GUI {public static bool enabled=true;public static bool Toggle(Rect r,bool v,string s)=>v;public static string TextField(Rect r,string v,int max,GUIStyle style)=>v;public static Matrix4x4 matrix;public static int depth;public static Vector2 BeginScrollView(Rect r,Vector2 s,Rect inner)=>s;public static void EndScrollView(){}}
+ public class GUIStyle {public int fontSize;public bool wordWrap;public GUIStyle(){}public GUIStyle(GUIStyle source){fontSize=source.fontSize;wordWrap=source.wordWrap;}public float CalcHeight(GUIContent c,float w)=>30;}public class GUIContent {public GUIContent(string s){}}public class Texture2D {public static Texture2D whiteTexture=new();}
+ public static class GUI {public static bool enabled=true;public static bool Toggle(Rect r,bool v,string s)=>v;public static void Label(Rect r,string text,GUIStyle style){}public static string TextField(Rect r,string v,int max,GUIStyle style)=>v;public static Matrix4x4 matrix;public static int depth;public static Vector2 BeginScrollView(Rect r,Vector2 s,Rect inner)=>s;public static void EndScrollView(){}}
 }
 namespace UnityEngine.Networking {
  public class DownloadHandlerBuffer {public string text="{}";}
@@ -57,3 +57,4 @@ namespace UnityEngine.Networking {
  public class UnityWebRequestAsyncOperation {public volatile bool isDone=true;}
  public class UnityWebRequest:IDisposable {public static Func<UnityWebRequest,UnityWebRequestAsyncOperation> Handler;public readonly string url,method;public readonly Dictionary<string,string> Headers=new();public enum Result {Success,ConnectionError};public Result result=Result.Success;public long responseCode=200;public string error;public int timeout;public UploadHandlerRaw uploadHandler;public DownloadHandlerBuffer downloadHandler;public UnityWebRequest(string u,string m){url=u;method=m;}public static UnityWebRequest Delete(string u)=>new(u,"DELETE");public static string EscapeURL(string s)=>Uri.EscapeDataString(s);public void SetRequestHeader(string n,string v){Headers[n]=v;}public UnityWebRequestAsyncOperation SendWebRequest()=>Handler?.Invoke(this)??new();public void Dispose(){}}
 }
+

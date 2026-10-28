@@ -1,0 +1,45 @@
+name: Menu, account and rewarded ads regression
+on:
+  push:
+    paths:
+      - 'Assets/Alterverse/Scripts/Shop/RewardedShard*.cs'
+      - 'Assets/Alterverse/Scripts/Profile/**'
+      - 'Assets/Alterverse/Scripts/UI/MenuBackgroundVideo.cs'
+      - 'Assets/Alterverse/Scripts/UI/MenuCosmicBackdrop.cs'
+      - 'Tools/Profile/GoogleNameRegression/**'
+      - 'Tools/UI/MenuBackgroundRegression/**'
+      - 'Assets/Alterverse/Scripts/Content/PlayerChallengeContent.cs'
+      - 'Assets/Alterverse/Scripts/Match/ArenaVariantRuntime.cs'
+      - 'Tools/Shop/AccountRegression/EngineStubs.cs'
+      - 'Tools/Shop/RewardedAdsRegression/**'
+      - '.github/workflows/rewarded-ads-regression.yml'
+  pull_request:
+    paths:
+      - 'Assets/Alterverse/Scripts/Shop/RewardedShard*.cs'
+      - 'Assets/Alterverse/Scripts/Profile/**'
+      - 'Assets/Alterverse/Scripts/UI/MenuBackgroundVideo.cs'
+      - 'Assets/Alterverse/Scripts/UI/MenuCosmicBackdrop.cs'
+      - 'Tools/Profile/GoogleNameRegression/**'
+      - 'Tools/UI/MenuBackgroundRegression/**'
+      - 'Assets/Alterverse/Scripts/Content/PlayerChallengeContent.cs'
+      - 'Assets/Alterverse/Scripts/Match/ArenaVariantRuntime.cs'
+      - 'Tools/Shop/AccountRegression/EngineStubs.cs'
+      - 'Tools/Shop/RewardedAdsRegression/**'
+      - 'Packages/manifest.json'
+      - 'Assets/GoogleMobileAds/**'
+      - '.github/workflows/rewarded-ads-regression.yml'
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python Tools/Shop/RewardedAdsRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Shop/AccountRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Profile/GoogleNameRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/UI/MenuBackgroundRegression/run.py --dotnet-root "$DOTNET_ROOT"

@@ -265,8 +265,8 @@ namespace Alterverse.Visuals
                 case HeroId.Traveler:
                     if (slot == 0) // Temporal Beam
                     {
-                        HeroVfxPool.Emit(HeroFxShape.Bolt, muzzle, muzzle + forward * 1.08f,
-                            new Vector3(.28f, .28f, 1.0f), hot, .20f, HeroFxMotion.Travel, facing, gameObject);
+                        HeroVfxPool.Emit(HeroFxShape.Burst, muzzle, muzzle,
+                            Vector3.one * .18f, Color.white, .10f, HeroFxMotion.Contract, facing, gameObject);
                     }
                     else if (slot == 1) // Rift Step
                     {

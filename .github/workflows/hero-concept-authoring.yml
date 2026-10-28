@@ -1,0 +1,54 @@
+name: Hero component optimization (four heroes; five delegated heroes excluded)
+on:
+  push:
+    branches: ['art/hero-parts-redesign-20261011']
+    paths: ['Tools/HeroConcepts/build_models.py', 'Tools/HeroConcepts/part_optimization.py']
+permissions:
+  contents: write
+concurrency:
+  group: hero-concept-models-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  author:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Blender authoring runtime
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libx11-6 libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libsm6
+          python -m pip install bpy==4.5.14 numpy pillow
+      - name: Finish and commit each hero before starting the next
+        env:
+          OMP_NUM_THREADS: '2'
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for hero in Sivra Ione Zhaev Timmy; do
+            python Tools/HeroConcepts/build_models.py --hero "$hero"
+            git add Assets/Alterverse/Resources ArtSource/Heroes Docs/HeroProvenanceStatus.md
+            if ! git diff --cached --quiet; then
+              git commit -m "Complete $hero component geometry, Blender plans and validated game exports"
+              git fetch origin '${{ github.ref_name }}'
+              git rebase 'origin/${{ github.ref_name }}'
+              git push origin HEAD:'${{ github.ref_name }}'
+            fi
+          done
+      - name: Preserve exact model renders, construction plans and checks
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hero-component-review
+          path: |
+            ArtSource/Heroes/ConceptModels/*.png
+            ArtSource/Heroes/ConceptModels/validation-report.json
+            ArtSource/Heroes/BuildPlans/
+          if-no-files-found: ignore

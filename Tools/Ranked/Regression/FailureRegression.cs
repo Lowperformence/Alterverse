@@ -86,7 +86,7 @@ partial class Regression
    for(ulong id=1;id<=(ulong)humans;id++)
    {
     manager.ConnectedClientsIds.Add(id);string ticket="solo-"+id;
-    Invoke(handshake,"OnClientHello",id,new FastBufferReader(7,new FixedString128Bytes(ticket),
+    Invoke(handshake,"OnClientHello",id,new FastBufferReader(8,new FixedString128Bytes(ticket),
      new FixedString128Bytes("friend-team"),new FixedString128Bytes("fixture-match"),
      new FixedString128Bytes(ticket),new Unity.Collections.FixedString64Bytes("Player"),
      (int)HeroId.Veyr,(int)BattleItemType.None,new Unity.Collections.FixedString4096Bytes("")));
@@ -100,7 +100,7 @@ partial class Regression
    Check(!(bool)Get(handshake,"launched"),"server still waits for human plan acknowledgement");
    uint fingerprint=(uint)Get(handshake,"planFingerprint");
    for(ulong id=1;id<=(ulong)humans;id++)
-    Invoke(handshake,"OnPlanAck",id,new FastBufferReader(7,true,fingerprint,new FixedString128Bytes("solo-"+id)));
+    Invoke(handshake,"OnPlanAck",id,new FastBufferReader(8,true,fingerprint,new FixedString128Bytes("solo-"+id)));
    Invoke(handshake,"UpdateDedicatedServer",manager);
    Check((bool)Get(handshake,"launched"),"single human/party launches without opposing humans or phantom bot ACKs");
    return Task.CompletedTask;
@@ -115,7 +115,7 @@ partial class Regression
    for(ulong id=1;id<=2;id++)
    {
     manager.ConnectedClientsIds.Add(id);string ticket="casual-"+id;
-    Invoke(handshake,"OnClientHello",id,new FastBufferReader(7,new Unity.Collections.FixedString128Bytes(ticket),
+    Invoke(handshake,"OnClientHello",id,new FastBufferReader(8,new Unity.Collections.FixedString128Bytes(ticket),
      new Unity.Collections.FixedString128Bytes(id==1?"red":"blue"),new Unity.Collections.FixedString128Bytes("fixture-match"),
      new Unity.Collections.FixedString128Bytes(ticket),new Unity.Collections.FixedString64Bytes("Player"),
      (int)HeroId.Veyr,(int)BattleItemType.None,new Unity.Collections.FixedString4096Bytes("")));
@@ -127,7 +127,7 @@ partial class Regression
    Check(bots==6,"two-human match adds exactly six server bots");
    uint fingerprint=(uint)Get(handshake,"planFingerprint");
    for(ulong id=1;id<=2;id++)
-    Invoke(handshake,"OnPlanAck",id,new FastBufferReader(7,true,fingerprint,new Unity.Collections.FixedString128Bytes("casual-"+id)));
+    Invoke(handshake,"OnPlanAck",id,new FastBufferReader(8,true,fingerprint,new Unity.Collections.FixedString128Bytes("casual-"+id)));
    Invoke(handshake,"UpdateDedicatedServer",manager);
    Check((bool)Get(handshake,"launched"),"two-player Casual launches once both plans are acknowledged");
    return Task.CompletedTask;
@@ -137,7 +137,7 @@ partial class Regression
    ResetFailures();Environment.SetEnvironmentVariable("DF_RANKED_SERVER","0");
    var handshake=Component<DedicatedOnlineMatchHandshake>();
    var manager=new NetworkManager{IsServer=true,IsListening=true};NetworkManager.Singleton=manager;
-   void Hello(ulong id,string team,int version=7)
+   void Hello(ulong id,string team,int version=8)
    {
     string ticket="hello-"+id;manager.ConnectedClientsIds.Add(id);
     var reader=new FastBufferReader(version,new Unity.Collections.FixedString128Bytes(ticket),
@@ -154,6 +154,8 @@ partial class Regression
    Check(manager.ConnectedClientsIds.Count==0,"pre-dash-epoch and pre-command-ack clients are rejected before entering a partially compatible match");
    Hello(93,"red",6);
    Check(manager.ConnectedClientsIds.Count==0,"Pre-source-time and pre-stable-target clients are rejected before gameplay");
+   Hello(94,"red",7);
+   Check(manager.ConnectedClientsIds.Count==0,"Clients without arena readiness cannot enter the new loading barrier");
    for(ulong id=1;id<=4;id++)Hello(id,"red");
    Hello(5,"red");
    Check(manager.ConnectedClientsIds.Count==4&&!manager.ConnectedClientsIds.Contains(5),"fifth teammate cannot enter handshake roster");

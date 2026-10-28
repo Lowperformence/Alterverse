@@ -14,8 +14,8 @@ fixture=r'''
 using System;
 using System.Collections.Generic;
 namespace UnityEngine {public struct Color {public Color(float r,float g,float b,float a=1){}}}
-namespace Alterverse.Match {public enum ArenaVariant {Moon,Mars,GreenPlanet,Noxara,Kryon,Earth,Pyraxis,Neptune,Dark00,DiamondCore,GJ504b,Wasp76b,Trappist1e}}
-namespace Alterverse.Characters {public enum HeroId {Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok,Timmy}}
+namespace Alterverse.Match {public enum ArenaVariant {Moon,Mars,GreenPlanet,Noxara,Kryon,Earth,Pyraxis,Neptune,Dark00,DiamondCore,GJ504b,Wasp76b,Trappist1e,Toi715b}}
+namespace Alterverse.Characters {public enum HeroId {Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok,Timmy,VoidKnight}}
 namespace Alterverse.Profile {
  public static class AccountProfilePrefs {
   public static Dictionary<string,int> Values=new Dictionary<string,int>();
@@ -58,11 +58,11 @@ class Regression {
   Check(Alterverse.Profile.ProfileTransaction.Commits==0&&Alterverse.Profile.ProfileTransaction.Recoveries==0,"locked purchase has no transaction side effects");
   Check(Alterverse.Profile.PlayerWallet.ServerPurchases==0,"locked purchase never invokes server debit");
   var wasp=Alterverse.Match.ArenaVariant.Wasp76b;
-  Check(Alterverse.Shop.ArenaShopCatalog.For(wasp).Price==900,"WASP price remains 900");
+  Check(Alterverse.Shop.ArenaShopCatalog.For(wasp).Price==600,"WASP price is 600");
   Check(Array.Exists(Alterverse.Shop.ArenaShopCatalog.PurchasableItems,item=>item.Variant==wasp),"WASP stays in shop");
   Check(!Alterverse.Shop.ArenaShopCatalog.PurchaseAvailable(wasp),"WASP purchase held");
   Check(Alterverse.Shop.ArenaUnlockInventory.UnlockRequirement(wasp)=="COMING SOON","WASP release status");
-  foreach(bool online in new[]{false,true})foreach(int balance in new[]{0,899,900,5000})foreach(int owned in new[]{0,1}){
+  foreach(bool online in new[]{false,true})foreach(int balance in new[]{0,599,600,5000})foreach(int owned in new[]{0,1}){
    Alterverse.Shop.PaidShardCommerce.Instance=online?new Alterverse.Shop.PaidShardCommerce():null;
    Alterverse.Profile.PlayerWallet.EarnedBalance=balance;
    Alterverse.Profile.AccountProfilePrefs.Values["DF_ArenaOwned_Wasp76b"]=owned;
@@ -73,10 +73,10 @@ class Regression {
   Check(Alterverse.Profile.ProfileTransaction.Commits==0&&Alterverse.Profile.PlayerWallet.ServerPurchases==0,"WASP hold causes no debit or unlock");
   Alterverse.Shop.PaidShardCommerce.Instance=null;
   foreach(var arena in new[]{Alterverse.Match.ArenaVariant.GreenPlanet,Alterverse.Match.ArenaVariant.Noxara,Alterverse.Match.ArenaVariant.Earth,Alterverse.Match.ArenaVariant.Pyraxis,Alterverse.Match.ArenaVariant.Dark00,Alterverse.Match.ArenaVariant.DiamondCore,Alterverse.Match.ArenaVariant.Trappist1e}){
-   Alterverse.Profile.PlayerWallet.EarnedBalance=900;
+   Alterverse.Profile.PlayerWallet.EarnedBalance=600;
    Check(Alterverse.Shop.ArenaShopCatalog.PurchaseAvailable(arena),"existing arena purchases remain available");
    Check(Alterverse.Shop.ArenaUnlockInventory.Purchase(arena)==Alterverse.Shop.ArenaPurchaseResult.Purchased,"other paid arena purchases still work");
-   Check(Alterverse.Profile.PlayerWallet.EarnedBalance==0&&Alterverse.Shop.ArenaUnlockInventory.Owned(arena),"other arena costs 900 and unlocks");
+   Check(Alterverse.Profile.PlayerWallet.EarnedBalance==0&&Alterverse.Shop.ArenaUnlockInventory.Owned(arena),"other arena costs 600 and unlocks");
    Check(Alterverse.Shop.ArenaUnlockInventory.Purchase(arena)==Alterverse.Shop.ArenaPurchaseResult.AlreadyOwned,"arena duplicate never charges again");
   }
   foreach(var free in new[]{Alterverse.Characters.HeroId.Veyr,Alterverse.Characters.HeroId.Kaelon,Alterverse.Characters.HeroId.Nyra,Alterverse.Characters.HeroId.Elyra,Alterverse.Characters.HeroId.Mira,Alterverse.Characters.HeroId.Rook}){
@@ -89,10 +89,10 @@ class Regression {
    Check(!Alterverse.Shop.HeroUnlockInventory.Owned(premium),"premium initially locked");
    int price=Alterverse.Shop.HeroUnlockCatalog.Price(premium);
    Check(Alterverse.Shop.HeroUnlockInventory.Purchase(premium)==Alterverse.Shop.HeroUnlockResult.Purchased,"existing premium still purchasable");
-   Check(Alterverse.Profile.PlayerWallet.EarnedBalance==5000-price,"existing premium price unchanged");
+   Check(Alterverse.Profile.PlayerWallet.EarnedBalance==5000-price,"existing premium configured price");
    Check(Alterverse.Characters.PlayerHeroSelection.Select(premium),"owned premium deploy allowed");
   }
-  Console.WriteLine("PASS "+checks+" production Timmy/WASP release, purchase, selection and unchanged arena assertions.");
+  Console.WriteLine("PASS "+checks+" production Timmy/WASP release, purchase, selection and arena price assertions.");
  }
 }
 '''
@@ -102,3 +102,4 @@ with tempfile.TemporaryDirectory(prefix='df-timmy-release-') as folder:
  folder=Path(folder);(folder/'Fixture.cs').write_text(fixture);binary=folder/'Release.exe'
  subprocess.run([str(mono),str(args.roslyn),'-nologo','-noconfig','-langversion:9','-r:'+str(args.mono_root/'usr/lib/mono/4.5/System.dll'),'-r:'+str(args.mono_root/'usr/lib/mono/4.5/System.Core.dll'),'-out:'+str(binary),str(folder/'Fixture.cs'),str(root/'Assets/Alterverse/Scripts/Shop/HeroUnlockCatalog.cs'),str(root/'Assets/Alterverse/Scripts/Characters/PlayerHeroSelection.cs'),str(root/'Assets/Alterverse/Scripts/Shop/ArenaShopCatalog.cs')],env=env,check=True)
  subprocess.run([str(mono),str(binary)],env=env,check=True)
+

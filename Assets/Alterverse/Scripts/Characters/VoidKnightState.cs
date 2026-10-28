@@ -9,6 +9,37 @@ namespace Alterverse.Characters
     public sealed class VoidKnightState:MonoBehaviour
     {
         private Health health;private HeroCombatStatus status;private int hits;private float guardUntil;private bool counter;private Vector3 guardDirection;
+        private float cloakUntil;
+        private double lastCloakSample=double.NegativeInfinity;
+        public float CloakRemaining=>isActiveAndEnabled&&health!=null&&!health.IsDead&&GetComponent<HeroIdentity>()?.Hero==HeroId.VoidKnight?Mathf.Max(0,cloakUntil-Time.time):0f;
+        public bool Cloaked=>CloakRemaining>0f;
+        public static bool HiddenFrom(GameObject observer,Health target)
+        {
+            if(observer==null||target==null||observer==target.gameObject||target.GetComponent<VoidKnightState>()?.Cloaked!=true)return false;
+            TeamMember viewer=observer.GetComponent<TeamMember>(),owner=target.GetComponent<TeamMember>();
+            return viewer!=null&&owner!=null&&viewer.Team!=owner.Team;
+        }
+        private void EnsureCloakPresentation()
+        {
+            if(GetComponent<VoidKnightStealth>()==null)gameObject.AddComponent<VoidKnightStealth>();
+        }
+        public void BeginSweepCloak()
+        {
+            if(!Authoritative)return;
+            cloakUntil=Time.time+VoidKnightBalance.SweepCloakSeconds;
+            EnsureCloakPresentation();
+            HeroSkillVfx.VoidKnightSmoke(gameObject,transform.position);
+        }
+        // Server timestamps prevent an old snapshot or delayed reliable effect from restarting the cloak.
+        public void ApplyCloakSnapshot(float remaining,double sampledAt,double serverNow)
+        {
+            if(CoopAuthority.CanSimulateHostGameplay||double.IsNaN(sampledAt)||double.IsInfinity(sampledAt)||
+                double.IsNaN(serverNow)||double.IsInfinity(serverNow)||float.IsNaN(remaining)||float.IsInfinity(remaining)||
+                remaining<0||remaining>VoidKnightBalance.SweepCloakSeconds||sampledAt<=lastCloakSample)return;
+            lastCloakSample=sampledAt;
+            cloakUntil=Time.time+Mathf.Max(0,remaining-Mathf.Max(0,(float)(serverNow-sampledAt)));
+            if(Cloaked)EnsureCloakPresentation();
+        }
         public int Charges=>hits;
         public bool Guarding=>Time.time<guardUntil&&health!=null&&!health.IsDead&&status?.Stunned!=true;
         private void Awake(){health=GetComponent<Health>();if(health!=null)health.Died+=ResetLife;status=GetComponent<HeroCombatStatus>()??gameObject.AddComponent<HeroCombatStatus>();}
@@ -38,8 +69,9 @@ namespace Alterverse.Characters
             if(!Authoritative||status.Stunned){if(health==null||health.IsDead)hits=0;CancelGuard();return;}
             if(guardUntil>0&&Time.time>=guardUntil){bool follow=counter;Vector3 direction=guardDirection;CancelGuard();if(follow)GetComponent<HeroAbilityExecution>()?.VoidKnightCounter(direction);}
         }
-        private void ResetLife(){hits=0;CancelGuard();}
+        private void ResetLife(){hits=0;cloakUntil=0;CancelGuard();}
         private void OnDisable()=>ResetLife();
         private void OnDestroy(){if(health!=null)health.Died-=ResetLife;}
     }
 }
+

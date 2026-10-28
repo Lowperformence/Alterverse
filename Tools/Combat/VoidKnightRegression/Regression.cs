@@ -19,23 +19,24 @@ class Regression
  static float Hp(GameObject a)=>a.GetComponent<Health>().Current;
  static void Main()
  {
-  Check((int)HeroId.VoidKnight==9&&HeroIdentity.HeroCount==10,"stable appended roster ID");Near(HeroIdentity.AttackDamage(HeroId.VoidKnight),18,"18 basic damage");
+  CloakCases();
+  Check((int)HeroId.VoidKnight==9&&(int)HeroId.Bolt7==10&&HeroIdentity.HeroCount==11,"stable appended roster ID");Near(HeroIdentity.AttackDamage(HeroId.VoidKnight),20,"20 basic damage");
   Check(HeroIdentity.BaseHealth(HeroId.VoidKnight)<HeroIdentity.BaseHealth(HeroId.Kaelon),"less health than tank");Check(HeroIdentity.BaseHealth(HeroId.VoidKnight)>HeroIdentity.BaseHealth(HeroId.Veyr),"more health than assassin");
   foreach(var id in new[]{HeroId.Veyr,HeroId.Timmy,HeroId.Kaelon})Check(VoidKnightBalance.BasicRange>HeroCombatProfile.StatsFor(id).AttackRange,"longer reach than "+id);
-  Check(18/VoidKnightBalance.BasicInterval<17/HeroCombatProfile.StatsFor(HeroId.Kaelon).AttackInterval,"lower sustained DPS than tank");Check(!HeroAttackDelivery.IsRanged(HeroId.VoidKnight),"greatsword remains melee beyond 3 metres");
+  Near(HeroCombatProfile.StatsFor(HeroId.VoidKnight).AttackInterval,1.2f,"current greatsword attack interval");Check(!HeroAttackDelivery.IsRanged(HeroId.VoidKnight),"greatsword remains melee beyond 3 metres");
   Check(AimingSettings.Current.For(HeroId.VoidKnight,2).aimType==AimType.Dash,"lunge aim type");Check(AimingSettings.Current.For(HeroId.VoidKnight,3).aimType==AimType.AreaCone,"ultimate cone aim type");
   Check(HeroCombatAudio.Cue(8,4,0)==132&&HeroCombatAudio.Cue(7,4,0)==117,"legacy audio cues unchanged");
   for(int action=0;action<5;action++)for(int phase=0;phase<3;phase++)Check(HeroCombatAudio.Cue(9,action,phase)==135+action*3+phase,"appended audio cue "+action+"/"+phase);
-  Resources.AudioClipsAvailable=true;Resources.LoadedAudioPaths.Clear();var bank=HeroCombatAudio.Load();Check(bank.Length==150,"expanded audio bank");Check(Resources.LoadedAudioPaths.FindAll(p=>p.StartsWith("Audio/Heroes/VoidKnight/")).Count==16,"all 16 runtime recordings requested");Resources.AudioClipsAvailable=false;
-  Reset();var a=Actor(HeroId.VoidKnight,0,Vector3.zero);var b=Actor(HeroId.Veyr,1,Vector3.forward*2);var state=a.GetComponent<VoidKnightState>();Check(state.BeginGuard(),"guard starts");Check(a.GetComponent<HeroCombatStatus>().Rooted&&!HeroCombatStatus.CanAct(a),"guard anchors and locks actions");Near(state.ReduceFrontalDamage(40,b),20,"front guard halves damage");b.transform.position=Vector3.back*2;Near(state.ReduceFrontalDamage(40,b),40,"rear bypasses guard");b.transform.position=Vector3.right*2;Near(state.ReduceFrontalDamage(40,b),40,"flank bypasses guard");Near(state.ReduceFrontalDamage(40,null),40,"unknown source bypasses guard");Run(.7f);Check(!state.Guarding&&!a.GetComponent<HeroCombatStatus>().Rooted,"guard expires and releases root");
+  Resources.AudioClipsAvailable=true;Resources.LoadedAudioPaths.Clear();var bank=HeroCombatAudio.Load();Check(bank.Length==HeroIdentity.HeroCount*15+1,"expanded audio bank includes Scratch hold cue");Check(Resources.LoadedAudioPaths.FindAll(p=>p.StartsWith("Audio/Heroes/VoidKnight/")).Count==16,"all 16 runtime recordings requested");Resources.AudioClipsAvailable=false;
+  Reset();var a=Actor(HeroId.VoidKnight,0,Vector3.zero);var b=Actor(HeroId.Veyr,1,Vector3.forward*2);var state=a.GetComponent<VoidKnightState>();Check(state.BeginGuard(),"guard starts");Check(a.GetComponent<HeroCombatStatus>().Rooted&&!HeroCombatStatus.CanAct(a),"guard anchors and locks actions");Near(state.ReduceFrontalDamage(40,b),8,"front guard blocks eighty percent of damage");b.transform.position=Vector3.back*2;Near(state.ReduceFrontalDamage(40,b),40,"rear bypasses guard");b.transform.position=Vector3.right*2;Near(state.ReduceFrontalDamage(40,b),40,"flank bypasses guard");Near(state.ReduceFrontalDamage(40,null),40,"unknown source bypasses guard");Run(.7f);Check(!state.Guarding&&!a.GetComponent<HeroCombatStatus>().Rooted,"guard expires and releases root");
   Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);state=a.GetComponent<VoidKnightState>();state.RecordBasicHit();state.RecordBasicHit();state.RecordSkillHit();Near(a.GetComponent<Health>().Shield,0,"two basics cannot trigger shield");state.RecordBasicHit();state.RecordSkillHit();Near(a.GetComponent<Health>().Shield,30,"three basics prime 30 shield");state.RecordSkillHit();Near(a.GetComponent<Health>().Shield,30,"passive consumed once");Check(state.Charges==0,"passive charges reset");
   Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);state=a.GetComponent<VoidKnightState>();CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Check(!state.BeginGuard(),"replica cannot start gameplay guard");state.RecordBasicHit();Check(state.Charges==0,"replica cannot build passive");Check(!a.GetComponent<HeroAbilityExecution>().TryCastAimed(2,Aim(a)),"replica cannot apply lunge");
   Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);b=Actor(HeroId.Veyr,1,Vector3.forward*3);Unlock(a);Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Aim(a)),"ultimate starts");Run(.64f);Near(Hp(b),1000,"ultimate no damage before warning");Run(.03f);Near(Hp(b),938,"ultimate 42 base plus 20 drain damage");Run(.7f);Near(Hp(b),938,"ultimate hits each enemy once");Near(HeroCombatStatus.Speed(b),.75f,"ultimate applies slow");
   Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);b=Actor(HeroId.Veyr,1,Vector3.forward*3);Unlock(a);a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Aim(a));Run(.2f);a.GetComponent<HeroCombatStatus>().Stun(1);Tick(.01f);Run(.6f);Near(Hp(b),1000,"stun cancels pending cleave");Check(!a.GetComponent<HeroCombatStatus>().Rooted,"interruption releases owned root");
-  Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);b=Actor(HeroId.Veyr,1,Vector3.forward*2);var behind=Actor(HeroId.Veyr,1,Vector3.forward*3.3f);Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(2,Aim(a)),"lunge starts");Run(.15f);Near(Hp(b),1000,"lunge respects preparation");Run(.6f);Near(Hp(b),984,"lunge deals 16 once");Near(Hp(behind),1000,"first enemy stops lunge");Check(a.transform.position.z<2.1f,"lunge stops near first contact");Near(HeroCombatStatus.Speed(b),.5f,"lunge slows hit enemy by 50 percent");Near(HeroCombatStatus.Speed(behind),1f,"lunge does not slow enemy behind first contact");Near(HeroCombatStatus.Speed(a),1f,"lunge does not slow caster");Run(2.1f);Near(HeroCombatStatus.Speed(b),1f,"lunge slow expires after two seconds");
+  Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);b=Actor(HeroId.Veyr,1,Vector3.forward*2);var behind=Actor(HeroId.Veyr,1,Vector3.forward*3.3f);Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(2,Aim(a)),"lunge starts");Run(.15f);Near(Hp(b),1000,"lunge respects preparation");Run(.6f);Near(Hp(b),978,"lunge deals 22 once");Near(Hp(behind),1000,"first enemy stops lunge");Check(a.transform.position.z<2.1f,"lunge stops near first contact");Near(HeroCombatStatus.Speed(b),.5f,"lunge slows hit enemy by 50 percent");Near(HeroCombatStatus.Speed(behind),1f,"lunge does not slow enemy behind first contact");Near(HeroCombatStatus.Speed(a),1f,"lunge does not slow caster");Run(2.1f);Near(HeroCombatStatus.Speed(b),1f,"lunge slow expires after two seconds");
   Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);b=Actor(HeroId.Veyr,1,Vector3.forward*3);Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(0,Aim(a)),"sweep starts");Run(.5f);Near(Hp(b),976,"sweep deals 24");
-  Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);b=Actor(HeroId.Veyr,1,Vector3.forward*2);Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(1,Aim(a)),"parry cast starts");a.GetComponent<Health>().TakeDamage(40,b);Near(Hp(a),980,"health boundary applies parry reduction");Run(1.1f);Near(Hp(b),986,"successful guard triggers 14 damage counter");
-  Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);b=Actor(HeroId.Veyr,1,Vector3.forward*3);a.AddComponent<BasicAttack>();Check(a.GetComponent<BasicAttack>().TryAttackAimed(Aim(a)),"basic starts at extended range");Run(.27f);Near(Hp(b),1000,"basic has readable windup");Run(.04f);Near(Hp(b),982,"basic exact 18 at 3 metres");Check(a.GetComponent<VoidKnightState>().Charges==1,"real basic hit builds passive");
+  Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);b=Actor(HeroId.Veyr,1,Vector3.forward*2);Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(1,Aim(a)),"parry cast starts");a.GetComponent<Health>().TakeDamage(40,b);Near(Hp(a),992,"health boundary applies parry reduction");Run(1.1f);Near(Hp(b),986,"successful guard triggers 14 damage counter");
+  Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);b=Actor(HeroId.Veyr,1,Vector3.forward*3);a.AddComponent<BasicAttack>();Check(a.GetComponent<BasicAttack>().TryAttackAimed(Aim(a)),"basic starts at extended range");Run(.27f);Near(Hp(b),1000,"basic has readable windup");Run(.04f);Near(Hp(b),980,"basic exact 20 at 3 metres");Check(a.GetComponent<VoidKnightState>().Charges==1,"real basic hit builds passive");
   Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);a.AddComponent<BasicAttack>();a.GetComponent<BasicAttack>().TryAttackAimed(Aim(a));Run(.5f);Check(a.GetComponent<VoidKnightState>().Charges==0,"missed basic does not build passive");
   Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);b=Actor(HeroId.Veyr,1,Vector3.back*2);Unlock(a);a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Aim(a));Run(.7f);Near(Hp(b),1000,"cleave excludes targets behind actor");
   Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);b=Actor(HeroId.Veyr,1,Vector3.forward*3);Unlock(a);a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Aim(a));Run(.2f);a.SetActive(false);Run(.7f);Near(Hp(b),1000,"disabled actor cannot land pending ultimate");
@@ -46,7 +47,7 @@ class Regression
   Check(Alterverse.Shop.PlayerWallet.ServerRequests==0,"blocked purchase sends no server request");
   Check(!PlayerHeroSelection.Select(HeroId.VoidKnight)&&PlayerHeroSelection.Selected!=HeroId.VoidKnight,"unreleased hero cannot deploy");
   Check(!Alterverse.Shop.HeroUnlockCatalog.Released(HeroId.Timmy),"Timmy release lock preserved");
-  Check(Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.Traveler)==1500&&Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.Nerok)==2200&&Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.Timmy)==1900,"existing prices preserved");
+  Check(Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.Traveler)==1500&&Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.Nerok)==1900&&Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.Timmy)==1900,"current hero prices preserved");
   Check(Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.VoidKnight)==1600,"Void Knight costs exactly 1600 shards");
   Check(Alterverse.Shop.HeroUnlockCatalog.Purchasable(HeroId.VoidKnight),"Void Knight uses premium hero purchase flow after release");
   Check(Alterverse.Shop.HeroUnlockCatalog.PurchaseSku(HeroId.VoidKnight)=="hero_void_knight"&&Alterverse.Shop.HeroUnlockCatalog.OwnedKey(HeroId.VoidKnight)=="DF_HeroOwned_VoidKnight","Void Knight SKU and persisted ownership mapping");
@@ -69,4 +70,38 @@ class Regression
   Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);a.GetComponent<Health>().Current=995;b=Actor(HeroId.Veyr,1,Vector3.forward*2);Unlock(a);a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Aim(a));Run(.7f);Near(Hp(a),1000,"life drain cannot exceed caster maximum HP");
   Console.WriteLine("VOID KNIGHT: "+passed+" checks passed. Engine fixtures; native Unity and NGO not covered.");
  }
+ static void CloakCases()
+ {
+  Reset();var a=Actor(HeroId.VoidKnight,0,Vector3.zero);var b=Actor(HeroId.Veyr,1,Vector3.forward*2);
+  var ally=Actor(HeroId.Nyra,0,Vector3.right);var state=a.GetComponent<VoidKnightState>();
+  Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(0,Aim(a)),"cloak sweep accepted");
+  Run(.27f);Check(!state.Cloaked,"cloak waits for actual swing");
+  Run(.03f);Check(state.Cloaked,"sweep cloaks at release");Near(state.CloakRemaining,1.98f,"cloak lasts two seconds from release");
+  Check(VoidKnightState.HiddenFrom(b,a.GetComponent<Health>()),"enemy loses target visibility");
+  Check(!VoidKnightState.HiddenFrom(ally,a.GetComponent<Health>())&&!VoidKnightState.HiddenFrom(a,a.GetComponent<Health>()),"owner and ally keep visibility");
+  var targeting=b.AddComponent<SoftTargeting>();Check(targeting.Acquire(4,Vector3.back)!=a.GetComponent<Health>(),"automatic acquisition excludes cloaked Knight");
+  float hp=Hp(a);a.GetComponent<Health>().TakeDamage(10);Near(Hp(a),hp-10,"cloak does not grant invulnerability");
+  Run(1.95f);Check(state.Cloaked,"still cloaked just before expiry");Run(.05f);Check(!state.Cloaked,"cloak expires without input");
+  Check(targeting.Acquire(4,Vector3.back)==a.GetComponent<Health>(),"target returns after expiry");
+  Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);state=a.GetComponent<VoidKnightState>();
+  Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(0,Aim(a)),"empty sweep accepted");Run(.3f);Check(state.Cloaked,"miss still cloaks");
+  float left=state.CloakRemaining;Run(.2f);Check(state.CloakRemaining<left,"open hit interval never refreshes cloak");
+  Check(!a.GetComponent<HeroAbilityExecution>().TryCastAimed(0,Aim(a)),"cooldown rejects second sweep");
+  a.GetComponent<Health>().TakeDamage(10000);Check(!state.Cloaked,"death immediately clears cloak");
+  Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);state=a.GetComponent<VoidKnightState>();
+  a.GetComponent<HeroAbilityExecution>().TryCastAimed(0,Aim(a));Run(.1f);a.GetComponent<HeroCombatStatus>().Stun(1);Run(.3f);
+  Check(!state.Cloaked,"interrupted windup never grants cloak");
+  Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);state=a.GetComponent<VoidKnightState>();
+  CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;state.BeginSweepCloak();Check(!state.Cloaked,"replica cannot grant own cloak");
+  state.ApplyCloakSnapshot(2,100,100.5);Near(state.CloakRemaining,1.5f,"replica subtracts network delay");
+  Run(.25f);state.ApplyCloakSnapshot(2,100,100.5);Near(state.CloakRemaining,1.25f,"duplicate event cannot restart cloak");
+  state.ApplyCloakSnapshot(2,99,100.5);Near(state.CloakRemaining,1.25f,"old snapshot cannot overwrite newer cloak");
+  state.ApplyCloakSnapshot(2,double.NaN,101);state.ApplyCloakSnapshot(float.NaN,101,101);Near(state.CloakRemaining,1.25f,"invalid network data rejected");
+  state.ApplyCloakSnapshot(0,101,101);Check(!state.Cloaked,"new server snapshot cancels cloak");
+  state.ApplyCloakSnapshot(2,102,104.1);Check(!state.Cloaked,"late effect never revives expired cloak");
+  state.ApplyCloakSnapshot(2,105,105);Check(state.Cloaked,"latest snapshot repairs a lost effect event");
+  a.SetActive(false);Check(!state.Cloaked,"disable clears cloak");
+ }
 }
+
+

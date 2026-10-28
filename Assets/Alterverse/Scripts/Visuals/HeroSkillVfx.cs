@@ -181,8 +181,8 @@ namespace Alterverse.Visuals
             TravelerPortal(actor,start,slot==0?.55f:.35f,.24f);
         }
 
-        private static Color TravelerColor(int slot)=>slot==3?Color.white:
-            slot==0||slot==1?new Color(1f,.82f,.08f,1f):new Color(.64f,.24f,1f,1f);
+        private static Color TravelerColor(int slot)=>slot==0||slot==3?Color.white:
+            slot==1?new Color(1f,.82f,.08f,1f):new Color(.64f,.24f,1f,1f);
 
         // Pooled spherical cores stay visible even when decorative effects are disabled.
         private static void TravelerOrb(GameObject actor,Vector3 point,int slot,float size,float life,
@@ -197,6 +197,7 @@ namespace Alterverse.Visuals
         }
         private static void TravelerProjectile(GameObject actor,Vector3 start,Vector3 end,int slot,float travel,Transform target)
         {
+            if(slot==0){TemporalLaser(actor,start,end,travel);return;}
             Color color=TravelerColor(slot);
             float size=slot==3?1.05f:slot<0?.30f:.42f;
             if(travel<=0)
@@ -300,7 +301,7 @@ namespace Alterverse.Visuals
             HeroVfxPool.Emit(HeroFxShape.Rift,p-facing*Vector3.forward*.015f,p,new Vector3(size*.55f,size*.9f,.9f),DarkCore,life,HeroFxMotion.Contract,facing,actor);
         }
         public static void CancelWarnings(GameObject actor)
-        {using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelWarnings,actor);HeroVfxPool.CancelWarnings(actor);}
+        {using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelWarnings,actor);HeroVfxPool.CancelWarnings(actor);Bolt7Vfx.CancelOwner(actor);}
         public static void CancelProjectiles(GameObject actor)
         {using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelProjectiles,actor);HeroVfxPool.CancelProjectiles(actor);}
         public static void Cast(GameObject actor,int slot,float windup=-1f)
@@ -314,6 +315,9 @@ namespace Alterverse.Visuals
             }
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Cast,actor,slot:slot,duration:Mathf.Max(0,windup));
             if(actor==null)return;
+            if(Hero(actor)==HeroId.Bolt7){Bolt7Vfx.Cast(actor,slot);return;}
+            if(Hero(actor)==HeroId.Nyra&&(slot==2||slot==3)&&SivraNovaVfx.Cast(actor,slot,Muzzle(actor),windup,HeroVfxEvents.ReplayElapsed))return;
+            if(Hero(actor)==HeroId.Traveler&&(slot==0||slot==2)&&TravelerLightningVfx.Cast(actor,slot))return;
             PolishCast(actor,slot);
             if(Hero(actor)==HeroId.Timmy){TimmyCast(actor,slot);return;}
             HeroId h=Hero(actor);Color c=h==HeroId.Mira&&(slot==1||slot==2||slot==3)?new Color(.24f,1f,.42f):Accent(actor);float size=slot==3?.45f:.22f;Vector3 p=Muzzle(actor);
@@ -485,8 +489,21 @@ namespace Alterverse.Visuals
         public static void Area(GameObject actor,Vector3 center,float radius,float duration,bool warning,bool beneficial=false,int slot=-1)
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Area,actor,center,slot,duration,radius,flag:warning,secondary:beneficial);
+            if(actor!=null&&Hero(actor)==HeroId.Bolt7&&!warning){Bolt7Vfx.Area(actor,center,slot);return;}
             if(actor==null)return;
             HeroId hero=Hero(actor);
+            if(!warning&&beneficial&&slot==3&&hero==HeroId.Mira&&
+                ThalaHealingVfx.TryArea(Ground(center),radius,HeroVfxEvents.ReplayElapsed))return;
+            if(!warning&&slot==2&&hero==HeroId.Traveler&&TravelerLightningVfx.ResolveArea(actor,Ground(center),radius,
+                ()=>Alterverse.Audio.HeroCombatAudio.PlayLightningGroundImpact(actor,center),HeroVfxEvents.ReplayElapsed))return;
+            if(!warning&&slot==3&&hero==HeroId.Elyra&&
+                AttackExplosionVfx.TryMeteor(Ground(center),Accent(actor),HeroVfxEvents.ReplayElapsed,radius))return;
+            if(!warning&&slot==3&&(hero==HeroId.Elyra||hero==HeroId.Traveler)&&
+                UltimateLightningVfx.TryPlay(hero==HeroId.Elyra?UltimateLightningVfx.Ione:UltimateLightningVfx.Traveler,
+                    Ground(center),radius,HeroVfxEvents.ReplayElapsed))return;
+            if(!warning&&slot==3&&(hero==HeroId.Kaelon||hero==HeroId.Rook)&&
+                SelectedAbilityVfx.TryArea(hero==HeroId.Kaelon?SelectedAbilityVfx.Circle:SelectedAbilityVfx.Fire,
+                    Ground(center),radius,HeroVfxEvents.ReplayElapsed))return;
             if(!warning)PolishArea(actor,center,radius,slot,beneficial);
             if(hero==HeroId.Timmy&&slot==1)
             {
@@ -664,6 +681,23 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Spell,actor,impact,slot,duration:travelTime,target:target!=null?target.gameObject:null);
             if(actor==null)return;HeroId h=Hero(actor);
+            if(h==HeroId.Bolt7){if(slot==0||slot==2)Bolt7Vfx.Grenade(actor,impact,travelTime,slot);return;}
+            if(h==HeroId.Nyra&&(slot==2||slot==3)&&SivraNovaVfx.Launch(actor,slot,Muzzle(actor),impact+Vector3.up*.25f,
+                travelTime,target,HeroVfxPool.CurrentDelivery,HeroVfxEvents.ReplayElapsed))return;
+            if(h==HeroId.Traveler&&(slot==0||slot==2)&&TravelerLightningVfx.Launch(actor,slot,Muzzle(actor),impact+Vector3.up*.35f,
+                travelTime,AimingSettings.Current.For(h,slot).projectileWidth,HeroVfxPool.CurrentDelivery,HeroVfxEvents.ReplayElapsed))return;
+            if(h==HeroId.Veyr&&slot==1&&SelectedAbilityVfx.TryRiftScar(actor,Muzzle(actor),impact+Vector3.up*.65f,
+                travelTime>0?travelTime:Mathf.Max(.01f,Vector3.Distance(Muzzle(actor),impact)/18f),
+                AimingSettings.Current.For(h,slot).projectileWidth,HeroVfxPool.CurrentDelivery,HeroVfxEvents.ReplayElapsed))return;
+            if(h==HeroId.Veyr&&slot==3)
+            {
+                var delivery=actor.GetComponent<HeroAttackDelivery>();
+                Vector3 origin=delivery?.VisualOrigin??HeroVfxEvents.ReplayOrigin??actor.transform.position;
+                Vector3 direction=delivery?.VisualDirection??(impact-origin);
+                var aim=AimingSettings.Current.For(h,slot);
+                SelectedAbilityVfx.RememberEcho(actor,origin,direction,aim.castRange,aim.coneAngle);
+                if(SelectedAbilityVfx.Ready(SelectedAbilityVfx.Blood)){VacantEchoSickle(actor,impact);return;}
+            }
             PolishRelease(actor,impact,slot,travelTime,target);
             if(h==HeroId.Timmy)
             {
@@ -790,7 +824,14 @@ namespace Alterverse.Visuals
         public static void Impact(GameObject actor,Health target,int slot)
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Impact,actor,slot:slot,target:target!=null?target.gameObject:null);
+            if(actor!=null&&Hero(actor)==HeroId.Bolt7){if(slot<0&&target!=null)Bolt7Vfx.BasicImpact(actor,target.transform.position);return;}
             if(actor==null||target==null)return;
+            if(slot<0&&Hero(actor)==HeroId.Nyra&&SmallBulletVfx.ConfirmHit(actor,target.transform.position+Vector3.up*.35f))return;
+            if(Hero(actor)==HeroId.Nyra&&(slot==2||slot==3)&&SivraNovaVfx.ConfirmHit(actor,target,slot,HeroVfxEvents.ReplayElapsed))return;
+            if(Hero(actor)==HeroId.Traveler&&(slot==0||slot==2)&&
+                TravelerLightningVfx.ConfirmHit(actor,target,slot,HeroVfxEvents.ReplayElapsed))return;
+            if(Hero(actor)==HeroId.Veyr&&slot==3&&
+                SelectedAbilityVfx.TryEchoImpact(actor,target.transform.position+Vector3.up*.35f,HeroVfxEvents.ReplayElapsed))return;
             PolishImpact(actor,target,slot);
             Vector3 p=target.transform.position+Vector3.up*.35f;Color c=Accent(actor);
             float strength=slot<0?.35f:slot==3?.90f:.62f;
@@ -894,6 +935,8 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Support,actor,duration:duration,target:target!=null?target.gameObject:null,flag:shield);
             if(actor==null||target==null)return;
+            if(!shield&&Hero(actor)==HeroId.Mira&&
+                ThalaHealingVfx.TryTarget(target.transform,HeroVfxEvents.ReplayElapsed))return;
             PolishSupport(actor,target,shield);
             HeroId hero=Hero(actor);
             Color c=hero==HeroId.Mira?new Color(.22f,1f,.52f):Accent(actor);
@@ -943,10 +986,13 @@ namespace Alterverse.Visuals
             if(Hero(actor)==HeroId.Mira)
                 HeroVfxPool.Emit(HeroFxShape.Bolt,from,to,new Vector3(.10f,.10f,.48f),new Color(link.r,link.g,link.b,.42f),.14f,HeroFxMotion.Travel,Face(from,to),actor);
         }
-        public static void Debuff(GameObject actor,Health target)
+        public static void Debuff(GameObject actor,Health target,int slot=-1)
         {
-            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Debuff,actor,target:target!=null?target.gameObject:null);
-            if(actor==null||target==null||target.GetComponent<HeroIdentity>()==null)return;
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Debuff,actor,slot:slot,target:target!=null?target.gameObject:null);
+            if(actor==null||target==null)return;
+            if(Hero(actor)==HeroId.Nyra&&SivraNovaVfx.SnareStatus(actor,target,HeroVfxEvents.ReplayElapsed))return;
+            if(Hero(actor)==HeroId.Traveler&&slot==2&&TravelerLightningVfx.Ready(2))return;
+            if(target.GetComponent<HeroIdentity>()==null)return;
             HeroId h=Hero(actor);if(h==HeroId.Nyra)return; // Dedicated snare bands already show this effect.
             Ring(actor,Ground(target.transform.position),.6f,.35f,h==HeroId.Elyra,h==HeroId.Kaelon,follow:target.transform);
         }
@@ -959,7 +1005,9 @@ namespace Alterverse.Visuals
         public static void Basic(GameObject actor,Vector3 impact,float travelTime=0,Transform target=null,bool animate=true)
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Basic,actor,impact,slot:-1,duration:travelTime,target:target!=null?target.gameObject:null,flag:animate);
-            if(actor==null)return;if(animate)actor.GetComponent<HeroVisualMotion>()?.PulseAttack(false);
+            if(actor==null)return;if(Hero(actor)==HeroId.Bolt7){Bolt7Vfx.Basic(actor,impact,travelTime);return;}if(animate)actor.GetComponent<HeroVisualMotion>()?.PulseAttack(false);
+            if(Hero(actor)==HeroId.Nyra&&SmallBulletVfx.Launch(actor,Muzzle(actor),impact+Vector3.up*.25f,travelTime,target,
+                HeroVfxPool.CurrentDelivery,HeroVfxEvents.ReplayElapsed))return;
             PolishRelease(actor,impact,-1,travelTime,target);
             if(Hero(actor)==HeroId.Timmy){TimmyClaws(actor,impact,-1);return;}
             switch(Hero(actor))
@@ -978,6 +1026,7 @@ namespace Alterverse.Visuals
         {
             using var cue=HeroVfxEvents.Begin(HeroVfxCue.Dash,actor,to,slot,duration,origin:from);
             if(actor==null)return;Color c=Accent(actor);HeroId h=Hero(actor);
+            if(h==HeroId.Bolt7){Bolt7Vfx.RamDash(actor,from,to,duration);return;}
             PolishDash(actor,from,to);
             if(h==HeroId.Timmy){TimmyEffect(actor,slot==3?3:2,from,to,0,duration);return;}
             Quaternion face=Face(from,to);float distance=Vector3.Distance(from,to);
@@ -1014,4 +1063,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

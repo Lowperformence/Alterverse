@@ -16,6 +16,9 @@ public void Build(bool zero)
     Material trim=Mat(Color.Lerp(faction,StylizedArtDirection.ArenaStone,.55f),.64f,.53f);
     Material dark=Mat(Color.Lerp(StylizedArtDirection.Ink,faction,.16f),.78f,.36f);
     Material energy=Mat(glow,.12f,.72f,true);
+    StructureSurfaceMaterials.Apply(floor,StructureFinish.Deck);
+    StructureSurfaceMaterials.Apply(trim,StructureFinish.Metal);
+    StructureSurfaceMaterials.Apply(dark,StructureFinish.Metal);
     Disc("BaseDeck",4.75f,.015f,.08f,floor);
     Ring("BaseOuterTrim",4.42f,.085f,.105f,trim);
     Ring("BaseEnergyCircuit",3.72f,.05f,.12f,energy);
@@ -96,3 +99,4 @@ Material Mat(Color c,float metallic,float smooth,bool emissive=false){Shader sh=
 void OnDestroy(){var owned=new HashSet<Mesh>();if(root!=null)foreach(MeshFilter filter in root.GetComponentsInChildren<MeshFilter>())if(filter.sharedMesh!=null&&owned.Add(filter.sharedMesh))Destroy(filter.sharedMesh);foreach(Material m in mats)if(m!=null)Destroy(m);}
 }
 }
+

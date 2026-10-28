@@ -1,4 +1,5 @@
 using System;
+using Alterverse.Shop;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -63,7 +64,7 @@ namespace Alterverse.Visuals
         static bool TryDefinition(string resource,out Definition cached,out string error)
         {
             cached=null;error=null;
-            if(resource!="UfoTestHat"&&resource!="WizardHat"&&resource!="PropellerCap"&&resource!="MushroomHat")
+            if(!HeadwearSelection.IsSerializedResource(resource))
             {error="Unknown headwear mesh resource.";return false;}
             if(!cache.TryGetValue(resource,out cached))
             {

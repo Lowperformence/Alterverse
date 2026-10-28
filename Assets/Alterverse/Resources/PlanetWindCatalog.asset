@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2862092df9f4676a37990f79536ca70, type: 3}
+  m_Name: PlanetWindCatalog
+  m_EditorClassIdentifier:
+  flows: {fileID: 8239912526358531115, guid: a42411a1dd2eafb48b382eabc15f9cb4, type: 3}
+  dust: {fileID: 5627696518775099638, guid: 2b9690e13d0c86840b695d2cc5420291, type: 3}
+  leaves: {fileID: 1921079115439858272, guid: 27baddc2ed1b5044ab9b4bdae21663c9, type: 3}
