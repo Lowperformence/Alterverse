@@ -70,7 +70,14 @@ namespace Alterverse.Combat
         {
             float before=target.Current+target.Shield;
             float dealt = Damage(actor, target, amount);
-            if(target.Current+target.Shield<before){actor.GetComponent<VoidKnightState>()?.RecordBasicHit();Alterverse.Audio.HeroCombatAudio.Play(actor,0,true,target.transform.position);Alterverse.Visuals.HeroSkillVfx.Impact(actor,target,-1);}
+            if(target.Current+target.Shield<before)
+            {
+                actor.GetComponent<VoidKnightState>()?.RecordBasicHit();
+                // Character basics keep their visual contact, without the extra hit/chime layer.
+                if(target.GetComponent<HeroIdentity>()==null)
+                    Alterverse.Audio.HeroCombatAudio.Play(actor,0,true,target.transform.position);
+                Alterverse.Visuals.HeroSkillVfx.Impact(actor,target,-1);
+            }
             HeroIdentity identity = actor.GetComponent<HeroIdentity>();
             Health hp = actor.GetComponent<Health>();
             if (identity != null && identity.Hero == HeroId.Rook && hp != null && hp.Normalized < .6f && target.GetComponent<HeroIdentity>() != null)
@@ -79,3 +86,4 @@ namespace Alterverse.Combat
         }
     }
 }
+
