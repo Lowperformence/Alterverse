@@ -459,7 +459,7 @@ namespace Alterverse.UI
         }
         private void DrawCoop()
         {
-            Heading("PRIVATE CO-OP", "Invite friends with a room code. Play together with up to four players.");
+            Heading("PRIVATE CO-OP", "Bots fill free slots. Friends joining with your code take their place.");
             CoopLobbyService coop = CoopLobbyService.Instance;
             theme.Panel(new Rect(Left, 214, ContentWidth, 456));
             if (coop == null)
@@ -503,7 +503,7 @@ namespace Alterverse.UI
             const int maxSlots = CoopLobbyService.MaxHumanPlayers;
             float gap = 9f;
             float slotWidth = (ContentWidth - 56 - (maxSlots - 1) * gap) / maxSlots;
-            IReadOnlyList<CoopLobbyService.MemberView> members = coop.Members;
+            IReadOnlyList<MatchPlayerSlot> members = coop.LobbySlots;
             for (int i = 0; i < maxSlots; i++)
             {
                 float x = Left + 28 + i * (slotWidth + gap);
@@ -513,10 +513,11 @@ namespace Alterverse.UI
                     theme.Center(new Rect(x + 8, 342, slotWidth - 16, 35), "OPEN SLOT");
                     continue;
                 }
-                CoopLobbyService.MemberView member = members[i];
-                theme.FitLabel(new Rect(x + 10, 320, slotWidth - 20, 23),
+                MatchPlayerSlot member = members[i];
+                AvatarBadgeRenderer.Draw(new Rect(x + 10, 324, 42, 42), member.AvatarId, Texture2D.whiteTexture, Time.unscaledTime);
+                theme.FitLabel(new Rect(x + 62, 320, slotWidth - 72, 23),
                     member.DisplayName + (member.IsLocal ? " (YOU)" : ""), theme.Small);
-                theme.FitLabel(new Rect(x + 10, 350, slotWidth - 20, 26),
+                theme.FitLabel(new Rect(x + 62, 350, slotWidth - 72, 26),
                     HeroIdentity.NameFor(member.Hero), theme.Body);
                 theme.StatusBadge(new Rect(x + 10, 390, slotWidth - 20, 25),
                     member.Ready ? "READY" : "NOT READY",
@@ -1567,4 +1568,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 

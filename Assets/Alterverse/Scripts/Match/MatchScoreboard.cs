@@ -61,7 +61,7 @@ for(int i=0;i<active.Count;i++)
 {
 Health health=active[i];if(health==null||entries.ContainsKey(health))continue;
 TeamMember member=health.GetComponent<TeamMember>();if(!IsHero(member))continue;
-HeroIdentity identity=member.GetComponent<HeroIdentity>();CoopHeroSlot coop=member.GetComponent<CoopHeroSlot>();string n=coop!=null?CoopDisplayName(coop):(member.GetComponent<HeroRespawn>()!=null?PlayerProfile.PlayerName:(identity!=null?identity.DisplayName:DisplayName(member.gameObject.name)));entries.Add(health,new Entry{Health=health,Member=member,Name=n});health.DiedWithSource+=OnHeroDied;}}private void OnHeroDied(Health victim,GameObject source){if(victim==null||!entries.TryGetValue(victim,out Entry victimEntry))return;victimEntry.Deaths++;TeamMember killer=source!=null?source.GetComponentInParent<TeamMember>():null;if(IsHero(killer)&&victimEntry.Member!=null&&killer.Team!=victimEntry.Member.Team){Entry killerEntry=FindEntry(killer);if(killerEntry!=null)killerEntry.Kills++;if(damageCredit.TryGetValue(victim,out Dictionary<TeamMember,float> credits))foreach(var credit in credits)if(IsHero(credit.Key)&&credit.Key!=killer&&Time.time-credit.Value<=assistWindow&&credit.Key.Team==killer.Team){Entry assist=FindEntry(credit.Key);if(assist!=null){assist.Assists++;MatchTelemetry.Instance?.RecordAssist(assist.Health);}}}damageCredit.Remove(victim);}private Entry FindEntry(TeamMember member){foreach(Entry e in entries.Values)if(e.Member==member)return e;return null;}
+HeroIdentity identity=member.GetComponent<HeroIdentity>();CoopHeroSlot coop=member.GetComponent<CoopHeroSlot>();string n=coop!=null?CoopDisplayName(coop):(member.GetComponent<HeroRespawn>()!=null?PlayerProfile.PlayerName:SafeIdentityCatalog.BotName(rewardId,member.Team*16+(identity!=null?(int)identity.Hero:entries.Count)));entries.Add(health,new Entry{Health=health,Member=member,Name=n});health.DiedWithSource+=OnHeroDied;}}private void OnHeroDied(Health victim,GameObject source){if(victim==null||!entries.TryGetValue(victim,out Entry victimEntry))return;victimEntry.Deaths++;TeamMember killer=source!=null?source.GetComponentInParent<TeamMember>():null;if(IsHero(killer)&&victimEntry.Member!=null&&killer.Team!=victimEntry.Member.Team){Entry killerEntry=FindEntry(killer);if(killerEntry!=null)killerEntry.Kills++;if(damageCredit.TryGetValue(victim,out Dictionary<TeamMember,float> credits))foreach(var credit in credits)if(IsHero(credit.Key)&&credit.Key!=killer&&Time.time-credit.Value<=assistWindow&&credit.Key.Team==killer.Team){Entry assist=FindEntry(credit.Key);if(assist!=null){assist.Assists++;MatchTelemetry.Instance?.RecordAssist(assist.Health);}}}damageCredit.Remove(victim);}private Entry FindEntry(TeamMember member){foreach(Entry e in entries.Values)if(e.Member==member)return e;return null;}
 // Absolute server snapshots repair packet loss without replaying death or reward events.
 public void GetNetworkScore(Health health,out int kills,out int deaths,out int assists)
 {
@@ -303,6 +303,7 @@ private void DrawTeam(List<Entry> team,float x,float y,float width,string title)
 private void OnDestroy(){foreach(var pair in entries)if(pair.Key!=null)pair.Key.DiedWithSource-=OnHeroDied;if(front!=null)front.MatchEnded-=OnMatchEnded;entries.Clear();if(Instance==this)Instance=null;}
 }
 }
+
 
 
 

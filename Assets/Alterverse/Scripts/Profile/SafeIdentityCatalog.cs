@@ -134,6 +134,25 @@ namespace Alterverse.Profile
             return Data.playerNames[hash % (uint)Data.playerNames.Length] +
                 (hash / (uint)Data.playerNames.Length % 10000000).ToString("D7", CultureInfo.InvariantCulture);
         }
+        // Display-only bot aliases never change or claim a real account identity.
+        static readonly string[] botNames = {
+            "Kairo", "MoonDrift", "Ashen", "Nox", "PixelPanda", "VelvetEcho", "Frostbyte", "Riven",
+            "SilentOrbit", "Lumi", "CopperFox", "Zephyr", "NightBloom", "Koda", "AstralJay", "Sora",
+            "DustRunner", "NovaPulse", "Mochi", "CloudRift", "Ember", "Vanta", "RiftWalker", "NimbleOtter",
+            "Haze", "NeonMoth", "Arlo", "Skybound", "Rune", "GhostLeaf", "EchoVale", "Cosmo",
+            "CrimsonFinch", "Nyx", "WildComet", "Aster", "Cobalt", "Fable", "LazyLynx", "MintMeteor",
+            "Solstice", "DuskWing", "Taro", "LunarSip", "Bramble", "QuietStorm", "Oriel", "ArcLight",
+            "MapleMoon", "Driftwood", "Juno", "SolarWisp", "Onyx", "Saffron", "TinyTempest", "Corvus",
+            "Wren", "VioletRush", "Lotus", "AmberWave", "Cinder", "IvoryRook", "Sable", "Mirae"
+        };
+        public static bool IsBotName(string value) => Array.IndexOf(botNames, value) >= 0;
+        public static string BotName(string seed, int slot, int attempt = 0)
+        {
+            // Slot offsets form a permutation: all eight slots get different aliases.
+            uint index = unchecked(IdentityHash(seed ?? "lobby") + (uint)slot * 17u + (uint)attempt);
+            return botNames[index % (uint)botNames.Length];
+        }
+        public static int BotNameCount => botNames.Length;
         static uint IdentityHash(string identity)
         {
             uint hash = 2166136261;
@@ -153,4 +172,5 @@ namespace Alterverse.Profile
         { int index = Array.IndexOf(Data.clanDescriptions, text); return index < 0 ? 0 : index; }
     }
 }
+
 

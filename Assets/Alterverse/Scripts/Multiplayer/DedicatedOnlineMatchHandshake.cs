@@ -39,10 +39,12 @@ namespace Alterverse.Multiplayer
             public string MatchId;
             public string PlayerId;
             public string DisplayName;
+            public int AvatarId;
             public HeroId Hero;
             public BattleItemType BattleItem;
             public string Admission;
             public bool SupportsDisplayNames;
+            public string BotNameSeed;
             public uint ArenaOwnedMask;
         }
 
@@ -241,6 +243,8 @@ namespace Alterverse.Multiplayer
             // Optional trailing field: older servers ignore it; updated servers merge
             // this client's unlocked arenas into the match-wide random pool.
             writer.WriteValueSafe(OnlineArenaPool.LocalOwnedMask());
+            writer.WriteValueSafe(new FixedString128Bytes(OnlinePartyService.Instance?.BotNameSeed ?? ""));
+            writer.WriteValueSafe(PlayerProfile.Avatar);
             messaging.SendNamedMessage(HelloMessage, NetworkManager.ServerClientId, writer, NetworkDelivery.ReliableSequenced);
             helloSent = true;
             status = "PLAYER IDENTITY SENT TO DEDICATED SERVER";
@@ -291,6 +295,15 @@ namespace Alterverse.Multiplayer
             uint reportedArenas = 0u;
             if (reader.TryBeginRead(sizeof(uint)))
                 reader.ReadValueSafe(out reportedArenas);
+            string botNameSeed = null;
+            if (reader.TryBeginRead(sizeof(ushort)))
+            {
+                reader.ReadValueSafe(out FixedString128Bytes fixedBotSeed);
+                botNameSeed = fixedBotSeed.ToString();
+            }
+            int avatarId = 0;
+            if (reader.TryBeginRead(sizeof(int))) reader.ReadValueSafe(out avatarId);
+            avatarId = Mathf.Max(0, avatarId);
             string admission = fixedAdmission.ToString();
             if (RankedMatchReporter.RankedDeployment != !string.IsNullOrEmpty(admission))
             { RejectClient(manager, senderClientId, "ranked admission required for ranked deployment only"); return; }
@@ -364,10 +377,12 @@ namespace Alterverse.Multiplayer
                 MatchId = matchId,
                 PlayerId = playerId,
                 DisplayName = SanitizeName(displayName),
+                AvatarId = avatarId,
                 Hero = (HeroId)heroRaw,
                 BattleItem = (BattleItemType)battleItemRaw,
                 Admission = admission,
                 SupportsDisplayNames = supportsDisplayNames,
+                BotNameSeed = botNameSeed,
                 ArenaOwnedMask = OnlineArenaPool.Normalize(reportedArenas)
             };
             authorizedPlayers[senderClientId] = playerId;
@@ -424,9 +439,11 @@ namespace Alterverse.Multiplayer
                     {
                         PlayerId = human.PlayerId,
                         DisplayName = human.DisplayName,
+                        AvatarId = human.AvatarId,
                         TeamId = human.TeamId,
                         Hero = human.Hero,
-                        BattleItem = human.BattleItem
+                        BattleItem = human.BattleItem,
+                        BotNameSeed = human.BotNameSeed
                     });
                 }
                 if (string.IsNullOrWhiteSpace(matchId)) matchId = Guid.NewGuid().ToString("N");
@@ -448,7 +465,7 @@ namespace Alterverse.Multiplayer
                 // so every peer hashes the same names and can still connect.
                 bool allowPlayGamesNames = ordered.TrueForAll(human => human.SupportsDisplayNames);
                 foreach(var slot in plan.Session.Slots)
-                    slot.DisplayName=SafeIdentityCatalog.DisplayPlayerName(slot.DisplayName,null,allowPlayGamesNames&&!slot.IsBot);
+                    slot.DisplayName=SafeIdentityCatalog.DisplayPlayerName(slot.DisplayName,null,allowPlayGamesNames);
                 CoopAuthority.Prepare(plan);
                 planFingerprint = CoopPlanHandshake.Fingerprint(plan);
                 planAcks.Clear();
@@ -501,6 +518,7 @@ namespace Alterverse.Multiplayer
                 writer.WriteValueSafe(slot.IsHost);
             }
 
+            for (int i = 0; i < MatchSession.MaxPlayers; i++) writer.WriteValueSafe(plan.Session.Slots[i].AvatarId);
             messaging.SendNamedMessage(PlanMessage, clientId, writer, NetworkDelivery.ReliableSequenced);
         }
 
@@ -555,6 +573,12 @@ namespace Alterverse.Multiplayer
                 }
             }
 
+            if (valid && reader.TryBeginRead(sizeof(int) * MatchSession.MaxPlayers))
+                for (int i = 0; i < MatchSession.MaxPlayers; i++)
+                {
+                    reader.ReadValueSafe(out int avatarId);
+                    slots[i].AvatarId = Mathf.Max(0, avatarId);
+                }
             OnlineMatchPlan plan = null;
             string localPlayerId = fixedLocalPlayerId.ToString();
             if (valid)
@@ -843,5 +867,6 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 
 

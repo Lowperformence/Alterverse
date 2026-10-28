@@ -25,6 +25,7 @@ namespace Alterverse.Multiplayer
         {
             public string PlayerId;
             public string DisplayName;
+            public int AvatarId;
             public HeroId Hero;
             public BattleItemType BattleItem;
             public bool Ready;
@@ -36,6 +37,7 @@ namespace Alterverse.Multiplayer
         public const int MaxHumanPlayers=MatchSession.TeamSize;
         private const string SessionType="df-private-coop-v3";
         private const string PlayerNameKey="displayName";
+        private const string PlayerAvatarKey="avatar";
         private const string PlayerHeroKey="hero";
         private const string PlayerBattleItemKey="battleItem";
         private const string PlayerReadyKey="ready";
@@ -48,10 +50,37 @@ namespace Alterverse.Multiplayer
         public static CoopLobbyService Instance { get; private set; }
 
         private ISession session;
+        private ISession lobbySlotSession;
+        private MatchPlayerSlot[] lobbySlots;
         private bool servicesInitialized,busy;
         private string status="CO-OP READY";
         private string lastError="";
         private readonly List<MemberView> memberBuffer=new(MaxHumanPlayers);
+
+        private float nextAvatarSyncAt;
+        private async void Update()
+        {
+            if (session?.CurrentPlayer == null || busy || !IsLobby || Time.unscaledTime < nextAvatarSyncAt) return;
+            nextAvatarSyncAt = Time.unscaledTime + 1f;
+            int avatar = PlayerProfile.Avatar;
+            if (ReadIntPlayer(session.CurrentPlayer, PlayerAvatarKey, 0) == avatar) return;
+            var target = session;
+            var player = target.CurrentPlayer;
+            string previousAvatar = ReadPlayer(player, PlayerAvatarKey, "0");
+            busy = true;
+            try
+            {
+                player.SetProperty(PlayerAvatarKey,
+                    new PlayerProperty(avatar.ToString(CultureInfo.InvariantCulture), VisibilityPropertyOptions.Member));
+                await target.SaveCurrentPlayerDataAsync();
+            }
+            catch (Exception ex)
+            {
+                player.SetProperty(PlayerAvatarKey, new PlayerProperty(previousAvatar, VisibilityPropertyOptions.Member));
+                Debug.LogWarning("DIMENSIONS FRONT: lobby avatar sync failed: " + ex.Message);
+            }
+            finally { busy = false; RaiseChanged(); }
+        }
 
         public event Action Changed;
 
@@ -397,6 +426,7 @@ namespace Alterverse.Multiplayer
                     {
                         PlayerId=player.Id,
                         DisplayName=SafeIdentityCatalog.DisplayPlayerName(ReadPlayer(player,PlayerNameKey,"TRAVELER"),player.Id,allowPlayGamesNames),
+                        AvatarId=Mathf.Max(0,ReadIntPlayer(player,PlayerAvatarKey,0)),
                         Hero=(HeroId)ReadIntPlayer(player,PlayerHeroKey,(int)HeroId.Veyr),
                         BattleItem=(BattleItemType)Mathf.Clamp(ReadIntPlayer(player,PlayerBattleItemKey,0),0,4),
                         Ready=ReadPlayer(player,PlayerReadyKey,"0")=="1",
@@ -408,6 +438,23 @@ namespace Alterverse.Multiplayer
                 // Return an immutable snapshot. Lobby UI and validation may query Members again
                 // while iterating; exposing the reusable buffer could mutate the caller's list.
                 return memberBuffer.ToArray();
+            }
+        }
+
+        // Bots are roster occupants, not Unity service members: invites retain their capacity.
+        public IReadOnlyList<MatchPlayerSlot> LobbySlots
+        {
+            get
+            {
+                if (session == null || PlayerCount < MinHumanPlayers || PlayerCount > MaxHumanPlayers)
+                    return Array.Empty<MatchPlayerSlot>();
+                if (lobbySlots == null || lobbySlotSession != session)
+                {
+                    lobbySlots = CoopMatchPlan.Build(session.Id, LobbyArena, LobbyDifficulty,
+                        Members, session.Id, allowHeroConflicts: true).Session.Slots;
+                    lobbySlotSession = session;
+                }
+                return lobbySlots;
             }
         }
 
@@ -487,7 +534,7 @@ namespace Alterverse.Multiplayer
             {
                 string matchId=ReadSession(MatchIdKey,session.Id);
                 if(string.IsNullOrEmpty(matchId))matchId=session.Id;
-                plan=CoopMatchPlan.Build(matchId,LobbyArena,LobbyDifficulty,members);
+                plan=CoopMatchPlan.Build(matchId,LobbyArena,LobbyDifficulty,members,session.Id);
                 return plan!=null;
             }
             catch(Exception ex)
@@ -713,6 +760,7 @@ namespace Alterverse.Multiplayer
             return new Dictionary<string,PlayerProperty>
             {
                 {PlayerNameKey,new PlayerProperty(name,VisibilityPropertyOptions.Member)},
+                {PlayerAvatarKey,new PlayerProperty(PlayerProfile.Avatar.ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
                 {SafeIdentityCatalog.DisplayNameFormatKey,new PlayerProperty(SafeIdentityCatalog.DisplayNameFormat,VisibilityPropertyOptions.Member)},
                 {PlayerHeroKey,new PlayerProperty(((int)PlayerHeroSelection.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
                 {PlayerBattleItemKey,new PlayerProperty(((int)BattleItemInventory.Equipped).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
@@ -911,7 +959,7 @@ namespace Alterverse.Multiplayer
         }
 
         private void SetStatus(string value){status=value;RaiseChanged();}
-        private void RaiseChanged()=>Changed?.Invoke();
+        private void RaiseChanged(){lobbySlots=null;Changed?.Invoke();}
 
         private static string FriendlyError(Exception ex)
         {
@@ -958,6 +1006,7 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 
 
 

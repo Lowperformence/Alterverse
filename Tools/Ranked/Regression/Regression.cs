@@ -34,6 +34,7 @@ partial class Regression {
   LifecycleCases().GetAwaiter().GetResult();
   IdentityCases();
   GoogleNameCases();
+  BotLobbyCases().GetAwaiter().GetResult();
   TeamFormatCases();
   FingerprintCases();
   var players=new List<OnlineMatchPlan.DedicatedMember>();
@@ -59,4 +60,5 @@ partial class Regression {
   Console.WriteLine(checks+" C# lobby, identity and ranked checks passed; engine/network substitutes, not a Unity build.");
  }
 }
+
 

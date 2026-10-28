@@ -23,7 +23,8 @@ namespace Alterverse.Multiplayer
             string matchId,
             ArenaVariant arena,
             BotDifficulty difficulty,
-            IReadOnlyList<CoopLobbyService.MemberView> members)
+            IReadOnlyList<CoopLobbyService.MemberView> members,
+            string botNameSeed = null, bool allowHeroConflicts = false)
         {
             if(members==null||members.Count<CoopLobbyService.MinHumanPlayers||members.Count>CoopLobbyService.MaxHumanPlayers)
                 throw new InvalidOperationException($"Co-op match plan requires {CoopLobbyService.MinHumanPlayers}-{CoopLobbyService.MaxHumanPlayers} human players.");
@@ -50,7 +51,7 @@ namespace Alterverse.Multiplayer
 
             HashSet<HeroId> humanHeroes=new();
             for(int i=0;i<ordered.Count;i++)
-                if(!humanHeroes.Add(ordered[i].Hero))
+                if(!humanHeroes.Add(ordered[i].Hero) && !allowHeroConflicts)
                     throw new InvalidOperationException("Co-op human players must use different heroes.");
 
             MatchSession session=new(matchId,SessionMode.Private);
@@ -79,6 +80,7 @@ namespace Alterverse.Multiplayer
 
             if(!session.IsFull)throw new InvalidOperationException($"Co-op match plan must fill all {MatchSession.MaxPlayers} match slots.");
 
+            NameBots(session, botNameSeed ?? matchId, (botNameSeed ?? matchId) + "/opponents");
             return new CoopMatchPlan
             {
                 MatchId=matchId,
@@ -104,21 +106,43 @@ namespace Alterverse.Multiplayer
                 bool human = !old.IsBot && (humanMask & (1 << i)) != 0;
                 var slot = new MatchPlayerSlot {
                     PlayerId = human || old.IsBot ? old.PlayerId : "round-bot-" + i,
-                    DisplayName = human || old.IsBot ? old.DisplayName : old.Hero.ToString(),
+                    DisplayName = human || old.IsBot ? old.DisplayName : null,
+                    AvatarId = old.AvatarId,
                     Team = old.Team, Hero = old.Hero, BattleItem = BattleItemType.None, IsLocal = human && old.IsLocal,
                     IsBot = !human, Ready = true, Connected = true, IsHost = human && old.IsHost
                 };
                 if (!next.Session.TryAssign(i, slot)) throw new InvalidOperationException("Invalid next-round roster.");
                 if (human) next.HumanCount++;
             }
+            NameBots(next.Session, id, id + "/opponents");
             if (next.HumanCount == 0) throw new InvalidOperationException("No players remain.");
             return next;
+        }
+
+        internal static void NameBots(MatchSession session, string teamZeroSeed, string teamOneSeed)
+        {
+            var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var slot in session.Slots)
+                if (slot != null && !string.IsNullOrEmpty(slot.DisplayName)) used.Add(slot.DisplayName);
+            for (int i = 0; i < session.Slots.Length; i++)
+            {
+                var slot = session.Slots[i];
+                if (slot == null || !slot.IsBot || !string.IsNullOrEmpty(slot.DisplayName)) continue;
+                for (int attempt = 0; attempt < SafeIdentityCatalog.BotNameCount; attempt++)
+                {
+                    string name = SafeIdentityCatalog.BotName(slot.Team == 0 ? teamZeroSeed : teamOneSeed,
+                        i % MatchSession.TeamSize, attempt);
+                    if (used.Add(name)) { slot.DisplayName = name; slot.AvatarId = name[0] % 6; break; }
+                }
+                if (string.IsNullOrEmpty(slot.DisplayName)) throw new InvalidOperationException("Bot alias pool exhausted.");
+            }
         }
 
         private static MatchPlayerSlot HumanSlot(CoopLobbyService.MemberView member,bool host)=>new()
         {
             PlayerId=member.PlayerId,
             DisplayName=member.DisplayName,
+            AvatarId=member.AvatarId,
             Team=0,
             Hero=member.Hero,
             BattleItem=member.BattleItem,
@@ -132,7 +156,7 @@ namespace Alterverse.Multiplayer
         private static MatchPlayerSlot BotSlot(string id,HeroId hero,int team)=>new()
         {
             PlayerId=id,
-            DisplayName=id,
+            DisplayName=null,
             Team=team,
             Hero=hero,
             BattleItem=BattleItemType.None,
@@ -144,3 +168,4 @@ namespace Alterverse.Multiplayer
         };
     }
 }
+

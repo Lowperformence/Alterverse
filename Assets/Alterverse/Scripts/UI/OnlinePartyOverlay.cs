@@ -191,7 +191,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(left + 500f, 166f, 250f, 22f),
                 $"PLAYERS  {online.PartyPlayerCount} / {online.PartyCapacity}", theme.Small, true);
             theme.Label(new Rect(left + 500f, 190f, 250f, 22f),
-                "4v4  •  AUTO TEAM FILL", theme.Small, true);
+                "PLAYERS REPLACE BOTS", theme.Small, true);
             theme.StatusBadge(new Rect(left + 758f, 176f, 198f, 26f),
                 matchFound ? "MATCH FOUND" : edgegapSearching ? "FINDING YOUR MATCH" : "MATCH LOBBY",edgegapSearching?FrontEndTheme.Positive:FrontEndTheme.Muted);
 
@@ -206,14 +206,17 @@ namespace Alterverse.UI
             const float playerGap = 8f;
             float innerWidth = width - 52f;
             float playerW = (innerWidth - playerGap * (slots - 1)) / slots;
-            IReadOnlyList<OnlinePartyService.MemberView> members = online.Members;
+            IReadOnlyList<MatchPlayerSlot> roster = online.LobbySlots;
+            int teamStart = 0;
+            for (int i = 0; i < roster.Count; i++)
+                if (roster[i].IsLocal) { teamStart = roster[i].Team * MatchSession.TeamSize; break; }
 
             for (int slot = 0; slot < slots; slot++)
             {
                 float x = left + 26f + slot * (playerW + playerGap);
                 theme.Panel(new Rect(x, 250f, playerW, 190f));
 
-                if (slot >= members.Count)
+                if (teamStart + slot >= roster.Count)
                 {
                     theme.Label(new Rect(x + 10f, 262f, playerW - 20f, 20f), $"SLOT {slot + 1}", theme.Small, true);
                     theme.Center(new Rect(x + 10f, 312f, playerW - 20f, 30f), edgegapSearching ? "RESERVED" : "OPEN SLOT");
@@ -222,14 +225,14 @@ namespace Alterverse.UI
                     continue;
                 }
 
-                OnlinePartyService.MemberView member = members[slot];
+                MatchPlayerSlot member = roster[teamStart + slot];
                 string role = member.IsHost ? "HOST" : $"PLAYER {slot + 1}";
                 if (member.IsLocal) role += " • YOU";
                 if(member.IsLocal)theme.Frame(new Rect(x,250,playerW,190),true);
                 theme.Label(new Rect(x + 10f, 262f, playerW - 20f, 20f), role, theme.Small, true);
-                theme.IdentityTile(new Rect(x+10,287,30,30),member.DisplayName,member.IsLocal);
-                theme.FitLabel(new Rect(x + 48f, 286f, playerW - 58f, 28f), member.DisplayName, theme.Body);
-                theme.FitLabel(new Rect(x + 10f, 320f, playerW - 20f, 20f),
+                AvatarBadgeRenderer.Draw(new Rect(x+10,287,40,40),member.AvatarId,Texture2D.whiteTexture,Time.unscaledTime);
+                theme.FitLabel(new Rect(x + 58f, 286f, playerW - 68f, 28f), member.DisplayName, theme.Body);
+                theme.FitLabel(new Rect(x + 58f, 318f, playerW - 68f, 20f),
                     HeroIdentity.NameFor(member.Hero).ToUpperInvariant(), theme.Small, true);
                 theme.StatusBadge(new Rect(x + 10f, 344f, playerW - 20f, 26f), member.Ready ? "READY" : "NOT READY",member.Ready?FrontEndTheme.Positive:FrontEndTheme.Warning);
 
@@ -329,3 +332,4 @@ namespace Alterverse.UI
         }
     }
 }
+

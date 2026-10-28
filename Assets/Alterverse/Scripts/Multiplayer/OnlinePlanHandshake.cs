@@ -138,7 +138,7 @@ namespace Alterverse.Multiplayer
             OnlineMatchPlan plan;
             try
             {
-                plan = OnlineMatchPlan.Build(matchId, ArenaVariantRuntime.Selected, BotDifficultySettings.OnlineDifficulty, online.Members);
+                plan = OnlineMatchPlan.Build(matchId, ArenaVariantRuntime.Selected, BotDifficultySettings.OnlineDifficulty, online.Members, online.BotNameSeed);
             }
             catch (Exception ex)
             {
@@ -206,7 +206,7 @@ namespace Alterverse.Multiplayer
                 {
                     ArenaVariant arena = (ArenaVariant)arenaRaw;
                     BotDifficulty difficulty = (BotDifficulty)difficultyRaw;
-                    plan = OnlineMatchPlan.Build(fixedMatchId.ToString(), arena, difficulty, online.Members);
+                    plan = OnlineMatchPlan.Build(fixedMatchId.ToString(), arena, difficulty, online.Members, online.BotNameSeed);
                     valid = CoopPlanHandshake.Fingerprint(plan) == hostFingerprint;
                 }
                 catch (Exception ex)
@@ -382,5 +382,6 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 
 

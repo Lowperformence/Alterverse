@@ -20,7 +20,9 @@ namespace Alterverse.Multiplayer
         {
             public string PlayerId;
             public string DisplayName;
+            public int AvatarId;
             public string TeamId;
+            public string BotNameSeed;
             public HeroId Hero;
             public BattleItemType BattleItem;
         }
@@ -34,7 +36,8 @@ namespace Alterverse.Multiplayer
             string matchId,
             ArenaVariant arena,
             BotDifficulty difficulty,
-            IReadOnlyList<OnlinePartyService.MemberView> members)
+            IReadOnlyList<OnlinePartyService.MemberView> members,
+            string botNameSeed = null)
         {
             if (members == null || members.Count < 1 || members.Count > MatchSession.MaxPlayers)
                 throw new InvalidOperationException("Online match plan requires 1-8 human players.");
@@ -112,6 +115,7 @@ namespace Alterverse.Multiplayer
             if (!session.IsFull)
                 throw new InvalidOperationException("Online roster could not fill all eight match slots.");
 
+            NameBots(session, botNameSeed ?? matchId, (botNameSeed ?? matchId) + "/opponents");
             return new OnlineMatchPlan
             {
                 MatchId = string.IsNullOrEmpty(matchId) ? Guid.NewGuid().ToString("N") : matchId,
@@ -195,6 +199,7 @@ namespace Alterverse.Multiplayer
                     {
                         PlayerId = member.PlayerId,
                         DisplayName = string.IsNullOrWhiteSpace(member.DisplayName) ? "TRAVELER" : member.DisplayName,
+                        AvatarId = member.AvatarId,
                         Team = team,
                         Hero = hero,
                         BattleItem = member.BattleItem,
@@ -215,6 +220,18 @@ namespace Alterverse.Multiplayer
             if (!session.IsFull)
                 throw new InvalidOperationException("Dedicated online roster could not fill all eight match slots.");
 
+            string[] botSeeds = { matchId + "/team-zero", matchId + "/team-one" };
+            for (int team = 0; team < teamKeys.Count; team++)
+            {
+                // A friend party supplies one shared lobby seed. Select deterministically if
+                // public players from several parties join the same Edgegap team.
+                string seed = null;
+                foreach (var member in playersByTeam[teamKeys[team]])
+                    if (!string.IsNullOrEmpty(member.BotNameSeed) &&
+                        (seed == null || string.CompareOrdinal(member.BotNameSeed, seed) < 0)) seed = member.BotNameSeed;
+                if (seed != null) botSeeds[team] = seed;
+            }
+            NameBots(session, botSeeds[0], botSeeds[1]);
             return new OnlineMatchPlan
             {
                 MatchId = string.IsNullOrWhiteSpace(matchId) ? Guid.NewGuid().ToString("N") : matchId,
@@ -260,6 +277,7 @@ namespace Alterverse.Multiplayer
                 {
                     PlayerId = source.PlayerId,
                     DisplayName = source.DisplayName,
+                    AvatarId = source.AvatarId,
                     Team = source.Team,
                     Hero = source.Hero,
                     BattleItem = source.BattleItem,
@@ -331,6 +349,7 @@ namespace Alterverse.Multiplayer
         {
             PlayerId = member.PlayerId,
             DisplayName = member.DisplayName,
+            AvatarId = member.AvatarId,
             Team = team,
             Hero = member.Hero,
             BattleItem = member.BattleItem,
@@ -344,7 +363,7 @@ namespace Alterverse.Multiplayer
         private static MatchPlayerSlot BotSlot(string id, HeroId hero, int team) => new()
         {
             PlayerId = id,
-            DisplayName = id,
+            DisplayName = null,
             Team = team,
             Hero = hero,
             BattleItem = BattleItemType.None,
@@ -406,3 +425,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
