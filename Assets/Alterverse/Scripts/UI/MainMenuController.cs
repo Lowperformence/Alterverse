@@ -216,13 +216,11 @@ namespace Alterverse.UI
                 theme ??= new FrontEndTheme();
                 if (ReviewPromptVisible) { DrawReviewPrompt(); return; }
                 if (launching) { DrawLaunch(); return; }
-                if(page != Page.Home)
-                {
-                    FrontEndTheme.Fill(new Rect(0,0,menuWidth,MenuHeight),new Color(.008f,.014f,.025f,.52f));
-                    DrawNavigation();
-                }
-                float reveal = Mathf.SmoothStep(0,1,Mathf.Clamp01((Time.unscaledTime-pageChangedAt)/.16f));
-                GUI.color = new Color(1,1,1,.65f+.35f*reveal);
+                // Keep the same backdrop brightness on Home and every menu page.
+                // A page-wide scrim and alpha reveal made navigation change the artwork
+                // and control contrast; individual panels already provide their own surface.
+                if(page != Page.Home) DrawNavigation();
+                GUI.color = Color.white;
                 if(shopPurchasePending)
                 {shopMessage=PaidShardCommerce.Instance?.Status??shopMessage;if(!PaidShardCommerce.Spending)shopPurchasePending=false;}
                 switch (page)
