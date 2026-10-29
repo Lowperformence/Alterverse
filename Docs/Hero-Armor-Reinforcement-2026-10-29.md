@@ -5,7 +5,7 @@ Void Knight und THE TRAVELER wurden am tatsächlich verwendeten Modell überarbe
 | Held | Neue Proportionen | Panzerung |
 | --- | --- | --- |
 | Void Knight | Oberschenkelschalen 235 statt 177 mm breit (+33%), 282 statt 195 mm tief (+45%) | Überlappende Quadrizepsplatten, Kühlkassetten, Rückenschalen, Energiekanäle, Brustschuppen, Gelenk- und Kniepanzer |
-| THE TRAVELER | Mittlerer Oberschenkelquerschnitt rund +35% Breite und +37% Tiefe | Breite Carbon-Schalen mit Titanrahmen, seitliche Kühlrippen, segmentierte Schultern, eingesetzte Anzeigen und mechanische Verbindungen |
+| THE TRAVELER | Oberschenkel und zugehörige Panzerplatten im Querschnitt 25% schlanker als die erste verstärkte Fassung; Beinlänge unverändert | Carbon-Schalen mit Titanrahmen, seitliche Kühlrippen, segmentierte Schultern, eingesetzte Anzeigen und mechanische Verbindungen |
 
 Bearbeitbare Blender-Dateien und echte Geometrieansichten:
 

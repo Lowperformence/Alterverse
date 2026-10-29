@@ -1,8 +1,8 @@
 {
   "result": "PASS",
-  "revision": "traveler-reinforced-armor-20261029",
+  "revision": "traveler-reinforced-armor-20261029-slimmer-thighs",
   "input_git_blob": "414be5ce0286b8616cafd4f375ab78c84260014e",
-  "output_git_blob": "d0d44814445ad7910d53978150aa04c1ce845019",
+  "output_git_blob": "391433b0a04aa65b8d7b5dc1fdf61048f8d8febb",
   "runtime_vertices": 38617,
   "runtime_triangles": 35992,
   "materials": 7,
@@ -13,15 +13,15 @@
   "thigh_measurements": {
     "ThighL": {
       "midsection_width_before_m": 0.145964,
-      "midsection_width_after_m": 0.196794415098706,
+      "midsection_width_after_m": 0.1475958162312831,
       "midsection_depth_before_m": 0.172479,
-      "midsection_depth_after_m": 0.23600245856402258
+      "midsection_depth_after_m": 0.1767075850242042
     },
     "ThighR": {
       "midsection_width_before_m": 0.145964,
-      "midsection_width_after_m": 0.196794415098706,
+      "midsection_width_after_m": 0.1475958162312831,
       "midsection_depth_before_m": 0.172479,
-      "midsection_depth_after_m": 0.23600245856402258
+      "midsection_depth_after_m": 0.1767075850242042
     }
   },
   "removed_narrow_carbon_triangles": 80,
@@ -31,5 +31,19 @@
   "old_phone_fallback_disabled": true,
   "runtime_schema_version": 1,
   "existing_FBX_and_animation_clips_unchanged": true,
+  "thigh_fit_correction": {
+    "ThighL": {
+      "cross_section_scale": 0.75,
+      "affected_runtime_vertices": 5036,
+      "affected_source_parts": 25,
+      "maximum_axial_position_error": 1.1671436386806455e-16
+    },
+    "ThighR": {
+      "cross_section_scale": 0.75,
+      "affected_runtime_vertices": 5036,
+      "affected_source_parts": 25,
+      "maximum_axial_position_error": 1.1671436386806455e-16
+    }
+  },
   "native_unity_and_android_visual_check": false
 }

@@ -13,7 +13,8 @@ from mathutils import Vector
 ROOT=Path(__file__).resolve().parents[2]
 TARGET=ROOT/'Assets/Alterverse/Resources/ChronoTraveler/Model.bytes'
 ART=ROOT/'ArtSource/Heroes/ChronoTraveler'
-REVISION='traveler-reinforced-armor-20261029'
+REVISION='traveler-reinforced-armor-20261029-slimmer-thighs'
+THIGH_CROSS_SECTION_SCALE=.75
 EXPECTED='414be5ce0286b8616cafd4f375ab78c84260014e'
 SOURCE=ART/'TravelerReinforced.blend'
 p=argparse.ArgumentParser();p.add_argument('--render-only',action='store_true')
@@ -263,6 +264,39 @@ else:
                 data['vertices'].extend(float(v) for v in rv(point));data['normals'].extend(float(v) for v in rv(normal))
                 data['boneIndices'].append(b);data['uvs'].extend(float(v) for v in mesh.uv_layers.active.data[li].uv)
             data['submeshes'][slot]['triangles'].extend((offset,offset+1,offset+2))
+    # User fit correction: reduce both thighs AND their armor cross-sections by
+    # 25%, preserving their length, fitting anchors, UVs and all other geometry.
+    fitted_vertices=np.array(data['vertices'],dtype=float).reshape(-1,3)
+    fitted_normals=np.array(data['normals'],dtype=float).reshape(-1,3)
+    fitted_indices=np.array(data['boneIndices'])
+    fit_report={}
+    for side in ['L','R']:
+        name='Thigh'+side;b=data['boneNames'].index(name);anchor=data['anchors'][b]
+        head=np.array(anchor['head']);axis=np.array(anchor['tail'])-head;axis/=np.linalg.norm(axis)
+        ids=np.where(fitted_indices==b)[0];points=fitted_vertices[ids].copy();offset=points-head
+        axial=(offset@axis)[:,None]*axis
+        fitted_vertices[ids]=head+axial+(offset-axial)*THIGH_CROSS_SECTION_SCALE
+        nn=fitted_normals[ids];an=(nn@axis)[:,None]*axis
+        nn=an+(nn-an)/THIGH_CROSS_SECTION_SCALE
+        fitted_normals[ids]=nn/np.maximum(np.linalg.norm(nn,axis=1)[:,None],1e-12)
+        # The native source uses the same fitting coordinates as the resource.
+        origin=cv(head);direction=cv(axis);direction.normalize()
+        parts=0
+        for obj in scene.objects:
+            if obj.type!='MESH' or obj.get('bone')!=name:continue
+            for vertex in obj.data.vertices:
+                delta=vertex.co-origin;along=direction*delta.dot(direction)
+                vertex.co=origin+along+(delta-along)*THIGH_CROSS_SECTION_SCALE
+            obj.data.update();parts+=1
+        fit_report[name]=dict(cross_section_scale=THIGH_CROSS_SECTION_SCALE,
+            affected_runtime_vertices=len(ids),affected_source_parts=parts,
+            maximum_axial_position_error=float(np.max(np.abs((fitted_vertices[ids]-points)@axis))))
+        # Update the existing measurement table to describe the final artifact.
+        base_ids=[int(i) for i in ids if i<base_count and int(i) in used and .20<(vertices[i,1]-.50)/.42<.80]
+        measurements[name]['midsection_width_after_m']=float(np.ptp(fitted_vertices[base_ids,0]))
+        measurements[name]['midsection_depth_after_m']=float(np.ptp(fitted_vertices[base_ids,2]))
+    data['vertices']=fitted_vertices.ravel().tolist();data['normals']=fitted_normals.ravel().tolist()
+    data['thighCrossSectionScale']=THIGH_CROSS_SECTION_SCALE
     data['reinforcedArmorRevision']=REVISION
     data['legEquipmentAuthored']=True
     total_triangles=sum(len(s['triangles'])//3 for s in data['submeshes'])
@@ -290,7 +324,7 @@ else:
         removed_narrow_carbon_triangles=removed_carbon_triangles,anchors_and_bone_names_unchanged=True,
         original_non_thigh_vertices_and_normals_unchanged=True,original_non_carbon_triangles_unchanged=True,
         old_phone_fallback_disabled=True,runtime_schema_version=data['version'],existing_FBX_and_animation_clips_unchanged=True,
-        native_unity_and_android_visual_check=False)
+        thigh_fit_correction=fit_report,native_unity_and_android_visual_check=False)
     (ART/'reinforced-armor-validation.json').write_text(json.dumps(report,indent=2)+'\n')
     print('TRAVELER_REINFORCED',json.dumps(report),flush=True)
 

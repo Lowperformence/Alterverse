@@ -6,7 +6,7 @@ The 29 October 2026 revision strengthens the actual runtime resource at `Assets/
 
 ## Design
 
-- The middle of each thigh is approximately 35% wider and 37% deeper, tapered back into the original hip and knee centers. New broad carbon cuisses have titanium frames, overlapping graphite lames, raised center keels, recessed cyan channels, shear bolts and wraparound side/rear armor.
+- The final fit reduces both thighs and their complete armor cross-sections to **75% of the previous reinforced version**. Bone lengths and hip/knee centers are retained. Carbon cuisses keep titanium frames, overlapping graphite lames, raised center keels, recessed cyan channels, shear bolts and wraparound side/rear armor.
 - Faceted shoulder crowns and lower scales cover the former simple domes. Blue status strips retain the Traveler's shoulder identity. Layered thoracic scutes, inset extractor pockets, a sternal chrono key, diagnostic vambraces, stepped greaves and rear reactor cages give the armor physical depth.
 - All 124 new parts are closed native meshes and remain separately editable in [TravelerReinforced.blend](TravelerReinforced.blend). Carbon UV density matches the existing compact runtime twill.
 - The generic `HeroLimbTechDetails` overlay is skipped when the authored Chrono appearance is present, avoiding extra service plates over the new armor. Existing boot presentation remains active.
@@ -20,7 +20,7 @@ The 29 October 2026 revision strengthens the actual runtime resource at `Assets/
 | Existing material slots | 7 |
 | Existing fitting anchors | 16, unchanged |
 | Closed added armor parts | 124 |
-| Resized original thigh vertices | 584 |
+| Thigh body and armor cross-section fit | 0.75; 25% slimmer |
 | Original non-thigh vertices/normals | Exact comparison passed |
 | Original non-carbon triangle indices | Exact comparison passed |
 
