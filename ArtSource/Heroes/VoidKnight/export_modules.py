@@ -12,6 +12,8 @@ rig=next(o for o in source_scene.objects if o.type=='ARMATURE')
 rig.data.pose_position='REST'
 
 def assembly(obj):
+    # V3 blueprints explicitly separate hip tassets from the thigh shells.
+    if obj.get('assembly'):return obj['assembly']
     bone=obj.get('bone','')
     if bone=='WeaponGripR':return 'Greatsword'
     if bone=='Head':return 'Helmet'
@@ -74,3 +76,4 @@ for item in manifest:
 (module_dir/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 bpy.ops.wm.open_mainfile(filepath=str(HERE/'VoidKnight.blend'))
 print('MODULES_EXPORTED',len(manifest),flush=True)
+

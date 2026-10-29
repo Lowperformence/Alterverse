@@ -1,0 +1,28 @@
+{
+  "result": "PASS",
+  "carry_center": [
+    0.05999999865889549,
+    -0.30000001192092896,
+    1.4500000476837158
+  ],
+  "carry_axis": [
+    0.6016870737075806,
+    0.5014058947563171,
+    0.6217433214187622
+  ],
+  "idle_run_frames_checked": 86,
+  "maximum_blade_surface_intersections": {
+    "UpperArmL": 0,
+    "UpperArmR": 0,
+    "ForearmL": 0,
+    "ForearmR": 0,
+    "Head": 0,
+    "Chest": 0
+  },
+  "protected_mesh_geometry_unchanged": true,
+  "rest_rig_unchanged": true,
+  "non_arm_pose_error": 0,
+  "strike_contact_pose_error": 4.172325134277344e-07,
+  "clips": 12,
+  "bones": 19
+}

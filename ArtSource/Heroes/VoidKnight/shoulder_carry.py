@@ -23,11 +23,12 @@ source_axis=Vector(rig['grip_axis']).normalized()
 source_across=scope['across'].copy();source_normal=scope['normal'].copy()
 source=Matrix((source_across,source_normal,source_axis)).transposed().to_4x4()
 source.translation=Vector(rig['grip_center'])
-carry_axis=Vector((.48,.80,.36)).normalized()
+carry_axis=Vector((.60,.50,.62)).normalized()
 carry_across=(Vector((1,0,0))-carry_axis*carry_axis.x).normalized()
 carry_normal=carry_axis.cross(carry_across).normalized()
 carry=Matrix((carry_across,carry_normal,carry_axis)).transposed().to_4x4()
-carry.translation=Vector((.13,-.25,1.36))
+# Keep the blade root above the shoulder cap and ahead of the upper arm.
+carry.translation=Vector((.06,-.30,1.45))
 carry_deform=carry@source.inverted()
 chest_rest=original['Idle'][1]['Chest']
 idle_weapon=original['Idle'][1]['WeaponGripR']@rig.data.bones['WeaponGripR'].matrix_local.inverted()
@@ -122,9 +123,10 @@ for action in actions:
             for curve in bag.fcurves:
                 if any('"'+name+'"' in curve.data_path for name in arm_names):
                     for point in curve.keyframe_points:point.interpolation='LINEAR'
-rig['shoulder_carry_version']=1
+rig['shoulder_carry_version']=2
 rig['shoulder_carry_center']=list(carry.translation)
 rig['shoulder_carry_axis']=list(carry_axis)
 rig.animation_data.action=bpy.data.actions['Idle'];bpy.context.scene.frame_set(1)
 print('SHOULDER_CARRY_MAX_FOREARM_SCALE',max(reach),flush=True)
 print('SHOULDER_CARRY_IDLE_SCALE',max(r for r in reach if r[1] in ['Idle','Run']),flush=True)
+

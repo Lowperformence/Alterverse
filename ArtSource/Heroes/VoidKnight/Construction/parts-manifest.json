@@ -1,5 +1,314 @@
 [
   {
+    "part": "VK7_A03_ThoracicCarrier",
+    "bone": "Chest",
+    "vertices": 80,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A02_Gorget_L",
+    "bone": "Chest",
+    "vertices": 28,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A03_Clavicle_L",
+    "bone": "Chest",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A03_Pectoral_L",
+    "bone": "Chest",
+    "vertices": 81,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A03_CostalLame_L_0",
+    "bone": "Chest",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A03_CostalLame_L_1",
+    "bone": "Chest",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A18_ChestSide_L",
+    "bone": "Chest",
+    "vertices": 52,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_A04_Scapular_L",
+    "bone": "Chest",
+    "vertices": 65,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A04_LowerBack_L",
+    "bone": "Chest",
+    "vertices": 29,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A02_Gorget_R",
+    "bone": "Chest",
+    "vertices": 28,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A03_Clavicle_R",
+    "bone": "Chest",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A03_Pectoral_R",
+    "bone": "Chest",
+    "vertices": 81,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A03_CostalLame_R_0",
+    "bone": "Chest",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A03_CostalLame_R_1",
+    "bone": "Chest",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A18_ChestSide_R",
+    "bone": "Chest",
+    "vertices": 52,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_A04_Scapular_R",
+    "bone": "Chest",
+    "vertices": 65,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A04_LowerBack_R",
+    "bone": "Chest",
+    "vertices": 29,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A17_CoreCradle",
+    "bone": "Chest",
+    "vertices": 25,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A17_CoreBezel",
+    "bone": "Chest",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A17_OpticalGasket",
+    "bone": "Chest",
+    "vertices": 24,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_A17_FacetedCore",
+    "bone": "Chest",
+    "vertices": 25,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_A17_InnerFacet",
+    "bone": "Chest",
+    "vertices": 9,
+    "materials": [
+      "Void core energy"
+    ]
+  },
+  {
+    "part": "VK7_A04_SpineVertebra_0",
+    "bone": "Chest",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A18_DorsalInsert_0",
+    "bone": "Chest",
+    "vertices": 28,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_A04_SpineVertebra_1",
+    "bone": "Chest",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A18_DorsalInsert_1",
+    "bone": "Chest",
+    "vertices": 28,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_A04_SpineVertebra_2",
+    "bone": "Chest",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A18_DorsalInsert_2",
+    "bone": "Chest",
+    "vertices": 28,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_A04_SpineVertebra_3",
+    "bone": "Chest",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A18_DorsalInsert_3",
+    "bone": "Chest",
+    "vertices": 28,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_A04_SpineVertebra_4",
+    "bone": "Chest",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A18_DorsalInsert_4",
+    "bone": "Chest",
+    "vertices": 28,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_A03_Machining_Chest_bevel_metal",
+    "bone": "Chest",
+    "vertices": 96,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A03_Machining_Chest_woven_undersuit",
+    "bone": "Chest",
+    "vertices": 176,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_A04_Machining_Chest_bevel_metal",
+    "bone": "Chest",
+    "vertices": 64,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A04_Machining_Chest_woven_undersuit",
+    "bone": "Chest",
+    "vertices": 80,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
     "part": "VK_Undersuit_Chest",
     "bone": "Chest",
     "vertices": 176,
@@ -16,283 +325,161 @@
     ]
   },
   {
-    "part": "VK2_ChestChassis",
-    "bone": "Chest",
-    "vertices": 184,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_Collar_L",
-    "bone": "Chest",
-    "vertices": 70,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK2_Collar_R",
-    "bone": "Chest",
-    "vertices": 70,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK2_CoreHousing",
-    "bone": "Chest",
-    "vertices": 56,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK2_CoreSocket",
-    "bone": "Chest",
-    "vertices": 56,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_CoreCrystal",
-    "bone": "Chest",
-    "vertices": 63,
-    "materials": [
-      "Void core energy"
-    ]
-  },
-  {
-    "part": "VK2_Abdominal_0",
+    "part": "VK7_A10_AbdominalLame_0",
     "bone": "Spine",
-    "vertices": 93,
+    "vertices": 41,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK2_AbdomenSeam_0",
+    "part": "VK7_A10_LumbarLame_0",
     "bone": "Spine",
-    "vertices": 6,
+    "vertices": 25,
     "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK2_Abdominal_1",
+    "part": "VK7_A10_AbdominalLame_1",
     "bone": "Spine",
-    "vertices": 93,
+    "vertices": 38,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK2_AbdomenSeam_1",
+    "part": "VK7_A10_LumbarLame_1",
     "bone": "Spine",
-    "vertices": 6,
+    "vertices": 25,
     "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK2_Abdominal_2",
+    "part": "VK7_A10_AbdominalLame_2",
     "bone": "Spine",
-    "vertices": 93,
+    "vertices": 38,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK2_AbdomenSeam_2",
+    "part": "VK7_A10_LumbarLame_2",
     "bone": "Spine",
-    "vertices": 6,
+    "vertices": 25,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A11_BeltCarrier",
+    "bone": "Hips",
+    "vertices": 64,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A11_Buckle",
+    "bone": "Hips",
+    "vertices": 31,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A11_BuckleInlay",
+    "bone": "Hips",
+    "vertices": 12,
     "materials": [
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK2_BackChassis",
-    "bone": "Chest",
-    "vertices": 132,
+    "part": "VK7_A11_BeltLink_L_0",
+    "bone": "Hips",
+    "vertices": 24,
     "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_BackSpine_0",
-    "bone": "Chest",
-    "vertices": 70,
-    "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK2_BackEnergy_0",
-    "bone": "Chest",
-    "vertices": 4,
+    "part": "VK7_A11_BeltLink_L_1",
+    "bone": "Hips",
+    "vertices": 24,
     "materials": [
-      "Void energy"
-    ]
-  },
-  {
-    "part": "VK2_BackSpine_1",
-    "bone": "Chest",
-    "vertices": 70,
-    "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK2_BackEnergy_1",
-    "bone": "Chest",
-    "vertices": 4,
+    "part": "VK7_A11_BeltLink_L_2",
+    "bone": "Hips",
+    "vertices": 24,
     "materials": [
-      "Void energy"
-    ]
-  },
-  {
-    "part": "VK2_BackSpine_2",
-    "bone": "Chest",
-    "vertices": 70,
-    "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK2_BackEnergy_2",
-    "bone": "Chest",
-    "vertices": 4,
+    "part": "VK7_A11_BeltLink_R_0",
+    "bone": "Hips",
+    "vertices": 24,
     "materials": [
-      "Void energy"
-    ]
-  },
-  {
-    "part": "VK2_BackSpine_3",
-    "bone": "Chest",
-    "vertices": 70,
-    "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK2_BackEnergy_3",
-    "bone": "Chest",
-    "vertices": 4,
+    "part": "VK7_A11_BeltLink_R_1",
+    "bone": "Hips",
+    "vertices": 24,
     "materials": [
-      "Void energy"
-    ]
-  },
-  {
-    "part": "VK2_BackSpine_4",
-    "bone": "Chest",
-    "vertices": 70,
-    "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK2_BackEnergy_4",
-    "bone": "Chest",
-    "vertices": 4,
+    "part": "VK7_A11_BeltLink_R_2",
+    "bone": "Hips",
+    "vertices": 24,
     "materials": [
-      "Void energy"
-    ]
-  },
-  {
-    "part": "VK3_CuirassRim_L",
-    "bone": "Chest",
-    "vertices": 85,
-    "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK3_Cuirass_L",
-    "bone": "Chest",
-    "vertices": 85,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_Clavicle_L",
-    "bone": "Chest",
-    "vertices": 6,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_CuirassRim_R",
-    "bone": "Chest",
-    "vertices": 85,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_Cuirass_R",
-    "bone": "Chest",
-    "vertices": 85,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_Clavicle_R",
-    "bone": "Chest",
-    "vertices": 6,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_LumbarLame_0",
+    "part": "VK7_A10_Machining_Spine_woven_undersuit",
     "bone": "Spine",
-    "vertices": 69,
+    "vertices": 36,
     "materials": [
-      "Void black metal"
+      "Void woven undersuit"
     ]
   },
   {
-    "part": "VK3_LumbarLip_0",
-    "bone": "Spine",
-    "vertices": 6,
+    "part": "VK7_A11_Machining_Hips_bevel_metal",
+    "bone": "Hips",
+    "vertices": 96,
     "materials": [
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK3_LumbarLame_1",
-    "bone": "Spine",
-    "vertices": 69,
+    "part": "VK7_A11_Machining_Hips_woven_undersuit",
+    "bone": "Hips",
+    "vertices": 48,
     "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_LumbarLip_1",
-    "bone": "Spine",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_LumbarLame_2",
-    "bone": "Spine",
-    "vertices": 69,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_LumbarLip_2",
-    "bone": "Spine",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
+      "Void woven undersuit"
     ]
   },
   {
@@ -304,71 +491,78 @@
     ]
   },
   {
-    "part": "VK2_WaistBelt",
-    "bone": "Hips",
-    "vertices": 112,
+    "part": "VK7_H02_InnerCranialShell",
+    "bone": "Head",
+    "vertices": 140,
     "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_BeltBuckle",
-    "bone": "Hips",
-    "vertices": 70,
-    "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK2_BuckleLight",
-    "bone": "Hips",
-    "vertices": 6,
+    "part": "VK7_H03_CrownTile_0",
+    "bone": "Head",
+    "vertices": 32,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H03_CrownTile_1",
+    "bone": "Head",
+    "vertices": 32,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H03_CrownTile_2",
+    "bone": "Head",
+    "vertices": 26,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H04_CentralBrowKeel",
+    "bone": "Head",
+    "vertices": 29,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H04_CrownSignal",
+    "bone": "Head",
+    "vertices": 52,
     "materials": [
       "Void energy"
     ]
   },
   {
-    "part": "VK3_RearFauld_L",
-    "bone": "Hips",
-    "vertices": 85,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_RearFauld_R",
-    "bone": "Hips",
-    "vertices": 85,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK4_HelmetSkull",
+    "part": "VK7_H03_CrownFlank_L",
     "bone": "Head",
-    "vertices": 176,
+    "vertices": 30,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_SagittalCrest",
+    "part": "VK7_H04_BrowWing_L",
     "bone": "Head",
-    "vertices": 71,
+    "vertices": 68,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_Forehead",
-    "bone": "Head",
-    "vertices": 103,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK4_VisorGasket_L",
+    "part": "VK7_H08_VisorGasket_L",
     "bone": "Head",
     "vertices": 12,
     "materials": [
@@ -384,7 +578,7 @@
     ]
   },
   {
-    "part": "VK4_VisorHighlight_L",
+    "part": "VK7_H09_LensLip_L",
     "bone": "Head",
     "vertices": 12,
     "materials": [
@@ -392,103 +586,122 @@
     ]
   },
   {
-    "part": "VK4_BrowRail_L",
+    "part": "VK7_H08_FaceShell_L",
     "bone": "Head",
-    "vertices": 12,
+    "vertices": 69,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_CheekShell_L",
+    "part": "VK7_H07_CheekLame_L_0",
     "bone": "Head",
-    "vertices": 83,
+    "vertices": 33,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_CheekSeam_L",
+    "part": "VK7_H07_CheekLame_L_1",
     "bone": "Head",
-    "vertices": 12,
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H07_CheekLame_L_2",
+    "bone": "Head",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H06_TempleChassis_L",
+    "bone": "Head",
+    "vertices": 48,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H06_ServiceRing_L",
+    "bone": "Head",
+    "vertices": 64,
     "materials": [
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_JawGuard_L",
+    "part": "VK7_H06_ServiceRecess_L",
     "bone": "Head",
-    "vertices": 63,
+    "vertices": 64,
     "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK4_EarRim_L",
-    "bone": "Head",
-    "vertices": 88,
-    "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_EarInset_L",
+    "part": "VK7_H06_ServiceHub_L",
     "bone": "Head",
-    "vertices": 120,
+    "vertices": 48,
     "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK4_TemplePanel_L",
-    "bone": "Head",
-    "vertices": 62,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK4_JawVent_L_0",
-    "bone": "Head",
-    "vertices": 8,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK4_JawVent_L_1",
-    "bone": "Head",
-    "vertices": 8,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK4_JawVent_L_2",
-    "bone": "Head",
-    "vertices": 8,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK4_RearHelmetPanel_L",
-    "bone": "Head",
-    "vertices": 85,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK4_RearHelmetSeam_L",
-    "bone": "Head",
-    "vertices": 12,
-    "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_VisorGasket_R",
+    "part": "VK7_H06_TempleIndicator_L",
+    "bone": "Head",
+    "vertices": 28,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_H05_RearShell_L",
+    "bone": "Head",
+    "vertices": 31,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H05_UpperTempleCover_L",
+    "bone": "Head",
+    "vertices": 37,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H03_CrownFlank_R",
+    "bone": "Head",
+    "vertices": 30,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H04_BrowWing_R",
+    "bone": "Head",
+    "vertices": 68,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H08_VisorGasket_R",
     "bone": "Head",
     "vertices": 12,
     "materials": [
@@ -504,7 +717,7 @@
     ]
   },
   {
-    "part": "VK4_VisorHighlight_R",
+    "part": "VK7_H09_LensLip_R",
     "bone": "Head",
     "vertices": 12,
     "materials": [
@@ -512,107 +725,232 @@
     ]
   },
   {
-    "part": "VK4_BrowRail_R",
+    "part": "VK7_H08_FaceShell_R",
     "bone": "Head",
-    "vertices": 12,
+    "vertices": 69,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_CheekShell_R",
+    "part": "VK7_H07_CheekLame_R_0",
     "bone": "Head",
-    "vertices": 83,
+    "vertices": 33,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_CheekSeam_R",
+    "part": "VK7_H07_CheekLame_R_1",
     "bone": "Head",
-    "vertices": 12,
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H07_CheekLame_R_2",
+    "bone": "Head",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H06_TempleChassis_R",
+    "bone": "Head",
+    "vertices": 48,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H06_ServiceRing_R",
+    "bone": "Head",
+    "vertices": 64,
     "materials": [
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_JawGuard_R",
+    "part": "VK7_H06_ServiceRecess_R",
     "bone": "Head",
-    "vertices": 63,
+    "vertices": 64,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_EarRim_R",
+    "part": "VK7_H06_ServiceHub_R",
+    "bone": "Head",
+    "vertices": 48,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H06_TempleIndicator_R",
+    "bone": "Head",
+    "vertices": 28,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_H05_RearShell_R",
+    "bone": "Head",
+    "vertices": 31,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H05_UpperTempleCover_R",
+    "bone": "Head",
+    "vertices": 37,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H11_ChinGuard",
+    "bone": "Head",
+    "vertices": 39,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H09_CentralVisorSlit",
+    "bone": "Head",
+    "vertices": 12,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_H10_RearLightCarrier",
+    "bone": "Head",
+    "vertices": 52,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_H12_NapeLame_0",
+    "bone": "Head",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H12_NapeLame_1",
+    "bone": "Head",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H12_NapeLame_2",
+    "bone": "Head",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H03_Machining_Head_bevel_metal",
+    "bone": "Head",
+    "vertices": 96,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H03_Machining_Head_woven_undersuit",
+    "bone": "Head",
+    "vertices": 48,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_H08_Machining_Head_woven_undersuit",
     "bone": "Head",
     "vertices": 88,
     "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK4_EarInset_R",
-    "bone": "Head",
-    "vertices": 120,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK4_TemplePanel_R",
-    "bone": "Head",
-    "vertices": 62,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK4_JawVent_R_0",
-    "bone": "Head",
-    "vertices": 8,
-    "materials": [
       "Void woven undersuit"
     ]
   },
   {
-    "part": "VK4_JawVent_R_1",
+    "part": "VK7_H08_Machining_Head_bevel_metal",
     "bone": "Head",
-    "vertices": 8,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK4_JawVent_R_2",
-    "bone": "Head",
-    "vertices": 8,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK4_RearHelmetPanel_R",
-    "bone": "Head",
-    "vertices": 85,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK4_RearHelmetSeam_R",
-    "bone": "Head",
-    "vertices": 12,
+    "vertices": 32,
     "materials": [
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_ChinKeel",
+    "part": "VK7_H07_Machining_Head_bevel_metal",
     "bone": "Head",
-    "vertices": 75,
+    "vertices": 96,
     "materials": [
-      "Void black metal"
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H07_Machining_Head_woven_undersuit",
+    "bone": "Head",
+    "vertices": 48,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_H06_Machining_Head_bevel_metal",
+    "bone": "Head",
+    "vertices": 96,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_H06_Machining_Head_woven_undersuit",
+    "bone": "Head",
+    "vertices": 48,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_H05_Machining_Head_woven_undersuit",
+    "bone": "Head",
+    "vertices": 72,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_H11_Machining_Head_woven_undersuit",
+    "bone": "Head",
+    "vertices": 48,
+    "materials": [
+      "Void woven undersuit"
     ]
   },
   {
@@ -624,7 +962,43 @@
     ]
   },
   {
-    "part": "VK4_ShoulderSocket_L",
+    "part": "VK7_A05_ShoulderBridge_L",
+    "bone": "UpperArmL",
+    "vertices": 60,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A05_ShoulderLame_L_0",
+    "bone": "UpperArmL",
+    "vertices": 69,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A05_ShoulderLame_L_1",
+    "bone": "UpperArmL",
+    "vertices": 69,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A05_ShoulderLame_L_2",
+    "bone": "UpperArmL",
+    "vertices": 69,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A05_EnergySeat_L",
     "bone": "UpperArmL",
     "vertices": 12,
     "materials": [
@@ -632,27 +1006,79 @@
     ]
   },
   {
-    "part": "VK4_ShoulderV_L",
+    "part": "VK7_A18_ShoulderChevron_L",
     "bone": "UpperArmL",
-    "vertices": 12,
+    "vertices": 52,
     "materials": [
       "Void energy"
     ]
   },
   {
-    "part": "VK4_ShoulderVCore_L",
+    "part": "VK7_A05_RearScale_L",
     "bone": "UpperArmL",
-    "vertices": 12,
+    "vertices": 31,
     "materials": [
-      "Void core energy"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_ShoulderRearV_L",
+    "part": "VK7_A18_RearShoulder_L",
     "bone": "UpperArmL",
-    "vertices": 12,
+    "vertices": 52,
     "materials": [
       "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_A06_BicepCarrier_L",
+    "bone": "UpperArmL",
+    "vertices": 60,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A06_BicepShell_L",
+    "bone": "UpperArmL",
+    "vertices": 39,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A07_ElbowShield_L",
+    "bone": "UpperArmL",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A05_Machining_UpperArmL_woven_undersuit",
+    "bone": "UpperArmL",
+    "vertices": 88,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_A05_Machining_UpperArmL_bevel_metal",
+    "bone": "UpperArmL",
+    "vertices": 32,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A06_Machining_UpperArmL_woven_undersuit",
+    "bone": "UpperArmL",
+    "vertices": 24,
+    "materials": [
+      "Void woven undersuit"
     ]
   },
   {
@@ -664,137 +1090,60 @@
     ]
   },
   {
-    "part": "VK2_Bicep_L",
-    "bone": "UpperArmL",
-    "vertices": 170,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_PauldronShell_L",
-    "bone": "UpperArmL",
-    "vertices": 188,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_PauldronRim_L",
-    "bone": "UpperArmL",
-    "vertices": 84,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_PauldronCrown_L",
-    "bone": "UpperArmL",
-    "vertices": 83,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_ShoulderLame_L_0",
-    "bone": "UpperArmL",
-    "vertices": 89,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_ShoulderLip_L_0",
-    "bone": "UpperArmL",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_ShoulderLame_L_1",
-    "bone": "UpperArmL",
-    "vertices": 89,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_ShoulderLip_L_1",
-    "bone": "UpperArmL",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_ScapularGuard_L",
-    "bone": "UpperArmL",
-    "vertices": 71,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_ElbowWing_L",
-    "bone": "UpperArmL",
-    "vertices": 69,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK4_VambraceFrame_L",
+    "part": "VK7_A08_InnerForearm_L",
     "bone": "ForearmL",
-    "vertices": 39,
+    "vertices": 60,
     "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_VambracePlate_L",
+    "part": "VK7_A08_ForearmShell_L",
     "bone": "ForearmL",
-    "vertices": 39,
+    "vertices": 81,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_BracerSocket_L",
+    "part": "VK7_A08_RearClosure_L",
     "bone": "ForearmL",
-    "vertices": 32,
+    "vertices": 31,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A08_InsertGasket_L",
+    "bone": "ForearmL",
+    "vertices": 30,
     "materials": [
       "Void woven undersuit"
     ]
   },
   {
-    "part": "VK4_BracerLight_L",
+    "part": "VK7_A18_ForearmLens_L",
     "bone": "ForearmL",
-    "vertices": 33,
+    "vertices": 31,
     "materials": [
       "Void energy"
     ]
   },
   {
-    "part": "VK4_BracerCore_L",
+    "part": "VK7_A08_Machining_ForearmL_woven_undersuit",
     "bone": "ForearmL",
-    "vertices": 8,
+    "vertices": 56,
     "materials": [
-      "Void core energy"
+      "Void woven undersuit"
     ]
   },
   {
-    "part": "VK4_BracerEdge_L-1",
+    "part": "VK7_A08_Machining_ForearmL_bevel_metal",
     "bone": "ForearmL",
-    "vertices": 8,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK4_BracerEdge_L1",
-    "bone": "ForearmL",
-    "vertices": 8,
+    "vertices": 32,
     "materials": [
       "Void bevel metal"
     ]
@@ -816,11 +1165,55 @@
     ]
   },
   {
-    "part": "VK2_Bracer_L",
-    "bone": "ForearmL",
-    "vertices": 200,
+    "part": "VK7_A13_ThighCarrier_L",
+    "bone": "ThighL",
+    "vertices": 60,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A13_ThighPlate_L",
+    "bone": "ThighL",
+    "vertices": 69,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A13_ThighOverlay_L",
+    "bone": "ThighL",
+    "vertices": 31,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A13_OuterThighScale_L",
+    "bone": "ThighL",
+    "vertices": 27,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A13_Machining_ThighL_woven_undersuit",
+    "bone": "ThighL",
+    "vertices": 52,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_A13_Machining_ThighL_bevel_metal",
+    "bone": "ThighL",
+    "vertices": 32,
+    "materials": [
+      "Void bevel metal"
     ]
   },
   {
@@ -832,67 +1225,105 @@
     ]
   },
   {
-    "part": "VK2_Cuisse_L",
-    "bone": "ThighL",
-    "vertices": 144,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_ThighPlate_L-1",
-    "bone": "ThighL",
-    "vertices": 63,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_ThighPlate_L1",
-    "bone": "ThighL",
-    "vertices": 63,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK4_GreaveFrame_L",
+    "part": "VK7_A15_ShinCarrier_L",
     "bone": "ShinL",
-    "vertices": 45,
+    "vertices": 60,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A14_KneeShell_L",
+    "bone": "ShinL",
+    "vertices": 73,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A14_Pivot_L_-1",
+    "bone": "ShinL",
+    "vertices": 48,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A14_PivotInset_L_-1",
+    "bone": "ShinL",
+    "vertices": 48,
     "materials": [
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_GreavePlate_L",
+    "part": "VK7_A14_Pivot_L_1",
     "bone": "ShinL",
-    "vertices": 41,
+    "vertices": 48,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_ShinSocket_L",
+    "part": "VK7_A14_PivotInset_L_1",
     "bone": "ShinL",
-    "vertices": 30,
+    "vertices": 48,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A15_ShinShell_L",
+    "bone": "ShinL",
+    "vertices": 77,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A15_CalfCover_L",
+    "bone": "ShinL",
+    "vertices": 27,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A15_LensSeat_L",
+    "bone": "ShinL",
+    "vertices": 28,
     "materials": [
       "Void woven undersuit"
     ]
   },
   {
-    "part": "VK4_ShinLight_L",
+    "part": "VK7_A18_ShinLens_L",
     "bone": "ShinL",
-    "vertices": 31,
+    "vertices": 29,
     "materials": [
       "Void energy"
     ]
   },
   {
-    "part": "VK4_ShinCore_L",
+    "part": "VK7_A15_Machining_ShinL_woven_undersuit",
     "bone": "ShinL",
-    "vertices": 8,
+    "vertices": 56,
     "materials": [
-      "Void core energy"
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_A15_Machining_ShinL_bevel_metal",
+    "bone": "ShinL",
+    "vertices": 32,
+    "materials": [
+      "Void bevel metal"
     ]
   },
   {
@@ -907,62 +1338,6 @@
     "part": "VK_Joint_ShinL",
     "bone": "ShinL",
     "vertices": 176,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK2_Greave_L",
-    "bone": "ShinL",
-    "vertices": 168,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_KneeRim_L",
-    "bone": "ShinL",
-    "vertices": 97,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_KneeShield_L",
-    "bone": "ShinL",
-    "vertices": 97,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_CalfPanel_L",
-    "bone": "ShinL",
-    "vertices": 83,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_CalfVent_L_0",
-    "bone": "ShinL",
-    "vertices": 6,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK3_CalfVent_L_1",
-    "bone": "ShinL",
-    "vertices": 6,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK3_CalfVent_L_2",
-    "bone": "ShinL",
-    "vertices": 6,
     "materials": [
       "Void woven undersuit"
     ]
@@ -1216,6 +1591,67 @@
     ]
   },
   {
+    "part": "VK7_A16_Outsole_L",
+    "bone": "FootL",
+    "vertices": 48,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_A16_BootShell_L",
+    "bone": "FootL",
+    "vertices": 71,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A16_InstepLame_L_0",
+    "bone": "FootL",
+    "vertices": 32,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A16_InstepLame_L_1",
+    "bone": "FootL",
+    "vertices": 32,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A16_InstepLame_L_2",
+    "bone": "FootL",
+    "vertices": 32,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A16_AnkleGuard_L",
+    "bone": "FootL",
+    "vertices": 37,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A16_Machining_FootL_bevel_metal",
+    "bone": "FootL",
+    "vertices": 12,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
     "part": "VK_Joint_FootL",
     "bone": "FootL",
     "vertices": 176,
@@ -1224,91 +1660,123 @@
     ]
   },
   {
-    "part": "VK2_Sole_L",
-    "bone": "FootL",
-    "vertices": 112,
+    "part": "VK7_A05_ShoulderBridge_R",
+    "bone": "UpperArmR",
+    "vertices": 60,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A05_ShoulderLame_R_0",
+    "bone": "UpperArmR",
+    "vertices": 69,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A05_ShoulderLame_R_1",
+    "bone": "UpperArmR",
+    "vertices": 69,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A05_ShoulderLame_R_2",
+    "bone": "UpperArmR",
+    "vertices": 69,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A05_EnergySeat_R",
+    "bone": "UpperArmR",
+    "vertices": 12,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_A18_ShoulderChevron_R",
+    "bone": "UpperArmR",
+    "vertices": 52,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_A05_RearScale_R",
+    "bone": "UpperArmR",
+    "vertices": 31,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A18_RearShoulder_R",
+    "bone": "UpperArmR",
+    "vertices": 52,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VK7_A06_BicepCarrier_R",
+    "bone": "UpperArmR",
+    "vertices": 60,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A06_BicepShell_R",
+    "bone": "UpperArmR",
+    "vertices": 39,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A07_ElbowShield_R",
+    "bone": "UpperArmR",
+    "vertices": 33,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A05_Machining_UpperArmR_woven_undersuit",
+    "bone": "UpperArmR",
+    "vertices": 88,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_A05_Machining_UpperArmR_bevel_metal",
+    "bone": "UpperArmR",
+    "vertices": 32,
     "materials": [
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK2_Outsole_L",
-    "bone": "FootL",
+    "part": "VK7_A06_Machining_UpperArmR_woven_undersuit",
+    "bone": "UpperArmR",
     "vertices": 24,
     "materials": [
       "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK2_Boot_L",
-    "bone": "FootL",
-    "vertices": 150,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_Sabaton_L_0",
-    "bone": "FootL",
-    "vertices": 63,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_Sabaton_L_1",
-    "bone": "FootL",
-    "vertices": 63,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_Sabaton_L_2",
-    "bone": "FootL",
-    "vertices": 63,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_BootMark_L",
-    "bone": "FootL",
-    "vertices": 6,
-    "materials": [
-      "Void energy"
-    ]
-  },
-  {
-    "part": "VK4_ShoulderSocket_R",
-    "bone": "UpperArmR",
-    "vertices": 12,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK4_ShoulderV_R",
-    "bone": "UpperArmR",
-    "vertices": 12,
-    "materials": [
-      "Void energy"
-    ]
-  },
-  {
-    "part": "VK4_ShoulderVCore_R",
-    "bone": "UpperArmR",
-    "vertices": 12,
-    "materials": [
-      "Void core energy"
-    ]
-  },
-  {
-    "part": "VK4_ShoulderRearV_R",
-    "bone": "UpperArmR",
-    "vertices": 12,
-    "materials": [
-      "Void energy"
     ]
   },
   {
@@ -1320,137 +1788,60 @@
     ]
   },
   {
-    "part": "VK2_Bicep_R",
-    "bone": "UpperArmR",
-    "vertices": 170,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_PauldronShell_R",
-    "bone": "UpperArmR",
-    "vertices": 188,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_PauldronRim_R",
-    "bone": "UpperArmR",
-    "vertices": 84,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_PauldronCrown_R",
-    "bone": "UpperArmR",
-    "vertices": 83,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_ShoulderLame_R_0",
-    "bone": "UpperArmR",
-    "vertices": 89,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_ShoulderLip_R_0",
-    "bone": "UpperArmR",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_ShoulderLame_R_1",
-    "bone": "UpperArmR",
-    "vertices": 89,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_ShoulderLip_R_1",
-    "bone": "UpperArmR",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_ScapularGuard_R",
-    "bone": "UpperArmR",
-    "vertices": 71,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_ElbowWing_R",
-    "bone": "UpperArmR",
-    "vertices": 69,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK4_VambraceFrame_R",
+    "part": "VK7_A08_InnerForearm_R",
     "bone": "ForearmR",
-    "vertices": 39,
+    "vertices": 60,
     "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_VambracePlate_R",
+    "part": "VK7_A08_ForearmShell_R",
     "bone": "ForearmR",
-    "vertices": 39,
+    "vertices": 81,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_BracerSocket_R",
+    "part": "VK7_A08_RearClosure_R",
     "bone": "ForearmR",
-    "vertices": 32,
+    "vertices": 31,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A08_InsertGasket_R",
+    "bone": "ForearmR",
+    "vertices": 30,
     "materials": [
       "Void woven undersuit"
     ]
   },
   {
-    "part": "VK4_BracerLight_R",
+    "part": "VK7_A18_ForearmLens_R",
     "bone": "ForearmR",
-    "vertices": 33,
+    "vertices": 31,
     "materials": [
       "Void energy"
     ]
   },
   {
-    "part": "VK4_BracerCore_R",
+    "part": "VK7_A08_Machining_ForearmR_woven_undersuit",
     "bone": "ForearmR",
-    "vertices": 8,
+    "vertices": 56,
     "materials": [
-      "Void core energy"
+      "Void woven undersuit"
     ]
   },
   {
-    "part": "VK4_BracerEdge_R-1",
+    "part": "VK7_A08_Machining_ForearmR_bevel_metal",
     "bone": "ForearmR",
-    "vertices": 8,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK4_BracerEdge_R1",
-    "bone": "ForearmR",
-    "vertices": 8,
+    "vertices": 32,
     "materials": [
       "Void bevel metal"
     ]
@@ -1472,11 +1863,55 @@
     ]
   },
   {
-    "part": "VK2_Bracer_R",
-    "bone": "ForearmR",
-    "vertices": 200,
+    "part": "VK7_A13_ThighCarrier_R",
+    "bone": "ThighR",
+    "vertices": 60,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A13_ThighPlate_R",
+    "bone": "ThighR",
+    "vertices": 69,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A13_ThighOverlay_R",
+    "bone": "ThighR",
+    "vertices": 31,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A13_OuterThighScale_R",
+    "bone": "ThighR",
+    "vertices": 27,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A13_Machining_ThighR_woven_undersuit",
+    "bone": "ThighR",
+    "vertices": 52,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_A13_Machining_ThighR_bevel_metal",
+    "bone": "ThighR",
+    "vertices": 32,
+    "materials": [
+      "Void bevel metal"
     ]
   },
   {
@@ -1488,67 +1923,105 @@
     ]
   },
   {
-    "part": "VK2_Cuisse_R",
-    "bone": "ThighR",
-    "vertices": 144,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_ThighPlate_R-1",
-    "bone": "ThighR",
-    "vertices": 63,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_ThighPlate_R1",
-    "bone": "ThighR",
-    "vertices": 63,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK4_GreaveFrame_R",
+    "part": "VK7_A15_ShinCarrier_R",
     "bone": "ShinR",
-    "vertices": 45,
+    "vertices": 60,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A14_KneeShell_R",
+    "bone": "ShinR",
+    "vertices": 73,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A14_Pivot_R_-1",
+    "bone": "ShinR",
+    "vertices": 48,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A14_PivotInset_R_-1",
+    "bone": "ShinR",
+    "vertices": 48,
     "materials": [
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_GreavePlate_R",
+    "part": "VK7_A14_Pivot_R_1",
     "bone": "ShinR",
-    "vertices": 41,
+    "vertices": 48,
     "materials": [
-      "Void black metal"
+      "Void black metal",
+      "Void bevel metal"
     ]
   },
   {
-    "part": "VK4_ShinSocket_R",
+    "part": "VK7_A14_PivotInset_R_1",
     "bone": "ShinR",
-    "vertices": 30,
+    "vertices": 48,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A15_ShinShell_R",
+    "bone": "ShinR",
+    "vertices": 77,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A15_CalfCover_R",
+    "bone": "ShinR",
+    "vertices": 27,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A15_LensSeat_R",
+    "bone": "ShinR",
+    "vertices": 28,
     "materials": [
       "Void woven undersuit"
     ]
   },
   {
-    "part": "VK4_ShinLight_R",
+    "part": "VK7_A18_ShinLens_R",
     "bone": "ShinR",
-    "vertices": 31,
+    "vertices": 29,
     "materials": [
       "Void energy"
     ]
   },
   {
-    "part": "VK4_ShinCore_R",
+    "part": "VK7_A15_Machining_ShinR_woven_undersuit",
     "bone": "ShinR",
-    "vertices": 8,
+    "vertices": 56,
     "materials": [
-      "Void core energy"
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_A15_Machining_ShinR_bevel_metal",
+    "bone": "ShinR",
+    "vertices": 32,
+    "materials": [
+      "Void bevel metal"
     ]
   },
   {
@@ -1563,62 +2036,6 @@
     "part": "VK_Joint_ShinR",
     "bone": "ShinR",
     "vertices": 176,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK2_Greave_R",
-    "bone": "ShinR",
-    "vertices": 168,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_KneeRim_R",
-    "bone": "ShinR",
-    "vertices": 97,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_KneeShield_R",
-    "bone": "ShinR",
-    "vertices": 97,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_CalfPanel_R",
-    "bone": "ShinR",
-    "vertices": 83,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_CalfVent_R_0",
-    "bone": "ShinR",
-    "vertices": 6,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK3_CalfVent_R_1",
-    "bone": "ShinR",
-    "vertices": 6,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK3_CalfVent_R_2",
-    "bone": "ShinR",
-    "vertices": 6,
     "materials": [
       "Void woven undersuit"
     ]
@@ -1872,6 +2289,67 @@
     ]
   },
   {
+    "part": "VK7_A16_Outsole_R",
+    "bone": "FootR",
+    "vertices": 48,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_A16_BootShell_R",
+    "bone": "FootR",
+    "vertices": 71,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A16_InstepLame_R_0",
+    "bone": "FootR",
+    "vertices": 32,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A16_InstepLame_R_1",
+    "bone": "FootR",
+    "vertices": 32,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A16_InstepLame_R_2",
+    "bone": "FootR",
+    "vertices": 32,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A16_AnkleGuard_R",
+    "bone": "FootR",
+    "vertices": 37,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A16_Machining_FootR_bevel_metal",
+    "bone": "FootR",
+    "vertices": 12,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
     "part": "VK_Joint_FootR",
     "bone": "FootR",
     "vertices": 176,
@@ -1880,384 +2358,287 @@
     ]
   },
   {
-    "part": "VK2_Sole_R",
-    "bone": "FootR",
-    "vertices": 112,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK2_Outsole_R",
-    "bone": "FootR",
-    "vertices": 24,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK2_Boot_R",
-    "bone": "FootR",
-    "vertices": 150,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_Sabaton_R_0",
-    "bone": "FootR",
-    "vertices": 63,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_Sabaton_R_1",
-    "bone": "FootR",
-    "vertices": 63,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_Sabaton_R_2",
-    "bone": "FootR",
-    "vertices": 63,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_BootMark_R",
-    "bone": "FootR",
-    "vertices": 6,
-    "materials": [
-      "Void energy"
-    ]
-  },
-  {
-    "part": "VK2_Hip_L",
-    "bone": "ThighL",
-    "vertices": 77,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_HipSeam_L",
-    "bone": "ThighL",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK2_Hip_R",
-    "bone": "ThighR",
-    "vertices": 77,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_HipSeam_R",
-    "bone": "ThighR",
-    "vertices": 6,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_Tasset_L_0",
-    "bone": "ThighL",
-    "vertices": 85,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_Tasset_L_1",
-    "bone": "ThighL",
-    "vertices": 85,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_Tasset_R_0",
-    "bone": "ThighR",
-    "vertices": 85,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_Tasset_R_1",
-    "bone": "ThighR",
-    "vertices": 85,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_SwordGrip",
-    "bone": "WeaponGripR",
-    "vertices": 112,
-    "materials": [
-      "Void woven undersuit"
-    ]
-  },
-  {
-    "part": "VK2_GripWrap_0",
-    "bone": "WeaponGripR",
-    "vertices": 140,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_GripWrap_1",
-    "bone": "WeaponGripR",
-    "vertices": 140,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_GripWrap_2",
-    "bone": "WeaponGripR",
-    "vertices": 140,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_GripWrap_3",
-    "bone": "WeaponGripR",
-    "vertices": 140,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_GripWrap_4",
-    "bone": "WeaponGripR",
-    "vertices": 140,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_GripWrap_5",
-    "bone": "WeaponGripR",
-    "vertices": 140,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_GripWrap_6",
-    "bone": "WeaponGripR",
-    "vertices": 140,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_GripWrap_7",
-    "bone": "WeaponGripR",
-    "vertices": 140,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_GripWrap_8",
-    "bone": "WeaponGripR",
-    "vertices": 140,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_GripWrap_9",
-    "bone": "WeaponGripR",
-    "vertices": 140,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_GripWrap_10",
-    "bone": "WeaponGripR",
-    "vertices": 140,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_GripWrap_11",
-    "bone": "WeaponGripR",
-    "vertices": 140,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_GripWrap_12",
-    "bone": "WeaponGripR",
-    "vertices": 140,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK2_Pommel",
-    "bone": "WeaponGripR",
-    "vertices": 138,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK2_PommelGem",
-    "bone": "WeaponGripR",
-    "vertices": 56,
-    "materials": [
-      "Void energy"
-    ]
-  },
-  {
-    "part": "VK3_GreatswordBlade",
-    "bone": "WeaponGripR",
-    "vertices": 368,
+    "part": "VK7_A12_CentralPelvicGuard",
+    "bone": "Hips",
+    "vertices": 35,
     "materials": [
       "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK3_RecessedFuller_-1",
-    "bone": "WeaponGripR",
+    "part": "VK7_A12_HipMain_L",
+    "bone": "ThighL",
+    "vertices": 69,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A12_HipSide_L",
+    "bone": "ThighL",
+    "vertices": 25,
+    "materials": [
+      "Void black metal",
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VK7_A18_HipInsert_L",
+    "bone": "ThighL",
     "vertices": 52,
     "materials": [
       "Void energy"
     ]
   },
   {
-    "part": "VK3_ForgedSigil_-1_0",
-    "bone": "WeaponGripR",
-    "vertices": 6,
+    "part": "VK7_A12_RearFauld_L",
+    "bone": "Hips",
+    "vertices": 35,
     "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK3_ForgedSigil_-1_1",
-    "bone": "WeaponGripR",
-    "vertices": 6,
+    "part": "VK7_A12_HipMain_R",
+    "bone": "ThighR",
+    "vertices": 69,
     "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK3_ForgedSigil_-1_2",
-    "bone": "WeaponGripR",
-    "vertices": 6,
+    "part": "VK7_A12_HipSide_R",
+    "bone": "ThighR",
+    "vertices": 25,
     "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK3_QuillonRim_-1",
-    "bone": "WeaponGripR",
-    "vertices": 104,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_Quillon_-1",
-    "bone": "WeaponGripR",
-    "vertices": 103,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_GuardSocket_-1",
-    "bone": "WeaponGripR",
-    "vertices": 56,
-    "materials": [
-      "Void black metal"
-    ]
-  },
-  {
-    "part": "VK3_GuardBezel_-1",
-    "bone": "WeaponGripR",
-    "vertices": 56,
-    "materials": [
-      "Void bevel metal"
-    ]
-  },
-  {
-    "part": "VK3_GuardCrystal_-1",
-    "bone": "WeaponGripR",
-    "vertices": 57,
-    "materials": [
-      "Void core energy"
-    ]
-  },
-  {
-    "part": "VK3_RecessedFuller_1",
-    "bone": "WeaponGripR",
+    "part": "VK7_A18_HipInsert_R",
+    "bone": "ThighR",
     "vertices": 52,
     "materials": [
       "Void energy"
     ]
   },
   {
-    "part": "VK3_ForgedSigil_1_0",
-    "bone": "WeaponGripR",
-    "vertices": 6,
+    "part": "VK7_A12_RearFauld_R",
+    "bone": "Hips",
+    "vertices": 35,
     "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK3_ForgedSigil_1_1",
-    "bone": "WeaponGripR",
-    "vertices": 6,
+    "part": "VK7_A12_Machining_ThighL_woven_undersuit",
+    "bone": "ThighL",
+    "vertices": 40,
     "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VK7_A12_Machining_ThighR_woven_undersuit",
+    "bone": "ThighR",
+    "vertices": 40,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VKC_Blade_Hull",
+    "bone": "WeaponGripR",
+    "vertices": 196,
+    "materials": [
+      "Void black metal",
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK3_ForgedSigil_1_2",
+    "part": "VKC_Violet_CuttingEdge_-1_-1",
     "bone": "WeaponGripR",
-    "vertices": 6,
+    "vertices": 14,
     "materials": [
-      "Void bevel metal"
+      "Void energy"
     ]
   },
   {
-    "part": "VK3_QuillonRim_1",
+    "part": "VKC_Violet_CuttingEdge_-1_1",
     "bone": "WeaponGripR",
-    "vertices": 104,
+    "vertices": 14,
     "materials": [
-      "Void bevel metal"
+      "Void energy"
     ]
   },
   {
-    "part": "VK3_Quillon_1",
+    "part": "VKC_Spine_Panel_-1_0",
     "bone": "WeaponGripR",
-    "vertices": 103,
+    "vertices": 42,
     "materials": [
       "Void black metal"
     ]
   },
   {
-    "part": "VK3_GuardSocket_1",
+    "part": "VKC_Spine_Panel_-1_1",
+    "bone": "WeaponGripR",
+    "vertices": 42,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_Panel_-1_2",
+    "bone": "WeaponGripR",
+    "vertices": 42,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_SilverKey_-1_0_-1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_SilverKey_-1_0_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_SilverKey_-1_1_-1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_SilverKey_-1_1_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_SilverKey_-1_2_-1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_SilverKey_-1_2_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Violet_CuttingEdge_1_-1",
+    "bone": "WeaponGripR",
+    "vertices": 14,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VKC_Violet_CuttingEdge_1_1",
+    "bone": "WeaponGripR",
+    "vertices": 14,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VKC_Spine_Panel_1_0",
+    "bone": "WeaponGripR",
+    "vertices": 42,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_Panel_1_1",
+    "bone": "WeaponGripR",
+    "vertices": 42,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_Panel_1_2",
+    "bone": "WeaponGripR",
+    "vertices": 42,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_SilverKey_1_0_-1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_SilverKey_1_0_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_SilverKey_1_1_-1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_SilverKey_1_1_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_SilverKey_1_2_-1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Spine_SilverKey_1_2_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_MainChassis",
     "bone": "WeaponGripR",
     "vertices": 56,
     "materials": [
@@ -2265,19 +2646,363 @@
     ]
   },
   {
-    "part": "VK3_GuardBezel_1",
+    "part": "VKC_Guard_SocketArmor_-1_-1",
     "bone": "WeaponGripR",
-    "vertices": 56,
+    "vertices": 36,
     "materials": [
       "Void bevel metal"
     ]
   },
   {
-    "part": "VK3_GuardCrystal_1",
+    "part": "VKC_Guard_RingRim_-1_-1",
     "bone": "WeaponGripR",
-    "vertices": 57,
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_SocketBevel_-1_-1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_Recess_-1_-1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_VioletCore_-1_-1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
     "materials": [
       "Void core energy"
+    ]
+  },
+  {
+    "part": "VKC_Guard_EnergyReturn_-1_-1",
+    "bone": "WeaponGripR",
+    "vertices": 8,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VKC_Guard_SocketArmor_-1_1",
+    "bone": "WeaponGripR",
+    "vertices": 36,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_RingRim_-1_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_SocketBevel_-1_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_Recess_-1_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_VioletCore_-1_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void core energy"
+    ]
+  },
+  {
+    "part": "VKC_Guard_EnergyReturn_-1_1",
+    "bone": "WeaponGripR",
+    "vertices": 8,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VKC_Guard_CentralBridge_-1",
+    "bone": "WeaponGripR",
+    "vertices": 36,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_CentralBadge_-1",
+    "bone": "WeaponGripR",
+    "vertices": 30,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_SocketArmor_1_-1",
+    "bone": "WeaponGripR",
+    "vertices": 36,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_RingRim_1_-1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_SocketBevel_1_-1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_Recess_1_-1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_VioletCore_1_-1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void core energy"
+    ]
+  },
+  {
+    "part": "VKC_Guard_EnergyReturn_1_-1",
+    "bone": "WeaponGripR",
+    "vertices": 8,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VKC_Guard_SocketArmor_1_1",
+    "bone": "WeaponGripR",
+    "vertices": 36,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_RingRim_1_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_SocketBevel_1_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_Recess_1_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_VioletCore_1_1",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void core energy"
+    ]
+  },
+  {
+    "part": "VKC_Guard_EnergyReturn_1_1",
+    "bone": "WeaponGripR",
+    "vertices": 8,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VKC_Guard_CentralBridge_1",
+    "bone": "WeaponGripR",
+    "vertices": 36,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Guard_CentralBadge_1",
+    "bone": "WeaponGripR",
+    "vertices": 30,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Grip_TacticalCore",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void woven undersuit"
+    ]
+  },
+  {
+    "part": "VKC_Grip_DarkWrap_00",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Grip_DarkWrap_01",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Grip_DarkWrap_02",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Grip_DarkWrap_03",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Grip_DarkWrap_04",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Grip_DarkWrap_05",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Grip_DarkWrap_06",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Grip_DarkWrap_07",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Grip_DarkWrap_08",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Grip_DarkWrap_09",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Grip_DarkWrap_10",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Grip_LockingCollar_-0.187",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Grip_LockingCollar_0.186",
+    "bone": "WeaponGripR",
+    "vertices": 24,
+    "materials": [
+      "Void bevel metal"
+    ]
+  },
+  {
+    "part": "VKC_Pommel_ArmoredCap",
+    "bone": "WeaponGripR",
+    "vertices": 96,
+    "materials": [
+      "Void black metal"
+    ]
+  },
+  {
+    "part": "VKC_Pommel_VioletIndicator_-1",
+    "bone": "WeaponGripR",
+    "vertices": 8,
+    "materials": [
+      "Void energy"
+    ]
+  },
+  {
+    "part": "VKC_Pommel_VioletIndicator_1",
+    "bone": "WeaponGripR",
+    "vertices": 8,
+    "materials": [
+      "Void energy"
     ]
   }
 ]

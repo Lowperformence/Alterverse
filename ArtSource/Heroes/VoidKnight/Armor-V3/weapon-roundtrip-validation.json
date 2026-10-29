@@ -1,0 +1,8 @@
+{
+  "result": "PASS",
+  "compared_fbx_weapon_vertices": 1988,
+  "weapon_triangles": 3652,
+  "same_vertex_coordinate_and_weight_multiset": true,
+  "same_material_names": true,
+  "coordinate_comparison_decimal_places": 5
+}

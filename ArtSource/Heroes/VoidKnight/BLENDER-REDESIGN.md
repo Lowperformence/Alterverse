@@ -1,5 +1,8 @@
 # Void Knight — armor and greatsword redesign
 
+Current armor implementation: [Armor V3 (29 October 2026)](Armor-V3/README.md).
+Use its builder for the current armor. The earlier scripts below document prior revisions.
+
 ## Visual target
 
 Modern sci-fi knight with a deliberate black silhouette and controlled violet emission. The tank/assassin midpoint reads through a strong chest and shoulders above a narrow waist, articulated limbs and a long two-handed sword. Helmet crown, closed black face and purple eye identity stay recognizable from the existing shop avatar. All combat numbers and timings remain unchanged.
@@ -72,3 +75,4 @@ view and strike/recovery/guard/thrust/cleave poses.
 Still verify Unity's URP materials and normal-map imports, both shop weapon colorways,
 grounded locomotion plus the shoulder pose, attacks, guards, camera views and Android GPU
 cost. The hero stays locked for release until explicitly enabled later.
+
