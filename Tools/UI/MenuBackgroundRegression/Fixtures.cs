@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 
 // Lifecycle and draw-command fixtures, not a Unity decoder or GPU renderer.
 namespace UnityEngine
@@ -12,19 +13,24 @@ namespace UnityEngine
         public bool destroyed;
         public static void Destroy(Object value) { if (value != null) value.destroyed = true; }
     }
-    public class Component : Object { public GameObject gameObject; }
+    public class Component : Object
+    {
+        public GameObject gameObject; public bool enabled=true;
+        public T GetComponent<T>() where T:Component => gameObject.GetComponent<T>();
+    }
     public class MonoBehaviour : Component { public bool isActiveAndEnabled = true; }
     public class GameObject : Object
     {
         public readonly List<Component> Components = new();
+        public T GetComponent<T>() where T:Component => Components.OfType<T>().FirstOrDefault(x=>!x.destroyed);
         public T AddComponent<T>() where T : Component, new()
         { var value = new T { gameObject = this }; Components.Add(value); return value; }
     }
     public class Texture : Object { public int width, height; }
     public enum TextureFormat { RGBA32 }
     public enum RenderTextureFormat { ARGB32 }
-    public enum FilterMode { Bilinear }
-    public enum TextureWrapMode { Clamp }
+    public enum FilterMode { Bilinear, Trilinear }
+    public enum TextureWrapMode { Clamp, Repeat }
     public enum ColorSpace { Gamma, Linear }
     public enum ScaleMode { ScaleAndCrop }
     public static class QualitySettings { public static ColorSpace activeColorSpace = ColorSpace.Linear; }
@@ -33,6 +39,38 @@ namespace UnityEngine
         public float r, g, b, a;
         public Color(float r, float g, float b, float a = 1) { this.r=r; this.g=g; this.b=b; this.a=a; }
     }
+    public struct Vector4
+    {
+        public float x,y,z,w;
+        public Vector4(float x,float y,float z,float w){this.x=x;this.y=y;this.z=z;this.w=w;}
+        public static Vector4 zero=>new(0,0,0,0);
+    }
+    public class Shader:Object
+    {
+        public bool isSupported=true;
+        static readonly Dictionary<string,int> ids=new();
+        public static int PropertyToID(string name)
+        {if(!ids.TryGetValue(name,out int id)){id=ids.Count+1;ids[name]=id;}return id;}
+    }
+    public class Material:Object
+    {
+        public static readonly List<Material> Allocated=new();
+        public readonly Dictionary<int,object> Properties=new();
+        public Material(Shader shader){Allocated.Add(this);}
+        public void SetTexture(int id,Texture value)=>Properties[id]=value;
+        public void SetFloat(int id,float value)=>Properties[id]=value;
+        public void SetColor(int id,Color value)=>Properties[id]=value;
+        public void SetVector(int id,Vector4 value)=>Properties[id]=value;
+    }
+    public enum CameraClearFlags { Skybox,SolidColor,Depth,Nothing }
+    public class Camera:Component
+    {
+        public static Camera main;
+        public CameraClearFlags clearFlags=CameraClearFlags.SolidColor;
+        public RenderTexture targetTexture;
+        public float aspect=2;
+    }
+    public class Skybox:Component {public Material material;}
     public struct Rect
     {
         public float x, y, width, height;
@@ -68,11 +106,15 @@ namespace UnityEngine
         public static bool Throw, LastWrite;
         public static Texture LastSource;
         public static RenderTexture LastTarget;
+        public static Material LastMaterial;
+        public static int LastPass;
         public static void Blit(Texture source, RenderTexture target)
         {
             Blits++; LastSource=source; LastTarget=target; LastWrite=GL.sRGBWrite; RenderTexture.active=target;
             if (Throw) throw new InvalidOperationException("fixture GPU failure");
         }
+        public static void Blit(Texture source,RenderTexture target,Material material,int pass)
+        {LastMaterial=material;LastPass=pass;Blit(source,target);}
     }
     public class AsyncOperation
     {
@@ -85,6 +127,8 @@ namespace UnityEngine
         public static readonly Dictionary<string,Object> Assets = new();
         public static int Loads, Unloads, AsyncLoads;
         public static readonly List<ResourceRequest> Pending = new();
+        public static readonly List<Object> UnloadedAssets=new();
+        public static readonly List<string> Paths=new();
         public static ResourceRequest LoadAsync<T>(string path) where T : Object
         {
             AsyncLoads++;
@@ -98,8 +142,8 @@ namespace UnityEngine
             foreach (var request in pending) request.Complete();
         }
         public static T Load<T>(string path) where T : Object
-        { Loads++; return Assets.TryGetValue(path, out var value) ? value as T : null; }
-        public static void UnloadAsset(Object value) { Unloads++; }
+        { Loads++;Paths.Add(path);return Assets.TryGetValue(path, out var value) ? value as T : null; }
+        public static void UnloadAsset(Object value) { Unloads++;UnloadedAssets.Add(value); }
     }
     public static class GUI
     {
@@ -112,6 +156,12 @@ namespace UnityEngine
     }
     public static class Mathf
     {
+        public static float Max(float a,float b)=>Math.Max(a,b);
+        public static int Max(int a,int b)=>Math.Max(a,b);
+        public static int RoundToInt(float value)=>(int)Math.Round(value);
+        public static float Floor(float value)=>(float)Math.Floor(value);
+        public static float Repeat(float value,float length)=>value-Floor(value/length)*length;
+        public static float Sin(float value)=>(float)Math.Sin(value);
         public static float Min(float a, float b) => Math.Min(a,b);
         public static float Clamp01(float x) => Math.Clamp(x,0,1);
         public static float SmoothStep(float from, float to, float t)

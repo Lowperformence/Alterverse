@@ -1,23 +1,27 @@
 using UnityEngine;
+using Alterverse.Visuals;
 
 namespace Alterverse.UI
 {
-    /// <summary>Draws the seeded video target, with a still fallback when playback is unavailable.</summary>
+    /// <summary>One opaque cosmic background draw, with the same authored still as fallback.</summary>
     internal sealed class MenuCosmicBackdrop : System.IDisposable
     {
         private readonly Texture2D texture;
         private readonly bool ownsTexture;
+        private readonly bool cosmicLease;
         private readonly Texture2D cards;
         public MenuCosmicBackdrop()
         {
+            if(!CosmicSkyMaterial.RenderingAllowed)return;
             cards=Resources.Load<Texture2D>("FrontEnd/MenuCardAtlas");
-            // Use the exact first video frame, at the same aspect ratio and crop, during decoding.
+            texture=CosmicSkyAssets.Acquire(CosmicSkyProfile.MenuPath);
+            if(texture!=null){cosmicLease=true;return;}
+            // Retain the previous authored poster if the new art was omitted from the build.
             texture=Resources.Load<Texture2D>("FrontEnd/InterstellarBackdropAnimatedPoster");
             if(texture!=null)return;
-            // Never flash the obsolete menu art when the animated poster is unavailable.
-            // A neutral dark frame is preferable until the video decoder has its first frame.
+            // Missing artwork must still give the menu one stable, opaque dark surface.
             ownsTexture=true;
-            Debug.LogWarning("DIMENSIONS FRONT: animated menu poster is missing; showing a dark frame until video is ready.");
+            Debug.LogWarning("DIMENSIONS FRONT: menu background art is missing; showing a dark frame.");
             texture=new Texture2D(1,1,TextureFormat.RGBA32,false)
             {name="DF_MenuPosterUnavailable",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Bilinear};
             texture.SetPixel(0,0,FrontEndTheme.Background);
@@ -25,9 +29,9 @@ namespace Alterverse.UI
         }
         public void Draw(Rect rect,Texture animated=null)
         {
-            // MenuBackgroundVideo seeds its render target with the first-frame poster.
-            // Keep one crop and one opaque GUI draw throughout startup and playback.
-            GUI.DrawTexture(rect,animated!=null?animated:texture,ScaleMode.ScaleAndCrop,false);
+            // Keep crop, opacity and GUI tint stable across pages and animation frames.
+            Texture image=animated!=null?animated:texture;
+            if(image!=null)GUI.DrawTexture(rect,image,ScaleMode.ScaleAndCrop,false);
         }
         public void DrawCard(Rect rect,int index)
         {
@@ -41,7 +45,12 @@ namespace Alterverse.UI
             float v=Mathf.Clamp(.67f-height*.5f,0,1-height);
             GUI.DrawTextureWithTexCoords(rect,art,new Rect(u,v,width,height));
         }
-        public void Dispose(){if(ownsTexture&&texture!=null)Object.Destroy(texture);}
+        private bool disposed;
+        public void Dispose()
+        {
+            if(disposed)return;disposed=true;
+            if(cosmicLease)CosmicSkyAssets.Release(CosmicSkyProfile.MenuPath,texture);
+            else if(ownsTexture&&texture!=null)Object.Destroy(texture);
+        }
     }
 }
-

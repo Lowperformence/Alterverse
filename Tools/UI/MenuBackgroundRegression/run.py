@@ -20,6 +20,8 @@ def main():
     runtime = sorted((dotnet / 'shared/Microsoft.NETCore.App').iterdir())[-1].name
     sources = [root / 'Assets/Alterverse/Scripts/UI' / name
                for name in ('MenuBackgroundVideo.cs', 'MenuCosmicBackdrop.cs')]
+    sources += [root/'Assets/Alterverse/Scripts/Visuals/CosmicSkyMaterial.cs',
+                root/'Tools/Visuals/CosmicBackdropRegression/Fixtures.cs']
     with tempfile.TemporaryDirectory(prefix='df-menu-background-') as temporary:
         for server in (False, True):
             output = Path(temporary) / ('Server.dll' if server else 'Client.dll')

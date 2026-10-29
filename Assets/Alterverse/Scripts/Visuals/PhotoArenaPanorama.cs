@@ -1,13 +1,13 @@
 using Alterverse.CameraSystem;
+using Alterverse.Match;
 using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Shared universe photograph, scoped to the gameplay camera.</summary>
+    /// <summary>Arena-specific cosmic art and subtle effects, scoped to the gameplay camera.</summary>
     public sealed class PhotoArenaPanorama
     {
-        private Texture2D texture;
-        private Material material;
+        private CosmicSkyMaterial cosmic;
         private Camera camera;
         private Skybox skybox;
         private Material previousMaterial;
@@ -16,29 +16,28 @@ namespace Alterverse.Visuals
 
         public bool Load()
         {
-            texture=Resources.Load<Texture2D>("MapPanoramas/Universe");
-            Shader shader=Resources.Load<Shader>("MapPanoramas/PhotoSkybox");
-            if(texture==null||shader==null||!shader.isSupported)
+            if(!CosmicSkyMaterial.RenderingAllowed)return false;
+            Dispose();
+            cosmic=CosmicSkyMaterial.Create(CosmicSkyProfile.ForArena(ArenaVariantRuntime.Current));
+            if(cosmic==null)
             {
                 Dispose();
                 Debug.LogWarning("DIMENSIONS FRONT: panorama missing; using procedural backdrop.");
                 return false;
             }
-            material=new Material(shader){name="DF_UniverseBackdrop"};
-            material.SetTexture("_Panorama",texture);
-            // The reference is a regular photograph, so preserve its aspect instead of stretching it over a sphere.
-            material.SetFloat("_ImageAspect",texture.width/(float)Mathf.Max(1,texture.height));
             RefreshCamera();
             return true;
         }
 
         public void RefreshCamera()
         {
-            if(material==null)return;
+            if(cosmic==null)return;
             Camera current=Camera.main;
+            if(current==null||current.targetTexture!=null||current.GetComponent<MobaCamera>()==null)
+            {RestoreCamera();return;}
+            cosmic.Update(Time.unscaledTime,current.aspect);
             if(current==camera&&skybox!=null)return;
             RestoreCamera();
-            if(current==null||current.targetTexture!=null||current.GetComponent<MobaCamera>()==null)return;
             camera=current;
             previousFlags=camera.clearFlags;
             skybox=camera.GetComponent<Skybox>();
@@ -46,14 +45,14 @@ namespace Alterverse.Visuals
             if(addedSkybox)skybox=camera.gameObject.AddComponent<Skybox>();
             previousMaterial=skybox.material;
             previousEnabled=skybox.enabled;
-            skybox.material=material;
+            skybox.material=cosmic.Material;
             skybox.enabled=true;
             camera.clearFlags=CameraClearFlags.Skybox;
         }
 
         public void RestoreCamera()
         {
-            if(skybox!=null&&skybox.material==material)
+            if(skybox!=null&&cosmic!=null&&skybox.material==cosmic.Material)
             {
                 skybox.material=previousMaterial;
                 skybox.enabled=previousEnabled;
@@ -66,10 +65,7 @@ namespace Alterverse.Visuals
         public void Dispose()
         {
             RestoreCamera();
-            if(material!=null)Object.Destroy(material);
-            material=null;
-            if(texture!=null)Resources.UnloadAsset(texture);
-            texture=null;
+            cosmic?.Dispose();cosmic=null;
         }
     }
 }
