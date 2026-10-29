@@ -51,6 +51,12 @@ namespace UnityEngine {
 namespace UnityEngine.Rendering{public enum ShadowCastingMode{Off}}
 namespace Alterverse.Characters{/* HERO_ENUM */ public class HeroIdentity{public static readonly int HeroCount=Enum.GetValues<HeroId>().Length;public void Configure(HeroId hero){}}}
 namespace Alterverse.Visuals{public class StylizedHeroVisual{public static int Builds;public void Build(){Builds++;}}}
+// This suite isolates selection/import caching; the pedestal suite compiles and
+// exercises the complete production grounding, platform and showcase classes.
+namespace Alterverse.UI {
+ internal sealed class MenuHeroGrounding {public MenuHeroGrounding(UnityEngine.GameObject actor){}}
+ internal sealed class MenuHeroPedestal {}
+}
 namespace Alterverse.Shop{
  public enum UniversalHeroCosmetic{Original,Voidfall,BetaCap}
  public static class UniversalCosmeticSelection{public static UniversalHeroCosmetic EquippedFor(HeroId hero)=>UniversalHeroCosmetic.Original;}

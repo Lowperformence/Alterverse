@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Alterverse.UI
 {
     /// <summary>One isolated preview of the actual hero model; never a combat actor.</summary>
-    [DefaultExecutionOrder(960)]
+    [DefaultExecutionOrder(1200)]
     public sealed class MenuHeroShowcase : MonoBehaviour
     {
         private const int PreviewLayer = 31;
@@ -27,6 +27,8 @@ namespace Alterverse.UI
         private Alterverse.Shop.UniversalHeroCosmetic cachedCosmetic;
         private HeroOriginBackdrop originBackdrop;
         private SpriteRenderer originWorld;
+        private MenuHeroGrounding grounding;
+        private MenuHeroPedestal pedestal;
         // Keep only the active preview and its two most recent variants. Returning
         // to a hero reuses its model/materials instead of rebuilding everything.
         private const int PreviewCacheCapacity=3;
@@ -37,6 +39,7 @@ namespace Alterverse.UI
             public bool Weapon;
             public int WeaponVariant;
             public GameObject Actor;
+            public MenuHeroGrounding Grounding;
         }
         private readonly System.Collections.Generic.List<CachedPreview> previews=new();
         // Older local skin scripts expose only Equipped/WeaponOverdrive. Preserve the
@@ -125,12 +128,12 @@ namespace Alterverse.UI
             if (actor != null) actor.SetActive(false);
             selected = hero; hasSelection = true; selectedAt = Time.unscaledTime;
             UpdateOriginWorld(hero);
-            actor=null;
+            actor=null;grounding=null;
             for(int i=0;i<previews.Count;i++)
             {
                 var cached=previews[i];
                 if(cached.Actor==null||cached.Hero!=hero||cached.Cosmetic!=cosmetic||cached.Headwear!=headwear||cached.Weapon!=weapon||cached.WeaponVariant!=weaponVariant)continue;
-                actor=cached.Actor;previews.RemoveAt(i);previews.Add(cached);break;
+                actor=cached.Actor;grounding=cached.Grounding;previews.RemoveAt(i);previews.Add(cached);break;
             }
             if(actor==null)
             {
@@ -160,7 +163,8 @@ namespace Alterverse.UI
                         block.SetFloat("_ShowcaseLighting",1f);renderer.SetPropertyBlock(block);
                     }
                 }
-                previews.Add(new CachedPreview{Hero=hero,Cosmetic=cosmetic,Headwear=headwear,Weapon=weapon,WeaponVariant=weaponVariant,Actor=actor});
+                grounding=new MenuHeroGrounding(actor);
+                previews.Add(new CachedPreview{Hero=hero,Cosmetic=cosmetic,Headwear=headwear,Weapon=weapon,WeaponVariant=weaponVariant,Actor=actor,Grounding=grounding});
             }
             actor.SetActive(true);
             Transform visual=actor.transform.Find("DF_VisualRoot");
@@ -223,6 +227,16 @@ namespace Alterverse.UI
                 }
             }
             if (!found) { min = new Vector3(-.8f,-1.1f,-.5f); max = new Vector3(.8f,1.65f,.5f); }
+            if(pedestal!=null)
+            {
+                Bounds deck=pedestal.Bounds;
+                for(int corner=0;corner<8;corner++)
+                {
+                    Vector3 world=deck.center+Vector3.Scale(deck.extents,new Vector3(
+                        (corner&1)==0?-1:1,(corner&2)==0?-1:1,(corner&4)==0?-1:1));
+                    Include(cameraSpace*(world-actor.transform.position),ref found,ref min,ref max);
+                }
+            }
             Vector3 center = actor.transform.position + previewCamera.transform.rotation * ((min + max) * .5f);
             previewCamera.transform.position = center - previewCamera.transform.forward * 5f;
             Vector3 size = max - min;
@@ -241,6 +255,7 @@ namespace Alterverse.UI
             stage = new GameObject("DF_MenuPortraitStage");
             stage.transform.SetParent(transform, false);
             stage.transform.position = new Vector3(12000,12000,12000);
+            pedestal=new MenuHeroPedestal(stage.transform,PreviewLayer);
 
             // A single cached SpriteRenderer sits behind the real hero preview. Swapping heroes only swaps
             // the cached origin-world sprite; there are no particles, extra cameras or gameplay objects.
@@ -271,7 +286,7 @@ namespace Alterverse.UI
             var data = cameraObject.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             data.renderPostProcessing = false; data.renderShadows = false;
             data.volumeLayerMask = 0;
-            cameraObject.transform.localPosition = new Vector3(0,.65f,5);
+            cameraObject.transform.localPosition = new Vector3(0,1.10f,5);
             cameraObject.transform.LookAt(stage.transform.position + Vector3.up*.08f);
             AddLight("Key",new Vector3(-2,3,3),new Color(.91f,.95f,1),3.5f);
             AddLight("Fill",new Vector3(2,1,2),new Color(.51f,.72f,.78f),1.8f);
@@ -285,6 +300,10 @@ namespace Alterverse.UI
             light.color = color; light.intensity = intensity; light.range = 8;
             light.shadows = LightShadows.None; light.cullingMask = 1 << PreviewLayer;
         }
+        private void Update()
+        {
+            if(actor!=null&&stage!=null&&stage.activeSelf)grounding?.Prepare();
+        }
         private void LateUpdate()
         {
             if (actor == null || stage == null || !stage.activeSelf) return;
@@ -297,6 +316,11 @@ namespace Alterverse.UI
             if(orbitRight!=null) orbitRight.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*.06f,.03f);
             if(wingLeft!=null) wingLeft.localRotation=Quaternion.Euler(0,-18,-18-Mathf.Sin(t*2)*3);
             if(wingRight!=null) wingRight.localRotation=Quaternion.Euler(0,18,18+Mathf.Sin(t*2)*3);
+            if(grounding!=null&&grounding.PlaceFeet(stage.transform,MenuHeroPedestal.SurfaceY))
+            {
+                pedestal?.SetRadius(grounding.Radius);
+                pedestal?.UpdateContacts(grounding,actor.transform);
+            }
             // Fit once, after the retargeted pose is ready, before this frame renders.
             if (needsFit)
             {
@@ -311,10 +335,12 @@ namespace Alterverse.UI
             if (texture != null) { texture.Release(); Destroy(texture); }
             originBackdrop?.Dispose();
             originBackdrop=null;
+            pedestal?.Dispose();pedestal=null;grounding=null;
             previews.Clear();
             if (stage != null) Destroy(stage);
         }
     }
 }
+
 
 
