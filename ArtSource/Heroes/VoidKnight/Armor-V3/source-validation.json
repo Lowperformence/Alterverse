@@ -1,12 +1,12 @@
 {
   "result": "PASS",
-  "source_meshes": 360,
-  "triangles": 28722,
+  "source_meshes": 455,
+  "triangles": 34330,
   "materials": 5,
   "bones": 19,
   "clips": 12,
-  "weighted_vertices_checked": 16211,
-  "closed_new_shells_checked": 172,
+  "weighted_vertices_checked": 19425,
+  "closed_new_shells_checked": 250,
   "source_modules": [
     "A02",
     "A03",
@@ -40,8 +40,28 @@
   "original_baseline_compared": true,
   "protected_meshes_compared": 149,
   "protected_geometry_unchanged": true,
-  "all_action_keys_unchanged": false,
-  "requested_carry_arm_adjustment": true,
+  "all_action_keys_unchanged": true,
+  "requested_carry_arm_adjustment": false,
   "non_arm_action_keys_unchanged": true,
-  "rest_skeleton_unchanged": true
+  "rest_skeleton_unchanged": true,
+  "thigh_armor_dimensions_before": {
+    "L": {
+      "width_m": 0.17698521049715055,
+      "depth_m": 0.19499998539686203
+    },
+    "R": {
+      "width_m": 0.17698521049715055,
+      "depth_m": 0.19499998539686203
+    }
+  },
+  "thigh_armor_dimensions_after": {
+    "L": {
+      "width_m": 0.2350000662841012,
+      "depth_m": 0.2819999782368541
+    },
+    "R": {
+      "width_m": 0.2350000662841012,
+      "depth_m": 0.2819999842904508
+    }
+  }
 }

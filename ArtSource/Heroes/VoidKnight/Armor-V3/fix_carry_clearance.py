@@ -1,6 +1,6 @@
 """Rebake a fitted two-hand shoulder carry; retain rest geometry and strike contacts."""
 from pathlib import Path
-import bpy, json, runpy, hashlib
+import bpy, json, runpy, hashlib, sys
 import numpy as np
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
@@ -21,7 +21,9 @@ blade=bpy.data.objects['VKC_Blade_Hull']
 coords=np.array([tuple(v.co) for v in blade.data.vertices]);_,_,vt=np.linalg.svd(coords-coords.mean(axis=0))
 normal=Vector(vt[-1]);normal*=1 if normal.y<0 else -1
 across=normal.cross(axis).normalized();normal=axis.cross(across).normalized()
-scope=runpy.run_path(str(HERE.parent/'shoulder_carry.py'),init_globals={'rig':rig,'scope':{'across':across,'normal':normal}})
+verify_only='--verify-only' in sys.argv
+scope=({'arm_names':[], 'original':{a.name:{} for a in bpy.data.actions}} if verify_only else
+    runpy.run_path(str(HERE.parent/'shoulder_carry.py'),init_globals={'rig':rig,'scope':{'across':across,'normal':normal}}))
 assert old_geometry==geometry(),'The carry fix must not alter geometry'
 assert old_rest=={b.name:tuple(x for row in b.matrix_local for x in row) for b in rig.data.bones},'Rest rig changed'
 arms=set(scope['arm_names']);original=scope['original']
@@ -60,10 +62,11 @@ for name in ['Idle','Run']:
 print('CARRY_CLEARANCE',maximum,flush=True)
 assert max(maximum.values())==0,maximum
 rig.animation_data.action=bpy.data.actions['Idle'];bpy.context.scene.frame_set(1)
-bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE),compress=True)
+if not verify_only:bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE),compress=True)
 report=dict(result='PASS',carry_center=list(rig['shoulder_carry_center']),carry_axis=list(rig['shoulder_carry_axis']),
     idle_run_frames_checked=checked,maximum_blade_surface_intersections=maximum,
-    protected_mesh_geometry_unchanged=True,rest_rig_unchanged=True,non_arm_pose_error=non_arm_error,
-    strike_contact_pose_error=contact_error,clips=len(bpy.data.actions),bones=len(rig.data.bones))
+    protected_mesh_geometry_unchanged=True,rest_rig_unchanged=True,verification_only=verify_only,
+    non_arm_pose_error=None if verify_only else non_arm_error,
+    strike_contact_pose_error=None if verify_only else contact_error,clips=len(bpy.data.actions),bones=len(rig.data.bones))
 (HERE/'carry-clearance-validation.json').write_text(json.dumps(report,indent=2)+'\n')
 print('CARRY_FIX_VALIDATION',json.dumps(report),flush=True)

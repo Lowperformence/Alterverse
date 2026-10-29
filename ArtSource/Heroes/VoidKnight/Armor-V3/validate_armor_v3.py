@@ -2,6 +2,7 @@
 from pathlib import Path
 import argparse, sys, json, math, hashlib
 import bpy, bmesh
+from mathutils import Vector
 
 HERE=Path(__file__).resolve().parent
 parser=argparse.ArgumentParser()
@@ -26,7 +27,13 @@ def snapshot(path):
         for layer in a.layers for strip in layer.strips for slot in a.slots
         for f in (strip.channelbag(slot).fcurves if strip.channelbag(slot) else [])] for a in bpy.data.actions}
     rest={b.name:(tuple(b.head_local),tuple(b.tail_local),tuple(x for row in b.matrix_local for x in row),b.parent.name if b.parent else None) for b in rig.data.bones}
-    return protected,actions,rest
+    dimensions={}
+    for side in ['L','R']:
+        bone=rig.data.bones['Thigh'+side];head=bone.head_local.copy();axis=(bone.tail_local-head).normalized()
+        across=Vector((1,0,0));across=(across-axis*across.dot(axis)).normalized();normal=across.cross(axis).normalized()
+        points=[v.co-head for o in bpy.context.scene.objects if o.type=='MESH' and o.get('bone')=='Thigh'+side and o.get('v3_module')=='A13' for v in o.data.vertices]
+        if points:dimensions[side]=dict(width_m=max(p.dot(across) for p in points)-min(p.dot(across) for p in points),depth_m=max(p.dot(normal) for p in points)-min(p.dot(normal) for p in points))
+    return protected,actions,rest,dimensions
 
 before=snapshot(args.before) if args.before else None
 after=snapshot(HERE.parent/'VoidKnight.blend')
@@ -41,8 +48,8 @@ if before:
     else:assert before[1]==after[1],'Changed action keys and handles'
 rig=next(o for o in bpy.context.scene.objects if o.type=='ARMATURE')
 meshes=[o for o in bpy.context.scene.objects if o.type=='MESH']
-new=[o for o in meshes if o.name.startswith('VK7_') or o.name.startswith('VK_Eye_')]
-assert 200<=len(meshes)<=360,len(meshes)
+new=[o for o in meshes if o.name.startswith(('VK7_','VK8_','VK_Eye_'))]
+assert 200<=len(meshes)<=480,len(meshes)
 assert len(rig.data.bones)==19
 expected={'Idle','Run','Attack1','Attack2','Attack3','Skill0','Skill1','Skill2','Ultimate','Counter','Hit','Death'}
 assert set(after[1])==expected
@@ -76,6 +83,7 @@ report=dict(result='PASS',source_meshes=len(meshes),triangles=triangles,material
     protected_geometry_unchanged=True if before else None,
     all_action_keys_unchanged=before[1]==after[1] if before else None,
     requested_carry_arm_adjustment=args.allow_carry_fix,
-    non_arm_action_keys_unchanged=True if before else None,rest_skeleton_unchanged=True if before else None)
+    non_arm_action_keys_unchanged=True if before else None,rest_skeleton_unchanged=True if before else None,
+    thigh_armor_dimensions_before=before[3] if before else None,thigh_armor_dimensions_after=after[3])
 (HERE/'source-validation.json').write_text(json.dumps(report,indent=2)+'\n')
 print('ARMOR_V3_ARTIFACT_VALIDATION',json.dumps(report),flush=True)

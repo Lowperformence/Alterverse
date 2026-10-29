@@ -1,0 +1,35 @@
+{
+  "result": "PASS",
+  "revision": "traveler-reinforced-armor-20261029",
+  "input_git_blob": "414be5ce0286b8616cafd4f375ab78c84260014e",
+  "output_git_blob": "d0d44814445ad7910d53978150aa04c1ce845019",
+  "runtime_vertices": 38617,
+  "runtime_triangles": 35992,
+  "materials": 7,
+  "fitting_bones": 16,
+  "new_armor_parts": 124,
+  "closed_new_shells": 124,
+  "resized_thigh_vertices": 584,
+  "thigh_measurements": {
+    "ThighL": {
+      "midsection_width_before_m": 0.145964,
+      "midsection_width_after_m": 0.196794415098706,
+      "midsection_depth_before_m": 0.172479,
+      "midsection_depth_after_m": 0.23600245856402258
+    },
+    "ThighR": {
+      "midsection_width_before_m": 0.145964,
+      "midsection_width_after_m": 0.196794415098706,
+      "midsection_depth_before_m": 0.172479,
+      "midsection_depth_after_m": 0.23600245856402258
+    }
+  },
+  "removed_narrow_carbon_triangles": 80,
+  "anchors_and_bone_names_unchanged": true,
+  "original_non_thigh_vertices_and_normals_unchanged": true,
+  "original_non_carbon_triangles_unchanged": true,
+  "old_phone_fallback_disabled": true,
+  "runtime_schema_version": 1,
+  "existing_FBX_and_animation_clips_unchanged": true,
+  "native_unity_and_android_visual_check": false
+}

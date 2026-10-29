@@ -21,8 +21,9 @@
   },
   "protected_mesh_geometry_unchanged": true,
   "rest_rig_unchanged": true,
-  "non_arm_pose_error": 0,
-  "strike_contact_pose_error": 4.172325134277344e-07,
+  "verification_only": true,
+  "non_arm_pose_error": null,
+  "strike_contact_pose_error": null,
   "clips": 12,
   "bones": 19
 }

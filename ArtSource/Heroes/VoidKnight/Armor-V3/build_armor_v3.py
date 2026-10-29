@@ -3,7 +3,7 @@
 Blender 5.0.1. Rebuilds armor only; retains the current sword, hands, undersuit,
 rest skeleton, every original action and the existing five runtime materials.
 Run: blender -b -t 4 --python-exit-code 1 --python Armor-V3/build_armor_v3.py
-The V3 concept is geometry revision 7, following the earlier V2/V4 armor sources.
+The reinforced V3 concept is geometry revision 8: fuller thighs and machined armor.
 """
 from pathlib import Path
 import bpy, bmesh, math, json, hashlib
@@ -76,14 +76,14 @@ def seated(point,normal,bone,module,assembly):
     return hit+n*.00065,hit_normal if hit_normal.dot(n)>0 else -hit_normal
 
 def mesh(name,verts,faces,mat,bone,module,assembly,bevel=0,frame=None):
-    name=name if name.startswith('VK_Eye_') else 'VK7_'+name
+    name=name if name.startswith('VK_Eye_') else 'VK8_'+name
     data=bpy.data.meshes.new(name)
     data.from_pydata([tuple(frame(v)) if frame else tuple(v) for v in verts],[],faces)
     data.update()
     bm=bmesh.new();bm.from_mesh(data)
     bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(data);bm.free()
     o=bpy.data.objects.new(name,data);scene.collection.objects.link(o)
-    o.parent=rig;o['bone']=bone;o['design_version']=7;o['blueprint_version']=3
+    o.parent=rig;o['bone']=bone;o['design_version']=8;o['blueprint_version']=3
     o['v3_module']=module;o['assembly']=assembly
     data.materials.append(mat)
     if bevel:
@@ -389,15 +389,26 @@ for sg,label in [(-1,'L'),(1,'R')]:
     strip('A12_HipContour',[(sg*.080,-.186,.974),(sg*.129,-.190,.965),(sg*.173,-.169,.929),(sg*.155,-.183,.884)],.0017,cloth,thigh,'A12','Tassets',pool=True)
     plate('A12_RearFauld_'+label,sx([(.018,1.009),(.136,1.012),(.207,.967),(.196,.880),(.124,.850),(.032,.901)]),
         [.144,.130,.099,.119,.161,.171],-.014,black,'Hips','A12','Tassets',.0013,ridge=-.004)
-    # A13: thigh halves leave the inner hip and knee movement space open.
+    # A13: deep, full-wrap cuisses; broad quadriceps taper into the original knees.
+    # The outboard flare adds mass without closing the inner-leg movement gap.
     f,L=frame_for(thigh)
-    shell('A13_ThighCarrier_'+label,[(.138,.084,.084,0,0),(.246,.082,.084,0,0),(L-.067,.068,.070,0,0)],black,thigh,'A13','Cuisse_'+label,12,f)
-    plate('A13_ThighPlate_'+label,[(-.075,.139),(-.043,.108),(.043,.108),(.075,.139),(.066,L-.088),(0,L-.038),(-.066,L-.088)],-.093,.021,black,thigh,'A13','Cuisse_'+label,.0014,f,ridge=.006)
-    plate('A13_ThighOverlay_'+label,[(-.054,.140),(0,.123),(.054,.140),(.050,.201),(0,.245),(-.050,.201)],-.109,.007,black,thigh,'A13','Cuisse_'+label,.0010,f,ridge=.002)
-    plate('A13_OuterThighScale_'+label,[(sg*.047,.160),(sg*.087,.134),(sg*.093,.252),(sg*.070,L-.079),(sg*.047,L-.059)],-.061,.025,black,thigh,'A13','Cuisse_'+label,.0011,f,ridge=.002)
-    strip('A13_ThighMachining',[(-.043,-.104,.162),(-.035,-.107,.254),(-.010,-.109,L-.070)],.0021,cloth,thigh,'A13','Cuisse_'+label,f,pool=True)
-    glyph(.017,-.108,.206,thigh,'A13','Cuisse_'+label,frame=f,size=.8)
-    for x in [-.055,.055]:bolt(f((x,-.105,.157)),f((0,-1,0))-f((0,0,0)),thigh,'A13','Cuisse_'+label,.0028)
+    shell('A13_ThighCarrier_'+label,[(.085,.102,.103,sg*.012,0),(.165,.116,.111,sg*.014,0),
+        (.255,.110,.108,sg*.014,0),(L-.072,.081,.082,sg*.010,0)],black,thigh,'A13','Cuisse_'+label,16,f)
+    broad=[(-.099,.125),(-.070,.084),(.070,.084),(.111,.125),(.109,.226),(.083,L-.083),
+        (.018,L-.030),(-.078,L-.077),(-.096,.220)]
+    plate('A13_ThighPlate_'+label,[(x+sg*.010,z) for x,z in broad],-.124,.027,black,thigh,'A13','Cuisse_'+label,.0018,f,ridge=.006)
+    # Overlapping upper plate and a long center keel replace the small knee-like patch.
+    plate('A13_QuadricepsCrown_'+label,[(-.079,.116),(-.056,.091),(.062,.091),(.089,.125),(.073,.181),(0,.208),(-.074,.177)],
+        -.143,.010,black,thigh,'A13','Cuisse_'+label,.0013,f,ridge=.003)
+    plate('A13_QuadricepsKeel_'+label,[(-.028,.193),(0,.180),(.033,.193),(.028,L-.102),(0,L-.061),(-.027,L-.103)],
+        [-.145,-.157,-.145,-.142,-.146,-.142],.012,black,thigh,'A13','Cuisse_'+label,.0012,f,ridge=.002)
+    side_frame=lambda p,s=sg:f((s*(.107-p[1]),p[0],p[2]))
+    plate('A13_OuterThighScale_'+label,[(-.077,.130),(-.033,.096),(.042,.114),(.085,.174),(.076,.261),(.040,L-.077),(-.055,L-.076),(-.085,.248)],
+        -.013,.018,black,thigh,'A13','Cuisse_'+label,.0014,side_frame,ridge=.004)
+    plate('A13_HamstringCover_'+label,[(-.082,.118),(-.050,.092),(.060,.092),(.093,.135),(.075,L-.089),(0,L-.053),(-.071,L-.094)],
+        .106,-.017,black,thigh,'A13','Cuisse_'+label,.0012,f,ridge=-.003)
+    strip('A13_ThighMachining',[(-.066,-.148,.173),(-.058,-.147,.258),(-.031,-.142,L-.079)],.0030,cloth,thigh,'A13','Cuisse_'+label,f,pool=True)
+    for x in [-.061,.071]:bolt(f((x,-.150,.132)),f((0,-1,0))-f((0,0,0)),thigh,'A13','Cuisse_'+label,.0030)
     # A14: faceted knee with a pair of recessed lateral pivot caps.
     f,L=frame_for(shin)
     shell('A15_ShinCarrier_'+label,[(.106,.063,.067,0,0),(.202,.069,.071,0,0),(L-.041,.048,.053,0,0)],black,shin,'A15','Greave_'+label,12,f)
@@ -431,6 +442,9 @@ for sg,label in [(-1,'L'),(1,'R')]:
     plate('A16_AnkleGuard_'+label,[(cx-.062,.153),(cx-.044,.192),(cx+.044,.192),(cx+.062,.153),(cx+.043,.122),(cx-.043,.122)],-.073,.018,black,foot,'A16','Sabaton_'+label,.0011,ridge=.004)
     strip('A16_ToeInset_'+label,[(cx-.020,-.239,.084),(cx,-.244,.079),(cx+.020,-.239,.084)],.0024,edge,foot,'A16','Sabaton_'+label,pool=True)
 
+# Reinforced armor's secondary structures use the same rest rig/material palette.
+exec(compile((HERE/'reinforce_armor_v8.py').read_text(),str(HERE/'reinforce_armor_v8.py'),'exec'))
+
 # Small hardware/engravings are consolidated by module, material and binding.
 # The main shells and luminous inserts remain independently editable.
 for (material,bone,module,assembly),(verts,faces) in detail_batches.items():
@@ -444,15 +458,15 @@ meshes=[o for o in scene.objects if o.type=='MESH']
 for o in meshes:o.data.calc_loop_triangles()
 triangles=sum(len(o.data.loop_triangles) for o in meshes)
 assert triangles<=35000,triangles
-assert len(meshes)<=360,len(meshes)
+assert len(meshes)<=480,len(meshes)
 assert len({s.material.name for o in meshes for s in o.material_slots})==5
 assert len(rig.data.bones)==19 and len(bpy.data.actions)==12
-rig['design_version']=7;rig['armor_blueprint_version']=3
-scene['void_knight_design']='V3 armor concept / geometry revision 7 / 2026-10-29'
+rig['design_version']=8;rig['armor_blueprint_version']=3
+scene['void_knight_design']='Reinforced V3 armor / geometry revision 8 / 2026-10-29'
 rig.data.pose_position='POSE';rig.animation_data.action=bpy.data.actions['Idle'];scene.frame_set(1)
 scene.render.fps=30
 bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE),compress=True)
-report=dict(result='PASS',concept='Armor V3',geometry_revision=7,source_parts=len(meshes),new_armor_parts=len(created),replaced_armor_parts=replaced_count,
+report=dict(result='PASS',concept='Reinforced Armor V3',geometry_revision=8,source_parts=len(meshes),new_armor_parts=len(created),replaced_armor_parts=replaced_count,
     protected_parts=len(before),protected_geometry_unchanged=True,original_actions_unchanged=True,original_rest_rig_unchanged=True,
     bones=len(rig.data.bones),clips=len(bpy.data.actions),triangles=triangles,materials=5,
     parts=[dict(name=o.name,module=o['v3_module'],assembly=o['assembly'],bone=o['bone'],triangles=len(o.data.loop_triangles)) for o in created])

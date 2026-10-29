@@ -22,6 +22,8 @@ namespace Alterverse.Visuals
         {
             // Brakk now keeps smooth arms and legs; his equipment has separate authored parts.
             if(hero==HeroId.Rook||model==null)return;
+            // The reinforced Traveler payload already carries fitted, articulated limb armor.
+            if(hero==HeroId.Traveler&&model.GetComponent<ChronoTravelerAppearance>()!=null)return;
             if(model.GetComponent<HeroLimbTechDetails>()!=null)return;
             SkinnedMeshRenderer anatomy=null;
             foreach(var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
@@ -202,5 +204,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 

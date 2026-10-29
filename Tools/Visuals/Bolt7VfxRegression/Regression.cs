@@ -56,7 +56,7 @@ class Regression {
   Check(Last(6).GetComponentsInChildren<AudioSource>(true).All(a=>a.clip==null)&&Last(4).GetComponentsInChildren<AudioSource>(true).All(a=>a.clip==null),"Nova and Fog do not duplicate the user's detonation sound");Tick(.7f);Check(Last(4).activeSelf,"Star Fog follows detonation");
   Check(lib.bulletMuzzle!=null&&lib.bulletProjectile!=null&&lib.bulletImpact!=null,"complete native Gatling bullet chain resolved");
   Bolt7Vfx.Basic(actor,new Vector3(0,0,4),.1f);Near(Last(8).transform.localScale.x,2.5f/3f,"Gatling projectile reduced to one third of previous size");Near(Last(7).transform.localScale.x,2.5f/3f,"Gatling muzzle reduced to one third");Tick(.72f);
-  var shot=Last(7).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null);Check(shot.isPlaying&&ReferenceEquals(shot.clip,mechShot),"Gatling plays the exact existing mech recording once");Near(shot.volume,.65f*.75f*.75f*.8f,"replacement shot includes the additional 20 percent reduction");Check(Last(8).GetComponentsInChildren<AudioSource>(true).All(a=>a.clip==null),"old projectile sound does not overlap the mech shot");
+  var shot=Last(7).GetComponentsInChildren<AudioSource>(true).Single(a=>a.clip!=null);Check(shot.isPlaying&&ReferenceEquals(shot.clip,mechShot),"Gatling plays the exact existing mech recording once");Near(shot.volume,.65f*.75f*.75f*.8f*.8f,"basic shot is 20 percent quieter; grenade mix remains unchanged");Check(Last(8).GetComponentsInChildren<AudioSource>(true).All(a=>a.clip==null),"old projectile sound does not overlap the mech shot");
   Bolt7Vfx.BasicImpact(actor,new Vector3(0,0,4));Near(Last(9).transform.localScale.x,2.5f/3f,"Gatling impact reduced to one third");Tick(.73f);Check(Last(9).GetComponentsInChildren<AudioSource>(true).All(a=>a.clip==null),"confirmed basic hit does not duplicate the mech recording with old audio");Tick(.85f);Check(shot.Plays==1,"one recorded burst per basic attack");
   Near(HeroVfxPool.RamOrigin.z,0,"ram sweep stays anchored to original cone, not dash endpoint");Near(HeroVfxPool.RamSize.z,3,"ram sweep reaches exactly the melee cone range");
   foreach(int slot in new[]{0,2})foreach(float range in new[]{0f,.1f,4f}){
@@ -68,3 +68,4 @@ class Regression {
   Console.WriteLine("PASS "+checks+" BOLT-7 native VFX/audio/scale/chain contracts. Controlled fixtures; native rendering/listening remain separate.");
  }
 }
+

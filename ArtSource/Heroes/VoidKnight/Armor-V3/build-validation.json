@@ -1,9 +1,9 @@
 {
   "result": "PASS",
-  "concept": "Armor V3",
-  "geometry_revision": 7,
-  "source_parts": 360,
-  "new_armor_parts": 211,
+  "concept": "Reinforced Armor V3",
+  "geometry_revision": 8,
+  "source_parts": 455,
+  "new_armor_parts": 306,
   "replaced_armor_parts": 211,
   "protected_parts": 149,
   "protected_geometry_unchanged": true,
@@ -11,67 +11,67 @@
   "original_rest_rig_unchanged": true,
   "bones": 19,
   "clips": 12,
-  "triangles": 28722,
+  "triangles": 34330,
   "materials": 5,
   "parts": [
     {
-      "name": "VK7_H02_InnerCranialShell",
+      "name": "VK8_H02_InnerCranialShell",
       "module": "H02",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 276
     },
     {
-      "name": "VK7_H03_CrownTile_0",
+      "name": "VK8_H03_CrownTile_0",
       "module": "H03",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 60
     },
     {
-      "name": "VK7_H03_CrownTile_1",
+      "name": "VK8_H03_CrownTile_1",
       "module": "H03",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 60
     },
     {
-      "name": "VK7_H03_CrownTile_2",
+      "name": "VK8_H03_CrownTile_2",
       "module": "H03",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 48
     },
     {
-      "name": "VK7_H04_CentralBrowKeel",
+      "name": "VK8_H04_CentralBrowKeel",
       "module": "H04",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 54
     },
     {
-      "name": "VK7_H04_CrownSignal",
+      "name": "VK8_H04_CrownSignal",
       "module": "H04",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 100
     },
     {
-      "name": "VK7_H03_CrownFlank_L",
+      "name": "VK8_H03_CrownFlank_L",
       "module": "H03",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 56
     },
     {
-      "name": "VK7_H04_BrowWing_L",
+      "name": "VK8_H04_BrowWing_L",
       "module": "H04",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 128
     },
     {
-      "name": "VK7_H08_VisorGasket_L",
+      "name": "VK8_H08_VisorGasket_L",
       "module": "H08",
       "assembly": "Helmet",
       "bone": "Head",
@@ -85,105 +85,105 @@
       "triangles": 20
     },
     {
-      "name": "VK7_H09_LensLip_L",
+      "name": "VK8_H09_LensLip_L",
       "module": "H09",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 20
     },
     {
-      "name": "VK7_H08_FaceShell_L",
+      "name": "VK8_H08_FaceShell_L",
       "module": "H08",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 130
     },
     {
-      "name": "VK7_H07_CheekLame_L_0",
+      "name": "VK8_H07_CheekLame_L_0",
       "module": "H07",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 62
     },
     {
-      "name": "VK7_H07_CheekLame_L_1",
+      "name": "VK8_H07_CheekLame_L_1",
       "module": "H07",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 62
     },
     {
-      "name": "VK7_H07_CheekLame_L_2",
+      "name": "VK8_H07_CheekLame_L_2",
       "module": "H07",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 62
     },
     {
-      "name": "VK7_H06_TempleChassis_L",
+      "name": "VK8_H06_TempleChassis_L",
       "module": "H06",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 92
     },
     {
-      "name": "VK7_H06_ServiceRing_L",
+      "name": "VK8_H06_ServiceRing_L",
       "module": "H06",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 124
     },
     {
-      "name": "VK7_H06_ServiceRecess_L",
+      "name": "VK8_H06_ServiceRecess_L",
       "module": "H06",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 124
     },
     {
-      "name": "VK7_H06_ServiceHub_L",
+      "name": "VK8_H06_ServiceHub_L",
       "module": "H06",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 92
     },
     {
-      "name": "VK7_H06_TempleIndicator_L",
+      "name": "VK8_H06_TempleIndicator_L",
       "module": "H06",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 52
     },
     {
-      "name": "VK7_H05_RearShell_L",
+      "name": "VK8_H05_RearShell_L",
       "module": "H05",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 58
     },
     {
-      "name": "VK7_H05_UpperTempleCover_L",
+      "name": "VK8_H05_UpperTempleCover_L",
       "module": "H05",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 70
     },
     {
-      "name": "VK7_H03_CrownFlank_R",
+      "name": "VK8_H03_CrownFlank_R",
       "module": "H03",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 56
     },
     {
-      "name": "VK7_H04_BrowWing_R",
+      "name": "VK8_H04_BrowWing_R",
       "module": "H04",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 128
     },
     {
-      "name": "VK7_H08_VisorGasket_R",
+      "name": "VK8_H08_VisorGasket_R",
       "module": "H08",
       "assembly": "Helmet",
       "bone": "Head",
@@ -197,1299 +197,1964 @@
       "triangles": 20
     },
     {
-      "name": "VK7_H09_LensLip_R",
+      "name": "VK8_H09_LensLip_R",
       "module": "H09",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 20
     },
     {
-      "name": "VK7_H08_FaceShell_R",
+      "name": "VK8_H08_FaceShell_R",
       "module": "H08",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 130
     },
     {
-      "name": "VK7_H07_CheekLame_R_0",
+      "name": "VK8_H07_CheekLame_R_0",
       "module": "H07",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 62
     },
     {
-      "name": "VK7_H07_CheekLame_R_1",
+      "name": "VK8_H07_CheekLame_R_1",
       "module": "H07",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 62
     },
     {
-      "name": "VK7_H07_CheekLame_R_2",
+      "name": "VK8_H07_CheekLame_R_2",
       "module": "H07",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 62
     },
     {
-      "name": "VK7_H06_TempleChassis_R",
+      "name": "VK8_H06_TempleChassis_R",
       "module": "H06",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 92
     },
     {
-      "name": "VK7_H06_ServiceRing_R",
+      "name": "VK8_H06_ServiceRing_R",
       "module": "H06",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 124
     },
     {
-      "name": "VK7_H06_ServiceRecess_R",
+      "name": "VK8_H06_ServiceRecess_R",
       "module": "H06",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 124
     },
     {
-      "name": "VK7_H06_ServiceHub_R",
+      "name": "VK8_H06_ServiceHub_R",
       "module": "H06",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 92
     },
     {
-      "name": "VK7_H06_TempleIndicator_R",
+      "name": "VK8_H06_TempleIndicator_R",
       "module": "H06",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 52
     },
     {
-      "name": "VK7_H05_RearShell_R",
+      "name": "VK8_H05_RearShell_R",
       "module": "H05",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 58
     },
     {
-      "name": "VK7_H05_UpperTempleCover_R",
+      "name": "VK8_H05_UpperTempleCover_R",
       "module": "H05",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 70
     },
     {
-      "name": "VK7_H11_ChinGuard",
+      "name": "VK8_H11_ChinGuard",
       "module": "H11",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 74
     },
     {
-      "name": "VK7_H09_CentralVisorSlit",
+      "name": "VK8_H09_CentralVisorSlit",
       "module": "H09",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 20
     },
     {
-      "name": "VK7_H10_RearLightCarrier",
+      "name": "VK8_H10_RearLightCarrier",
       "module": "H10",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 100
     },
     {
-      "name": "VK7_H12_NapeLame_0",
+      "name": "VK8_H12_NapeLame_0",
       "module": "H12",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 62
     },
     {
-      "name": "VK7_H12_NapeLame_1",
+      "name": "VK8_H12_NapeLame_1",
       "module": "H12",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 62
     },
     {
-      "name": "VK7_H12_NapeLame_2",
+      "name": "VK8_H12_NapeLame_2",
       "module": "H12",
       "assembly": "Helmet",
       "bone": "Head",
       "triangles": 62
     },
     {
-      "name": "VK7_A03_ThoracicCarrier",
+      "name": "VK8_A03_ThoracicCarrier",
       "module": "A03",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 156
     },
     {
-      "name": "VK7_A02_Gorget_L",
+      "name": "VK8_A02_Gorget_L",
       "module": "A02",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 52
     },
     {
-      "name": "VK7_A03_Clavicle_L",
+      "name": "VK8_A03_Clavicle_L",
       "module": "A03",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 62
     },
     {
-      "name": "VK7_A03_Pectoral_L",
+      "name": "VK8_A03_Pectoral_L",
       "module": "A03",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 154
     },
     {
-      "name": "VK7_A03_CostalLame_L_0",
+      "name": "VK8_A03_CostalLame_L_0",
       "module": "A03",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 62
     },
     {
-      "name": "VK7_A03_CostalLame_L_1",
+      "name": "VK8_A03_CostalLame_L_1",
       "module": "A03",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 62
     },
     {
-      "name": "VK7_A18_ChestSide_L",
+      "name": "VK8_A18_ChestSide_L",
       "module": "A18",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 100
     },
     {
-      "name": "VK7_A04_Scapular_L",
+      "name": "VK8_A04_Scapular_L",
       "module": "A04",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 122
     },
     {
-      "name": "VK7_A04_LowerBack_L",
+      "name": "VK8_A04_LowerBack_L",
       "module": "A04",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 54
     },
     {
-      "name": "VK7_A02_Gorget_R",
+      "name": "VK8_A02_Gorget_R",
       "module": "A02",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 52
     },
     {
-      "name": "VK7_A03_Clavicle_R",
+      "name": "VK8_A03_Clavicle_R",
       "module": "A03",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 62
     },
     {
-      "name": "VK7_A03_Pectoral_R",
+      "name": "VK8_A03_Pectoral_R",
       "module": "A03",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 154
     },
     {
-      "name": "VK7_A03_CostalLame_R_0",
+      "name": "VK8_A03_CostalLame_R_0",
       "module": "A03",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 62
     },
     {
-      "name": "VK7_A03_CostalLame_R_1",
+      "name": "VK8_A03_CostalLame_R_1",
       "module": "A03",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 62
     },
     {
-      "name": "VK7_A18_ChestSide_R",
+      "name": "VK8_A18_ChestSide_R",
       "module": "A18",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 100
     },
     {
-      "name": "VK7_A04_Scapular_R",
+      "name": "VK8_A04_Scapular_R",
       "module": "A04",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 122
     },
     {
-      "name": "VK7_A04_LowerBack_R",
+      "name": "VK8_A04_LowerBack_R",
       "module": "A04",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 54
     },
     {
-      "name": "VK7_A17_CoreCradle",
+      "name": "VK8_A17_CoreCradle",
       "module": "A17",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 46
     },
     {
-      "name": "VK7_A17_CoreBezel",
+      "name": "VK8_A17_CoreBezel",
       "module": "A17",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 44
     },
     {
-      "name": "VK7_A17_OpticalGasket",
+      "name": "VK8_A17_OpticalGasket",
       "module": "A17",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 44
     },
     {
-      "name": "VK7_A17_FacetedCore",
+      "name": "VK8_A17_FacetedCore",
       "module": "A17",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 46
     },
     {
-      "name": "VK7_A17_InnerFacet",
+      "name": "VK8_A17_InnerFacet",
       "module": "A17",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 14
     },
     {
-      "name": "VK7_A04_SpineVertebra_0",
+      "name": "VK8_A04_SpineVertebra_0",
       "module": "A04",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 62
     },
     {
-      "name": "VK7_A18_DorsalInsert_0",
+      "name": "VK8_A18_DorsalInsert_0",
       "module": "A18",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 52
     },
     {
-      "name": "VK7_A04_SpineVertebra_1",
+      "name": "VK8_A04_SpineVertebra_1",
       "module": "A04",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 62
     },
     {
-      "name": "VK7_A18_DorsalInsert_1",
+      "name": "VK8_A18_DorsalInsert_1",
       "module": "A18",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 52
     },
     {
-      "name": "VK7_A04_SpineVertebra_2",
+      "name": "VK8_A04_SpineVertebra_2",
       "module": "A04",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 62
     },
     {
-      "name": "VK7_A18_DorsalInsert_2",
+      "name": "VK8_A18_DorsalInsert_2",
       "module": "A18",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 52
     },
     {
-      "name": "VK7_A04_SpineVertebra_3",
+      "name": "VK8_A04_SpineVertebra_3",
       "module": "A04",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 62
     },
     {
-      "name": "VK7_A18_DorsalInsert_3",
+      "name": "VK8_A18_DorsalInsert_3",
       "module": "A18",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 52
     },
     {
-      "name": "VK7_A04_SpineVertebra_4",
+      "name": "VK8_A04_SpineVertebra_4",
       "module": "A04",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 62
     },
     {
-      "name": "VK7_A18_DorsalInsert_4",
+      "name": "VK8_A18_DorsalInsert_4",
       "module": "A18",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 52
     },
     {
-      "name": "VK7_A10_AbdominalLame_0",
+      "name": "VK8_A10_AbdominalLame_0",
       "module": "A10",
       "assembly": "Waist",
       "bone": "Spine",
       "triangles": 78
     },
     {
-      "name": "VK7_A10_LumbarLame_0",
+      "name": "VK8_A10_LumbarLame_0",
       "module": "A10",
       "assembly": "Waist",
       "bone": "Spine",
       "triangles": 46
     },
     {
-      "name": "VK7_A10_AbdominalLame_1",
+      "name": "VK8_A10_AbdominalLame_1",
       "module": "A10",
       "assembly": "Waist",
       "bone": "Spine",
       "triangles": 72
     },
     {
-      "name": "VK7_A10_LumbarLame_1",
+      "name": "VK8_A10_LumbarLame_1",
       "module": "A10",
       "assembly": "Waist",
       "bone": "Spine",
       "triangles": 46
     },
     {
-      "name": "VK7_A10_AbdominalLame_2",
+      "name": "VK8_A10_AbdominalLame_2",
       "module": "A10",
       "assembly": "Waist",
       "bone": "Spine",
       "triangles": 72
     },
     {
-      "name": "VK7_A10_LumbarLame_2",
+      "name": "VK8_A10_LumbarLame_2",
       "module": "A10",
       "assembly": "Waist",
       "bone": "Spine",
       "triangles": 46
     },
     {
-      "name": "VK7_A11_BeltCarrier",
+      "name": "VK8_A11_BeltCarrier",
       "module": "A11",
       "assembly": "Waist",
       "bone": "Hips",
       "triangles": 124
     },
     {
-      "name": "VK7_A11_Buckle",
+      "name": "VK8_A11_Buckle",
       "module": "A11",
       "assembly": "Waist",
       "bone": "Hips",
       "triangles": 58
     },
     {
-      "name": "VK7_A11_BuckleInlay",
+      "name": "VK8_A11_BuckleInlay",
       "module": "A11",
       "assembly": "Waist",
       "bone": "Hips",
       "triangles": 20
     },
     {
-      "name": "VK7_A11_BeltLink_L_0",
+      "name": "VK8_A11_BeltLink_L_0",
       "module": "A11",
       "assembly": "Waist",
       "bone": "Hips",
       "triangles": 44
     },
     {
-      "name": "VK7_A11_BeltLink_L_1",
+      "name": "VK8_A11_BeltLink_L_1",
       "module": "A11",
       "assembly": "Waist",
       "bone": "Hips",
       "triangles": 44
     },
     {
-      "name": "VK7_A11_BeltLink_L_2",
+      "name": "VK8_A11_BeltLink_L_2",
       "module": "A11",
       "assembly": "Waist",
       "bone": "Hips",
       "triangles": 44
     },
     {
-      "name": "VK7_A11_BeltLink_R_0",
+      "name": "VK8_A11_BeltLink_R_0",
       "module": "A11",
       "assembly": "Waist",
       "bone": "Hips",
       "triangles": 44
     },
     {
-      "name": "VK7_A11_BeltLink_R_1",
+      "name": "VK8_A11_BeltLink_R_1",
       "module": "A11",
       "assembly": "Waist",
       "bone": "Hips",
       "triangles": 44
     },
     {
-      "name": "VK7_A11_BeltLink_R_2",
+      "name": "VK8_A11_BeltLink_R_2",
       "module": "A11",
       "assembly": "Waist",
       "bone": "Hips",
       "triangles": 44
     },
     {
-      "name": "VK7_A12_CentralPelvicGuard",
+      "name": "VK8_A12_CentralPelvicGuard",
       "module": "A12",
       "assembly": "Tassets",
       "bone": "Hips",
       "triangles": 66
     },
     {
-      "name": "VK7_A05_ShoulderBridge_L",
+      "name": "VK8_A05_ShoulderBridge_L",
       "module": "A05",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
       "triangles": 116
     },
     {
-      "name": "VK7_A05_ShoulderLame_L_0",
+      "name": "VK8_A05_ShoulderLame_L_0",
       "module": "A05",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
       "triangles": 130
     },
     {
-      "name": "VK7_A05_ShoulderLame_L_1",
+      "name": "VK8_A05_ShoulderLame_L_1",
       "module": "A05",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
       "triangles": 130
     },
     {
-      "name": "VK7_A05_ShoulderLame_L_2",
+      "name": "VK8_A05_ShoulderLame_L_2",
       "module": "A05",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
       "triangles": 130
     },
     {
-      "name": "VK7_A05_EnergySeat_L",
+      "name": "VK8_A05_EnergySeat_L",
       "module": "A05",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
       "triangles": 20
     },
     {
-      "name": "VK7_A18_ShoulderChevron_L",
+      "name": "VK8_A18_ShoulderChevron_L",
       "module": "A18",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
       "triangles": 100
     },
     {
-      "name": "VK7_A05_RearScale_L",
+      "name": "VK8_A05_RearScale_L",
       "module": "A05",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
       "triangles": 58
     },
     {
-      "name": "VK7_A18_RearShoulder_L",
+      "name": "VK8_A18_RearShoulder_L",
       "module": "A18",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
       "triangles": 100
     },
     {
-      "name": "VK7_A06_BicepCarrier_L",
+      "name": "VK8_A06_BicepCarrier_L",
       "module": "A06",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
       "triangles": 116
     },
     {
-      "name": "VK7_A06_BicepShell_L",
+      "name": "VK8_A06_BicepShell_L",
       "module": "A06",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
       "triangles": 74
     },
     {
-      "name": "VK7_A07_ElbowShield_L",
+      "name": "VK8_A07_ElbowShield_L",
       "module": "A07",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
       "triangles": 62
     },
     {
-      "name": "VK7_A08_InnerForearm_L",
+      "name": "VK8_A08_InnerForearm_L",
       "module": "A08",
       "assembly": "Vambrace_L",
       "bone": "ForearmL",
       "triangles": 116
     },
     {
-      "name": "VK7_A08_ForearmShell_L",
+      "name": "VK8_A08_ForearmShell_L",
       "module": "A08",
       "assembly": "Vambrace_L",
       "bone": "ForearmL",
       "triangles": 154
     },
     {
-      "name": "VK7_A08_RearClosure_L",
+      "name": "VK8_A08_RearClosure_L",
       "module": "A08",
       "assembly": "Vambrace_L",
       "bone": "ForearmL",
       "triangles": 58
     },
     {
-      "name": "VK7_A08_InsertGasket_L",
+      "name": "VK8_A08_InsertGasket_L",
       "module": "A08",
       "assembly": "Vambrace_L",
       "bone": "ForearmL",
       "triangles": 56
     },
     {
-      "name": "VK7_A18_ForearmLens_L",
+      "name": "VK8_A18_ForearmLens_L",
       "module": "A18",
       "assembly": "Vambrace_L",
       "bone": "ForearmL",
       "triangles": 58
     },
     {
-      "name": "VK7_A12_HipMain_L",
+      "name": "VK8_A12_HipMain_L",
       "module": "A12",
       "assembly": "Tassets",
       "bone": "ThighL",
       "triangles": 130
     },
     {
-      "name": "VK7_A12_HipSide_L",
+      "name": "VK8_A12_HipSide_L",
       "module": "A12",
       "assembly": "Tassets",
       "bone": "ThighL",
       "triangles": 46
     },
     {
-      "name": "VK7_A18_HipInsert_L",
+      "name": "VK8_A18_HipInsert_L",
       "module": "A18",
       "assembly": "Tassets",
       "bone": "ThighL",
       "triangles": 100
     },
     {
-      "name": "VK7_A12_RearFauld_L",
+      "name": "VK8_A12_RearFauld_L",
       "module": "A12",
       "assembly": "Tassets",
       "bone": "Hips",
       "triangles": 66
     },
     {
-      "name": "VK7_A13_ThighCarrier_L",
+      "name": "VK8_A13_ThighCarrier_L",
       "module": "A13",
       "assembly": "Cuisse_L",
       "bone": "ThighL",
-      "triangles": 116
+      "triangles": 188
     },
     {
-      "name": "VK7_A13_ThighPlate_L",
+      "name": "VK8_A13_ThighPlate_L",
       "module": "A13",
       "assembly": "Cuisse_L",
       "bone": "ThighL",
-      "triangles": 130
+      "triangles": 162
     },
     {
-      "name": "VK7_A13_ThighOverlay_L",
+      "name": "VK8_A13_QuadricepsCrown_L",
+      "module": "A13",
+      "assembly": "Cuisse_L",
+      "bone": "ThighL",
+      "triangles": 70
+    },
+    {
+      "name": "VK8_A13_QuadricepsKeel_L",
       "module": "A13",
       "assembly": "Cuisse_L",
       "bone": "ThighL",
       "triangles": 58
     },
     {
-      "name": "VK7_A13_OuterThighScale_L",
+      "name": "VK8_A13_OuterThighScale_L",
       "module": "A13",
       "assembly": "Cuisse_L",
       "bone": "ThighL",
-      "triangles": 50
+      "triangles": 74
     },
     {
-      "name": "VK7_A15_ShinCarrier_L",
+      "name": "VK8_A13_HamstringCover_L",
+      "module": "A13",
+      "assembly": "Cuisse_L",
+      "bone": "ThighL",
+      "triangles": 74
+    },
+    {
+      "name": "VK8_A15_ShinCarrier_L",
       "module": "A15",
       "assembly": "Greave_L",
       "bone": "ShinL",
       "triangles": 116
     },
     {
-      "name": "VK7_A14_KneeShell_L",
+      "name": "VK8_A14_KneeShell_L",
       "module": "A14",
       "assembly": "Greave_L",
       "bone": "ShinL",
       "triangles": 138
     },
     {
-      "name": "VK7_A14_Pivot_L_-1",
+      "name": "VK8_A14_Pivot_L_-1",
       "module": "A14",
       "assembly": "Greave_L",
       "bone": "ShinL",
       "triangles": 92
     },
     {
-      "name": "VK7_A14_PivotInset_L_-1",
+      "name": "VK8_A14_PivotInset_L_-1",
       "module": "A14",
       "assembly": "Greave_L",
       "bone": "ShinL",
       "triangles": 92
     },
     {
-      "name": "VK7_A14_Pivot_L_1",
+      "name": "VK8_A14_Pivot_L_1",
       "module": "A14",
       "assembly": "Greave_L",
       "bone": "ShinL",
       "triangles": 92
     },
     {
-      "name": "VK7_A14_PivotInset_L_1",
+      "name": "VK8_A14_PivotInset_L_1",
       "module": "A14",
       "assembly": "Greave_L",
       "bone": "ShinL",
       "triangles": 92
     },
     {
-      "name": "VK7_A15_ShinShell_L",
+      "name": "VK8_A15_ShinShell_L",
       "module": "A15",
       "assembly": "Greave_L",
       "bone": "ShinL",
       "triangles": 146
     },
     {
-      "name": "VK7_A15_CalfCover_L",
+      "name": "VK8_A15_CalfCover_L",
       "module": "A15",
       "assembly": "Greave_L",
       "bone": "ShinL",
       "triangles": 50
     },
     {
-      "name": "VK7_A15_LensSeat_L",
+      "name": "VK8_A15_LensSeat_L",
       "module": "A15",
       "assembly": "Greave_L",
       "bone": "ShinL",
       "triangles": 52
     },
     {
-      "name": "VK7_A18_ShinLens_L",
+      "name": "VK8_A18_ShinLens_L",
       "module": "A18",
       "assembly": "Greave_L",
       "bone": "ShinL",
       "triangles": 54
     },
     {
-      "name": "VK7_A16_Outsole_L",
+      "name": "VK8_A16_Outsole_L",
       "module": "A16",
       "assembly": "Sabaton_L",
       "bone": "FootL",
       "triangles": 92
     },
     {
-      "name": "VK7_A16_BootShell_L",
+      "name": "VK8_A16_BootShell_L",
       "module": "A16",
       "assembly": "Sabaton_L",
       "bone": "FootL",
       "triangles": 138
     },
     {
-      "name": "VK7_A16_InstepLame_L_0",
+      "name": "VK8_A16_InstepLame_L_0",
       "module": "A16",
       "assembly": "Sabaton_L",
       "bone": "FootL",
       "triangles": 60
     },
     {
-      "name": "VK7_A16_InstepLame_L_1",
+      "name": "VK8_A16_InstepLame_L_1",
       "module": "A16",
       "assembly": "Sabaton_L",
       "bone": "FootL",
       "triangles": 60
     },
     {
-      "name": "VK7_A16_InstepLame_L_2",
+      "name": "VK8_A16_InstepLame_L_2",
       "module": "A16",
       "assembly": "Sabaton_L",
       "bone": "FootL",
       "triangles": 60
     },
     {
-      "name": "VK7_A16_AnkleGuard_L",
+      "name": "VK8_A16_AnkleGuard_L",
       "module": "A16",
       "assembly": "Sabaton_L",
       "bone": "FootL",
       "triangles": 70
     },
     {
-      "name": "VK7_A05_ShoulderBridge_R",
+      "name": "VK8_A05_ShoulderBridge_R",
       "module": "A05",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
       "triangles": 116
     },
     {
-      "name": "VK7_A05_ShoulderLame_R_0",
+      "name": "VK8_A05_ShoulderLame_R_0",
       "module": "A05",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
       "triangles": 130
     },
     {
-      "name": "VK7_A05_ShoulderLame_R_1",
+      "name": "VK8_A05_ShoulderLame_R_1",
       "module": "A05",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
       "triangles": 130
     },
     {
-      "name": "VK7_A05_ShoulderLame_R_2",
+      "name": "VK8_A05_ShoulderLame_R_2",
       "module": "A05",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
       "triangles": 130
     },
     {
-      "name": "VK7_A05_EnergySeat_R",
+      "name": "VK8_A05_EnergySeat_R",
       "module": "A05",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
       "triangles": 20
     },
     {
-      "name": "VK7_A18_ShoulderChevron_R",
+      "name": "VK8_A18_ShoulderChevron_R",
       "module": "A18",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
       "triangles": 100
     },
     {
-      "name": "VK7_A05_RearScale_R",
+      "name": "VK8_A05_RearScale_R",
       "module": "A05",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
       "triangles": 58
     },
     {
-      "name": "VK7_A18_RearShoulder_R",
+      "name": "VK8_A18_RearShoulder_R",
       "module": "A18",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
       "triangles": 100
     },
     {
-      "name": "VK7_A06_BicepCarrier_R",
+      "name": "VK8_A06_BicepCarrier_R",
       "module": "A06",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
       "triangles": 116
     },
     {
-      "name": "VK7_A06_BicepShell_R",
+      "name": "VK8_A06_BicepShell_R",
       "module": "A06",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
       "triangles": 74
     },
     {
-      "name": "VK7_A07_ElbowShield_R",
+      "name": "VK8_A07_ElbowShield_R",
       "module": "A07",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
       "triangles": 62
     },
     {
-      "name": "VK7_A08_InnerForearm_R",
+      "name": "VK8_A08_InnerForearm_R",
       "module": "A08",
       "assembly": "Vambrace_R",
       "bone": "ForearmR",
       "triangles": 116
     },
     {
-      "name": "VK7_A08_ForearmShell_R",
+      "name": "VK8_A08_ForearmShell_R",
       "module": "A08",
       "assembly": "Vambrace_R",
       "bone": "ForearmR",
       "triangles": 154
     },
     {
-      "name": "VK7_A08_RearClosure_R",
+      "name": "VK8_A08_RearClosure_R",
       "module": "A08",
       "assembly": "Vambrace_R",
       "bone": "ForearmR",
       "triangles": 58
     },
     {
-      "name": "VK7_A08_InsertGasket_R",
+      "name": "VK8_A08_InsertGasket_R",
       "module": "A08",
       "assembly": "Vambrace_R",
       "bone": "ForearmR",
       "triangles": 56
     },
     {
-      "name": "VK7_A18_ForearmLens_R",
+      "name": "VK8_A18_ForearmLens_R",
       "module": "A18",
       "assembly": "Vambrace_R",
       "bone": "ForearmR",
       "triangles": 58
     },
     {
-      "name": "VK7_A12_HipMain_R",
+      "name": "VK8_A12_HipMain_R",
       "module": "A12",
       "assembly": "Tassets",
       "bone": "ThighR",
       "triangles": 130
     },
     {
-      "name": "VK7_A12_HipSide_R",
+      "name": "VK8_A12_HipSide_R",
       "module": "A12",
       "assembly": "Tassets",
       "bone": "ThighR",
       "triangles": 46
     },
     {
-      "name": "VK7_A18_HipInsert_R",
+      "name": "VK8_A18_HipInsert_R",
       "module": "A18",
       "assembly": "Tassets",
       "bone": "ThighR",
       "triangles": 100
     },
     {
-      "name": "VK7_A12_RearFauld_R",
+      "name": "VK8_A12_RearFauld_R",
       "module": "A12",
       "assembly": "Tassets",
       "bone": "Hips",
       "triangles": 66
     },
     {
-      "name": "VK7_A13_ThighCarrier_R",
+      "name": "VK8_A13_ThighCarrier_R",
       "module": "A13",
       "assembly": "Cuisse_R",
       "bone": "ThighR",
-      "triangles": 116
+      "triangles": 188
     },
     {
-      "name": "VK7_A13_ThighPlate_R",
+      "name": "VK8_A13_ThighPlate_R",
       "module": "A13",
       "assembly": "Cuisse_R",
       "bone": "ThighR",
-      "triangles": 130
+      "triangles": 162
     },
     {
-      "name": "VK7_A13_ThighOverlay_R",
+      "name": "VK8_A13_QuadricepsCrown_R",
+      "module": "A13",
+      "assembly": "Cuisse_R",
+      "bone": "ThighR",
+      "triangles": 70
+    },
+    {
+      "name": "VK8_A13_QuadricepsKeel_R",
       "module": "A13",
       "assembly": "Cuisse_R",
       "bone": "ThighR",
       "triangles": 58
     },
     {
-      "name": "VK7_A13_OuterThighScale_R",
+      "name": "VK8_A13_OuterThighScale_R",
       "module": "A13",
       "assembly": "Cuisse_R",
       "bone": "ThighR",
-      "triangles": 50
+      "triangles": 74
     },
     {
-      "name": "VK7_A15_ShinCarrier_R",
+      "name": "VK8_A13_HamstringCover_R",
+      "module": "A13",
+      "assembly": "Cuisse_R",
+      "bone": "ThighR",
+      "triangles": 74
+    },
+    {
+      "name": "VK8_A15_ShinCarrier_R",
       "module": "A15",
       "assembly": "Greave_R",
       "bone": "ShinR",
       "triangles": 116
     },
     {
-      "name": "VK7_A14_KneeShell_R",
+      "name": "VK8_A14_KneeShell_R",
       "module": "A14",
       "assembly": "Greave_R",
       "bone": "ShinR",
       "triangles": 138
     },
     {
-      "name": "VK7_A14_Pivot_R_-1",
+      "name": "VK8_A14_Pivot_R_-1",
       "module": "A14",
       "assembly": "Greave_R",
       "bone": "ShinR",
       "triangles": 92
     },
     {
-      "name": "VK7_A14_PivotInset_R_-1",
+      "name": "VK8_A14_PivotInset_R_-1",
       "module": "A14",
       "assembly": "Greave_R",
       "bone": "ShinR",
       "triangles": 92
     },
     {
-      "name": "VK7_A14_Pivot_R_1",
+      "name": "VK8_A14_Pivot_R_1",
       "module": "A14",
       "assembly": "Greave_R",
       "bone": "ShinR",
       "triangles": 92
     },
     {
-      "name": "VK7_A14_PivotInset_R_1",
+      "name": "VK8_A14_PivotInset_R_1",
       "module": "A14",
       "assembly": "Greave_R",
       "bone": "ShinR",
       "triangles": 92
     },
     {
-      "name": "VK7_A15_ShinShell_R",
+      "name": "VK8_A15_ShinShell_R",
       "module": "A15",
       "assembly": "Greave_R",
       "bone": "ShinR",
       "triangles": 146
     },
     {
-      "name": "VK7_A15_CalfCover_R",
+      "name": "VK8_A15_CalfCover_R",
       "module": "A15",
       "assembly": "Greave_R",
       "bone": "ShinR",
       "triangles": 50
     },
     {
-      "name": "VK7_A15_LensSeat_R",
+      "name": "VK8_A15_LensSeat_R",
       "module": "A15",
       "assembly": "Greave_R",
       "bone": "ShinR",
       "triangles": 52
     },
     {
-      "name": "VK7_A18_ShinLens_R",
+      "name": "VK8_A18_ShinLens_R",
       "module": "A18",
       "assembly": "Greave_R",
       "bone": "ShinR",
       "triangles": 54
     },
     {
-      "name": "VK7_A16_Outsole_R",
+      "name": "VK8_A16_Outsole_R",
       "module": "A16",
       "assembly": "Sabaton_R",
       "bone": "FootR",
       "triangles": 92
     },
     {
-      "name": "VK7_A16_BootShell_R",
+      "name": "VK8_A16_BootShell_R",
       "module": "A16",
       "assembly": "Sabaton_R",
       "bone": "FootR",
       "triangles": 138
     },
     {
-      "name": "VK7_A16_InstepLame_R_0",
+      "name": "VK8_A16_InstepLame_R_0",
       "module": "A16",
       "assembly": "Sabaton_R",
       "bone": "FootR",
       "triangles": 60
     },
     {
-      "name": "VK7_A16_InstepLame_R_1",
+      "name": "VK8_A16_InstepLame_R_1",
       "module": "A16",
       "assembly": "Sabaton_R",
       "bone": "FootR",
       "triangles": 60
     },
     {
-      "name": "VK7_A16_InstepLame_R_2",
+      "name": "VK8_A16_InstepLame_R_2",
       "module": "A16",
       "assembly": "Sabaton_R",
       "bone": "FootR",
       "triangles": 60
     },
     {
-      "name": "VK7_A16_AnkleGuard_R",
+      "name": "VK8_A16_AnkleGuard_R",
       "module": "A16",
       "assembly": "Sabaton_R",
       "bone": "FootR",
       "triangles": 70
     },
     {
-      "name": "VK7_H03_Machining_Head_bevel_metal",
-      "module": "H03",
-      "assembly": "Helmet",
-      "bone": "Head",
-      "triangles": 96
+      "name": "VK8_A03_ClavicleSpur_L",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 40
     },
     {
-      "name": "VK7_H03_Machining_Head_woven_undersuit",
-      "module": "H03",
-      "assembly": "Helmet",
-      "bone": "Head",
-      "triangles": 36
-    },
-    {
-      "name": "VK7_H08_Machining_Head_woven_undersuit",
-      "module": "H08",
-      "assembly": "Helmet",
-      "bone": "Head",
-      "triangles": 132
-    },
-    {
-      "name": "VK7_H08_Machining_Head_bevel_metal",
-      "module": "H08",
-      "assembly": "Helmet",
-      "bone": "Head",
-      "triangles": 32
-    },
-    {
-      "name": "VK7_H07_Machining_Head_bevel_metal",
-      "module": "H07",
-      "assembly": "Helmet",
-      "bone": "Head",
-      "triangles": 96
-    },
-    {
-      "name": "VK7_H07_Machining_Head_woven_undersuit",
-      "module": "H07",
-      "assembly": "Helmet",
-      "bone": "Head",
-      "triangles": 36
-    },
-    {
-      "name": "VK7_H06_Machining_Head_bevel_metal",
-      "module": "H06",
-      "assembly": "Helmet",
-      "bone": "Head",
-      "triangles": 96
-    },
-    {
-      "name": "VK7_H06_Machining_Head_woven_undersuit",
-      "module": "H06",
-      "assembly": "Helmet",
-      "bone": "Head",
-      "triangles": 36
-    },
-    {
-      "name": "VK7_H05_Machining_Head_woven_undersuit",
-      "module": "H05",
-      "assembly": "Helmet",
-      "bone": "Head",
-      "triangles": 120
-    },
-    {
-      "name": "VK7_H11_Machining_Head_woven_undersuit",
-      "module": "H11",
-      "assembly": "Helmet",
-      "bone": "Head",
+      "name": "VK8_A03_SweptChestScute_L_0",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
       "triangles": 72
     },
     {
-      "name": "VK7_A03_Machining_Chest_bevel_metal",
+      "name": "VK8_A03_SweptChestScute_L_1",
       "module": "A03",
       "assembly": "Cuirass",
       "bone": "Chest",
-      "triangles": 96
+      "triangles": 72
     },
     {
-      "name": "VK7_A03_Machining_Chest_woven_undersuit",
+      "name": "VK8_A03_ChestExtractor_L_Pocket",
       "module": "A03",
       "assembly": "Cuirass",
       "bone": "Chest",
-      "triangles": 252
+      "triangles": 28
     },
     {
-      "name": "VK7_A04_Machining_Chest_bevel_metal",
+      "name": "VK8_A03_ChestExtractor_L_Flange",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_A17_CoreLock_L",
+      "module": "A17",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 48
+    },
+    {
+      "name": "VK8_A03_FlankRib_L_0",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 60
+    },
+    {
+      "name": "VK8_A03_FlankRib_L_1",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 60
+    },
+    {
+      "name": "VK8_A03_FlankRib_L_2",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 60
+    },
+    {
+      "name": "VK8_A04_ScapulaVent_L_Pocket",
+      "module": "A04",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 28
+    },
+    {
+      "name": "VK8_A04_ScapulaVent_L_Flange",
       "module": "A04",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 64
     },
     {
-      "name": "VK7_A04_Machining_Chest_woven_undersuit",
+      "name": "VK8_A12_LowerHipLame_L",
+      "module": "A12",
+      "assembly": "Tassets",
+      "bone": "ThighL",
+      "triangles": 56
+    },
+    {
+      "name": "VK8_A12_HipCrownLatch_L",
+      "module": "A12",
+      "assembly": "Tassets",
+      "bone": "ThighL",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A13_QuadricepsLame_L_0",
+      "module": "A13",
+      "assembly": "Cuisse_L",
+      "bone": "ThighL",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A13_QuadricepsLame_L_1",
+      "module": "A13",
+      "assembly": "Cuisse_L",
+      "bone": "ThighL",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A13_ThighFeedSeat_L",
+      "module": "A13",
+      "assembly": "Cuisse_L",
+      "bone": "ThighL",
+      "triangles": 56
+    },
+    {
+      "name": "VK8_A13_ThighFeedRim_L",
+      "module": "A13",
+      "assembly": "Cuisse_L",
+      "bone": "ThighL",
+      "triangles": 48
+    },
+    {
+      "name": "VK8_A18_ThighFeed_L",
+      "module": "A18",
+      "assembly": "Cuisse_L",
+      "bone": "ThighL",
+      "triangles": 44
+    },
+    {
+      "name": "VK8_A13_ThighCooling_L_Pocket",
+      "module": "A13",
+      "assembly": "Cuisse_L",
+      "bone": "ThighL",
+      "triangles": 28
+    },
+    {
+      "name": "VK8_A13_ThighCooling_L_Flange",
+      "module": "A13",
+      "assembly": "Cuisse_L",
+      "bone": "ThighL",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_A13_LateralReinforcement_L",
+      "module": "A13",
+      "assembly": "Cuisse_L",
+      "bone": "ThighL",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A13_RearRelease_L_Pocket",
+      "module": "A13",
+      "assembly": "Cuisse_L",
+      "bone": "ThighL",
+      "triangles": 28
+    },
+    {
+      "name": "VK8_A13_RearRelease_L_Flange",
+      "module": "A13",
+      "assembly": "Cuisse_L",
+      "bone": "ThighL",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_A05_ShoulderKeel_L",
+      "module": "A05",
+      "assembly": "Pauldron_L",
+      "bone": "UpperArmL",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A05_ScaleRivetTab_L_0",
+      "module": "A05",
+      "assembly": "Pauldron_L",
+      "bone": "UpperArmL",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A05_ScaleRivetTab_L_1",
+      "module": "A05",
+      "assembly": "Pauldron_L",
+      "bone": "UpperArmL",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A06_BicepVent_L_Pocket",
+      "module": "A06",
+      "assembly": "Pauldron_L",
+      "bone": "UpperArmL",
+      "triangles": 28
+    },
+    {
+      "name": "VK8_A06_BicepVent_L_Flange",
+      "module": "A06",
+      "assembly": "Pauldron_L",
+      "bone": "UpperArmL",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_A08_ForearmFlange_L_-1",
+      "module": "A08",
+      "assembly": "Vambrace_L",
+      "bone": "ForearmL",
+      "triangles": 48
+    },
+    {
+      "name": "VK8_A08_ForearmFlange_L_1",
+      "module": "A08",
+      "assembly": "Vambrace_L",
+      "bone": "ForearmL",
+      "triangles": 48
+    },
+    {
+      "name": "VK8_A08_WristCollar_L",
+      "module": "A08",
+      "assembly": "Vambrace_L",
+      "bone": "ForearmL",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A08_TerminalVent_L_Pocket",
+      "module": "A08",
+      "assembly": "Vambrace_L",
+      "bone": "ForearmL",
+      "triangles": 28
+    },
+    {
+      "name": "VK8_A08_TerminalVent_L_Flange",
+      "module": "A08",
+      "assembly": "Vambrace_L",
+      "bone": "ForearmL",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_A14_PatellaCap_L",
+      "module": "A14",
+      "assembly": "Greave_L",
+      "bone": "ShinL",
+      "triangles": 70
+    },
+    {
+      "name": "VK8_A15_LowerShinGuard_L",
+      "module": "A15",
+      "assembly": "Greave_L",
+      "bone": "ShinL",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_A03_ClavicleSpur_R",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 40
+    },
+    {
+      "name": "VK8_A03_SweptChestScute_R_0",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 72
+    },
+    {
+      "name": "VK8_A03_SweptChestScute_R_1",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 72
+    },
+    {
+      "name": "VK8_A03_ChestExtractor_R_Pocket",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 28
+    },
+    {
+      "name": "VK8_A03_ChestExtractor_R_Flange",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_A17_CoreLock_R",
+      "module": "A17",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 48
+    },
+    {
+      "name": "VK8_A03_FlankRib_R_0",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 60
+    },
+    {
+      "name": "VK8_A03_FlankRib_R_1",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 60
+    },
+    {
+      "name": "VK8_A03_FlankRib_R_2",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 60
+    },
+    {
+      "name": "VK8_A04_ScapulaVent_R_Pocket",
+      "module": "A04",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 28
+    },
+    {
+      "name": "VK8_A04_ScapulaVent_R_Flange",
+      "module": "A04",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_A12_LowerHipLame_R",
+      "module": "A12",
+      "assembly": "Tassets",
+      "bone": "ThighR",
+      "triangles": 56
+    },
+    {
+      "name": "VK8_A12_HipCrownLatch_R",
+      "module": "A12",
+      "assembly": "Tassets",
+      "bone": "ThighR",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A13_QuadricepsLame_R_0",
+      "module": "A13",
+      "assembly": "Cuisse_R",
+      "bone": "ThighR",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A13_QuadricepsLame_R_1",
+      "module": "A13",
+      "assembly": "Cuisse_R",
+      "bone": "ThighR",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A13_ThighFeedSeat_R",
+      "module": "A13",
+      "assembly": "Cuisse_R",
+      "bone": "ThighR",
+      "triangles": 56
+    },
+    {
+      "name": "VK8_A13_ThighFeedRim_R",
+      "module": "A13",
+      "assembly": "Cuisse_R",
+      "bone": "ThighR",
+      "triangles": 48
+    },
+    {
+      "name": "VK8_A18_ThighFeed_R",
+      "module": "A18",
+      "assembly": "Cuisse_R",
+      "bone": "ThighR",
+      "triangles": 44
+    },
+    {
+      "name": "VK8_A13_ThighCooling_R_Pocket",
+      "module": "A13",
+      "assembly": "Cuisse_R",
+      "bone": "ThighR",
+      "triangles": 28
+    },
+    {
+      "name": "VK8_A13_ThighCooling_R_Flange",
+      "module": "A13",
+      "assembly": "Cuisse_R",
+      "bone": "ThighR",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_A13_LateralReinforcement_R",
+      "module": "A13",
+      "assembly": "Cuisse_R",
+      "bone": "ThighR",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A13_RearRelease_R_Pocket",
+      "module": "A13",
+      "assembly": "Cuisse_R",
+      "bone": "ThighR",
+      "triangles": 28
+    },
+    {
+      "name": "VK8_A13_RearRelease_R_Flange",
+      "module": "A13",
+      "assembly": "Cuisse_R",
+      "bone": "ThighR",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_A05_ShoulderKeel_R",
+      "module": "A05",
+      "assembly": "Pauldron_R",
+      "bone": "UpperArmR",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A05_ScaleRivetTab_R_0",
+      "module": "A05",
+      "assembly": "Pauldron_R",
+      "bone": "UpperArmR",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A05_ScaleRivetTab_R_1",
+      "module": "A05",
+      "assembly": "Pauldron_R",
+      "bone": "UpperArmR",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A06_BicepVent_R_Pocket",
+      "module": "A06",
+      "assembly": "Pauldron_R",
+      "bone": "UpperArmR",
+      "triangles": 28
+    },
+    {
+      "name": "VK8_A06_BicepVent_R_Flange",
+      "module": "A06",
+      "assembly": "Pauldron_R",
+      "bone": "UpperArmR",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_A08_ForearmFlange_R_-1",
+      "module": "A08",
+      "assembly": "Vambrace_R",
+      "bone": "ForearmR",
+      "triangles": 48
+    },
+    {
+      "name": "VK8_A08_ForearmFlange_R_1",
+      "module": "A08",
+      "assembly": "Vambrace_R",
+      "bone": "ForearmR",
+      "triangles": 48
+    },
+    {
+      "name": "VK8_A08_WristCollar_R",
+      "module": "A08",
+      "assembly": "Vambrace_R",
+      "bone": "ForearmR",
+      "triangles": 52
+    },
+    {
+      "name": "VK8_A08_TerminalVent_R_Pocket",
+      "module": "A08",
+      "assembly": "Vambrace_R",
+      "bone": "ForearmR",
+      "triangles": 28
+    },
+    {
+      "name": "VK8_A08_TerminalVent_R_Flange",
+      "module": "A08",
+      "assembly": "Vambrace_R",
+      "bone": "ForearmR",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_A14_PatellaCap_R",
+      "module": "A14",
+      "assembly": "Greave_R",
+      "bone": "ShinR",
+      "triangles": 70
+    },
+    {
+      "name": "VK8_A15_LowerShinGuard_R",
+      "module": "A15",
+      "assembly": "Greave_R",
+      "bone": "ShinR",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_H07_JawExtractor_L_Pocket",
+      "module": "H07",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 28
+    },
+    {
+      "name": "VK8_H07_JawExtractor_L_Flange",
+      "module": "H07",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_H07_JawExtractor_R_Pocket",
+      "module": "H07",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 28
+    },
+    {
+      "name": "VK8_H07_JawExtractor_R_Flange",
+      "module": "H07",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 64
+    },
+    {
+      "name": "VK8_H03_Machining_Head_bevel_metal",
+      "module": "H03",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 136
+    },
+    {
+      "name": "VK8_H03_Machining_Head_woven_undersuit",
+      "module": "H03",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 36
+    },
+    {
+      "name": "VK8_H08_Machining_Head_woven_undersuit",
+      "module": "H08",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 132
+    },
+    {
+      "name": "VK8_H08_Machining_Head_bevel_metal",
+      "module": "H08",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 32
+    },
+    {
+      "name": "VK8_H07_Machining_Head_bevel_metal",
+      "module": "H07",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 96
+    },
+    {
+      "name": "VK8_H07_Machining_Head_woven_undersuit",
+      "module": "H07",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 36
+    },
+    {
+      "name": "VK8_H06_Machining_Head_bevel_metal",
+      "module": "H06",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 96
+    },
+    {
+      "name": "VK8_H06_Machining_Head_woven_undersuit",
+      "module": "H06",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 36
+    },
+    {
+      "name": "VK8_H05_Machining_Head_woven_undersuit",
+      "module": "H05",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 120
+    },
+    {
+      "name": "VK8_H11_Machining_Head_woven_undersuit",
+      "module": "H11",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 72
+    },
+    {
+      "name": "VK8_A03_Machining_Chest_bevel_metal",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 176
+    },
+    {
+      "name": "VK8_A03_Machining_Chest_woven_undersuit",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 252
+    },
+    {
+      "name": "VK8_A04_Machining_Chest_bevel_metal",
       "module": "A04",
       "assembly": "Cuirass",
       "bone": "Chest",
       "triangles": 104
     },
     {
-      "name": "VK7_A10_Machining_Spine_woven_undersuit",
+      "name": "VK8_A04_Machining_Chest_woven_undersuit",
+      "module": "A04",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 104
+    },
+    {
+      "name": "VK8_A10_Machining_Spine_woven_undersuit",
       "module": "A10",
       "assembly": "Waist",
       "bone": "Spine",
       "triangles": 60
     },
     {
-      "name": "VK7_A11_Machining_Hips_bevel_metal",
+      "name": "VK8_A11_Machining_Hips_bevel_metal",
       "module": "A11",
       "assembly": "Waist",
       "bone": "Hips",
       "triangles": 96
     },
     {
-      "name": "VK7_A11_Machining_Hips_woven_undersuit",
+      "name": "VK8_A11_Machining_Hips_woven_undersuit",
       "module": "A11",
       "assembly": "Waist",
       "bone": "Hips",
       "triangles": 36
     },
     {
-      "name": "VK7_A05_Machining_UpperArmL_woven_undersuit",
+      "name": "VK8_A05_Machining_UpperArmL_woven_undersuit",
       "module": "A05",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
-      "triangles": 132
+      "triangles": 144
     },
     {
-      "name": "VK7_A05_Machining_UpperArmL_bevel_metal",
+      "name": "VK8_A05_Machining_UpperArmL_bevel_metal",
       "module": "A05",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
-      "triangles": 32
+      "triangles": 64
     },
     {
-      "name": "VK7_A06_Machining_UpperArmL_woven_undersuit",
+      "name": "VK8_A06_Machining_UpperArmL_woven_undersuit",
       "module": "A06",
       "assembly": "Pauldron_L",
       "bone": "UpperArmL",
       "triangles": 40
     },
     {
-      "name": "VK7_A08_Machining_ForearmL_woven_undersuit",
+      "name": "VK8_A08_Machining_ForearmL_woven_undersuit",
       "module": "A08",
       "assembly": "Vambrace_L",
       "bone": "ForearmL",
       "triangles": 76
     },
     {
-      "name": "VK7_A08_Machining_ForearmL_bevel_metal",
+      "name": "VK8_A08_Machining_ForearmL_bevel_metal",
       "module": "A08",
       "assembly": "Vambrace_L",
       "bone": "ForearmL",
       "triangles": 32
     },
     {
-      "name": "VK7_A12_Machining_ThighL_woven_undersuit",
+      "name": "VK8_A12_Machining_ThighL_woven_undersuit",
       "module": "A12",
       "assembly": "Tassets",
       "bone": "ThighL",
       "triangles": 68
     },
     {
-      "name": "VK7_A13_Machining_ThighL_woven_undersuit",
+      "name": "VK8_A13_Machining_ThighL_woven_undersuit",
       "module": "A13",
       "assembly": "Cuisse_L",
       "bone": "ThighL",
-      "triangles": 72
+      "triangles": 84
     },
     {
-      "name": "VK7_A13_Machining_ThighL_bevel_metal",
+      "name": "VK8_A13_Machining_ThighL_bevel_metal",
       "module": "A13",
       "assembly": "Cuisse_L",
       "bone": "ThighL",
-      "triangles": 32
+      "triangles": 64
     },
     {
-      "name": "VK7_A15_Machining_ShinL_woven_undersuit",
+      "name": "VK8_A15_Machining_ShinL_woven_undersuit",
       "module": "A15",
       "assembly": "Greave_L",
       "bone": "ShinL",
       "triangles": 72
     },
     {
-      "name": "VK7_A15_Machining_ShinL_bevel_metal",
+      "name": "VK8_A15_Machining_ShinL_bevel_metal",
       "module": "A15",
       "assembly": "Greave_L",
       "bone": "ShinL",
-      "triangles": 32
+      "triangles": 56
     },
     {
-      "name": "VK7_A16_Machining_FootL_bevel_metal",
+      "name": "VK8_A16_Machining_FootL_bevel_metal",
       "module": "A16",
       "assembly": "Sabaton_L",
       "bone": "FootL",
       "triangles": 20
     },
     {
-      "name": "VK7_A05_Machining_UpperArmR_woven_undersuit",
+      "name": "VK8_A05_Machining_UpperArmR_woven_undersuit",
       "module": "A05",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
-      "triangles": 132
+      "triangles": 144
     },
     {
-      "name": "VK7_A05_Machining_UpperArmR_bevel_metal",
+      "name": "VK8_A05_Machining_UpperArmR_bevel_metal",
       "module": "A05",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
-      "triangles": 32
+      "triangles": 64
     },
     {
-      "name": "VK7_A06_Machining_UpperArmR_woven_undersuit",
+      "name": "VK8_A06_Machining_UpperArmR_woven_undersuit",
       "module": "A06",
       "assembly": "Pauldron_R",
       "bone": "UpperArmR",
       "triangles": 40
     },
     {
-      "name": "VK7_A08_Machining_ForearmR_woven_undersuit",
+      "name": "VK8_A08_Machining_ForearmR_woven_undersuit",
       "module": "A08",
       "assembly": "Vambrace_R",
       "bone": "ForearmR",
       "triangles": 76
     },
     {
-      "name": "VK7_A08_Machining_ForearmR_bevel_metal",
+      "name": "VK8_A08_Machining_ForearmR_bevel_metal",
       "module": "A08",
       "assembly": "Vambrace_R",
       "bone": "ForearmR",
       "triangles": 32
     },
     {
-      "name": "VK7_A12_Machining_ThighR_woven_undersuit",
+      "name": "VK8_A12_Machining_ThighR_woven_undersuit",
       "module": "A12",
       "assembly": "Tassets",
       "bone": "ThighR",
       "triangles": 68
     },
     {
-      "name": "VK7_A13_Machining_ThighR_woven_undersuit",
+      "name": "VK8_A13_Machining_ThighR_woven_undersuit",
       "module": "A13",
       "assembly": "Cuisse_R",
       "bone": "ThighR",
-      "triangles": 72
+      "triangles": 84
     },
     {
-      "name": "VK7_A13_Machining_ThighR_bevel_metal",
+      "name": "VK8_A13_Machining_ThighR_bevel_metal",
       "module": "A13",
       "assembly": "Cuisse_R",
       "bone": "ThighR",
-      "triangles": 32
+      "triangles": 64
     },
     {
-      "name": "VK7_A15_Machining_ShinR_woven_undersuit",
+      "name": "VK8_A15_Machining_ShinR_woven_undersuit",
       "module": "A15",
       "assembly": "Greave_R",
       "bone": "ShinR",
       "triangles": 72
     },
     {
-      "name": "VK7_A15_Machining_ShinR_bevel_metal",
+      "name": "VK8_A15_Machining_ShinR_bevel_metal",
       "module": "A15",
       "assembly": "Greave_R",
       "bone": "ShinR",
-      "triangles": 32
+      "triangles": 56
     },
     {
-      "name": "VK7_A16_Machining_FootR_bevel_metal",
+      "name": "VK8_A16_Machining_FootR_bevel_metal",
       "module": "A16",
       "assembly": "Sabaton_R",
       "bone": "FootR",
       "triangles": 20
+    },
+    {
+      "name": "VK8_A03_Machining_Chest_black_metal",
+      "module": "A03",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 96
+    },
+    {
+      "name": "VK8_A17_Machining_Chest_bevel_metal",
+      "module": "A17",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 56
+    },
+    {
+      "name": "VK8_A17_Machining_Chest_woven_undersuit",
+      "module": "A17",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 12
+    },
+    {
+      "name": "VK8_A04_Machining_Chest_black_metal",
+      "module": "A04",
+      "assembly": "Cuirass",
+      "bone": "Chest",
+      "triangles": 96
+    },
+    {
+      "name": "VK8_A12_Machining_ThighL_bevel_metal",
+      "module": "A12",
+      "assembly": "Tassets",
+      "bone": "ThighL",
+      "triangles": 20
+    },
+    {
+      "name": "VK8_A13_Machining_ThighL_black_metal",
+      "module": "A13",
+      "assembly": "Cuisse_L",
+      "bone": "ThighL",
+      "triangles": 96
+    },
+    {
+      "name": "VK8_A06_Machining_UpperArmL_black_metal",
+      "module": "A06",
+      "assembly": "Pauldron_L",
+      "bone": "UpperArmL",
+      "triangles": 48
+    },
+    {
+      "name": "VK8_A07_Machining_UpperArmL_bevel_metal",
+      "module": "A07",
+      "assembly": "Pauldron_L",
+      "bone": "UpperArmL",
+      "triangles": 24
+    },
+    {
+      "name": "VK8_A08_Machining_ForearmL_black_metal",
+      "module": "A08",
+      "assembly": "Vambrace_L",
+      "bone": "ForearmL",
+      "triangles": 48
+    },
+    {
+      "name": "VK8_A14_Machining_ShinL_bevel_metal",
+      "module": "A14",
+      "assembly": "Greave_L",
+      "bone": "ShinL",
+      "triangles": 20
+    },
+    {
+      "name": "VK8_A12_Machining_ThighR_bevel_metal",
+      "module": "A12",
+      "assembly": "Tassets",
+      "bone": "ThighR",
+      "triangles": 20
+    },
+    {
+      "name": "VK8_A13_Machining_ThighR_black_metal",
+      "module": "A13",
+      "assembly": "Cuisse_R",
+      "bone": "ThighR",
+      "triangles": 96
+    },
+    {
+      "name": "VK8_A06_Machining_UpperArmR_black_metal",
+      "module": "A06",
+      "assembly": "Pauldron_R",
+      "bone": "UpperArmR",
+      "triangles": 48
+    },
+    {
+      "name": "VK8_A07_Machining_UpperArmR_bevel_metal",
+      "module": "A07",
+      "assembly": "Pauldron_R",
+      "bone": "UpperArmR",
+      "triangles": 24
+    },
+    {
+      "name": "VK8_A08_Machining_ForearmR_black_metal",
+      "module": "A08",
+      "assembly": "Vambrace_R",
+      "bone": "ForearmR",
+      "triangles": 48
+    },
+    {
+      "name": "VK8_A14_Machining_ShinR_bevel_metal",
+      "module": "A14",
+      "assembly": "Greave_R",
+      "bone": "ShinR",
+      "triangles": 20
+    },
+    {
+      "name": "VK8_H07_Machining_Head_black_metal",
+      "module": "H07",
+      "assembly": "Helmet",
+      "bone": "Head",
+      "triangles": 96
     }
   ]
 }
