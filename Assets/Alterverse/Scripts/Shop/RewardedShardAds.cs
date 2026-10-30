@@ -145,9 +145,11 @@ namespace Alterverse.Shop
         public void Prepare()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
-            if (disposed || showing || consentBusy || privacyBusy || RewardedShardPayout.HasPending || Time.unscaledTime < nextAttempt) return;
+            if (disposed || showing || consentBusy || privacyBusy || Time.unscaledTime < nextAttempt) return;
             if (!consentChecked || !ConsentInformation.CanRequestAds()) { GatherConsent(); return; }
             if (!initialized) { InitializeAds(); return; }
+            // Pending payouts block new rewarded videos, not the SDK used by menu banners.
+            if (RewardedShardPayout.HasPending) return;
             if (ad != null && (AdExpired || !ad.CanShowAd())) DestroyLoadedAd();
             if (ad == null && !loading) LoadAd();
 #endif
@@ -288,7 +290,8 @@ namespace Alterverse.Shop
                     loaded?.Destroy();
                     loadFailures = Math.Min(loadFailures + 1, 3);
                     nextAttempt = Time.unscaledTime + (float)Math.Min(60, 10 * (1 << loadFailures));
-                    Status = "No video available right now. Please try again shortly.";
+                    Status = error == null ? "No video returned. Retrying shortly." :
+                        "Video could not load (" + error.GetCode() + "): " + error.GetMessage() + " Retrying shortly.";
                     return;
                 }
                 ad = loaded;

@@ -2,7 +2,11 @@ using System;
 namespace GoogleMobileAds.Api
 {
     public sealed class AdRequest { }
-    public sealed class LoadAdError { }
+    public sealed class LoadAdError
+    {
+        public int GetCode()=>2;
+        public string GetMessage()=>"Network unavailable";
+    }
     public sealed class AdError { }
     public sealed class InitializationStatus { }
     public sealed class Reward { public double Amount = 2; public string Type = "Shards"; }

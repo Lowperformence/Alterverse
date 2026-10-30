@@ -135,13 +135,18 @@ namespace Alterverse.Shop
     {
         public static readonly RewardedShardAds Instance=new RewardedShardAds();
         public bool ReadyForRequests; public int PrivacyRevision;
+        public string Status="Checking ad privacy preferences...";
         public static RewardedShardAds Ensure()=>Instance;
     }
 }
 namespace GoogleMobileAds.Api
 {
     public sealed class AdRequest { }
-    public sealed class LoadAdError { }
+    public sealed class LoadAdError
+    {
+        public int GetCode()=>2;
+        public string GetMessage()=>"Network unavailable";
+    }
     public sealed class AdSize
     {
         public readonly int Width,Height;

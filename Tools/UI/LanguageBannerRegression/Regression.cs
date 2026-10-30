@@ -80,6 +80,9 @@ static class Regression
         ads.Request(new Rect(300,600,960,150));Call(ads,"LateUpdate");
         Check(BannerView.All.Count==0,"Never request ads before the shared consent and initialization gate");
 #if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
+        Check(ads.Status==RewardedShardAds.Instance.Status,"An unready banner exposes its shared privacy/SDK blocker");
+#endif
+#if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
         RewardedShardAds.Instance.ReadyForRequests=true;
         Call(ads,"LateUpdate");
         Check(BannerView.All.Count==1,"One banner instance is created");
@@ -90,9 +93,26 @@ static class Regression
         Check(banner.Unit=="ca-app-pub-1716027263297702/9930233354","Release uses the supplied banner placement");
 #endif
         Check(banner.X==100&&banner.Y==200,"Convert Unity pixels to the pinned Android plugin's dp offsets");
-        banner.Complete();Call(ads,"LateUpdate");Check(ads.Loaded&&banner.Visible,"A loaded banner becomes available");
+        banner.Fail();Call(ads,"LateUpdate");
+        Check(!ads.Loaded&&!banner.Visible&&ads.Status.Contains("Network unavailable")&&ads.Status.Contains("(2)"),
+            "An initial failure exposes the SDK reason and hides the empty native view");
         for(int i=0;i<100;i++)Call(ads,"LateUpdate");
-        Check(banner.Loads==1&&BannerView.All.Count==1,"No application refresh loop or duplicate views");
+        Time.unscaledTime+=29;Call(ads,"LateUpdate");
+        Check(BannerView.All.Count==1&&banner.Loads==1,"A failed initial load cannot retry in a frame loop or before thirty seconds");
+        MainMenuController.MockVisible=false;Time.unscaledTime+=1;Call(ads,"LateUpdate");
+        Check(BannerView.All.Count==1,"A due retry remains suspended outside the menu");
+        MainMenuController.MockVisible=true;Call(ads,"LateUpdate");
+        Check(banner.Destroyed&&BannerView.All.Count==2,"An eligible menu retries the empty initial load after its delay");
+        banner=BannerView.All[1];
+        banner.Fail();Call(ads,"LateUpdate");
+        Time.unscaledTime+=59;Call(ads,"LateUpdate");
+        Check(BannerView.All.Count==2,"Consecutive failures increase the delay to sixty seconds");
+        Time.unscaledTime+=1;Call(ads,"LateUpdate");banner=BannerView.All[2];
+        banner.Complete();Call(ads,"LateUpdate");Check(ads.Loaded&&banner.Visible,"A recovered banner becomes available");
+        banner.Fail();Call(ads,"LateUpdate");Time.unscaledTime+=200;Call(ads,"LateUpdate");
+        Check(ads.Loaded&&banner.Visible&&BannerView.All.Count==3,"SDK refresh errors preserve an existing creative and never trigger app refreshes");
+        for(int i=0;i<100;i++)Call(ads,"LateUpdate");
+        Check(banner.Loads==1&&BannerView.All.Count==3,"No application refresh loop or duplicate views");
         MainMenuController.MockVisible=false;Call(ads,"LateUpdate");
         Check(!banner.Visible,"Hide advertisements outside the home page and behind dialogs");
         MainMenuController.MockVisible=true;Call(ads,"LateUpdate");
@@ -103,15 +123,20 @@ static class Regression
         RewardedShardAds.Instance.ReadyForRequests=false;Call(ads,"LateUpdate");
         Check(!banner.Visible,"Fullscreen rewarded ads and privacy dialogs suppress the banner");
         RewardedShardAds.Instance.PrivacyRevision++;Call(ads,"LateUpdate");
-        Check(banner.Destroyed&&BannerView.All.Count==1,"A privacy change destroys the old ad without requesting before consent");
+        Check(banner.Destroyed&&BannerView.All.Count==3,"A privacy change destroys the old ad without requesting before consent");
         RewardedShardAds.Instance.ReadyForRequests=true;Call(ads,"LateUpdate");
-        var second=BannerView.All[1];
+        var second=BannerView.All[3];
         Call(ads,"OnApplicationPause",true);Call(ads,"LateUpdate");Check(!second.Visible,"Backgrounded apps hide the banner");
         Call(ads,"OnApplicationPause",false);Call(ads,"LateUpdate");Check(second.Visible,"Resume restores an eligible menu banner");
         Time.frameCount+=4;Call(ads,"LateUpdate");Check(!second.Visible,"A stale menu draw cannot leave a native overlay visible");
         ads.Request(new Rect(300,600,960,300),true);Call(ads,"LateUpdate");
-        var large=BannerView.All[2];
+        var large=BannerView.All[4];
         Check(second.Destroyed&&large.Size.Width==320&&large.Size.Height==100,"A size transition replaces the view with a full 320x100 dp large banner");
+        large.Fail();Call(ads,"LateUpdate");Time.unscaledTime+=29;Call(ads,"LateUpdate");
+        Check(BannerView.All.Count==5,"A successful recovery resets the next initial-failure delay to thirty seconds");
+        large.Complete();Call(ads,"LateUpdate");Time.unscaledTime+=200;Call(ads,"LateUpdate");
+        Check(ads.Loaded&&large.Visible&&BannerView.All.Count==5,
+            "An SDK recovery cancels the pending app retry without destroying its creative");
         int before=AndroidJavaClass.Calls;
         LocalizedText.Draw(new Rect(0,0,300,48),"العربية",new GUIStyle());
         LocalizedText.Draw(new Rect(0,0,300,48),"العربية",new GUIStyle());

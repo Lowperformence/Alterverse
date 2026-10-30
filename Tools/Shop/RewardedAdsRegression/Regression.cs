@@ -33,6 +33,9 @@ static class Regression
         var ads = RewardedShardAds.Ensure();
         Call(ads, "Start");
 #if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
+        AccountProfilePrefs.Attach("startup-original", 1, Profile(0));
+        RewardedShardPayout.Enqueue(RewardedShardPayout.NewReceipt());
+        AccountProfilePrefs.Attach("startup-current", 1, Profile(0));
         ads.Prepare();
         Check(MobileAds.Calls == 0, "Never initialize from cached consent before this launch's Update completes");
         Check(ConsentInformation.Updates == 1, "One consent update per launch");
@@ -40,6 +43,13 @@ static class Regression
         Pump(ads);
         Pump(ads);
         Check(MobileAds.Calls == 1, "SDK initialized once");
+        Check(ads.ReadyForRequests && RewardedShardPayout.HasPending && RewardedAd.Loads == 0,
+            "A pending reward still permits SDK/banner initialization while blocking another rewarded video");
+        AccountProfilePrefs.Attach("startup-original", 1, Profile(0));
+        Time.unscaledTime += 2; Pump(ads);
+        Check(!RewardedShardPayout.HasPending && PlayerWallet.EarnedBalance == 5,
+            "The original account can collect its saved reward without a duplicate payment");
+        AccountProfilePrefs.Attach("video-session", 1, Profile(0));
         Check(RewardedAd.Loads == 1 && RewardedAd.Pending != null,
             "Preload immediately after launch consent without opening the shop or calling Prepare");
         Check(!ads.CanShow && RewardedAd.Shows == 0, "Loading never enables an unready ad or opens it automatically");
@@ -124,6 +134,8 @@ static class Regression
         Time.unscaledTime += 3301; Pump(ads);
         Check(ready.Destroyed && !ads.CanShow, "Expire cached ads before Google's one-hour limit");
         ads.Prepare(); RewardedAd.Pending(null, new LoadAdError()); Pump(ads);
+        Check(ads.Status.Contains("Network unavailable") && ads.Status.Contains("(2)"),
+            "Rewarded failures expose the actual SDK error instead of claiming every error is missing demand");
         int attempts = RewardedAd.Loads;
         for (int i = 0; i < 100; i++) ads.Prepare();
         Check(RewardedAd.Loads == attempts, "Failed load retries must be rate limited");
