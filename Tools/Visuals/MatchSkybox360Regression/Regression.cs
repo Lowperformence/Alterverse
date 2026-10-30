@@ -83,7 +83,8 @@ static class Regression
     {
         var method=typeof(MatchSkybox360TextureImporter).GetMethod("OnPreprocessTexture",BindingFlags.NonPublic|BindingFlags.Instance);
         foreach(var path in new[]{"Assets/Alterverse/Resources/FrontEnd/CosmicMenu.png","Assets/Alterverse/Resources/MapPanoramas/Universe.png"}){var i=new TextureImporter{maxTextureSize=17};method.Invoke(new MatchSkybox360TextureImporter{assetPath=path,assetImporter=i},null);Check(i.maxTextureSize==17&&i.platform==null,"existing imports unchanged");}
-        var own=new TextureImporter();method.Invoke(new MatchSkybox360TextureImporter{assetPath=MatchSkybox360Assets.Root+"/Textures/Sky360_StarsNebula.png",assetImporter=own},null);Check(own.maxTextureSize==2048&&own.platform?.format==TextureImporterFormat.ASTC_6x6&&own.platform.overridden&&own.sRGBTexture&&own.mipmapEnabled&&!own.isReadable,"Android texture profile");
+        var own=new TextureImporter();method.Invoke(new MatchSkybox360TextureImporter{assetPath=MatchSkybox360Assets.Root+"/Textures/Sky360_StarsNebula.png",assetImporter=own},null);Check(own.maxTextureSize==2048&&own.platform?.format==TextureImporterFormat.ASTC_4x4&&own.platform.compressionQuality==90&&own.platform.overridden&&own.sRGBTexture&&own.mipmapEnabled&&!own.isReadable,"Android texture profile");
+        var planet=new TextureImporter();method.Invoke(new MatchSkybox360TextureImporter{assetPath=MatchSkybox360Assets.Root+"/Textures/Planet_Azure.png",assetImporter=planet},null);Check(planet.maxTextureSize==1024&&planet.platform?.format==TextureImporterFormat.ASTC_6x6&&planet.platform.compressionQuality==70,"planet compression unchanged");
     }
     static void Main()
     {

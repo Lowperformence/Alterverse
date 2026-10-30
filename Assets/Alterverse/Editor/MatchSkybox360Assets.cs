@@ -97,9 +97,11 @@ namespace Alterverse.EditorTools
             importer.textureType=TextureImporterType.Default;importer.textureShape=TextureImporterShape.Texture2D;
             importer.sRGBTexture=true;importer.alphaSource=TextureImporterAlphaSource.None;importer.isReadable=false;
             importer.mipmapEnabled=true;importer.wrapModeU=TextureWrapMode.Repeat;importer.wrapModeV=TextureWrapMode.Clamp;
-            importer.maxTextureSize=assetPath.EndsWith("Sky360_StarsNebula.png",StringComparison.Ordinal)?2048:1024;
+            bool sky=assetPath.EndsWith("Sky360_StarsNebula.png",StringComparison.Ordinal);
+            importer.maxTextureSize=sky?2048:1024;
             importer.textureCompression=TextureImporterCompression.Compressed;importer.compressionQuality=70;
-            importer.SetPlatformTextureSettings(new TextureImporterPlatformSettings{name="Android",overridden=true,maxTextureSize=importer.maxTextureSize,format=TextureImporterFormat.ASTC_6x6,compressionQuality=70});
+            // Preserve small, bright star cores; planet surfaces keep the existing memory profile.
+            importer.SetPlatformTextureSettings(new TextureImporterPlatformSettings{name="Android",overridden=true,maxTextureSize=importer.maxTextureSize,format=sky?TextureImporterFormat.ASTC_4x4:TextureImporterFormat.ASTC_6x6,compressionQuality=sky?90:70});
         }
     }
 }

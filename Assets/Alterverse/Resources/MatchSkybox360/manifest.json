@@ -15,7 +15,7 @@
         4096,
         2048
       ],
-      "sha256": "b80ce5e2df88df65215799efe70a3775836e82f384a9cd1da1942570eb78c449"
+      "sha256": "4d264e5b40c31ca6d02563ac287add0095904270ea28b0429f8ffa48ca083a8e"
     },
     {
       "file": "Textures/Planet_Azure.png",
@@ -64,5 +64,15 @@
     "Universal Render Pipeline/Lit",
     "Universal Render Pipeline/Unlit"
   ],
-  "build_dependencies": "Editor creates serialized materials in Resources/MatchSkybox360/Generated after import and before client builds."
+  "build_dependencies": "Editor creates serialized materials in Resources/MatchSkybox360/Generated after import and before client builds.",
+  "star_visibility_fix": {
+    "date": "2026-10-30",
+    "angular_core_radius": [
+      0.0017,
+      0.0043
+    ],
+    "source": "Tools/Visuals/MatchSkybox360Stars",
+    "android_sky_compression": "ASTC_4x4",
+    "unchanged": "nebula colors, panorama orientation, planets, runtime camera/sky shader, server"
+  }
 }

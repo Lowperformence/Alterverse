@@ -151,7 +151,7 @@ namespace UnityEditor
 
     public class AssetImporter { }public class AssetPostprocessor {public string assetPath;public AssetImporter assetImporter;}
     public class TextureImporterPlatformSettings {public string name;public bool overridden;public int maxTextureSize,compressionQuality;public TextureImporterFormat format;}
-    public enum TextureImporterFormat {ASTC_6x6}
+    public enum TextureImporterFormat {ASTC_6x6,ASTC_4x4}
     public enum TextureImporterType {Default}public enum TextureImporterShape {Texture2D}public enum TextureImporterAlphaSource {None}public enum TextureImporterCompression {Compressed}
     public class TextureImporter:AssetImporter {public TextureImporterPlatformSettings platform;public void SetPlatformTextureSettings(TextureImporterPlatformSettings p){platform=p;}public TextureImporterType textureType;public TextureImporterShape textureShape;public bool sRGBTexture,isReadable,mipmapEnabled;public TextureImporterAlphaSource alphaSource;public UnityEngine.TextureWrapMode wrapModeU,wrapModeV;public int maxTextureSize,compressionQuality;public TextureImporterCompression textureCompression;}
 }
