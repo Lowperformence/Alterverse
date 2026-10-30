@@ -15,6 +15,7 @@ namespace UnityEngine {
   public static float Sign(float v){return v>=0?1:-1;} public static float Sin(float v){return (float)Math.Sin(v);}
   public static float Cos(float v){return (float)Math.Cos(v);} public static float Pow(float a,float b){return (float)Math.Pow(a,b);}
   public static float Sqrt(float v){return (float)Math.Sqrt(v);} public static float Max(float a,float b){return Math.Max(a,b);}
+  public static float Exp(float value)=>(float)Math.Exp(value);
   public static float Min(float a,float b){return Math.Min(a,b);} public static float Lerp(float a,float b,float t){return a+(b-a)*Clamp01(t);}
   public static float MoveTowards(float v,float target,float delta){return Abs(target-v)<=delta?target:v+Sign(target-v)*delta;}
  }
