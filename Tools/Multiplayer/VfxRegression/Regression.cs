@@ -69,7 +69,9 @@ static partial class VfxRegression
             Check(ability?CoopGameplayCommands.TrySendAbility(client,0,pose):CoopGameplayCommands.TrySendBasic(client,pose),"Real client serializes combat command");
             string name=manager.CustomMessagingManager.LastMessage;byte[] bytes=manager.CustomMessagingManager.LastPacket;
             CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;
+            int searches=UnityEngine.Object.SceneSearches;
             manager.CustomMessagingManager.Handlers[name](7,new FastBufferReader(bytes));
+            Check(UnityEngine.Object.SceneSearches==searches,"actor and hero target lookup perform no global scene discovery");
             float initial=victim.GetComponent<Health>().Current+victim.GetComponent<Health>().Shield;
             for(int frame=0;frame<fps;frame++)Step(1f/fps);
             float after=victim.GetComponent<Health>().Current+victim.GetComponent<Health>().Shield;
@@ -504,6 +506,36 @@ static partial class VfxRegression
         HeroSkillVfx.Debuff(actor,hp,3);Check(Visible().Length>before,"Traveler ultimate retains its original victim debuff presentation");
         TravelerLightningVfx.Available=false;TravelerLightningVfx.NativeClips.Clear();
     }
+    static void LiveCommandLookup()
+    {
+        Reset();var actor=Hero(HeroId.Nyra,0,true);var victim=Hero(HeroId.Kaelon,1);
+        var service=new GameObject("commands").AddComponent<CoopGameplayCommands>();
+        var manager=NetworkManager.Singleton;GameObject.Invoke(service,"Update");
+        CoopAuthority.LocalHasServerAuthority=false;manager.IsServer=false;
+        Check(CoopGameplayCommands.TrySendBasic(actor,new AimPose(Vector3.forward,victim.transform.position,victim.GetComponent<Health>(),true)),"lookup fixture serializes real command");
+        byte[] packet=manager.CustomMessagingManager.LastPacket;
+        CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;
+        var auth=typeof(CoopGameplayCommands).GetMethod("TryReadAuthorizedActor",BindingFlags.NonPublic|BindingFlags.Instance);
+        var target=typeof(CoopGameplayCommands).GetMethod("TryReadTarget",BindingFlags.NonPublic|BindingFlags.Static);
+        bool Authorized()
+        {object[] args={7UL,new FastBufferReader(packet),null};return (bool)auth.Invoke(service,args);}
+        bool Target(out Health result)
+        {
+            var reader=new FastBufferReader(packet);reader.ReadValueSafe(out string round);reader.ReadValueSafe(out int slot);
+            reader.ReadValueSafe(out Unity.Collections.FixedString128Bytes id);reader.ReadValueSafe(out uint sequence);
+            object[] args={actor,reader,null};bool found=(bool)target.Invoke(null,args);result=(Health)args[2];return found;
+        }
+        Check(Authorized(),"live registered owner resolves");
+        actor.GetComponent<Health>().IsDead=true;Check(!Authorized(),"dead owner rejects combat");actor.GetComponent<Health>().IsDead=false;
+        actor.GetComponent<CoopHeroSlot>().PlayerId="other";Check(!Authorized(),"changed identity cannot execute old command");actor.GetComponent<CoopHeroSlot>().PlayerId="test";
+        Health.Active.Remove(actor.GetComponent<Health>());Check(!Authorized(),"removed owner cannot execute stale command");Health.Active.Add(actor.GetComponent<Health>());
+        Check(Authorized(),"reactivated owner resolves without cache delay");
+        Check(Target(out var hp)&&ReferenceEquals(hp,victim.GetComponent<Health>()),"exact target resolves");
+        victim.GetComponent<Health>().IsDead=true;Check(!Target(out hp),"dead target is not substituted");victim.GetComponent<Health>().IsDead=false;
+        Health.Active.Remove(victim.GetComponent<Health>());Check(!Target(out hp),"removed target rejects stale intention");
+        var replacement=Hero(HeroId.Kaelon,1);
+        Check(Target(out hp)&&ReferenceEquals(hp,replacement.GetComponent<Health>()),"replacement roster actor resolves immediately");
+    }
     static void Main()
     {
         var manager=new NetworkManager{IsServer=true,IsListening=true,IsConnectedClient=true};
@@ -521,10 +553,11 @@ static partial class VfxRegression
         Check(Visible().Length>before,"Production receiver and full facade create visible client meshes");
         Check(manager.CustomMessagingManager.Packets.Count==1,"Client replay cannot echo an event");
         before=Visible().Length;relay.Receive(9,packet);Check(Visible().Length==before,"A non-server cannot inject visual events");
-        relay.Unbind();NetworkPresentationFollowers();AllCues();CommandDamage();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();ConfirmedBasicWindups();PendingCooldowns();OfflineOnlineParity();
+        relay.Unbind();NetworkPresentationFollowers();AllCues();CommandDamage();LiveCommandLookup();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();ConfirmedBasicWindups();PendingCooldowns();OfflineOnlineParity();
         AttackAtlasChecks();ThalaHealingRoutes();SelectedAbilityRoutes();TravelerLightningRoutes();
         Console.WriteLine("PASS "+checks+" production online VFX and combat/shader checks (controlled Unity/GPU/network fixtures)");
     }
 }
+
 
 

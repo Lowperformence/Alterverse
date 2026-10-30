@@ -281,12 +281,13 @@ namespace Alterverse.Multiplayer
             if(kind==TargetHero)
             {
                 if(heroSlot<0||heroSlot>=MatchSession.MaxPlayers)return false;
-                CoopHeroSlot[] heroes=FindObjectsByType<CoopHeroSlot>(FindObjectsInactive.Exclude);
-                for(int i=0;i<heroes.Length;i++)
+                // Health already maintains the live registry; do not allocate/search the scene per shot.
+                var heroes=Health.Active;
+                for(int i=0;i<heroes.Count;i++)
                 {
-                    CoopHeroSlot slot=heroes[i];
+                    Health health=heroes[i];
+                    CoopHeroSlot slot=health!=null?health.GetComponent<CoopHeroSlot>():null;
                     if(slot==null||slot.Slot!=heroSlot)continue;
-                    Health health=slot.GetComponent<Health>();
                     if(health!=null&&!health.IsDead&&health.isActiveAndEnabled)target=health;
                     return target!=null;
                 }
@@ -302,9 +303,10 @@ namespace Alterverse.Multiplayer
             {
                 Health candidate=candidates[i];
                 if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled)continue;
-                if(!MatchesTargetKind(candidate,kind,targetTeam))continue;
                 CoopWorldEntityKey key=candidate.GetComponent<CoopWorldEntityKey>();
                 if(key==null||key.Key!=requestedKey)continue;
+                // Only classify/check the team of the exact requested entity.
+                if(!MatchesTargetKind(candidate,kind,targetTeam))continue;
                 target=candidate;return true;
             }
             // A missing/dead target rejects this intention; never substitute a nearby unit.
@@ -358,14 +360,14 @@ namespace Alterverse.Multiplayer
             if(!authorized)return false;
             senderOwners[senderClientId]=playerId;
 
-            CoopHeroSlot[] heroes=FindObjectsByType<CoopHeroSlot>(FindObjectsInactive.Exclude);
-            for(int i=0;i<heroes.Length;i++)
+            var heroes=Health.Active;
+            for(int i=0;i<heroes.Count;i++)
             {
-                CoopHeroSlot h=heroes[i];
+                Health health=heroes[i];
+                CoopHeroSlot h=health!=null?health.GetComponent<CoopHeroSlot>():null;
                 if(h!=null&&h.Slot==rosterSlot&&h.PlayerId==playerId)
                 {
-                    Health health=h.GetComponent<Health>();
-                    if (health == null || health.IsDead) return false;
+                    if (health == null || health.IsDead || !health.isActiveAndEnabled) return false;
                     actor=h.gameObject;
                     return true;
                 }
@@ -380,5 +382,6 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 
 

@@ -12,10 +12,10 @@ static class Regression
     static GameObject Native(string path,Material material)
     {var g=new GameObject(System.IO.Path.GetFileNameWithoutExtension(path));g.AddComponent<ParticleSystem>();g.AddComponent<ParticleSystemRenderer>().sharedMaterials=new[]{material};g.AddComponent<Collider>();g.AddComponent<AudioSource>();g.AddComponent<DemoController>();g.SetActive(false);AssetDatabase.Assets[path]=g;return g;}
     static void Reset()=>typeof(SelectedAbilityVfx).GetMethod("ResetStatic",BindingFlags.NonPublic|BindingFlags.Static).Invoke(null,null);
-    static GameObject Last(int kind,int before)=>GameObject.All.Skip(before).Single(g=>g.name=="DF_Selected_"+kind&&g.GetComponent<SelectedAbilityVfx>()!=null);
+    static GameObject Last(int kind,int before)=>GameObject.All.Last(g=>!g.Destroyed&&g.activeSelf&&g.name=="DF_Selected_"+kind&&g.GetComponent<SelectedAbilityVfx>()!=null);
     static Vector4 Clip(GameObject g)=>g.GetComponentsInChildren<Renderer>(true).Single().Block.Vectors["_AttackClip"];
     static void Finish(GameObject g)
-    {Time.time+=20;GameObject.Invoke(g.GetComponent<SelectedAbilityVfx>(),"LateUpdate");foreach(var ps in g.GetComponentsInChildren<ParticleSystem>(true))ps.Playing=false;GameObject.Invoke(g.GetComponent<SelectedAbilityVfx>(),"LateUpdate");Check(g.Destroyed,"completed native composition is released");}
+    {Time.time+=20;GameObject.Invoke(g.GetComponent<SelectedAbilityVfx>(),"LateUpdate");foreach(var ps in g.GetComponentsInChildren<ParticleSystem>(true))ps.Playing=false;GameObject.Invoke(g.GetComponent<SelectedAbilityVfx>(),"LateUpdate");Check(g.Destroyed||!g.activeSelf,"completed native composition is released");}
     static void Main()
     {
         var m=new Material(new Shader()){name="NativeDetail"};m.SetColor("_Color",new Color(.3f,.8f,.2f));AssetDatabase.Assets["Assets/Epic Toon FX/Materials/NativeDetail.mat"]=m;
@@ -48,7 +48,7 @@ static class Regression
         int count=GameObject.All.Count;SelectedAbilityVfx.TimmyHold(actor,hp,1.5f);Check(GameObject.All.Count==count,"hold refresh cannot stack another stars effect");
         victim.transform.position=new Vector3(3,0,4);Time.time+=.2f;GameObject.Invoke(stars.GetComponent<SelectedAbilityVfx>(),"LateUpdate");Check(stars.transform.position.x==3&&stars.transform.position.z==4&&stars.transform.position.y>1,"stars follow target overhead");
         SelectedAbilityVfx.TimmyHold(actor,hp,0);Check(stars.GetComponentsInChildren<Renderer>(true).All(r=>!r.enabled),"confirmed hold end immediately clears status indication");Finish(stars);
-        before=GameObject.All.Count;SelectedAbilityVfx.TimmyHold(actor,hp,1);var next=Last(5,before);state.Rooted=false;state.Stunned=true;Time.time+=.1f;GameObject.Invoke(next.GetComponent<SelectedAbilityVfx>(),"LateUpdate");Check(next.GetComponentsInChildren<Renderer>(true).All(r=>r.enabled),"stunned network snapshot retains stars during confirmed control");state.Stunned=false;Time.time+=.2f;GameObject.Invoke(next.GetComponent<SelectedAbilityVfx>(),"LateUpdate");Check(next.GetComponentsInChildren<Renderer>(true).All(r=>!r.enabled),"observed root ending removes stars early");Finish(next);
+        before=GameObject.All.Count;SelectedAbilityVfx.TimmyHold(actor,hp,1);var next=Last(5,before);Check(ReferenceEquals(next,stars)&&GameObject.All.Count==before,"stars reuse the existing composition without allocations");state.Rooted=false;state.Stunned=true;Time.time+=.1f;GameObject.Invoke(next.GetComponent<SelectedAbilityVfx>(),"LateUpdate");Check(next.GetComponentsInChildren<Renderer>(true).All(r=>r.enabled),"stunned network snapshot retains stars during confirmed control");state.Stunned=false;Time.time+=.2f;GameObject.Invoke(next.GetComponent<SelectedAbilityVfx>(),"LateUpdate");Check(next.GetComponentsInChildren<Renderer>(true).All(r=>!r.enabled),"observed root ending removes stars early");Finish(next);
         before=GameObject.All.Count;Check(SelectedAbilityVfx.TimmyHold(actor,hp,1,2)&&GameObject.All.Count==before,"late expired stars do not restart");
         hp.IsDead=true;SelectedAbilityVfx.TimmyHold(actor,hp,1);Check(GameObject.All.Count==before,"dead target cannot gain stars");hp.IsDead=false;
         foreach(int kind in new[]{SelectedAbilityVfx.Circle,SelectedAbilityVfx.Fire})foreach(float radius in new[]{.5f,3.2f,3.8f,6})
@@ -68,6 +68,24 @@ static class Regression
         Check(SelectedAbilityVfx.TryEchoImpact(actor,new Vector3(0,0,2)),"confirmed Vacant Echo creates native blood explosion");var blood=Last(1,before);
         Check(Clip(blood).w==3&&Clip(blood).z==3.5f,"blood explosion is bounded to actual release cone");
         var cone=blood.GetComponentsInChildren<Renderer>(true).Single().Block.Vectors["_AttackCone"];Check(Math.Abs(cone.x-(float)Math.Cos(35*Math.PI/180))<.0001,"blood uses actual half cone angle");Finish(blood);
+        // Repeat casts after warm-up without creating/destroying native hierarchies.
+        int warmCount=GameObject.All.Count;
+        for(int i=0;i<200;i++)
+        {
+            SelectedAbilityVfx.TryArea(SelectedAbilityVfx.Fire,new Vector3(i,0,2),1+i%4);
+            var fx=Last(SelectedAbilityVfx.Fire,0);
+            Check(Clip(fx).x==i&&Clip(fx).z==1+i%4,"reused clipping is fresh");Finish(fx);
+        }
+        Check(GameObject.All.Count==warmCount,"200 sequential casts allocate no new effect hierarchy");
+        // Saturation must not steal a running effect or drop a confirmed cast.
+        var burst=new System.Collections.Generic.List<GameObject>();
+        for(int i=0;i<25;i++){SelectedAbilityVfx.TryArea(SelectedAbilityVfx.Fire,new Vector3(i,0,0),2);burst.Add(Last(SelectedAbilityVfx.Fire,0));}
+        Check(burst.Distinct().Count()==25&&burst.All(g=>g.activeSelf),"all 25 simultaneous casts retain independent visuals");
+        foreach(var fx in burst)Finish(fx);
+        Check(burst.Count(g=>!g.Destroyed)==16,"idle retention remains bounded to 16 per kind");
+        int retained=GameObject.All.Count;
+        for(int i=0;i<16;i++)SelectedAbilityVfx.TryArea(SelectedAbilityVfx.Fire,new(),2);
+        Check(GameObject.All.Count==retained,"next burst uses all retained compositions");
         AssetDatabase.Assets.Remove(paths[1]);AssetDatabase.Assets.Remove(paths[5]);
         string folderBlood="Assets/Epic Toon FX/Prefabs/Combat/Explosions/SpikyBlood/Blood.prefab",folderStars="Assets/Epic Toon FX/Prefabs/Status/Stunning/CirclingStars.prefab";
         Native(folderBlood,m);Native(folderStars,m);AssetDatabase.Dependency="folder-categories";SelectedAbilityVfxBuilder.Build();
@@ -77,3 +95,4 @@ static class Regression
         Console.WriteLine($"PASS {checks} selected native ability source/scale/clip/hold/smoke/delivery/lifecycle checks. Controlled fixtures; Unity import, GPU appearance and Android acceptance remain separate.");
     }
 }
+

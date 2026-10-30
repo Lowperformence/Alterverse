@@ -20,6 +20,10 @@ namespace Alterverse.Visuals
         private static SelectedAbilityVfx library;
         private static readonly bool[] warned=new bool[6],reported=new bool[6];
         private static readonly List<SelectedAbilityVfx> active=new();
+        // Bound retained memory without dropping effects during a busy fight.
+        private const int MaxIdlePerKind=16;
+        private static readonly List<SelectedAbilityVfx>[] idle={new(),new(),new(),new(),new(),new()};
+        private bool[] rendererEnabled;
         private struct EchoFrame {public Vector3 origin,direction;public float range,angle,until;}
         private static readonly Dictionary<GameObject,EchoFrame> echoes=new();
         private ParticleSystem[] systems;private Renderer[] renderers;private MaterialPropertyBlock block;
@@ -30,7 +34,7 @@ namespace Alterverse.Visuals
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatic()
-        {library=null;active.Clear();echoes.Clear();for(int i=0;i<6;i++)warned[i]=reported[i]=false;}
+        {library=null;active.Clear();echoes.Clear();foreach(var pool in idle)pool.Clear();for(int i=0;i<6;i++)warned[i]=reported[i]=false;}
         private static Entry Look(int kind,bool report=true)
         {
             if(kind<0||kind>5)return null;
@@ -112,12 +116,28 @@ namespace Alterverse.Visuals
         {for(int i=active.Count-1;i>=0;i--)if(active[i]!=null&&active[i].owner==actor)active[i].Release();if(actor!=null)echoes.Remove(actor);}
         private static SelectedAbilityVfx Spawn(Entry entry,int kind,Vector3 point,Quaternion rotation,float visualRadius,float clipRadius,float elapsed,Vector3 start,Vector3 end,float clipMode)
         {
-            var g=Instantiate(entry.prefab,point,rotation);g.name="DF_Selected_"+kind;
+            SelectedAbilityVfx p=null;
+            var pool=idle[kind];
+            while(pool.Count>0&&p==null){int last=pool.Count-1;p=pool[last];pool.RemoveAt(last);}
+            if(p==null)
+            {
+                var created=Instantiate(entry.prefab,point,rotation);created.name="DF_Selected_"+kind;
+                p=created.AddComponent<SelectedAbilityVfx>();
+                p.systems=created.GetComponentsInChildren<ParticleSystem>(true);
+                p.renderers=created.GetComponentsInChildren<Renderer>(true);p.block=new MaterialPropertyBlock();
+                p.rendererEnabled=new bool[p.renderers.Length];
+                for(int i=0;i<p.renderers.Length;i++)p.rendererEnabled[i]=p.renderers[i].enabled;
+            }
+            var g=p.gameObject;
+            g.transform.position=point;g.transform.rotation=rotation;
             g.transform.localScale=Vector3.one*(visualRadius/entry.nativeRadius);
-            var p=g.AddComponent<SelectedAbilityVfx>();p.live=true;p.kind=kind;p.started=Time.time-elapsed;p.emissionSeconds=Mathf.Max(.05f,entry.emissionSeconds);
+            p.live=true;p.kind=kind;p.started=Time.time-elapsed;p.emissionSeconds=Mathf.Max(.05f,entry.emissionSeconds);
             p.radius=clipRadius;p.clipMode=clipMode;p.clipCenter=clipMode==3?start:end;p.clipStart=start;p.clipEnd=end;
-            p.systems=g.GetComponentsInChildren<ParticleSystem>(true);p.renderers=g.GetComponentsInChildren<Renderer>(true);p.block=new MaterialPropertyBlock();
+            for(int i=0;i<p.renderers.Length;i++)if(p.renderers[i]!=null)p.renderers[i].enabled=p.rendererEnabled[i];
+            foreach(var system in p.systems)if(system!=null)system.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);
             p.UpdateClip();active.Add(p);g.SetActive(true);
+            foreach(var system in p.systems)
+                if(system!=null&&system.gameObject.activeInHierarchy&&system.main.playOnAwake)system.Play(false);
             if(elapsed>0)foreach(var system in p.systems)
                 if(system.gameObject.activeInHierarchy&&system.isPlaying){system.Simulate(elapsed,false,false,false);if(system.particleCount>0||elapsed<p.emissionSeconds)system.Play(false);}
             if(!reported[kind]){Debug.Log("DIMENSIONS FRONT VFX: selected kind "+kind+" ACTIVE; scale="+SizeMultiplier+"; source="+entry.source);reported[kind]=true;}
@@ -152,7 +172,19 @@ namespace Alterverse.Visuals
                 foreach(var system in systems)if(system!=null&&system.gameObject.activeInHierarchy&&system.main.playOnAwake)system.Play(false);
                 return;
             }
-            active.Remove(this);Destroy(gameObject);
+            Recycle();
+        }
+        private void Recycle()
+        {
+            active.Remove(this);live=false;
+            // Clear all actor/status/motion state before this composition serves another cast.
+            owner=null;ownerHealth=null;subject=null;status=null;follow=null;
+            offset=from=to=Vector3.zero;holdUntil=travelSeconds=cosine=0;delivery=0;
+            held=moving=stopped=rootObserved=false;
+            foreach(var system in systems)if(system!=null)system.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);
+            gameObject.SetActive(false);
+            var pool=idle[kind];
+            if(pool.Count<MaxIdlePerKind)pool.Add(this);else Destroy(gameObject);
         }
         private void Release()
         {
@@ -172,6 +204,7 @@ namespace Alterverse.Visuals
                 block.SetVector("_AttackCone",new Vector4(cosine,0,0,0));renderer.SetPropertyBlock(block);
             }
         }
-        private void OnDestroy(){active.Remove(this);}
+        private void OnDestroy(){active.Remove(this);if(kind>=0&&kind<idle.Length)idle[kind].Remove(this);}
     }
 }
+

@@ -39,6 +39,9 @@ def main():
               'Characters/VoidKnightBalance.cs', 'Characters/VoidKnightState.cs',
               'Characters/HeroAbilityExecution.VoidKnight.cs', 'Characters/HeroAbilityExecution.Bolt7.cs', 'Combat/Bolt7Combat.cs', 'Multiplayer/CoopHeroStateSync.Vfx.cs', 'Characters/HeroLocomotion.cs', 'Visuals/HeroPresentationBuffer.cs', 'UI/TargetIndicatorHUD.cs']
     engine = (shared / 'EngineStubs.cs').read_text()
+    engine = engine.replace('public class Object {', 'public class Object {public static int SceneSearches;')
+    engine = engine.replace('where T:class=>GameObject.All.Where(g=>g.activeInHierarchy).Select(g=>g.GetComponent<T>()).Where(x=>x!=null).ToArray();',
+                            'where T:class {SceneSearches++;return GameObject.All.Where(g=>g.activeInHierarchy).Select(g=>g.GetComponent<T>()).Where(x=>x!=null).ToArray();}')
     engine = remove_class(engine, 'public sealed partial class HeroSkillVfx:')
     engine = remove_class(engine, 'public static class CoopHeroStateSync ')
     engine = remove_class(engine, 'public class HeroLocomotion:')
@@ -114,4 +117,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
