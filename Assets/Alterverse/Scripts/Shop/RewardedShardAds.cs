@@ -19,7 +19,42 @@ namespace Alterverse.Shop
         readonly ConcurrentQueue<Action> callbacks = new ConcurrentQueue<Action>();
         bool disposed;
         float nextCollection;
-        public string Status { get; private set; } = "Rewarded ads are available in the Android build.";
+        public string Status { get; private set; } = "Rewarded videos run on Android devices, not in the Unity Editor.";
+        public string DisplayStatus
+        {
+            get
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
+                if (RewardedShardPayout.HasPending) return "A saved ad reward must be collected on its original account first.";
+                if (!Alterverse.Profile.AccountServerBootstrap.CloudProfileReady)
+                    return "Sign in and wait for your game account to finish loading.";
+#endif
+                return Status;
+            }
+        }
+        public bool ReadyForRequests
+        {
+            get
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
+                return !disposed && consentChecked && initialized && !consentBusy && !privacyBusy &&
+                    !showing && ConsentInformation.CanRequestAds();
+#else
+                return false;
+#endif
+            }
+        }
+        public int PrivacyRevision
+        {
+            get
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
+                return consentVersion;
+#else
+                return 0;
+#endif
+            }
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void AutoCreate() => Ensure();
@@ -199,6 +234,7 @@ namespace Alterverse.Shop
             {
                 if (error != null)
                 {
+                    Debug.LogWarning("[DF Ads/Consent] Update failed: " + error);
                     consentBusy = false;
                     consentChecked = true;
                     nextAttempt = Time.unscaledTime + 30;
@@ -248,6 +284,7 @@ namespace Alterverse.Shop
                 }
                 if (error != null || loaded == null)
                 {
+                    Debug.LogWarning("[DF Ads/Rewarded] Load failed: " + (error == null ? "Empty ad response" : error.ToString()));
                     loaded?.Destroy();
                     loadFailures = Math.Min(loadFailures + 1, 3);
                     nextAttempt = Time.unscaledTime + (float)Math.Min(60, 10 * (1 << loadFailures));
@@ -291,3 +328,4 @@ namespace Alterverse.Shop
         }
     }
 }
+

@@ -1,0 +1,46 @@
+name: Language selection and menu banner regression
+on:
+  push:
+    paths:
+      - 'Assets/Alterverse/Scripts/Profile/GameLanguage.cs'
+      - 'Assets/Alterverse/Scripts/UI/LanguagePicker.cs'
+      - 'Assets/Alterverse/Scripts/UI/LocalizedText.cs'
+      - 'Assets/Alterverse/Scripts/UI/MenuBannerLayout.cs'
+      - 'Assets/Alterverse/Scripts/UI/MainMenuAdvertising.cs'
+      - 'Assets/Alterverse/Scripts/UI/MainMenuController.cs'
+      - 'Assets/Alterverse/Scripts/UI/InMatchSettingsMenu.cs'
+      - 'Assets/Alterverse/Scripts/Shop/MenuBannerAds.cs'
+      - 'Assets/Alterverse/Resources/Localization/**'
+      - 'Assets/Plugins/Android/LocalizedTextBitmap.java'
+      - 'Assets/Plugins/Android/proguard-user.txt'
+      - 'Tools/UI/LanguageBannerRegression/**'
+      - '.github/workflows/language-banner-regression.yml'
+  pull_request:
+    paths:
+      - 'Assets/Alterverse/Scripts/Profile/GameLanguage.cs'
+      - 'Assets/Alterverse/Scripts/UI/**'
+      - 'Assets/Alterverse/Scripts/Shop/MenuBannerAds.cs'
+      - 'Assets/Alterverse/Resources/Localization/**'
+      - 'Assets/Plugins/Android/LocalizedTextBitmap.java'
+      - 'Tools/UI/LanguageBannerRegression/**'
+      - '.github/workflows/language-banner-regression.yml'
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python Tools/UI/LanguageBannerRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - name: Compile Android text bridge
+        shell: bash
+        run: |
+          android_jar=$(find "$ANDROID_HOME/platforms" -name android.jar | sort -V | tail -n 1)
+          test -n "$android_jar"
+          javac -classpath "$android_jar" -d "$RUNNER_TEMP/df-language-java" Assets/Plugins/Android/LocalizedTextBitmap.java

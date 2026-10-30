@@ -26,3 +26,7 @@
 -keep,allowoptimization class com.android.billingclient.api.** { public *; protected *; }
 -keep,allowoptimization interface com.unity.purchasing.common.IUnityCallback { *; }
 
+
+# Interface text shaping bridge invoked from Unity C# through JNI.
+-keep,allowoptimization class com.dimensionsfront.ui.LocalizedTextBitmap { public static byte[] render(...); }
+

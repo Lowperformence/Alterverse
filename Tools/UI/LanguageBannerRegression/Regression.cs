@@ -1,0 +1,114 @@
+using System;
+using System.Globalization;
+using System.IO;
+using System.Reflection;
+using Alterverse.Profile;
+using Alterverse.Shop;
+using Alterverse.UI;
+using GoogleMobileAds.Api;
+using UnityEngine;
+
+static class Regression
+{
+    static int checks;
+    static void Check(bool value,string message) {checks++;if(!value)throw new Exception(message);}
+    static void ResetLanguage()=>typeof(GameLanguage).GetMethod("Reset",BindingFlags.Static|BindingFlags.NonPublic).Invoke(null,null);
+    static void Call(MenuBannerAds ads,string method,params object[] args)=>typeof(MenuBannerAds).GetMethod(method,BindingFlags.Instance|BindingFlags.NonPublic).Invoke(ads,args);
+    public static void Main(string[] args)
+    {
+        Resources.Catalog=File.ReadAllText(args[0]);
+        PlayerPrefs.SetString("DF_Shards","170");
+        Application.systemLanguage=SystemLanguage.German;
+        Check(GameLanguage.Current.Code=="de","First launch follows device language without location access");
+        Check(GameLanguage.Languages.Count==40,"All forty language options are available offline");
+        foreach(var language in GameLanguage.Languages)
+        {
+            Check(GameLanguage.Select(language.Code),"Can select "+language.Code);
+            Check(GameLanguage.Current.Code==language.Code,"Selection applies immediately: "+language.Code);
+            string expected=GameLanguage.Text("Settings");
+            Check(!string.IsNullOrWhiteSpace(expected),"Settings label exists: "+language.Code);
+            Check(GameLanguage.Text("SETTINGS")==expected,"Uppercase menu label resolves to the same translation");
+            ResetLanguage();
+            Check(GameLanguage.Current.Code==language.Code && GameLanguage.Text("Settings")==expected,"Selection survives a new app session: "+language.Code);
+        }
+        Check(PlayerPrefs.GetString("DF_Shards","")=="170","Language changes do not change currency or profile data");
+        GameLanguage.Select("de");
+        Check(!GameLanguage.Select("unconfigured-language")&&GameLanguage.Current.Code=="de","Invalid input preserves the existing selection");
+        Check(GameLanguage.Normalize("ES_mx")=="es-MX"&&GameLanguage.Normalize("pt-BR")=="pt-BR","Regional variants remain distinct");
+        Check(GameLanguage.Normalize("fr-CA")=="fr"&&GameLanguage.Normalize("no-NO")=="nb","Regional and legacy aliases resolve");
+        Check(GameLanguage.Normalize("zh-TW")=="zh-Hant"&&GameLanguage.Normalize("zh-CN")=="zh-Hans","Chinese writing systems remain distinct");
+        Check(GameLanguage.Text("Timmy")=="Timmy"&&GameLanguage.Text("An untranslated message.")=="An untranslated message.","Names and missing translations retain the source text");
+        var culture=CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentUICulture=new CultureInfo("es-MX");Application.systemLanguage=SystemLanguage.Spanish;
+        GameLanguage.Select(GameLanguage.DeviceDefault);
+        Check(GameLanguage.Current.Code=="es-MX","Automatic language detection preserves the Mexican locale");
+        CultureInfo.CurrentUICulture=culture;Application.systemLanguage=SystemLanguage.German;
+        Check(GameLanguage.Current.Code=="de","Device-default follows a changed device language");
+
+        var picker=new LanguagePicker();var theme=new FrontEndTheme();
+        picker.Open();GUI.NextText="russian";FrontEndTheme.Click="Русский  /  Russian";
+        picker.Draw(theme,new Rect(0,0,1500,720));
+        Check(!picker.IsOpen&&GameLanguage.Current.Code=="ru","Search and selecting a language change the real preference");
+        picker.Open();GUI.NextText="cestina";FrontEndTheme.Click="Čeština  /  Czech";
+        picker.Draw(theme,new Rect(0,0,1500,720));
+        Check(!picker.IsOpen&&GameLanguage.Current.Code=="cs","Search ignores accents in native names");
+        picker.Open();FrontEndTheme.Click=GameLanguage.Text("Close");picker.Draw(theme,new Rect(0,0,1500,720));
+        Check(!picker.IsOpen&&GameLanguage.Current.Code=="cs","Closing does not change the selection");
+        picker.Open();FrontEndTheme.Actions=0;picker.Draw(theme,new Rect(0,0,1500,720));
+        Check(FrontEndTheme.Actions<16,"Offscreen language rows do not allocate/render text textures");
+
+        foreach(float density in new[]{1f,2f,3f,4f})
+        foreach(var safe in new[]{new Rect(0,0,1920,1080),new Rect(80,40,1760,1000),new Rect(0,0,1280,720)})
+        {
+            var layout=MenuBannerLayout.Calculate(safe,1080,density);
+            if(!layout.Valid)continue;
+            Check(layout.AdPixels.width==(layout.MediumRectangle?300:320)*density&&layout.AdPixels.height==(layout.MediumRectangle?250:50)*density,"Never shrink or crop a native banner");
+            Check(layout.AdPixels.x>=layout.BoardPixels.x&&layout.AdPixels.xMax<=layout.BoardPixels.xMax&&layout.AdPixels.yMax<=layout.BoardPixels.yMax,"The native ad stays completely inside its frame");
+            Check(layout.MediumRectangle ? layout.ContentSafeArea.xMax<layout.BoardPixels.x : 1080-layout.ContentSafeArea.y<layout.BoardPixels.y,"Menu controls are separated from the ad by a reserved gap");
+            Check(layout.BoardPixels.x>=safe.x&&layout.BoardPixels.xMax<=safe.xMax&&layout.BoardPixels.yMax<=1080-safe.y,"Frame respects display cutouts and safe insets");
+        }
+        Check(!MenuBannerLayout.Calculate(new Rect(0,0,300,200),200,1).Valid,"Do not request a banner that cannot fit");
+        Check(MenuBannerLayout.Calculate(new Rect(0,0,1500,720),720,float.NaN).Valid,"Invalid density safely falls back");
+
+        var ads=MenuBannerAds.Ensure();
+        ads.Request(new Rect(300,600,960,150));Call(ads,"LateUpdate");
+        Check(BannerView.All.Count==0,"Never request ads before the shared consent and initialization gate");
+#if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
+        RewardedShardAds.Instance.ReadyForRequests=true;
+        Call(ads,"LateUpdate");
+        Check(BannerView.All.Count==1,"One banner instance is created");
+        var banner=BannerView.All[0];
+#if DEVELOPMENT_BUILD
+        Check(banner.Unit=="ca-app-pub-3940256099942544/6300978111","Development uses the pinned SDK's real banner test ID");
+#else
+        Check(banner.Unit=="ca-app-pub-1716027263297702/9930233354","Release uses the supplied banner placement");
+#endif
+        Check(banner.X==100&&banner.Y==200,"Convert Unity pixels to the pinned Android plugin's dp offsets");
+        banner.Complete();Call(ads,"LateUpdate");Check(ads.Loaded&&banner.Visible,"A loaded banner becomes available");
+        for(int i=0;i<100;i++)Call(ads,"LateUpdate");
+        Check(banner.Loads==1&&BannerView.All.Count==1,"No application refresh loop or duplicate views");
+        MainMenuController.AllowsHomeBanner=false;Call(ads,"LateUpdate");
+        Check(!banner.Visible,"Hide advertisements outside the home page and behind dialogs");
+        MainMenuController.AllowsHomeBanner=true;Call(ads,"LateUpdate");
+        Check(banner.Visible&&banner.Loads==1,"Returning to the menu reuses the banner");
+        RewardedShardAds.Instance.ReadyForRequests=false;Call(ads,"LateUpdate");
+        Check(!banner.Visible,"Fullscreen rewarded ads and privacy dialogs suppress the banner");
+        RewardedShardAds.Instance.PrivacyRevision++;Call(ads,"LateUpdate");
+        Check(banner.Destroyed&&BannerView.All.Count==1,"A privacy change destroys the old ad without requesting before consent");
+        RewardedShardAds.Instance.ReadyForRequests=true;Call(ads,"LateUpdate");
+        var second=BannerView.All[1];
+        Call(ads,"OnApplicationPause",true);Call(ads,"LateUpdate");Check(!second.Visible,"Backgrounded apps hide the banner");
+        Call(ads,"OnApplicationPause",false);Call(ads,"LateUpdate");Check(second.Visible,"Resume restores an eligible menu banner");
+        Time.frameCount+=4;Call(ads,"LateUpdate");Check(!second.Visible,"A stale menu draw cannot leave a native overlay visible");
+        int before=AndroidJavaClass.Calls;
+        LocalizedText.Draw(new Rect(0,0,300,48),"العربية",new GUIStyle());
+        LocalizedText.Draw(new Rect(0,0,300,48),"العربية",new GUIStyle());
+        Check(AndroidJavaClass.Calls==before+1,"Script-shaped text is rendered once and cached");
+        Call(ads,"OnDestroy");Check(second.Destroyed,"Destroying the host releases its native ad");
+#else
+        RewardedShardAds.Instance.ReadyForRequests=true;Call(ads,"LateUpdate");
+        Check(BannerView.All.Count==0,"Editor and dedicated servers never request real mobile advertisements");
+#endif
+        Console.WriteLine("PASS: "+checks+" language persistence, dialog, layout, banner lifecycle and platform checks.");
+    }
+}

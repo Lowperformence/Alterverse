@@ -34,6 +34,14 @@ namespace Alterverse.UI
         private readonly GUIContent measuredText = new GUIContent();
         public void FitLabel(Rect rect, string text, GUIStyle style, bool muted = false)
         {
+            Color original = GUI.color;
+            bool originalWrap = style.wordWrap;
+            style.wordWrap = false;
+            if (muted) GUI.color *= Muted;
+            bool rendered = LocalizedText.Draw(rect, text, style);
+            GUI.color = original;
+            style.wordWrap = originalWrap;
+            if (rendered) return;
             int size = style.fontSize;
             bool wrap = style.wordWrap;
             TextClipping clip = style.clipping;
@@ -301,7 +309,7 @@ namespace Alterverse.UI
             if(style.wordWrap&&rect.width>0&&rect.height>0)
                 while(style.fontSize>12&&style.CalcHeight(measuredText,rect.width)>rect.height+1)
                     style.fontSize--;
-            GUI.Label(rect, text, style);
+            if (!LocalizedText.Draw(rect, text, style)) GUI.Label(rect, text, style);
             style.fontSize=size;
             GUI.color = before;
         }
@@ -361,7 +369,7 @@ namespace Alterverse.UI
                 Button.fontSize = Mathf.Max(12, Mathf.FloorToInt(originalFontSize * availableTextWidth / labelWidth));
 
             GUI.color *= !enabled ? Muted : accent.HasValue ? new Color(.025f,.085f,.14f) : primary ? new Color(1f,.91f,.75f) : Text;
-            GUI.Label(textRect, text, Button);
+            if (!LocalizedText.Draw(textRect, text, Button)) GUI.Label(textRect, text, Button);
             GUI.color = before;
             Button.fontSize = originalFontSize;
 
@@ -416,4 +424,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 

@@ -1,0 +1,26 @@
+# Interface language selection and home advertising
+
+Settings now has a searchable language dialog, shared with the in-match options menu. The selection applies immediately and is stored under device-local `DF_InterfaceLanguage_v1`; account switching, profile synchronization and currency are unaffected. Device-default uses the system language and supported locale, never geolocation. There are 40 choices including Spanish (Mexico), Portuguese (Brazil), Russian, Ukrainian, Arabic, Hebrew, Hindi, both Chinese writing systems, Japanese and Korean.
+
+The offline catalog currently translates 28 settings, navigation and match-control strings. This is not a complete translation of all game dialogue, descriptions, quests or error messages: unmapped strings stay in their original English. Hero names and player names are never passed through the lookup. Extend `InterfaceLanguages.json` with matching entries to localize further authored text.
+
+Android international text uses an offline native `StaticLayout` bridge so Arabic/Hebrew direction, script shaping and system font fallback work without bundling a second font pack. Transparent glyph textures are cached within a 16 MiB/96-entry limit; offscreen language rows are not rendered. The JNI bridge has an Android-only importer and an explicit R8 keep rule. Editor rendering still depends on the installed/editor font coverage and is not a substitute for device verification.
+
+## Additional home-menu advertising board
+
+The supplied banner unit is `ca-app-pub-1716027263297702/9930233354`. Android development builds use the banner test ID from the pinned Google Mobile Ads 11.5.0 sample (`ca-app-pub-3940256099942544/6300978111`). The existing rewarded unit remains `ca-app-pub-1716027263297702/1813938170`.
+
+A native ad does not fit the original narrow hero-caption area at normal phone density. Following the revised marked reference, roomy displays (at least 1000x400 dp) reserve a separate right-hand board with a full 300x250 dp medium rectangle. The remaining menu, including the Halloween card to the left of the advertising column, uses its own safe area. Smaller phones use a dedicated footer with a full 320x50 dp banner and the menu above it. Its heading and border are outside the ad bounds. Layout converts Unity screen pixels into dp for the pinned Android bridge, respects safe-area insets, never clips/scales the ad and skips layouts that cannot accommodate it.
+
+The banner shares the existing rewarded service's consent and SDK initialization. It is hidden during matches, other menu pages, dialogs, full-screen rewarded videos and backgrounding. Changing privacy settings destroys the previous banner. Returning to Home reuses the view; AdMob owns refresh. In the banner unit's advanced settings select Google's optimized automatic refresh. There is no app loop to manufacture impressions and no promise of continuous demand.
+
+## Rewarded-ad diagnosis
+
+The existing service intentionally disables all rewarded ads in the Unity Editor, desktop and dedicated-server builds. Real ads require an Android release build; development builds request test ads. The watch button also requires the matching cloud account to be ready and outstanding earned receipts to be collected. The shop now displays those blockers rather than showing a ready-to-watch message on a disabled button. Native consent/load errors now have `[DF Ads/...]` log entries for Android Logcat diagnosis. This static inspection does not establish the current production fill/error state on the user's device.
+
+## Verification and rollout
+
+`python Tools/UI/LanguageBannerRegression/run.py --dotnet-root "$DOTNET_ROOT"` compiles the real preference, picker, international-text and banner code against controlled engine/ad fixtures for Android release/development, Editor and server. It checks persistence, aliases, missing-key fallback, immediate dialog selection, safe-area layout and consent/visibility/privacy lifecycle. The dedicated workflow also compiles the Java bridge against the runner's Android SDK. The existing rewarded/account regression workflow covers the unchanged reward delivery rules.
+
+A signed Android AAB must be rebuilt and installed/published for these client changes to appear. A dedicated-server rebuild is not required. Native Unity/Gradle rendering, real ad delivery and device typography still require Android validation.
+

@@ -22,6 +22,7 @@ namespace Alterverse.UI
         private bool confirmLeave;
         private bool leaving;
         private bool audioDirty;
+        private readonly LanguagePicker languagePicker = new LanguagePicker();
         private float master, music, sfx;
         private Texture2D settingsGearIcon;
 
@@ -84,6 +85,7 @@ namespace Alterverse.UI
 
         private void CloseOverlay()
         {
+            languagePicker.Close();
             FlushAudio();
             confirmLeave = false;
             IsOpen = false;
@@ -155,7 +157,19 @@ namespace Alterverse.UI
                     return;
                 }
 
-                DrawOverlay(layout);
+                bool choosingLanguage = languagePicker.IsOpen;
+                bool wasEnabled = GUI.enabled;
+                try
+                {
+                    if (choosingLanguage) GUI.enabled = false;
+                    DrawOverlay(layout);
+                    if (choosingLanguage)
+                    {
+                        GUI.enabled = wasEnabled;
+                        languagePicker.Draw(theme, new Rect(0, 0, layout.Width, layout.Height));
+                    }
+                }
+                finally { GUI.enabled = wasEnabled; }
             }
             finally
             {
@@ -262,24 +276,26 @@ namespace Alterverse.UI
             theme.Panel(panel);
             FrontEndTheme.Fill(new Rect(panel.x, panel.y, panel.width, 2), FrontEndTheme.Accent);
 
-            theme.Label(new Rect(panel.x + 24, panel.y + 14, panel.width - 48, 36), "MATCH OPTIONS", theme.Heading);
+            theme.Label(new Rect(panel.x + 24, panel.y + 14, panel.width - 48, 36), GameLanguage.Text("MATCH OPTIONS"), theme.Heading);
             string state = CoopAuthority.Active
                 ? "CO-OP MATCH CONTINUES WHILE OPTIONS ARE OPEN"
                 : "MATCH PAUSED";
-            theme.Label(new Rect(panel.x + 24, panel.y + 50, panel.width - 48, 22), state, theme.Small, true);
+            theme.Label(new Rect(panel.x + 24, panel.y + 50, panel.width - 48, 22), GameLanguage.Text(state), theme.Small, true);
 
             float previousMaster = master, previousMusic = music, previousSfx = sfx;
             const float rowStart = 78f;
             const float rowStep = 64f;
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart, panel.width - 48, 60), "Master Volume", ref master);
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep, panel.width - 48, 60), "Music", ref music);
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 2f, panel.width - 48, 60), "Sound Effects", ref sfx);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart, panel.width - 48, 60), GameLanguage.Text("Master volume"), ref master);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep, panel.width - 48, 60), GameLanguage.Text("Music"), ref music);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 2f, panel.width - 48, 60), GameLanguage.Text("Sound effects"), ref sfx);
             if (previousMaster != master || previousMusic != music || previousSfx != sfx)
                 ApplyAudioLive();
+            theme.Label(new Rect(panel.x + 24, panel.y + 284, 150, 42), GameLanguage.Text("Language"), theme.Body);
+            languagePicker.DrawControl(theme, new Rect(panel.x + 184, panel.y + 284, panel.width - 208, 42));
 
             if (!confirmLeave)
             {
-                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 100, panel.width - 48, 42), "RESUME MATCH", true))
+                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 100, panel.width - 48, 42), GameLanguage.Text("RESUME MATCH"), true))
                     CloseOverlay();
 
                 string destination = CoopAuthority.Active
@@ -296,9 +312,9 @@ namespace Alterverse.UI
                     : "The current match will end without a match reward.";
                 theme.Label(new Rect(panel.x + 24, panel.yMax - 86, panel.width - 48, 22), warning, theme.Small, true);
                 float gap = 12f, buttonWidth = (panel.width - 48 - gap) * .5f;
-                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 50, buttonWidth, 34), "CANCEL"))
+                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 50, buttonWidth, 34), GameLanguage.Text("CANCEL")))
                     confirmLeave = false;
-                if (theme.Action(new Rect(panel.x + 24 + buttonWidth + gap, panel.yMax - 50, buttonWidth, 34), "LEAVE MATCH", true))
+                if (theme.Action(new Rect(panel.x + 24 + buttonWidth + gap, panel.yMax - 50, buttonWidth, 34), GameLanguage.Text("LEAVE MATCH"), true))
                     LeaveMatchNow();
             }
         }
@@ -344,3 +360,4 @@ namespace Alterverse.UI
         }
     }
 }
+

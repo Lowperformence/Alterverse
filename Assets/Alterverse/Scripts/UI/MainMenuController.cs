@@ -54,6 +54,7 @@ namespace Alterverse.UI
         private System.Action<int> changeCollectionHero;
         private float master, music, sfx;
         private bool audioDirty;
+        private readonly LanguagePicker languagePicker = new LanguagePicker();
         private const float MenuHeight = 720;
         private float Left => (menuWidth - ContentWidth + (page==Page.Home?0:240))*.5f;
         private float ContentWidth => Mathf.Min(1360,menuWidth-(page==Page.Home?64:288));
@@ -184,7 +185,8 @@ namespace Alterverse.UI
                 previewWeapon?weaponSkinVariant:(int?)null);
             if (!OnlinePartyOverlay.IsOpen && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
-                if (launching) launching = false;
+                if (languagePicker.IsOpen) languagePicker.Close();
+                else if (launching) launching = false;
                 else SetPage(Page.Home);
             }
             if (launching && Time.unscaledTime-launchAt >= .55f) EnterMatch();
@@ -192,7 +194,7 @@ namespace Alterverse.UI
         private void SetPage(Page next)
         {
             if (page == next || launching) return;
-            FlushAudio(); collection?.Invalidate();showcase?.InvalidateLoadout(); page = next; pageChangedAt = Time.unscaledTime;
+            FlushAudio(); languagePicker.Close(); collection?.Invalidate();showcase?.InvalidateLoadout(); page = next; pageChangedAt = Time.unscaledTime;
             profileMessage = ""; shopMessage = ""; GUI.FocusControl(null);
             confirmRoute=confirmPlayer=confirmLabel=null;
             if(next==Page.Leaderboard)GooglePlayLevelLeaderboard.AuthenticateAndSync();
@@ -209,6 +211,11 @@ namespace Alterverse.UI
                 backdrop.Draw(new Rect(0,0,Screen.width,Screen.height),cosmicBackground?.Image);
                 Rect safe = Screen.safeArea;
                 if (safe.width <= 0 || safe.height <= 0) return;
+                if (AllowsHomeBanner)
+                {
+                    var advertising = MenuBannerLayout.Calculate(safe, Screen.height, MenuBannerAds.DeviceScale);
+                    if (advertising.Valid) safe = advertising.ContentSafeArea;
+                }
                 float scale = Mathf.Min(safe.height/MenuHeight,safe.width/1500f);
                 menuWidth = safe.width/scale;
                 float y = Screen.height-safe.yMax+(safe.height-MenuHeight*scale)*.5f;
@@ -216,6 +223,8 @@ namespace Alterverse.UI
                 theme ??= new FrontEndTheme();
                 if (ReviewPromptVisible) { DrawReviewPrompt(); return; }
                 if (launching) { DrawLaunch(); return; }
+                bool choosingLanguage = languagePicker.IsOpen;
+                if (choosingLanguage) GUI.enabled = false;
                 // Keep the same backdrop brightness on Home and every menu page.
                 // A page-wide scrim and alpha reveal made navigation change the artwork
                 // and control contrast; individual panels already provide their own surface.
@@ -239,6 +248,11 @@ namespace Alterverse.UI
                     case Page.Clans: DrawClans(); break;
                     default: DrawPlay(); break;
                 }
+                if (choosingLanguage)
+                {
+                    GUI.enabled = true;
+                    languagePicker.Draw(theme, new Rect(0, 0, menuWidth, MenuHeight));
+                }
             }
             finally { GUI.matrix = oldMatrix; GUI.color = oldColor; GUI.enabled = oldEnabled; }
         }
@@ -248,9 +262,9 @@ namespace Alterverse.UI
             theme.FitLabel(new Rect(rail,26,208,35),"DIMENSIONS",theme.Heading);
             theme.Label(new Rect(rail,61,208,27),"F  R  O  N  T",theme.Small,true);
             FrontEndTheme.Fill(new Rect(rail+218,26,1,660),new Color(.53f,.64f,.75f,.22f));
-            if(theme.Navigation(new Rect(rail,116,202,46),"HOME",0,selected:page==Page.Home))SetPage(Page.Home);
+            if(theme.Navigation(new Rect(rail,116,202,46),GameLanguage.Text("HOME"),0,selected:page==Page.Home))SetPage(Page.Home);
             for(int i=0;i<NavigationLabels.Length;i++)
-                if(theme.Navigation(new Rect(rail,178+i*44,202,40),NavigationLabels[i],NavigationIcon(NavigationPages[i]),
+                if(theme.Navigation(new Rect(rail,178+i*44,202,40),GameLanguage.Text(NavigationLabels[i]),NavigationIcon(NavigationPages[i]),
                     primary:i==0,selected:page==NavigationPages[i]))SetPage(NavigationPages[i]);
             theme.FitLabel(new Rect(Left,25,ContentWidth-300,30),"COMMAND DECK  /  "+page.ToString().ToUpperInvariant(),theme.Heading);
             theme.Label(new Rect(Left,57,ContentWidth-300,22),$"LEVEL {PlayerExperience.Level}",theme.Small,true);
@@ -320,7 +334,7 @@ namespace Alterverse.UI
             for(int row=0;row<homeNavigation.Length;row++)
             {
                 int i=homeNavigation[row];
-                if(theme.Navigation(new Rect(Left+10,246+row*56,navWidth-10,48),NavigationLabels[i],NavigationIcon(NavigationPages[i]),primary:row==0))
+                if(theme.Navigation(new Rect(Left+10,246+row*56,navWidth-10,48),GameLanguage.Text(NavigationLabels[i]),NavigationIcon(NavigationPages[i]),primary:row==0))
                     SetPage(NavigationPages[i]);
             }
             float textX=Left+navWidth+38;
@@ -336,10 +350,11 @@ namespace Alterverse.UI
             DrawHomeCard(new Rect(Left,542,cardWidth,126),"01  /  DEPLOYMENT","ENTER THE FRONT",Page.Play);
             DrawHomeCard(new Rect(Left+cardWidth+12,542,cardWidth,126),"02  /  SEASON REWARDS","BATTLE PASS",Page.BattlePass);
             DrawHomeCard(new Rect(Left+(cardWidth+12)*2,542,cardWidth,126),"03  /  DAILY OBJECTIVES","MISSIONS",Page.Quests);
-            if(theme.Navigation(new Rect(Left,672,cardWidth,44),"RANKING",NavigationIcon(Page.Leaderboard)))SetPage(Page.Leaderboard);
-            if(theme.Navigation(new Rect(Left+cardWidth+12,672,cardWidth,44),"SETTINGS",NavigationIcon(Page.Settings)))SetPage(Page.Settings);
-            if(theme.Navigation(new Rect(Left+(cardWidth+12)*2,672,cardWidth,44),"CLANS",NavigationIcon(Page.Clans)))SetPage(Page.Clans);
+            if(theme.Navigation(new Rect(Left,672,cardWidth,44),GameLanguage.Text("RANKING"),NavigationIcon(Page.Leaderboard)))SetPage(Page.Leaderboard);
+            if(theme.Navigation(new Rect(Left+cardWidth+12,672,cardWidth,44),GameLanguage.Text("SETTINGS"),NavigationIcon(Page.Settings)))SetPage(Page.Settings);
+            if(theme.Navigation(new Rect(Left+(cardWidth+12)*2,672,cardWidth,44),GameLanguage.Text("CLANS"),NavigationIcon(Page.Clans)))SetPage(Page.Clans);
             DrawHomeNews();
+            DrawHomeAdvertising();
         }
         private void DrawHomeCard(Rect rect,string eyebrow,string title,Page target)
         {
@@ -1363,20 +1378,20 @@ namespace Alterverse.UI
 
         private void DrawSettings()
         {
-            Heading("Settings","Make the sound your own.");
+            Heading(GameLanguage.Text("Settings"),GameLanguage.Text("Audio and language."));
             float w=ContentWidth*.64f;
             theme.Panel(new Rect(Left,222,w,438));
             float previousMaster=master, previousMusic=music, previousSfx=sfx;
-            DrawVolume(new Rect(Left+28,250,w-56,100),"Master volume",ref master);
-            DrawVolume(new Rect(Left+28,380,w-56,100),"Music",ref music);
-            DrawVolume(new Rect(Left+28,510,w-56,100),"Sound effects",ref sfx);
+            DrawVolume(new Rect(Left+28,250,w-56,100),GameLanguage.Text("Master volume"),ref master);
+            DrawVolume(new Rect(Left+28,380,w-56,100),GameLanguage.Text("Music"),ref music);
+            DrawVolume(new Rect(Left+28,510,w-56,100),GameLanguage.Text("Sound effects"),ref sfx);
             if(previousMaster!=master||previousMusic!=music||previousSfx!=sfx)
                 PlayerProfile.SetAudioVolumes(master,music,sfx,false);
             float x=Left+w+32,rw=ContentWidth-w-32;
-            theme.Label(new Rect(x,250,rw,38),"MATCH OPTIONS",theme.Heading);
-            // Remaining audio controls keep their existing layout.
-            theme.Label(new Rect(x,452,rw,28),"Language: "+PlayerProfile.Language,theme.Small,true);
-            theme.Label(new Rect(x,492,rw,48),"Progress and settings are saved on this device.",theme.Small,true);
+            theme.Label(new Rect(x,250,rw,38),GameLanguage.Text("Language"),theme.Heading);
+            languagePicker.DrawControl(theme,new Rect(x,302,rw,54));
+            theme.Label(new Rect(x,374,rw,56),GameLanguage.Text("Changes apply immediately."),theme.Small,true);
+            theme.Label(new Rect(x,492,rw,68),GameLanguage.Text("Progress and settings are saved on this device."),theme.Small,true);
         }
         private void DrawVolume(Rect r,string label,ref float value)
         {
@@ -1590,6 +1605,7 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 
 
