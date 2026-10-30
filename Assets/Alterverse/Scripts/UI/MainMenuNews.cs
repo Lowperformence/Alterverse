@@ -9,13 +9,20 @@ namespace Alterverse.UI
         private GUIStyle newsTitle, newsEyebrow;
         private Rect HomeNewsRect => new(Right - 274f,
             HomeAdvertisingActive ? Mathf.Max(110f, HomeBannerMenuRect.y - 268f) : 460f, 274f, 256f);
-        private float HomeHeroCaptionX => Left + ContentWidth * .62f + (HomeAdvertisingActive ? 44f : 24f);
+        private float HomeHeroColumnX => Left + ContentWidth * .62f + 44f;
+        private float HomeHeroColumnWidth => Mathf.Max(100f, HomeNewsRect.x - HomeHeroColumnX - 12f);
+        private float HomeHeroPreviewWidth => Mathf.Min(320f, HomeHeroColumnWidth * 1.6f);
+        private float HomeHeroCaptionX => HomeAdvertisingActive
+            ? HomeNewsRect.x - 12f - (HomeHeroPreviewWidth + HomeHeroColumnWidth) * .5f
+            : Left + ContentWidth * .62f + 24f;
         private float HomeHeroCaptionY => HomeAdvertisingActive ? HomeBannerMenuRect.y - 66f : 616f;
         private float HomeHeroCaptionWidth =>
-            HomeAdvertisingActive ? Mathf.Max(100f, HomeNewsRect.x - HomeHeroCaptionX - 12f) :
+            HomeAdvertisingActive ? HomeHeroColumnWidth :
             Mathf.Max(150f, HomeNewsRect.x - HomeHeroCaptionX - 12f);
         private Rect HomeHeroPreviewRect(float heroX) => HomeAdvertisingActive
-            ? new Rect(HomeHeroCaptionX, 152f, HomeHeroCaptionWidth, Mathf.Max(140f, HomeHeroCaptionY - 160f))
+            // Grow into the free space on the left; retain the full portrait and pedestal.
+            ? new Rect(HomeNewsRect.x - 12f - HomeHeroPreviewWidth, 124f, HomeHeroPreviewWidth,
+                Mathf.Max(140f, HomeHeroCaptionY - 132f))
             : new Rect(heroX - 64f, 152f, Right - heroX, 450f);
 
         private void DrawHomeNews()
