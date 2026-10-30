@@ -8,6 +8,10 @@ on:
       - 'Assets/Alterverse/Scripts/UI/MenuCosmicBackdrop.cs'
       - 'Tools/Profile/GoogleNameRegression/**'
       - 'Tools/UI/MenuBackgroundRegression/**'
+      - 'Tools/UI/MenuPedestalRegression/**'
+      - 'Tools/UI/MenuPreviewRegression/**'
+      - 'Assets/Alterverse/Scripts/UI/MenuHero*.cs'
+      - 'Assets/Alterverse/Scripts/Visuals/HeroProceduralRig.cs'
       - 'Assets/Alterverse/Scripts/Content/PlayerChallengeContent.cs'
       - 'Assets/Alterverse/Scripts/Match/ArenaVariantRuntime.cs'
       - 'Tools/Shop/AccountRegression/EngineStubs.cs'
@@ -21,6 +25,10 @@ on:
       - 'Assets/Alterverse/Scripts/UI/MenuCosmicBackdrop.cs'
       - 'Tools/Profile/GoogleNameRegression/**'
       - 'Tools/UI/MenuBackgroundRegression/**'
+      - 'Tools/UI/MenuPedestalRegression/**'
+      - 'Tools/UI/MenuPreviewRegression/**'
+      - 'Assets/Alterverse/Scripts/UI/MenuHero*.cs'
+      - 'Assets/Alterverse/Scripts/Visuals/HeroProceduralRig.cs'
       - 'Assets/Alterverse/Scripts/Content/PlayerChallengeContent.cs'
       - 'Assets/Alterverse/Scripts/Match/ArenaVariantRuntime.cs'
       - 'Tools/Shop/AccountRegression/EngineStubs.cs'
@@ -43,3 +51,6 @@ jobs:
       - run: python Tools/Shop/AccountRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Profile/GoogleNameRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/UI/MenuBackgroundRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/UI/MenuPedestalRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python -m pip install Pillow
+      - run: python Tools/UI/MenuPreviewRegression/run.py --dotnet-root "$DOTNET_ROOT"

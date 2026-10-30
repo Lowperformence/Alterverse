@@ -36,9 +36,20 @@ def main():
         solver = (root/'Assets/Alterverse/Scripts/Visuals/CombatMotion.cs').read_text()
         (folder/'Solve.cs').write_text('using UnityEngine;namespace Alterverse.Visuals {public static class CombatMotion {'+
                                       extract(solver,'        public static void Solve(')+'}}')
+        # Exercise the production pose application with synthetic joints, not a second solver.
+        rig = (root/'Assets/Alterverse/Scripts/Visuals/HeroProceduralRig.cs').read_text()
+        fields = rig[rig.index('        private Transform visualRoot;'):rig.index('        public bool Ready')]
+        (folder/'Pose.cs').write_text('using UnityEngine;namespace Alterverse.Visuals {public sealed class HeroProceduralRig:MonoBehaviour {'+
+            fields+'public bool Ready {get;private set;}'+
+            'public void TestBind(Transform lh,Transform lk,Transform la,Transform rh,Transform rk,Transform ra) {'+
+            'hipL=lh;kneeL=lk;ankleL=la;hipR=rh;kneeR=rk;ankleR=ra;'+
+            'hipRestL=lh.localRotation;kneeRestL=lk.localRotation;ankleRestL=la.localRotation;'+
+            'hipRestR=rh.localRotation;kneeRestR=rk.localRotation;ankleRestR=ra.localRotation;Ready=true;}'+
+            extract(rig,'        public void SetProceduralPose(')+
+            extract(rig,'        private void LateUpdate(')+extract(rig,'        private static void ApplyJoint(')+'}}')
         output = folder/'Regression.dll'
         command = [str(sdk/'dotnet'),str(csc),'-nologo','-nowarn:0108,0067','-langversion:9','-out:'+str(output),
-                   *['-r:'+str(p) for p in refs.glob('*.dll')],*map(str,sources),str(folder/'Solve.cs')]
+                   *['-r:'+str(p) for p in refs.glob('*.dll')],*map(str,sources),str(folder/'Solve.cs'),str(folder/'Pose.cs')]
         subprocess.run(command,check=True)
         output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0',
             'framework':{'name':'Microsoft.NETCore.App','version':runtime}}}))

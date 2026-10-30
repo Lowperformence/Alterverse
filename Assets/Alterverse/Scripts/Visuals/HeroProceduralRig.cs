@@ -29,6 +29,7 @@ namespace Alterverse.Visuals
         private Quaternion targetSpineUpper = Quaternion.identity, targetNeck = Quaternion.identity;
         private float targetWeight, displayedWeight, targetBodyWeight, displayedBodyWeight;
         private int poseFrame = -1, bodyPoseFrame = -1;
+        private bool? menuPreview;
 
         public bool Ready { get; private set; }
         public Transform Pelvis => pelvisJoint;
@@ -277,7 +278,10 @@ namespace Alterverse.Visuals
             float dt = Mathf.Max(Time.deltaTime, .0001f);
             if (poseFrame != Time.frameCount) targetWeight = 0f;
             if (bodyPoseFrame != Time.frameCount) targetBodyWeight = 0f;
-            float response = 1f - Mathf.Exp(-18f * dt);
+            // A portrait must start in its final standing pose, before the camera fits.
+            // The same idle targets still animate; only menu-only startup easing is skipped.
+            menuPreview ??= GetComponent<Alterverse.Shop.SkinPreviewSelection>() != null;
+            float response = menuPreview.Value ? 1f : 1f - Mathf.Exp(-18f * dt);
             displayedWeight = Mathf.Lerp(displayedWeight, targetWeight, response);
 
             ApplyJoint(hipL, hipRestL, targetHipL, displayedWeight, response);

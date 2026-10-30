@@ -43,7 +43,7 @@ namespace UnityEngine {
   public static float Pow(float n,float e)=>(float)Math.Pow(n,e);public static float Abs(float n)=>Math.Abs(n);public static float Exp(float n)=>(float)Math.Exp(n);public static float Sqrt(float n)=>(float)Math.Sqrt(n);public static float Sin(float n)=>(float)Math.Sin(n);public static float Min(float a,float b)=>Math.Min(a,b);public static float Max(float a,float b)=>Math.Max(a,b);public static float SmoothStep(float a,float b,float t){t=Clamp01(t);return a+(b-a)*t*t*(3-2*t);}
   public static float PerlinNoise(float x,float y)=>throw new Exception("Runtime backdrop must not generate pixels");
  }
- public static class Time{public static float unscaledTime;}
+ public static class Time{public static float unscaledTime;public static int frameCount;}
  public class Renderer{public Rendering.ShadowCastingMode shadowCastingMode;public bool receiveShadows;public Material sharedMaterial;public void GetPropertyBlock(MaterialPropertyBlock block){}public void SetPropertyBlock(MaterialPropertyBlock block){}}
  public class Material{public bool HasProperty(string name)=>true;}public class MaterialPropertyBlock{public void SetFloat(string name,float value){}}
  public static class Debug{public static void LogWarning(object value){Console.WriteLine(value);}}

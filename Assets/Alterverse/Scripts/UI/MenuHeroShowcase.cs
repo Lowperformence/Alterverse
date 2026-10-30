@@ -20,6 +20,7 @@ namespace Alterverse.UI
         private Alterverse.Shop.UniversalHeroCosmetic selectedCosmetic;
         private Alterverse.Shop.UniversalHeroCosmetic selectedHeadwear,cachedHeadwear;
         private float selectedAt;
+        private int selectedFrame = -1;
         private bool needsFit;
         private bool loadoutDirty=true,cachedWeapon;
         private int cachedWeaponVariant=-1,selectedWeaponVariant=-1;
@@ -61,7 +62,7 @@ namespace Alterverse.UI
         public void InvalidateLoadout()=>loadoutDirty=true;
         private void OnEnable(){Alterverse.Profile.ProfileTransaction.Committed+=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged+=InvalidateLoadout;loadoutDirty=true;}
         private Transform orbitLeft, orbitRight, wingLeft, wingRight;
-        public Texture Image => texture;
+        public Texture Image => needsFit ? null : texture;
         public Texture BackgroundImage => originWorld != null && originWorld.sprite != null ? originWorld.sprite.texture : null;
 
         public void DrawPreview(Rect rect)
@@ -127,6 +128,7 @@ namespace Alterverse.UI
             selectedCosmetic=cosmetic;selectedWeapon=weapon;selectedWeaponVariant=weaponVariant;
             if (actor != null) actor.SetActive(false);
             selected = hero; hasSelection = true; selectedAt = Time.unscaledTime;
+            selectedFrame = Time.frameCount;
             UpdateOriginWorld(hero);
             actor=null;grounding=null;
             for(int i=0;i<previews.Count;i++)
@@ -323,6 +325,9 @@ namespace Alterverse.UI
         private void LateUpdate()
         {
             if (actor == null || stage == null || !stage.activeSelf) return;
+            // Present may construct the actor during Update/OnGUI, before its Start callbacks.
+            // Let the pose writers initialize before measuring feet or exposing the portrait.
+            if (needsFit && selectedFrame == Time.frameCount) return;
             UpdateRenderTarget();
             UpdateOriginWorld(selected);
             float t = Time.unscaledTime - selectedAt;

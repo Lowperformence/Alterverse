@@ -120,11 +120,15 @@ static class Regression
         pedestal.Dispose();pedestal.Dispose();
         Check(host.GetComponentsInChildren<MeshFilter>().All(f=>f.sharedMesh.Destroyed),"owned deck and contact meshes released idempotently");
 
+        CheckInitialStandPose();
         var menu=new GameObject("showcase").AddComponent<MenuHeroShowcase>();
         menu.Present(HeroId.Veyr,true);Call(menu,"Update");Call(menu,"LateUpdate");
+        Check(menu.Image==null&&!Field<MenuHeroGrounding>(menu,"grounding").Ready,
+            "A newly constructed actor is not exposed or foot-solved before its Start/pose frame");
+        Time.frameCount++;Call(menu,"Update");Call(menu,"LateUpdate");
         var first=Field<GameObject>(menu,"actor");var originalGrounding=Field<MenuHeroGrounding>(menu,"grounding");
         var actualDeck=Field<MenuHeroPedestal>(menu,"pedestal");var camera=Field<Camera>(menu,"previewCamera");
-        Check(originalGrounding.Ready&&camera.targetTexture!=null,"full production showcase grounds before fitting camera");
+        Check(originalGrounding.Ready&&menu.Image!=null&&camera.targetTexture!=null,"full production showcase exposes only a grounded, fitted portrait");
         Bounds deckBounds=actualDeck.Bounds;
         for(int corner=0;corner<8;corner++)
         {
@@ -132,11 +136,11 @@ static class Regression
             Vector3 view=camera.transform.InverseTransformPoint(world);
             Check(Math.Abs(view.y)<camera.orthographicSize&&Math.Abs(view.x)<camera.orthographicSize*1536/1728f,"entire stand stays inside portrait camera");
         }
-        menu.Present(HeroId.Timmy,true);Call(menu,"Update");Call(menu,"LateUpdate");
-        menu.Present(HeroId.Veyr,true);Call(menu,"Update");Call(menu,"LateUpdate");
+        menu.Present(HeroId.Timmy,true);Time.frameCount++;Call(menu,"Update");Call(menu,"LateUpdate");
+        menu.Present(HeroId.Veyr,true);Time.frameCount++;Call(menu,"Update");Call(menu,"LateUpdate");
         Check(Field<GameObject>(menu,"actor")==first&&Field<MenuHeroGrounding>(menu,"grounding")==originalGrounding,"cached hero retains measured soles across switching");
         Check(Field<MenuHeroPedestal>(menu,"pedestal")==actualDeck,"all heroes share one stage pedestal");
-        menu.Present(HeroId.Bolt7,true);Call(menu,"Update");Call(menu,"LateUpdate");
+        menu.Present(HeroId.Bolt7,true);Time.frameCount++;Call(menu,"Update");Call(menu,"LateUpdate");
         Check(Field<MenuHeroGrounding>(menu,"grounding").Ready,"dedicated BOLT rig reaches complete preview grounding");
         CheckMobileBudget(menu,camera);
         menu.Present(HeroId.Bolt7,false);Check(!Field<GameObject>(menu,"stage").activeSelf,"hidden menu also hides the pedestal");
@@ -144,6 +148,53 @@ static class Regression
         Call(menu,"OnDestroy");Check(!target.Live&&target.Destroyed&&owned.All(m=>m.Destroyed),"showcase teardown releases stage resources");
         Console.WriteLine($"PASS menu pedestal: {checks} geometry, sole, cache, framing and lifetime checks; synthetic meshes/affine engine fixtures, no native Unity screenshot.");
     }
+    static void CheckInitialStandPose()
+    {
+        foreach(float origin in new[]{0f,12000f})
+        foreach(int fps in new[]{30,60})
+        {
+            Time.deltaTime=1f/fps;
+            var stage=new GameObject("entry pose").transform;stage.position=new Vector3(origin,origin,origin);
+            var actor=TestRig.Part("portrait",stage,Vector3.zero).gameObject;
+            actor.AddComponent<HeroIdentity>().Configure(HeroId.Veyr);
+            actor.AddComponent<Alterverse.Shop.SkinPreviewSelection>();TestRig.Build(actor);
+            var feet=actor.GetComponentInChildren<SkinnedMeshRenderer>().bones;
+            var pose=actor.AddComponent<Alterverse.Visuals.HeroProceduralRig>();
+            pose.TestBind(feet[0].parent.parent,feet[0].parent,feet[0],feet[1].parent.parent,feet[1].parent,feet[1]);
+            var grounding=new MenuHeroGrounding(actor);grounding.Prepare();
+            Quaternion hip=Quaternion.Euler(-8,0,0),knee=Quaternion.Euler(24,0,0),ankle=Quaternion.Euler(-8,0,0);
+            void Pose()
+            {
+                Time.frameCount++;actor.transform.localPosition=Vector3.zero;
+                pose.SetProceduralPose(1,hip,knee,ankle,hip,knee,ankle,Quaternion.identity,Quaternion.identity,Quaternion.identity,Quaternion.identity);
+                Call(pose,"LateUpdate");
+            }
+            Pose();
+            Check(Quaternion.Angle(feet[1].parent.localRotation,knee)<.05f,
+                "A menu actor reaches its standing knee pose on the first posed frame");
+            grounding.PlaceFeet(stage,MenuHeroPedestal.SurfaceY);
+            Transform head=actor.GetComponentsInChildren<Transform>().First(t=>t.name=="Head");
+            float height=head.position.y;
+            for(int frame=0;frame<fps;frame++)
+            {
+                Pose();grounding.PlaceFeet(stage,MenuHeroPedestal.SurfaceY);
+                Check(Math.Abs(head.position.y-height)<.003f,
+                    $"No entry-height settling at {fps} FPS and stage origin {origin}");
+            }
+            var combat=new GameObject("combat pose");
+            var combatPose=combat.AddComponent<Alterverse.Visuals.HeroProceduralRig>();
+            Transform Joint(string name)=>TestRig.Part(name,combat.transform,Vector3.zero);
+            Transform combatKnee=Joint("knee");
+            combatPose.TestBind(Joint("hip"),combatKnee,Joint("ankle"),Joint("hipR"),Joint("kneeR"),Joint("ankleR"));
+            Time.frameCount++;
+            combatPose.SetProceduralPose(1,hip,knee,ankle,hip,knee,ankle,Quaternion.identity,Quaternion.identity,Quaternion.identity,Quaternion.identity);
+            Call(combatPose,"LateUpdate");
+            Check(Quaternion.Angle(combatKnee.localRotation,knee)>1f,
+                "Actors without the preview marker retain their normal smooth pose transition");
+        }
+        Time.deltaTime=1f/60f;
+    }
+
     static void CheckMobileBudget(MenuHeroShowcase menu,Camera camera)
     {
         var original=camera.targetTexture;var actor=Field<GameObject>(menu,"actor");float size=camera.orthographicSize;
