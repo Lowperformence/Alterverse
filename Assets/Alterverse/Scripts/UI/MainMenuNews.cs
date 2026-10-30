@@ -7,9 +7,16 @@ namespace Alterverse.UI
     {
         private static Texture2D pumpkinNewsIcon;
         private GUIStyle newsTitle, newsEyebrow;
-        private Rect HomeNewsRect => new(Right - 274f, 460f, 274f, 256f);
+        private Rect HomeNewsRect => new(Right - 274f,
+            HomeAdvertisingActive ? Mathf.Max(110f, HomeBannerMenuRect.y - 268f) : 460f, 274f, 256f);
+        private float HomeHeroCaptionX => Left + ContentWidth * .62f + (HomeAdvertisingActive ? 44f : 24f);
+        private float HomeHeroCaptionY => HomeAdvertisingActive ? HomeBannerMenuRect.y - 66f : 616f;
         private float HomeHeroCaptionWidth =>
-            Mathf.Max(150f, HomeNewsRect.x - (Left + ContentWidth * .62f + 24f) - 12f);
+            HomeAdvertisingActive ? Mathf.Max(100f, HomeNewsRect.x - HomeHeroCaptionX - 12f) :
+            Mathf.Max(150f, HomeNewsRect.x - HomeHeroCaptionX - 12f);
+        private Rect HomeHeroPreviewRect(float heroX) => HomeAdvertisingActive
+            ? new Rect(HomeHeroCaptionX, 152f, HomeHeroCaptionWidth, Mathf.Max(140f, HomeHeroCaptionY - 160f))
+            : new Rect(heroX - 64f, 152f, Right - heroX, 450f);
 
         private void DrawHomeNews()
         {
@@ -91,3 +98,4 @@ namespace Alterverse.UI
         }
     }
 }
+

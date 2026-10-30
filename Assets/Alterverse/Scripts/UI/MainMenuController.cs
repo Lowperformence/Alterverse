@@ -211,11 +211,6 @@ namespace Alterverse.UI
                 backdrop.Draw(new Rect(0,0,Screen.width,Screen.height),cosmicBackground?.Image);
                 Rect safe = Screen.safeArea;
                 if (safe.width <= 0 || safe.height <= 0) return;
-                if (AllowsHomeBanner)
-                {
-                    var advertising = MenuBannerLayout.Calculate(safe, Screen.height, MenuBannerAds.DeviceScale);
-                    if (advertising.Valid) safe = advertising.ContentSafeArea;
-                }
                 float scale = Mathf.Min(safe.height/MenuHeight,safe.width/1500f);
                 menuWidth = safe.width/scale;
                 float y = Screen.height-safe.yMax+(safe.height-MenuHeight*scale)*.5f;
@@ -312,7 +307,7 @@ namespace Alterverse.UI
             float heroX=Left+ContentWidth*.62f;
             // Render the actual selected loadout over the environment, without an opaque card.
             if(showcase?.Image!=null)
-                GUI.DrawTexture(new Rect(heroX-64,152,Right-heroX,450),showcase.Image,ScaleMode.ScaleToFit,true);
+                GUI.DrawTexture(HomeHeroPreviewRect(heroX),showcase.Image,ScaleMode.ScaleToFit,true);
 
             homeLogo??=new GUIStyle(theme.Title){fontSize=64,fontStyle=FontStyle.Normal};
             theme.FitLabel(new Rect(Left,58,ContentWidth*.67f,80),"DIMENSIONS",homeLogo);
@@ -343,10 +338,12 @@ namespace Alterverse.UI
             theme.Label(new Rect(textX,309,textWidth,94),"TWO REALITIES.\nONE FRONT.",theme.Title);
             theme.Label(new Rect(textX,416,textWidth-12,76),"Choose your hero. Fight alongside your team. Claim the Hotzone and break the enemy core.",theme.Body,true);
             FrontEndTheme.Fill(new Rect(textX,510,56,2),FrontEndTheme.Accent);
-            theme.FitLabel(new Rect(heroX+24,616,HomeHeroCaptionWidth,35),HeroName,theme.Heading);
-            theme.FitLabel(new Rect(heroX+24,654,HomeHeroCaptionWidth,22),Roles[selectedHero],theme.Small,true);
+            theme.FitLabel(new Rect(HomeHeroCaptionX,HomeHeroCaptionY,HomeHeroCaptionWidth,35),HeroName,theme.Heading);
+            theme.FitLabel(new Rect(HomeHeroCaptionX,HomeHeroCaptionY+38,HomeHeroCaptionWidth,22),Roles[selectedHero],theme.Small,true);
 
-            float cardWidth=Mathf.Min(232,(ContentWidth*.66f-24)/3f);
+            float footerWidth=ContentWidth*.66f;
+            if (HomeAdvertisingActive) footerWidth=Mathf.Min(footerWidth,HomeBannerMenuRect.x-Left-16f);
+            float cardWidth=Mathf.Min(232,(footerWidth-24)/3f);
             DrawHomeCard(new Rect(Left,542,cardWidth,126),"01  /  DEPLOYMENT","ENTER THE FRONT",Page.Play);
             DrawHomeCard(new Rect(Left+cardWidth+12,542,cardWidth,126),"02  /  SEASON REWARDS","BATTLE PASS",Page.BattlePass);
             DrawHomeCard(new Rect(Left+(cardWidth+12)*2,542,cardWidth,126),"03  /  DAILY OBJECTIVES","MISSIONS",Page.Quests);

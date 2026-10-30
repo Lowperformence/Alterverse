@@ -124,15 +124,20 @@ namespace GoogleMobileAds.Api
 {
     public sealed class AdRequest { }
     public sealed class LoadAdError { }
-    public sealed class AdSize { public static readonly AdSize Banner=new AdSize(),MediumRectangle=new AdSize(); }
+    public sealed class AdSize
+    {
+        public readonly int Width,Height;
+        public static readonly AdSize Banner=new AdSize(320,50);
+        public AdSize(int width,int height) {Width=width;Height=height;}
+    }
     public static class MobileAds { public static class Utils { public static float GetDeviceScale()=>3; } }
     public sealed class BannerView
     {
         public static readonly List<BannerView> All=new List<BannerView>();
-        public string Unit; public int X,Y,Loads; public bool Visible,Destroyed;
+        public string Unit; public AdSize Size; public int X,Y,Loads; public bool Visible,Destroyed;
         public event Action OnBannerAdLoaded;
         public event Action<LoadAdError> OnBannerAdLoadFailed;
-        public BannerView(string unit,AdSize size,int x,int y) {Unit=unit;X=x;Y=y;All.Add(this);}
+        public BannerView(string unit,AdSize size,int x,int y) {Unit=unit;Size=size;X=x;Y=y;All.Add(this);}
         public void LoadAd(AdRequest request)=>Loads++;
         public void SetPosition(int x,int y) {X=x;Y=y;}
         public void Show()=>Visible=true;

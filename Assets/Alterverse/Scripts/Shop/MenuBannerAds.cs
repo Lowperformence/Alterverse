@@ -18,7 +18,7 @@ namespace Alterverse.Shop
         public bool Loaded { get; private set; }
         bool disposed, paused;
         Rect requestedPixels;
-        bool requestedMediumRectangle;
+        bool requestedLargeBanner;
         int lastRequestedFrame = -100;
         readonly ConcurrentQueue<Action> callbacks = new ConcurrentQueue<Action>();
         static float density = 1, nextDensityCheck;
@@ -51,8 +51,8 @@ namespace Alterverse.Shop
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this; DontDestroyOnLoad(gameObject);
         }
-        public void Request(Rect topLeftPixels, bool mediumRectangle = false)
-        { requestedPixels = topLeftPixels; requestedMediumRectangle = mediumRectangle; lastRequestedFrame = Time.frameCount; }
+        public void Request(Rect topLeftPixels, bool largeBanner = false)
+        { requestedPixels = topLeftPixels; requestedLargeBanner = largeBanner; lastRequestedFrame = Time.frameCount; }
         void LateUpdate()
         {
             while (callbacks.TryDequeue(out var callback)) if (!disposed) callback();
@@ -65,7 +65,7 @@ namespace Alterverse.Shop
             if (!visible) { Hide(); return; }
             int x = Mathf.RoundToInt(requestedPixels.x / DeviceScale);
             int y = Mathf.RoundToInt(requestedPixels.y / DeviceScale);
-            if (banner != null && currentMediumRectangle != requestedMediumRectangle) DestroyBanner();
+            if (banner != null && currentLargeBanner != requestedLargeBanner) DestroyBanner();
             if (banner == null) Create(x, y);
             if (banner == null) return;
             if (x != positionX || y != positionY) { banner.SetPosition(x, y); positionX = x; positionY = y; }
@@ -75,7 +75,7 @@ namespace Alterverse.Shop
 #if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
         BannerView banner;
         bool shown;
-        bool currentMediumRectangle;
+        bool currentLargeBanner;
         int privacyVersion, positionX, positionY;
         void Create(int x, int y)
         {
@@ -84,8 +84,8 @@ namespace Alterverse.Shop
 #else
             string unit = AndroidAdUnitId;
 #endif
-            currentMediumRectangle = requestedMediumRectangle;
-            var created = new BannerView(unit, currentMediumRectangle ? AdSize.MediumRectangle : AdSize.Banner, x, y);
+            currentLargeBanner = requestedLargeBanner;
+            var created = new BannerView(unit, currentLargeBanner ? new AdSize(320, 100) : AdSize.Banner, x, y);
             banner = created; positionX = x; positionY = y;
             Status = "Loading advertisement...";
             created.OnBannerAdLoaded += () => callbacks.Enqueue(() =>

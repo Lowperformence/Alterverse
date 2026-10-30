@@ -8,6 +8,10 @@ namespace Alterverse.UI
         public static bool AllowsHomeBanner => IsVisible && instance.page == Page.Home &&
             !instance.launching && !instance.ReviewPromptVisible && !instance.languagePicker.IsOpen &&
             !OnlinePartyOverlay.IsOpen && !RankedPanel.Visible && !OnlineMatchLoadingScreen.IsVisible;
+        private MenuBannerLayout HomeAdvertisingLayout => MenuBannerLayout.Calculate(Screen.safeArea,
+            Screen.height, MenuBannerAds.DeviceScale);
+        private bool HomeAdvertisingActive => HomeAdvertisingLayout.Valid;
+        private Rect HomeBannerMenuRect => HomeAdvertisingLayout.InMenuCoordinates(Screen.safeArea, Screen.height);
 
         void DrawHomeAdvertising()
         {
@@ -16,7 +20,7 @@ namespace Alterverse.UI
             var layout = MenuBannerLayout.Calculate(Screen.safeArea, Screen.height, density);
             if (!layout.Valid) return;
             var service = MenuBannerAds.Ensure();
-            service.Request(layout.AdPixels, layout.MediumRectangle);
+            service.Request(layout.AdPixels, layout.LargeBanner);
             Matrix4x4 previous = GUI.matrix;
             GUI.matrix = Matrix4x4.identity;
             try

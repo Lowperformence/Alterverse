@@ -58,13 +58,19 @@ static class Regression
         Check(FrontEndTheme.Actions<16,"Offscreen language rows do not allocate/render text textures");
 
         foreach(float density in new[]{1f,2f,3f,4f})
-        foreach(var safe in new[]{new Rect(0,0,1920,1080),new Rect(80,40,1760,1000),new Rect(0,0,1280,720)})
+        foreach(var safe in new[]{new Rect(0,0,1920,1080),new Rect(80,40,1760,1000),new Rect(0,0,1280,720),new Rect(0,0,1560,1020)})
         {
             var layout=MenuBannerLayout.Calculate(safe,1080,density);
             if(!layout.Valid)continue;
-            Check(layout.AdPixels.width==(layout.MediumRectangle?300:320)*density&&layout.AdPixels.height==(layout.MediumRectangle?250:50)*density,"Never shrink or crop a native banner");
+            Check(layout.AdPixels.width==320*density&&layout.AdPixels.height==(layout.LargeBanner?100:50)*density,"Never shrink or crop a native banner");
             Check(layout.AdPixels.x>=layout.BoardPixels.x&&layout.AdPixels.xMax<=layout.BoardPixels.xMax&&layout.AdPixels.yMax<=layout.BoardPixels.yMax,"The native ad stays completely inside its frame");
-            Check(layout.MediumRectangle ? layout.ContentSafeArea.xMax<layout.BoardPixels.x : 1080-layout.ContentSafeArea.y<layout.BoardPixels.y,"Menu controls are separated from the ad by a reserved gap");
+            var menuRect=layout.InMenuCoordinates(safe,1080);
+            Check(menuRect.x>=0&&menuRect.y>=0,"Convert the lower-right board into the menu coordinate system");
+            float scale=Math.Min(safe.height/720f,safe.width/1500f);
+            float menuWidth=safe.width/scale,contentWidth=Math.Min(1360,menuWidth-64),left=(menuWidth-contentWidth)*.5f;
+            float footerWidth=Math.Min(contentWidth*.66f,menuRect.x-left-16),cardWidth=Math.Min(232,(footerWidth-24)/3);
+            Check(cardWidth>=120&&left+cardWidth*3+24<=menuRect.x-16,"All three footer cards/actions fit to the left of the advertisement");
+            Check(Math.Max(110,menuRect.y-268)+256<=menuRect.y-12,"The event card remains above the advertising board");
             Check(layout.BoardPixels.x>=safe.x&&layout.BoardPixels.xMax<=safe.xMax&&layout.BoardPixels.yMax<=1080-safe.y,"Frame respects display cutouts and safe insets");
         }
         Check(!MenuBannerLayout.Calculate(new Rect(0,0,300,200),200,1).Valid,"Do not request a banner that cannot fit");
@@ -100,11 +106,14 @@ static class Regression
         Call(ads,"OnApplicationPause",true);Call(ads,"LateUpdate");Check(!second.Visible,"Backgrounded apps hide the banner");
         Call(ads,"OnApplicationPause",false);Call(ads,"LateUpdate");Check(second.Visible,"Resume restores an eligible menu banner");
         Time.frameCount+=4;Call(ads,"LateUpdate");Check(!second.Visible,"A stale menu draw cannot leave a native overlay visible");
+        ads.Request(new Rect(300,600,960,300),true);Call(ads,"LateUpdate");
+        var large=BannerView.All[2];
+        Check(second.Destroyed&&large.Size.Width==320&&large.Size.Height==100,"A size transition replaces the view with a full 320x100 dp large banner");
         int before=AndroidJavaClass.Calls;
         LocalizedText.Draw(new Rect(0,0,300,48),"العربية",new GUIStyle());
         LocalizedText.Draw(new Rect(0,0,300,48),"العربية",new GUIStyle());
         Check(AndroidJavaClass.Calls==before+1,"Script-shaped text is rendered once and cached");
-        Call(ads,"OnDestroy");Check(second.Destroyed,"Destroying the host releases its native ad");
+        Call(ads,"OnDestroy");Check(large.Destroyed,"Destroying the host releases its native ad");
 #else
         RewardedShardAds.Instance.ReadyForRequests=true;Call(ads,"LateUpdate");
         Check(BannerView.All.Count==0,"Editor and dedicated servers never request real mobile advertisements");

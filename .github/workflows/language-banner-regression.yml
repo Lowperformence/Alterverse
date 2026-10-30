@@ -8,6 +8,7 @@ on:
       - 'Assets/Alterverse/Scripts/UI/MenuBannerLayout.cs'
       - 'Assets/Alterverse/Scripts/UI/MainMenuAdvertising.cs'
       - 'Assets/Alterverse/Scripts/UI/MainMenuController.cs'
+      - 'Assets/Alterverse/Scripts/UI/MainMenuNews.cs'
       - 'Assets/Alterverse/Scripts/UI/InMatchSettingsMenu.cs'
       - 'Assets/Alterverse/Scripts/Shop/MenuBannerAds.cs'
       - 'Assets/Alterverse/Resources/Localization/**'
