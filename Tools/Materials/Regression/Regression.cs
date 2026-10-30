@@ -12,6 +12,7 @@ namespace UnityEngine.Rendering
     public enum TextureDimension { Tex2D, Cube, Tex3D, Tex2DArray, CubeArray }
     public enum ShaderPropertyType { Texture, Float }
     public enum ShadowCastingMode { On, Off }
+    public enum GraphicsDeviceType { Null, Direct3D11 }
     public static class GraphicsSettings { public static object currentRenderPipeline = new object(); }
 }
 namespace UnityEngine
@@ -25,9 +26,10 @@ namespace UnityEngine
     public class RuntimeInitializeOnLoadMethodAttribute : Attribute { public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType type) { } }
     public class Object
     {
+        public static Renderer[] FoundRenderers=Array.Empty<Renderer>();
         public string name = "Fixture";
         public static T FindAnyObjectByType<T>() where T : class => null;
-        public static T[] FindObjectsByType<T>(FindObjectsInactive inactive, FindObjectsSortMode sort) => Array.Empty<T>();
+        public static T[] FindObjectsByType<T>(FindObjectsInactive inactive, FindObjectsSortMode sort) => (T[])(object)FoundRenderers;
         public static void DontDestroyOnLoad(Object target) { }
     }
     public class Component : Object { public GameObject gameObject = new GameObject(); }
@@ -35,11 +37,15 @@ namespace UnityEngine
     public class Transform : Object { }
     public class GameObject : Object
     {
+        public bool activeInHierarchy=true;
+        public static int AddedComponents;
         public Transform transform = new Transform();
         public GameObject() { } public GameObject(string name) { this.name = name; }
         public static GameObject Find(string name) => null;
-        public T AddComponent<T>() where T : new() => new T();
+        public T AddComponent<T>() where T : new() { AddedComponents++;return new T(); }
     }
+    public static class Mathf { public static int Min(int a,int b)=>Math.Min(a,b); }
+    public static class SystemInfo { public static GraphicsDeviceType graphicsDeviceType=GraphicsDeviceType.Direct3D11; }
     public static class Time { public static float unscaledTime; }
     public struct Color { public float r,g,b,a; public static Color white => new Color { r=1,g=1,b=1,a=1 }; }
     public struct Vector2 { public float x,y; public Vector2(float x,float y) { this.x=x;this.y=y; } }
@@ -87,8 +93,17 @@ namespace UnityEngine
         public void DisableKeyword(string name) { keywords.Remove(name); }
         public bool IsKeywordEnabled(string name) => keywords.Contains(name);
     }
-    public class Renderer : Component { public Material[] sharedMaterials; public ShadowCastingMode shadowCastingMode=ShadowCastingMode.On; }
+    public class Renderer : Component
+    {
+        Material[] materials;
+        public static int ArrayReads,ListReads;
+        public Material[] sharedMaterials {get {ArrayReads++;return (Material[])materials.Clone();} set {materials=value;}}
+        public void GetSharedMaterials(List<Material> result) {ListReads++;result.Clear();result.AddRange(materials);}
+        public void SetSharedMaterials(List<Material> result) {materials=result.ToArray();}
+        public ShadowCastingMode shadowCastingMode=ShadowCastingMode.On;
+    }
 }
+namespace Alterverse.Multiplayer {public static class DedicatedServerNetworkRuntime {public static bool Requested;}}
 namespace UnityEditor
 {
     public class AssetPostprocessor { public string assetPath;public object assetImporter; public virtual uint GetVersion()=>0; }
@@ -111,18 +126,20 @@ namespace Alterverse.Visuals
 internal static class Regression
 {
     private static int checks;
-    private static readonly MethodInfo Repair=typeof(AndroidMaterialCompatibilityGuard).GetMethod("RepairRenderer",BindingFlags.NonPublic|BindingFlags.Static);
+    private static readonly AndroidMaterialCompatibilityGuard Guard=new AndroidMaterialCompatibilityGuard();
+    private static readonly MethodInfo Repair=typeof(AndroidMaterialCompatibilityGuard).GetMethod("RepairRenderer",BindingFlags.NonPublic|BindingFlags.Instance);
     private static void Check(bool condition,string message) { checks++;if(!condition)throw new Exception(message); }
     private static Material RepairOne(Material source)
     {
         var renderer=new Renderer { sharedMaterials=new[]{source},name="Armor" };
-        Repair.Invoke(null,new object[]{renderer});
+        Repair.Invoke(Guard,new object[]{renderer});
         var result=renderer.sharedMaterials[0];int owned=RuntimeMaterialPalette.Repairs;
-        Repair.Invoke(null,new object[]{renderer});Check(renderer.sharedMaterials[0]==result&&RuntimeMaterialPalette.Repairs==owned,"Repeated repair must reuse the material");
+        Repair.Invoke(Guard,new object[]{renderer});Check(renderer.sharedMaterials[0]==result&&RuntimeMaterialPalette.Repairs==owned,"Repeated repair must reuse the material");
         return result;
     }
     private static void Main()
     {
+        CheckRepairBudget();
         foreach(var dimension in new[]{TextureDimension.Cube,TextureDimension.Tex3D,TextureDimension.Tex2DArray,TextureDimension.CubeArray})
         {
             foreach(bool legacy in new[]{false,true})
@@ -165,6 +182,29 @@ internal static class Regression
         var unrelated=new Alterverse.EditorTools.VoidKnightTextureImporter{assetPath="Assets/Other/Environment.png",assetImporter=other};
         unrelated.GetType().GetMethod("OnPreprocessTexture",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(unrelated,null);
         Check(other.textureShape==UnityEditor.TextureImporterShape.TextureCube,"Unrelated environment imports must not change");
-        Console.WriteLine(checks+" material dimension/import checks passed using engine fixtures. Not a native Unity render test.");
+        Console.WriteLine(checks+" material repair/budget/dimension/import checks passed using engine fixtures. Not a native Unity render test.");
+    }
+    private static void CheckRepairBudget()
+    {
+        var install=typeof(AndroidMaterialCompatibilityGuard).GetMethod("Install",BindingFlags.Static|BindingFlags.NonPublic);
+        Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested=true;
+        install.Invoke(null,null);Check(GameObject.AddedComponents==0,"No material guard on dedicated server");
+        Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested=false;
+        SystemInfo.graphicsDeviceType=GraphicsDeviceType.Null;
+        install.Invoke(null,null);Check(GameObject.AddedComponents==0,"No material guard without a graphics device");
+        SystemInfo.graphicsDeviceType=GraphicsDeviceType.Direct3D11;
+        UnityEngine.Object.FoundRenderers=new Renderer[161];
+        for(int i=0;i<160;i++)UnityEngine.Object.FoundRenderers[i]=new Renderer{sharedMaterials=new[]{new Material(new Shader("Standard"))}};
+        var tick=typeof(AndroidMaterialCompatibilityGuard).GetMethod("LateUpdate",BindingFlags.Instance|BindingFlags.NonPublic);
+        Renderer.ArrayReads=Renderer.ListReads=0;Time.unscaledTime=10;
+        tick.Invoke(Guard,null);
+        Check(Renderer.ListReads==48&&Renderer.ArrayReads==0,"Bound each repair frame and reuse material list");
+        for(int i=0;i<3;i++)tick.Invoke(Guard,null);
+        Check(Renderer.ListReads==160,"Every live renderer eventually checked; null entries skipped");
+        tick.Invoke(Guard,null);Check(Renderer.ListReads==160,"No busy scanning between sweeps");
+        for(int i=0;i<160;i++)Check(UnityEngine.Object.FoundRenderers[i].sharedMaterials[0].shader!=null&&
+            UnityEngine.Object.FoundRenderers[i].sharedMaterials[0].shader.name!="Standard","Batched repair retains legacy shader recovery");
+        Time.unscaledTime+=1.01f;int before=Renderer.ListReads;
+        tick.Invoke(Guard,null);Check(Renderer.ListReads-before==48,"A later sweep retains the frame budget");
     }
 }

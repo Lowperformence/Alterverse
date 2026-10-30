@@ -138,9 +138,40 @@ static class Regression
         Check(Field<MenuHeroPedestal>(menu,"pedestal")==actualDeck,"all heroes share one stage pedestal");
         menu.Present(HeroId.Bolt7,true);Call(menu,"Update");Call(menu,"LateUpdate");
         Check(Field<MenuHeroGrounding>(menu,"grounding").Ready,"dedicated BOLT rig reaches complete preview grounding");
+        CheckMobileBudget(menu,camera);
         menu.Present(HeroId.Bolt7,false);Check(!Field<GameObject>(menu,"stage").activeSelf,"hidden menu also hides the pedestal");
         var target=(RenderTexture)menu.Image;var owned=Field<GameObject>(menu,"stage").GetComponentsInChildren<MeshFilter>().Where(f=>f.gameObject.name.StartsWith("DF_Menu")).Select(f=>f.sharedMesh).ToArray();
         Call(menu,"OnDestroy");Check(!target.Live&&target.Destroyed&&owned.All(m=>m.Destroyed),"showcase teardown releases stage resources");
         Console.WriteLine($"PASS menu pedestal: {checks} geometry, sole, cache, framing and lifetime checks; synthetic meshes/affine engine fixtures, no native Unity screenshot.");
+    }
+    static void CheckMobileBudget(MenuHeroShowcase menu,Camera camera)
+    {
+        var original=camera.targetTexture;var actor=Field<GameObject>(menu,"actor");float size=camera.orthographicSize;
+        Check(original.width==1536&&original.height==1728&&original.antiAliasing==4,"Retain desktop portrait target");
+        Application.isMobilePlatform=true;
+        Alterverse.Performance.MobilePerformanceProfile.Current=Alterverse.Performance.MobileQuality.Balanced;
+        Call(menu,"LateUpdate");var balanced=camera.targetTexture;
+        Check(balanced.width==1024&&balanced.height==1152&&balanced.antiAliasing==2,"Bound balanced Android portrait cost");
+        Check(original.Destroyed&&!original.Live,"Release replaced target");
+        Call(menu,"LateUpdate");Check(camera.targetTexture==balanced,"Reuse target while quality stays unchanged");
+        Alterverse.Performance.MobilePerformanceProfile.Current=Alterverse.Performance.MobileQuality.Battery;
+        Call(menu,"LateUpdate");Check(camera.targetTexture.width==768&&camera.targetTexture.height==864&&camera.targetTexture.antiAliasing==1,"Battery portrait budget");
+        Check(Application.targetFrameRate==30,"Battery frame pacing remains 30 FPS");
+        var battery=camera.targetTexture;
+        Alterverse.Performance.MobilePerformanceProfile.Current=Alterverse.Performance.MobileQuality.Performance;
+        RenderTexture.FailCreate=true;Call(menu,"LateUpdate");
+        Check(camera.targetTexture==battery&&!battery.Destroyed,"A failed target allocation retains the previous image");
+        RenderTexture.FailCreate=false;Call(menu,"LateUpdate");
+        Check(camera.targetTexture.width==1536&&camera.targetTexture.antiAliasing==4&&Application.targetFrameRate==60,"High quality and 60 FPS remain available");
+        Check(Field<GameObject>(menu,"actor")==actor&&camera.orthographicSize==size,"Quality changes preserve hero size, camera framing and actor identity");
+        Time.frameCount++;int reads=Alterverse.Profile.AccountProfilePrefs.Reads;
+        for(int i=0;i<2000;i++){var q=Alterverse.Performance.MobilePerformanceProfile.Current;}
+        Check(Alterverse.Profile.AccountProfilePrefs.Reads==reads+1,"Read mobile quality once per frame, even for many effects");
+        Alterverse.Profile.AccountProfilePrefs.Account="second-account";Alterverse.Profile.AccountProfilePrefs.Value=0;
+        Check(Alterverse.Performance.MobilePerformanceProfile.Current==Alterverse.Performance.MobileQuality.Battery,"Account switch invalidates cache immediately");
+        Alterverse.Performance.MobilePerformanceProfile.Current=Alterverse.Performance.MobileQuality.Balanced;
+        Check(Alterverse.Performance.MobilePerformanceProfile.Current==Alterverse.Performance.MobileQuality.Balanced,"Settings write invalidates cache in the same frame");
+        Alterverse.Profile.AccountProfilePrefs.Value=2;Time.frameCount++;
+        Check(Alterverse.Performance.MobilePerformanceProfile.Current==Alterverse.Performance.MobileQuality.Performance,"Cloud preference changes appear on the next frame");
     }
 }

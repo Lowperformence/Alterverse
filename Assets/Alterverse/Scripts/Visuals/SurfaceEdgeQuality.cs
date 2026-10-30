@@ -1,10 +1,12 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace Alterverse.Visuals
 {
     /// <summary>Render-only edge rounding for existing opaque arena cube props.</summary>
     public static class SurfaceEdgeQuality
     {
+        private static readonly List<Material> materials=new List<Material>(4);
         public static void Apply(Renderer renderer, Transform matchWorld)
         {
             if (matchWorld == null || !(renderer is MeshRenderer) ||
@@ -19,7 +21,8 @@ namespace Alterverse.Visuals
             float largest = Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
             // Keep flat ground sheets, lane markings and long thin energy strips exact.
             if (smallest < .025f || largest > smallest * 12f) return;
-            foreach (Material material in renderer.sharedMaterials)
+            renderer.GetSharedMaterials(materials);
+            foreach (Material material in materials)
             {
                 if (material == null || material.shader == null || material.renderQueue >= 2450) return;
                 string shader = material.shader.name;

@@ -29,7 +29,8 @@ def main():
     runtime = sorted((sdk/'shared/Microsoft.NETCore.App').iterdir())[-1].name
     sources = [root/'Assets/Alterverse/Scripts/UI'/name for name in
                ('MenuHeroShowcase.cs', 'MenuHeroGrounding.cs', 'MenuHeroPedestal.cs')]
-    sources += [here/name for name in ('EngineStubs.cs', 'PresentationStubs.cs', 'Regression.cs')]
+    sources += [here/name for name in ('EngineStubs.cs', 'PresentationStubs.cs', 'PerformanceFixtures.cs', 'Regression.cs')]
+    sources += [root/'Assets/Alterverse/Scripts/Performance/MobilePerformanceProfile.cs']
     with tempfile.TemporaryDirectory(prefix='df-menu-pedestal-') as folder:
         folder = Path(folder)
         solver = (root/'Assets/Alterverse/Scripts/Visuals/CombatMotion.cs').read_text()

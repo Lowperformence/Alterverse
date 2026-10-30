@@ -23,9 +23,10 @@ namespace Alterverse.Combat
 
         private static readonly System.Collections.Generic.List<Health> active = new(128);
         public static System.Collections.Generic.IReadOnlyList<Health> Active => active;
+        public static uint RegistryVersion { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetRegistry() => active.Clear();
+        private static void ResetRegistry() { active.Clear(); unchecked { RegistryVersion++; } }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void RebuildRegistry()
@@ -34,18 +35,22 @@ namespace Alterverse.Combat
             foreach (Health h in FindObjectsByType<Health>())
                 if (h.isActiveAndEnabled)
                     active.Add(h);
+            unchecked { RegistryVersion++; }
         }
 
         private void OnEnable()
         {
             if (!active.Contains(this))
+            {
                 active.Add(this);
+                unchecked { RegistryVersion++; }
+            }
         }
 
         private void OnDisable()
         {
             aurenPassiveElapsed = 0f;
-            active.Remove(this);
+            if (active.Remove(this)) { unchecked { RegistryVersion++; } }
         }
 
         [SerializeField, Min(1f)] private float maxHealth = 100f;

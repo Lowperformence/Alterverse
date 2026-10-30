@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using System.Collections.Generic;
 
 namespace Alterverse.Visuals
 {
@@ -16,11 +17,18 @@ namespace Alterverse.Visuals
         private static Shader litShader;
         private static Shader unlitShader;
         private float nextRepair;
+        private const int RepairsPerFrame=48;
+        private Renderer[] repairQueue;
+        private int repairCursor;
+        private Transform worldRoot;
+        private readonly List<Material> materials=new List<Material>(8);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
         {
-            if(GraphicsSettings.currentRenderPipeline==null)return;
+            if(GraphicsSettings.currentRenderPipeline==null||
+                Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested||
+                SystemInfo.graphicsDeviceType==GraphicsDeviceType.Null)return;
             if(FindAnyObjectByType<AndroidMaterialCompatibilityGuard>()!=null)return;
             GameObject guard=new GameObject("DF_AndroidMaterialCompatibilityGuard");
             DontDestroyOnLoad(guard);
@@ -33,7 +41,8 @@ namespace Alterverse.Visuals
             // Do not depend on Shader.Find here: the guard must also work when URP variants were stripped.
             litShader=RuntimeShaderLibrary.Lit;
             unlitShader=RuntimeShaderLibrary.Unlit;
-            RepairAll();
+            BeginRepair();
+            RepairBatch(int.MaxValue);
             nextRepair=Time.unscaledTime+.35f;
         }
 
@@ -41,33 +50,51 @@ namespace Alterverse.Visuals
         {
             // Runtime objects are created after the scene loads (menu, arena, mechs, VFX).
             // A low-frequency pass catches them without touching gameplay simulation.
-            if(Time.unscaledTime<nextRepair)return;
-            nextRepair=Time.unscaledTime+1f;
-            RepairAll();
+            if(repairQueue==null)
+            {
+                if(Time.unscaledTime<nextRepair)return;
+                BeginRepair();
+            }
+            RepairBatch(RepairsPerFrame);
         }
 
-        private static void RepairAll()
+        private void BeginRepair()
         {
+            nextRepair=Time.unscaledTime+1f;
             if(litShader==null)litShader=RuntimeShaderLibrary.Lit;
             if(unlitShader==null)unlitShader=RuntimeShaderLibrary.Unlit;
             if(litShader==null||unlitShader==null)return;
 
-            Renderer[] renderers=FindObjectsByType<Renderer>(FindObjectsInactive.Exclude,FindObjectsSortMode.None);
+            repairQueue=FindObjectsByType<Renderer>(FindObjectsInactive.Exclude,FindObjectsSortMode.None);
+            repairCursor=0;
             GameObject world=GameObject.Find("DF_MatchWorld");
-            Transform worldRoot=world!=null?world.transform:null;
-            foreach(Renderer renderer in renderers)
+            worldRoot=world!=null?world.transform:null;
+        }
+
+        private void RepairBatch(int budget)
+        {
+            if(repairQueue==null)return;
+            int end=repairCursor+Mathf.Min(budget,repairQueue.Length-repairCursor);
+            while(repairCursor<end)
             {
+                Renderer renderer=repairQueue[repairCursor++];
+                if(renderer==null||!renderer.gameObject.activeInHierarchy)continue;
                 RepairRenderer(renderer);
                 SurfaceEdgeQuality.Apply(renderer,worldRoot);
             }
+            if(repairCursor==repairQueue.Length)
+            {
+                repairQueue=null;worldRoot=null;
+                nextRepair=Time.unscaledTime+1f;
+            }
         }
 
-        private static void RepairRenderer(Renderer renderer)
+        private void RepairRenderer(Renderer renderer)
         {
             if(renderer==null)return;
-            Material[] materials=renderer.sharedMaterials;
+            renderer.GetSharedMaterials(materials);
             bool changed=false;
-            for(int i=0;i<materials.Length;i++)
+            for(int i=0;i<materials.Count;i++)
             {
                 Material source=materials[i];
                 Material replacement;
@@ -82,7 +109,7 @@ namespace Alterverse.Visuals
                 RuntimeMaterialPalette.For(renderer.gameObject).OwnRepair(replacement);
                 changed=true;
             }
-            if(changed)renderer.sharedMaterials=materials;
+            if(changed)renderer.SetSharedMaterials(materials);
         }
 
         private static bool NeedsRepair(Material material)
@@ -190,4 +217,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

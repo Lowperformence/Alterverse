@@ -59,8 +59,9 @@ namespace UnityEngine
     public class RenderTexture:Texture
     {
         public int antiAliasing;public bool useMipMap,autoGenerateMips;public FilterMode filterMode;public TextureWrapMode wrapMode;
-        public bool Live;public RenderTexture(int w,int h,int d,RenderTextureFormat f,RenderTextureReadWrite r){}
-        public void Create(){Live=true;}public void Release(){Live=false;}
+        public static bool FailCreate;public int width,height;
+        public bool Live;public RenderTexture(int w,int h,int d,RenderTextureFormat f,RenderTextureReadWrite r){width=w;height=h;}
+        public bool Create(){Live=!FailCreate;return Live;}public void Release(){Live=false;}
     }
     public enum CameraClearFlags {SolidColor}public enum LightType {Point}public enum LightShadows {None}
     public class Camera:Component

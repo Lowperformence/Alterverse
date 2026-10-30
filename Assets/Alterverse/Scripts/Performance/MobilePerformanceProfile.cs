@@ -10,15 +10,29 @@ namespace Alterverse.Performance
     {
         private const string Key = "DF_MobileQuality";
         private static UniversalRenderPipelineAsset runtimePipeline;
+        private static int cachedFrame = -1;
+        private static string cachedAccount;
+        private static MobileQuality cachedQuality;
 
         public static MobileQuality Current
         {
-            get => (MobileQuality)Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(Key, (int)MobileQuality.Balanced), 0, 2);
+            get
+            {
+                string account = Alterverse.Profile.AccountProfilePrefs.Account;
+                if (cachedFrame != Time.frameCount || cachedAccount != account)
+                {
+                    cachedQuality = (MobileQuality)Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(Key, (int)MobileQuality.Balanced), 0, 2);
+                    cachedAccount = account;
+                    cachedFrame = Time.frameCount;
+                }
+                return cachedQuality;
+            }
             set
             {
                 value = (MobileQuality)Mathf.Clamp((int)value, 0, 2);
                 Alterverse.Profile.AccountProfilePrefs.SetInt(Key, (int)value);
                 Alterverse.Profile.AccountProfilePrefs.Save();
+                cachedFrame = -1;
                 Apply(value);
             }
         }
@@ -26,6 +40,8 @@ namespace Alterverse.Performance
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetRuntimeState()
         {
+            cachedFrame = -1;
+            cachedAccount = null;
             if (runtimePipeline != null)
             {
                 if (QualitySettings.renderPipeline == runtimePipeline)
@@ -75,4 +91,5 @@ namespace Alterverse.Performance
         }
     }
 }
+
 

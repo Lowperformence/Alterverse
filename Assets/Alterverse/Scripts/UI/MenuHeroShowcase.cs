@@ -270,9 +270,6 @@ namespace Alterverse.UI
             originWorld.color=new Color(1,1,1,.96f);
             originBackdrop=new HeroOriginBackdrop();
 
-            texture = new RenderTexture(PreviewWidth,PreviewHeight,24,RenderTextureFormat.ARGB32,RenderTextureReadWrite.sRGB)
-            { name = "DF_HeroPortrait_HD", antiAliasing = 4, useMipMap = false, autoGenerateMips = false, filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
-            texture.Create();
             var cameraObject = new GameObject("DF_PortraitCamera"); cameraObject.transform.SetParent(stage.transform,false);
             previewCamera = cameraObject.AddComponent<Camera>();
             previewCamera.clearFlags = CameraClearFlags.SolidColor;
@@ -282,7 +279,7 @@ namespace Alterverse.UI
             previewCamera.allowHDR = false; previewCamera.allowMSAA = true;
             previewCamera.allowDynamicResolution = false;
             previewCamera.useOcclusionCulling = false; previewCamera.cullingMask = 1 << PreviewLayer;
-            previewCamera.targetTexture = texture; previewCamera.depth = -20;
+            UpdateRenderTarget(); previewCamera.depth = -20;
             var data = cameraObject.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             data.renderPostProcessing = false; data.renderShadows = false;
             data.volumeLayerMask = 0;
@@ -300,6 +297,25 @@ namespace Alterverse.UI
             light.color = color; light.intensity = intensity; light.range = 8;
             light.shadows = LightShadows.None; light.cullingMask = 1 << PreviewLayer;
         }
+        private void UpdateRenderTarget()
+        {
+            int width=PreviewWidth,height=PreviewHeight,samples=4;
+            if(Application.isMobilePlatform)
+            {
+                var quality=Alterverse.Performance.MobilePerformanceProfile.Current;
+                if(quality==Alterverse.Performance.MobileQuality.Battery){width=768;height=864;samples=1;}
+                else if(quality==Alterverse.Performance.MobileQuality.Balanced){width=1024;height=1152;samples=2;}
+            }
+            if(texture!=null&&texture.width==width&&texture.height==height&&texture.antiAliasing==samples)return;
+            var replacement=new RenderTexture(width,height,24,RenderTextureFormat.ARGB32,RenderTextureReadWrite.sRGB)
+            { name="DF_HeroPortrait_HD",antiAliasing=samples,useMipMap=false,autoGenerateMips=false,
+                filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp };
+            if(!replacement.Create()){Destroy(replacement);return;}
+            RenderTexture previous=texture;
+            texture=replacement;
+            if(previewCamera!=null)previewCamera.targetTexture=texture;
+            if(previous!=null){previous.Release();Destroy(previous);}
+        }
         private void Update()
         {
             if(actor!=null&&stage!=null&&stage.activeSelf)grounding?.Prepare();
@@ -307,6 +323,7 @@ namespace Alterverse.UI
         private void LateUpdate()
         {
             if (actor == null || stage == null || !stage.activeSelf) return;
+            UpdateRenderTarget();
             UpdateOriginWorld(selected);
             float t = Time.unscaledTime - selectedAt;
             float facing=selected==HeroId.Nyra?-24: selected==HeroId.Kaelon?-24:-16;

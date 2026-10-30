@@ -20,10 +20,12 @@ namespace Alterverse.Multiplayer
         private bool hidden,configured;
 
         public string Key=>key;
+        public static uint IdentityVersion { get; private set; }
 
         public void Configure(string explicitKey=null)
         {
             if(configured&&string.IsNullOrEmpty(explicitKey))return;
+            string previousKey=key;
             if(!string.IsNullOrEmpty(explicitKey))key=explicitKey;
             if(string.IsNullOrEmpty(key))
             {
@@ -33,8 +35,10 @@ namespace Alterverse.Multiplayer
                 int x=Mathf.RoundToInt(p.x*10f),z=Mathf.RoundToInt(p.z*10f);
                 key=$"{gameObject.name}|T{teamId}|X{x}|Z{z}";
             }
+            if(!configured||previousKey!=key) { unchecked { IdentityVersion++; } }
             presentation.Clear();hasTarget=false;
-            if(!configured)CachePresentation();
+            // The server publishes state; only receiving clients hide/render replicas.
+            if(!configured&&!CoopAuthority.LocalHasServerAuthority)CachePresentation();
             configured=true;
         }
 

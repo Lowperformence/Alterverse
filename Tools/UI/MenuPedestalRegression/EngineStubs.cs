@@ -61,7 +61,7 @@ namespace UnityEngine {
   public static Quaternion LookRotation(Vector3 f,Vector3 u){f=f.normalized;Vector3 r=Vector3.Cross(u,f).normalized;u=Vector3.Cross(f,r);
    var m=new System.Numerics.Matrix4x4(r.x,r.y,r.z,0,u.x,u.y,u.z,0,f.x,f.y,f.z,0,0,0,0,1);return From(NQ.CreateFromRotationMatrix(m));}
  }
- public class Object { public bool Destroyed; public string name; public static void Destroy(Object o){if(o!=null)o.Destroyed=true;} }
+ public class Object { public bool Destroyed; public string name; public static void Destroy(Object o){if(o!=null)o.Destroyed=true;} public static T Instantiate<T>(T source)where T:Object,new()=>new T{name=source.name}; }
  public class Component:Object {
   public bool enabled=true;public string name=>gameObject.name; public GameObject gameObject; public Transform transform=>gameObject.transform;
   public T GetComponent<T>() where T:class{return gameObject.GetComponent<T>();}

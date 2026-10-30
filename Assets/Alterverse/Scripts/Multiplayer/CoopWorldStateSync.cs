@@ -30,7 +30,9 @@ namespace Alterverse.Multiplayer
         private CustomMessagingManager messaging;
         private bool attached;
         private float nextSend,nextMovingSend,nextRefresh;
-        private int lastRefreshFrame=-1,lastHealthCount=-1;
+        private uint entityHealthVersion=uint.MaxValue,entityKeyVersion=uint.MaxValue;
+        private CoopMatchPlan entityPlan;
+        private float nextEntityAudit;
 
         private void OnDisable(){Detach();}
 
@@ -61,11 +63,11 @@ namespace Alterverse.Multiplayer
         private void RefreshEntities()
         {
             IReadOnlyList<Health> active=Health.Active;
-            // A world snapshot arrives in several packets. Rebuilding the complete entity
-            // lookup for every chunk repeats the same component scan in one rendered frame.
-            // Still discover entities spawned by another event in that frame immediately.
-            if(lastRefreshFrame==Time.frameCount&&lastHealthCount==active.Count)return;
-            lastRefreshFrame=Time.frameCount;lastHealthCount=active.Count;
+            // Membership and explicit pool re-keying invalidate immediately, including a
+            // remove/add pair with the same count in one frame. A bounded audit also
+            // catches components added later to an already-enabled Health owner.
+            if(entityHealthVersion==Health.RegistryVersion&&entityKeyVersion==CoopWorldEntityKey.IdentityVersion&&
+                object.ReferenceEquals(entityPlan,CoopAuthority.ActivePlan)&&Time.unscaledTime<nextEntityAudit)return;
             entities.Clear();
             for(int i=0;i<active.Count;i++)
             {
@@ -75,6 +77,8 @@ namespace Alterverse.Multiplayer
                 key.Configure();
                 if(!string.IsNullOrEmpty(key.Key)&&!entities.ContainsKey(key.Key))entities.Add(key.Key,key);
             }
+            entityHealthVersion=Health.RegistryVersion;entityKeyVersion=CoopWorldEntityKey.IdentityVersion;
+            entityPlan=CoopAuthority.ActivePlan;nextEntityAudit=Time.unscaledTime+1f;
         }
 
         private void SendState(NetworkManager manager,bool movingOnly=false)
@@ -256,6 +260,7 @@ namespace Alterverse.Multiplayer
 
         private void Detach()
         {
+            entityPlan=null;nextEntityAudit=0f;
             snapshotHistory.Clear();
             if(!attached||messaging==null){messaging=null;attached=false;return;}
             messaging.UnregisterNamedMessageHandler(StateMessage);
