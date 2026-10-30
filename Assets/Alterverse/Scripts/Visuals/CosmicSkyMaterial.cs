@@ -1,48 +1,26 @@
 using System;
 using System.Collections.Generic;
-using Alterverse.Match;
 using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>One authored composition per arena; effects never change scene lighting.</summary>
+    /// <summary>Authored main-menu composition; never used as an arena skybox.</summary>
     internal readonly struct CosmicSkyProfile
     {
         public const string MenuPath="FrontEnd/CosmicMenu";
         public readonly string ResourcePath;
         public readonly Color Dust;
         public readonly float Seed,Exposure,MeteorInterval,MeteorStrength,NebulaStrength;
-        public readonly bool Menu;
-
+        
         CosmicSkyProfile(string resource,int seed,Color dust,float exposure=.82f,
-            float interval=25f,float meteors=.72f,float nebula=.018f,bool menu=false)
+            float interval=25f,float meteors=.72f,float nebula=.018f)
         {ResourcePath=resource;Seed=seed;Dust=dust;Exposure=exposure;
-            MeteorInterval=interval;MeteorStrength=meteors;NebulaStrength=nebula;Menu=menu;}
+            MeteorInterval=interval;MeteorStrength=meteors;NebulaStrength=nebula;}
 
         public static CosmicSkyProfile MainMenu=>new(MenuPath,173,new(.40f,.52f,1f),
-            .92f,13f,.85f,.022f,true);
+            .92f,13f,.85f,.022f);
 
-        public static CosmicSkyProfile ForArena(ArenaVariant arena)=>arena switch
-        {
-            ArenaVariant.Moon=>Arena("Moon",11,new(.48f,.62f,1f),.78f,29f),
-            ArenaVariant.Mars=>Arena("Mars",23,new(1f,.49f,.22f),.76f,24f),
-            ArenaVariant.GreenPlanet=>Arena("GreenPlanet",37,new(.28f,1f,.72f),.78f,26f),
-            ArenaVariant.Noxara=>Arena("Noxara",43,new(.61f,.32f,1f),.78f,32f),
-            ArenaVariant.Kryon=>Arena("Kryon",59,new(.45f,.85f,1f),.76f,28f),
-            ArenaVariant.Earth=>Arena("Earth",67,new(.38f,.65f,1f),.80f,27f),
-            ArenaVariant.Pyraxis=>Arena("Pyraxis",79,new(1f,.32f,.12f),.72f,23f),
-            ArenaVariant.Neptune=>Arena("Neptune",83,new(.23f,.65f,1f),.78f,29f),
-            ArenaVariant.Dark00=>new("MapPanoramas/Dark00",97,new(.32f,.18f,.60f),.72f,43f,.32f,.008f),
-            ArenaVariant.DiamondCore=>Arena("DiamondCore",101,new(.72f,.62f,1f),.76f,31f),
-            ArenaVariant.GJ504b=>Arena("GJ504b",113,new(1f,.37f,.71f),.76f,26f),
-            ArenaVariant.Wasp76b=>Arena("Wasp76b",127,new(1f,.64f,.25f),.74f,24f),
-            ArenaVariant.Trappist1e=>Arena("Trappist1e",139,new(.40f,.70f,.78f),.80f,30f),
-            ArenaVariant.Toi715b=>Arena("Toi715b",151,new(1f,.55f,.31f),.77f,28f),
-            _=>throw new ArgumentOutOfRangeException(nameof(arena))
-        };
 
-        static CosmicSkyProfile Arena(string name,int seed,Color dust,float exposure,float interval)
-            =>new("MapPanoramas/"+name,seed,dust,exposure,interval);
     }
 
     /// <summary>Shared texture leases protect the menu still while its animated target closes.</summary>
@@ -96,8 +74,8 @@ namespace Alterverse.Visuals
     /// <summary>Owns one selected texture and material, plus a small shared noise-data texture.</summary>
     internal sealed class CosmicSkyMaterial : IDisposable
     {
-        public const string ShaderPath="MapPanoramas/CosmicSky";
-        const string NoisePath="MapPanoramas/CosmicNoise";
+        public const string ShaderPath="FrontEnd/CosmicMenuEffect";
+        const string NoisePath="FrontEnd/CosmicNoise";
         static readonly int PanoramaId=Shader.PropertyToID("_Panorama");
         static readonly int NoiseId=Shader.PropertyToID("_CosmicNoise");
         static readonly int ImageAspectId=Shader.PropertyToID("_ImageAspect");
@@ -166,3 +144,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

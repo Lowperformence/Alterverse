@@ -20,10 +20,11 @@ def main():
         channels.append(np.round(field*255).astype(np.uint8))
     data = np.stack((channels[0], channels[1], np.full((size, size), 128, np.uint8)), axis=-1)
     root = Path(__file__).resolve().parents[2]
-    destination = root/'Assets/Alterverse/Resources/MapPanoramas/CosmicNoise.png'
+    destination = root/'Assets/Alterverse/Resources/FrontEnd/CosmicNoise.png'
     Image.fromarray(data).save(destination)
     print(destination)
 
 
 if __name__ == '__main__':
     main()
+

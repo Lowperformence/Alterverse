@@ -2,12 +2,10 @@
 """Compile actual production C# against engine fixtures; does not replace Unity/device QA."""
 import argparse
 import json
-import hashlib
 import re
 from pathlib import Path
 import subprocess
 import tempfile
-from PIL import Image
 
 
 def main():
@@ -17,26 +15,15 @@ def main():
     args = parser.parse_args()
     here = Path(__file__).resolve().parent
     root = args.source_root or here.parents[2]
-    runtime_source = (root/'Assets/Alterverse/Scripts/Match/ArenaVariantRuntime.cs').read_text()
-    enum = re.search(r'public enum ArenaVariant\s*\{([^}]+)\}', runtime_source)[1]
-    arenas = [value.strip().split('=')[0].strip() for value in enum.split(',')]
-    fixture = (here/'Fixtures.cs').read_text()
-    fixture_enum = re.search(r'public enum ArenaVariant\s*\{([^}]+)\}', fixture)[1]
-    assert arenas == [value.strip() for value in fixture_enum.split(',')], 'Fixture must cover the real arena catalog'
-    manifest = json.loads((root/'ArtSource/CosmicSkies/manifest.json').read_text())
-    assert {entry['name'] for entry in manifest['artwork']} == {'Menu', *arenas}
-    hashes, guids = set(), set()
-    for entry in manifest['artwork']:
-        asset = root/entry['path']
-        content = asset.read_bytes()
-        assert hashlib.sha256(content).hexdigest() == entry['sha256']
-        with Image.open(asset) as image:
-            image.load()
-            assert image.size == (1774,887) and image.mode in ('RGB','RGBA')
-        guid = re.search(r'^guid: ([0-9a-f]{32})$', asset.with_suffix('.png.meta').read_text(), re.M)[1]
-        assert guid not in guids and entry['sha256'] not in hashes, 'Artwork and GUIDs must be distinct'
-        guids.add(guid);hashes.add(entry['sha256'])
-    print(f'Artwork: {len(hashes)} distinct PNGs match the real arena catalog, dimensions, hashes and Unity GUIDs.', flush=True)
+    menu_shader = (root/'Assets/Alterverse/Resources/FrontEnd/CosmicMenuEffect.shader').read_text()
+    assert len(re.findall(r'\bPass\s*\{', menu_shader)) == 1, 'Menu shader must have exactly one isolated pass'
+    assert 'PreviewType' not in menu_shader and 'FragSky' not in menu_shader
+    map_shader = (root/'Assets/Alterverse/Resources/MapPanoramas/PhotoSkybox.shader').read_text()
+    assert len(re.findall(r'\bPass\s*\{', map_shader)) == 1 and 'ZTest Always' not in map_shader
+    arena = (root/'Assets/Alterverse/Scripts/Visuals/PhotoArenaPanorama.cs').read_text()
+    assert 'CosmicSkyMaterial' not in arena and 'ForArena' not in arena
+    assert 'MapPanoramas/Universe' in arena and 'MapPanoramas/PhotoSkybox' in arena
+    print('Shader isolation: arena uses only the restored single-pass photo skybox; menu shader remains separate.', flush=True)
     dotnet = args.dotnet_root.resolve()
     refs = sorted((dotnet/'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'))[-1]
     csc = sorted((dotnet/'sdk').glob('*/Roslyn/bincore/csc.dll'))[-1]
@@ -49,7 +36,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='df-cosmic-') as temporary:
         for server in (False, True):
             output = Path(temporary)/('Server.dll' if server else 'Client.dll')
-            command = [str(dotnet/'dotnet'), str(csc), '-nologo', '-langversion:9',
+            command = [str(dotnet/'dotnet'), str(csc), '-nologo', '-debug:portable', '-langversion:9',
                        '-define:UNITY_EDITOR'+(',UNITY_SERVER' if server else ''),
                        '-out:'+str(output), *['-r:'+str(p) for p in refs.glob('*.dll')], *map(str,sources)]
             subprocess.run(command, check=True)
@@ -63,3 +50,4 @@ if __name__ == '__main__':
         main()
     except subprocess.CalledProcessError as error:
         raise SystemExit(error.returncode)
+

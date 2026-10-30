@@ -48,7 +48,7 @@ namespace Alterverse.UI
             {
                 sky.Update(Time.unscaledTime,image.width/(float)image.height);
                 GL.sRGBWrite=image.sRGB;
-                Graphics.Blit(sky.Texture,image,sky.Material,1);
+                Graphics.Blit(sky.Texture,image,sky.Material,0);
                 // The first successful render is ready before OnGUI; retain the same target afterwards.
                 ready=true;
                 nextFrame=Time.unscaledTime+FrameInterval;
@@ -87,3 +87,4 @@ namespace Alterverse.UI
         void OnDestroy()=>Release();
     }
 }
+

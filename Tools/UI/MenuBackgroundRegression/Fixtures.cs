@@ -58,6 +58,8 @@ namespace UnityEngine
         public readonly Dictionary<int,object> Properties=new();
         public Material(Shader shader){Allocated.Add(this);}
         public void SetTexture(int id,Texture value)=>Properties[id]=value;
+        public void SetTexture(string id,Texture value)=>SetTexture(Shader.PropertyToID(id),value);
+        public void SetFloat(string id,float value)=>SetFloat(Shader.PropertyToID(id),value);
         public void SetFloat(int id,float value)=>Properties[id]=value;
         public void SetColor(int id,Color value)=>Properties[id]=value;
         public void SetVector(int id,Vector4 value)=>Properties[id]=value;
@@ -214,3 +216,4 @@ namespace Alterverse.UI
 {
     internal static class FrontEndTheme { public static UnityEngine.Color Background = new(.01f,.02f,.03f); }
 }
+

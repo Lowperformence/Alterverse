@@ -1,4 +1,4 @@
-Shader "DimensionsFront/CosmicSky"
+Shader "DimensionsFront/CosmicMenu"
 {
     Properties
     {
@@ -13,7 +13,7 @@ Shader "DimensionsFront/CosmicSky"
     }
     SubShader
     {
-        Tags { "Queue"="Background" "RenderType"="Background" "RenderPipeline"="UniversalPipeline" "PreviewType"="Skybox" }
+        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" }
         Cull Off ZWrite Off
         HLSLINCLUDE
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
@@ -76,24 +76,6 @@ Shader "DimensionsFront/CosmicSky"
         ENDHLSL
         Pass
         {
-            Name "Sky"
-            HLSLPROGRAM
-            #pragma target 3.0
-            #pragma vertex Vert
-            #pragma fragment FragSky
-            half4 FragSky(Varyings input):SV_Target
-            {
-                float2 size=max(GetScaledScreenParams().xy,float2(1,1));
-                float2 uv=input.positionCS.xy/size;
-                #if UNITY_UV_STARTS_AT_TOP
-                uv.y=1-uv.y;
-                #endif
-                return Cosmos(uv);
-            }
-            ENDHLSL
-        }
-        Pass
-        {
             Name "Menu"
             ZTest Always
             HLSLPROGRAM
@@ -106,3 +88,4 @@ Shader "DimensionsFront/CosmicSky"
     }
     Fallback Off
 }
+

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "projection": "camera-facing 2:1 cinematic matte; aspect-preserving center crop, not equirectangular",
   "shared_art_direction": "Use case: stylized-concept. Asset type: finished in-game space background matte for a top-down mobile sci-fi MOBA, Dimensions Front. ONE coherent wide landscape image, 2:1 aspect ratio, edge-to-edge. Premium detailed astronomical matte painting with physically plausible space light, intricate nebula dust filaments, crisp tiny stars, sophisticated restrained palette and visual depth. A calm dark central area must stay readable behind a floating arena; put the distinctive large celestial shapes toward the lower sides and outer frame. NOT an equirectangular image: this is a camera-facing cinematic wide background. The image will be cropped to different landscape phone screens, so keep the main planetary feature within the middle 80% of the width and avoid important content at the extreme edge. No UI, no text, no labels, no watermarks, no border, no characters, no foreground terrain, no buildings, no spaceships, no collage, no baked shooting stars or bright streaks. Keep peak lights localized and the overall space dark, never a flat colorful wash.",
   "third_party_package": null,
@@ -16,184 +16,10 @@
       "original_pixels_preserved": true,
       "generation_prompt": "Edit the supplied space artwork for the main menu of Dimensions Front. Keep the same premium detailed astronomical matte-painting style, 2:1 wide composition, crisp tiny stars and restrained navy, violet and cyan palette. The user explicitly wants MULTIPLE PLANETS AND MORE STARS: the current image feels too empty. Make the entire composition visibly richer and fuller. Add FIVE clearly distinct planets at different sizes and depths: a prominent elegantly ringed blue-violet gas giant in the lower LEFT quadrant with much of its disk visible; a medium rocky copper-brown crescent in the lower RIGHT; a smaller violet world above and left of center; a small silver moon toward the upper right inside the crop-safe area; a small teal distant world to the right of center. Add delicate extra moonlets near the large planets, denser fine star fields and recognizable star clusters across the whole image, including the center. Extend wispy luminous dust and a soft Milky Way ribbon diagonally through the center so there is no huge empty black hole. Keep layered depth and photographic astronomical detail, not a diagram or collage. UI readability still matters: planet surfaces mostly dark, brightest rims and nebula patches localized, medium-dark calm contrast behind future interface text. No text or interface in the actual image. No flares obscuring the scene, no spaceships, characters, buildings, terrain, borders or watermarks. No baked shooting-star streaks because those are animated separately. Preserve the existing nebula craftsmanship but change the layout substantially to satisfy the fuller multi-planet request.",
       "revision": "Five planets with moonlets, denser stars and a diagonal galactic dust ribbon, requested by user."
-    },
-    {
-      "name": "Moon",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/Moon.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "1fda687bd5f869a0ddafd103ae85cf1f2b0e7f257180f6a9d71be9c2e655453f",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "art_direction_brief": "Silver cratered lunar crescent with cold blue dust and fine stars.",
-      "exact_prompt_recorded": false
-    },
-    {
-      "name": "Mars",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/Mars.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "270290e49eeb7e30a99a9ed8a8a0e6ea218e900e12407e6e51c73375d94798da",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "art_direction_brief": "Copper/rust planetary terrain with warm dusty nebula and small moons.",
-      "exact_prompt_recorded": false
-    },
-    {
-      "name": "GreenPlanet",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/GreenPlanet.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "2eb9137617a3eafab1265bf5f50f3175e2adef70e046b5986a537df019f55633",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "art_direction_brief": "Emerald/turquoise cosmic clouds and a green alien world.",
-      "exact_prompt_recorded": false
-    },
-    {
-      "name": "Noxara",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/Noxara.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "34972c4ff68ea8356eda4237809be26d5738e92248f77b3f4e19edb5ef3518c6",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "art_direction_brief": "Violet nebula and a dark indigo alien world.",
-      "exact_prompt_recorded": false
-    },
-    {
-      "name": "Kryon",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/Kryon.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "4e71a5bfb07631db82fd04a95b9f14a1e98f55c3e07347dab3a1ce9df40cefd3",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "art_direction_brief": "Ice-blue frozen world with cyan auroral dust.",
-      "exact_prompt_recorded": false
-    },
-    {
-      "name": "Earth",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/Earth.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "a8d8ce73f19c4040157dbf929a527553b6abf77d653e11873a9f3451ffe142b5",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "art_direction_brief": "Blue ocean world, white cloud systems and a cold atmospheric rim.",
-      "exact_prompt_recorded": false
-    },
-    {
-      "name": "Pyraxis",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/Pyraxis.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "4eab74955d7631478dd5aea8becd774e935cb09e4719c3bd353641aa3b66ce53",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "generation_prompt": "Use case: stylized-concept. Asset type: finished in-game space background matte for a top-down mobile sci-fi MOBA, Dimensions Front. ONE coherent wide landscape image, 2:1 aspect ratio, edge-to-edge. Premium detailed astronomical matte painting with physically plausible space light, intricate nebula dust filaments, crisp tiny stars, sophisticated restrained palette and visual depth. A calm dark central area must stay readable behind a floating arena; put the distinctive large celestial shapes toward the lower sides and outer frame. NOT an equirectangular image: this is a camera-facing cinematic wide background. The image will be cropped to different landscape phone screens, so keep the main planetary feature within the middle 80% of the width and avoid important content at the extreme edge. No UI, no text, no labels, no watermarks, no border, no characters, no foreground terrain, no buildings, no spaceships, no collage, no baked shooting stars or bright streaks. Keep peak lights localized and the overall space dark, never a flat colorful wash. PYRAXIS: a near-black volcanic space vista with ember orange-red dust plumes curling around the outer frame. A rocky volcanic planet crescent in the lower LEFT, cracked with fine restrained molten fissures, mostly dark. Fine white stars, rich copper dust detail, dramatic but quiet dark central region."
-    },
-    {
-      "name": "Neptune",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/Neptune.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "0272e2298177f81704cd0851d5ecba9d108ecc3f3c23174a91486806c85fbde9",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "generation_prompt": "Use case: stylized-concept. Asset type: finished in-game space background matte for a top-down mobile sci-fi MOBA, Dimensions Front. ONE coherent wide landscape image, 2:1 aspect ratio, edge-to-edge. Premium detailed astronomical matte painting with physically plausible space light, intricate nebula dust filaments, crisp tiny stars, sophisticated restrained palette and visual depth. A calm dark central area must stay readable behind a floating arena; put the distinctive large celestial shapes toward the lower sides and outer frame. NOT an equirectangular image: this is a camera-facing cinematic wide background. The image will be cropped to different landscape phone screens, so keep the main planetary feature within the middle 80% of the width and avoid important content at the extreme edge. No UI, no text, no labels, no watermarks, no border, no characters, no foreground terrain, no buildings, no spaceships, no collage, no baked shooting stars or bright streaks. Keep peak lights localized and the overall space dark, never a flat colorful wash. NEPTUNE: deep cobalt and cyan space with a striking blue gaseous planet crescent in the lower RIGHT, slender delicate rings and two tiny distant moons. Soft turquoise nebular wisps along the LEFT edge. Sophisticated black-blue negative space across the central region, cold pinpoint stars."
-    },
-    {
-      "name": "Dark00",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/Dark00.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "50f0a762c9d857dcfa65cfbb248cbb864d424fc2f39f1ce8da3ad6a20baa3e80",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "generation_prompt": "Use case: stylized-concept. Asset type: finished in-game space background matte for a top-down mobile sci-fi MOBA, Dimensions Front. ONE coherent wide landscape image, 2:1 aspect ratio, edge-to-edge. Premium detailed astronomical matte painting with physically plausible space light, intricate nebula dust filaments, crisp tiny stars, sophisticated restrained palette and visual depth. A calm dark central area must stay readable behind a floating arena; put the distinctive large celestial shapes toward the lower sides and outer frame. NOT an equirectangular image: this is a camera-facing cinematic wide background. The image will be cropped to different landscape phone screens, so keep the main planetary feature within the middle 80% of the width and avoid important content at the extreme edge. No UI, no text, no labels, no watermarks, no border, no characters, no foreground terrain, no buildings, no spaceships, no collage, no baked shooting stars or bright streaks. Keep peak lights localized and the overall space dark, never a flat colorful wash. DARK 00: the darkest quietest map background. Almost black indigo starfield with very sparse tiny stars. A nearly invisible eclipsed planet silhouette in lower LEFT with a very thin dim violet corona. Subtle threadlike dark violet dust along the far upper-right only. Minimal elegant space, no giant bright black hole, no bright flares. Maintain deep black negative space across most of the center."
-    },
-    {
-      "name": "DiamondCore",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/DiamondCore.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "ca0b54ba86b48d1d93c1614265947d25811fc1673b720298ce505b908fa8d3e4",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "generation_prompt": "Use case: stylized-concept. Asset type: finished in-game space background matte for a top-down mobile sci-fi MOBA, Dimensions Front. ONE coherent wide landscape image, 2:1 aspect ratio, edge-to-edge. Premium detailed astronomical matte painting with physically plausible space light, intricate nebula dust filaments, crisp tiny stars, sophisticated restrained palette and visual depth. A calm dark central area must stay readable behind a floating arena; put the distinctive large celestial shapes toward the lower sides and outer frame. NOT an equirectangular image: this is a camera-facing cinematic wide background. The image will be cropped to different landscape phone screens, so keep the main planetary feature within the middle 80% of the width and avoid important content at the extreme edge. No UI, no text, no labels, no watermarks, no border, no characters, no foreground terrain, no buildings, no spaceships, no collage, no baked shooting stars or bright streaks. Keep peak lights localized and the overall space dark, never a flat colorful wash. DIAMOND CORE: silver and icy lilac space vista, refined iridescent cosmic dust strands softly luminous along the RIGHT and top edges, a distant crystalline faceted world crescent in lower LEFT with a few delicate pale cyan and lilac prismatic highlights. Mostly dark calm center, sophisticated luxurious cold palette, tiny diamond-like stars. Natural astronomical interpretation, no floating giant gemstone props."
-    },
-    {
-      "name": "GJ504b",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/GJ504b.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "7f783ef946e1b85cc226076e585f71996ef21e9634e757623ec842c2758e4e48",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "generation_prompt": "Use case: stylized-concept. Asset type: finished in-game space background matte for a top-down mobile sci-fi MOBA, Dimensions Front. ONE coherent wide landscape image, 2:1 aspect ratio, edge-to-edge. Premium detailed astronomical matte painting with physically plausible space light, intricate nebula dust filaments, crisp tiny stars, sophisticated restrained palette and visual depth. A calm dark central area must stay readable behind a floating arena; put the distinctive large celestial shapes toward the lower sides and outer frame. NOT an equirectangular image: this is a camera-facing cinematic wide background. The image will be cropped to different landscape phone screens, so keep the main planetary feature within the middle 80% of the width and avoid important content at the extreme edge. No UI, no text, no labels, no watermarks, no border, no characters, no foreground terrain, no buildings, no spaceships, no collage, no baked shooting stars or bright streaks. Keep peak lights localized and the overall space dark, never a flat colorful wash. GJ 504 B: rose-magenta cosmic dust curls and pink-violet nebular filaments tracing a sweeping S-shape along the outer upper LEFT and far RIGHT frame, dark plum space in the middle. A pinkish gas giant in the lower RIGHT with a warm ivory rim and tiny moons. Rich luminous detail restricted to edges, unusual romantic alien atmosphere, no bright central objects."
-    },
-    {
-      "name": "Wasp76b",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/Wasp76b.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "6b324dfd63ff37328863a2aeeb83e11927edb8be02d18389e3170a80ad403dde",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "generation_prompt": "Use case: stylized-concept. Asset type: finished in-game space background matte for a top-down mobile sci-fi MOBA, Dimensions Front. ONE coherent wide landscape image, 2:1 aspect ratio, edge-to-edge. Premium detailed astronomical matte painting with physically plausible space light, intricate nebula dust filaments, crisp tiny stars, sophisticated restrained palette and visual depth. A calm dark central area must stay readable behind a floating arena; put the distinctive large celestial shapes toward the lower sides and outer frame. NOT an equirectangular image: this is a camera-facing cinematic wide background. The image will be cropped to different landscape phone screens, so keep the main planetary feature within the middle 80% of the width and avoid important content at the extreme edge. No UI, no text, no labels, no watermarks, no border, no characters, no foreground terrain, no buildings, no spaceships, no collage, no baked shooting stars or bright streaks. Keep peak lights localized and the overall space dark, never a flat colorful wash. WASP 76 B: hot iron-vapor gas giant in the lower LEFT. An amber heated limb with wisps of iron vapor and a cold almost-black hemisphere. Golden copper vapor filaments along top and RIGHT in deep near-black space. Very small white stars. A restrained orange/gold palette distinct from red volcanic rock, realistic dark banded gaseous world with a metallic haze, calm dark center."
-    },
-    {
-      "name": "Trappist1e",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/Trappist1e.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "f4783d8e4bbf1d7b63be0ccc426eda07cab0211535dc0f03f7a8d33157fff8a7",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "generation_prompt": "Use case: stylized-concept. Asset type: finished in-game space background matte for a top-down mobile sci-fi MOBA, Dimensions Front. ONE coherent wide landscape image, 2:1 aspect ratio, edge-to-edge. Premium detailed astronomical matte painting with physically plausible space light, intricate nebula dust filaments, crisp tiny stars, sophisticated restrained palette and visual depth. A calm dark central area must stay readable behind a floating arena; put the distinctive large celestial shapes toward the lower sides and outer frame. NOT an equirectangular image: this is a camera-facing cinematic wide background. The image will be cropped to different landscape phone screens, so keep the main planetary feature within the middle 80% of the width and avoid important content at the extreme edge. No UI, no text, no labels, no watermarks, no border, no characters, no foreground terrain, no buildings, no spaceships, no collage, no baked shooting stars or bright streaks. Keep peak lights localized and the overall space dark, never a flat colorful wash. TRAPPIST 1 E: cool teal and blue-black space with THREE rocky worlds of different sizes grouped across the outer lower LEFT side, each with realistic dim rims and subtle craters. A small restrained red dwarf star on the upper RIGHT side, not a huge flare. Muted teal nebular arches flow across the upper edges. Elegant spacious composition, quiet dark center, a distinct multiple-world system, no giant central planet."
-    },
-    {
-      "name": "Toi715b",
-      "path": "Assets/Alterverse/Resources/MapPanoramas/Toi715b.png",
-      "dimensions": [
-        1774,
-        887
-      ],
-      "sha256": "cba04bb85d516dee3d451169a5a5df9eeb6f268c3bae37602d582d5a610316f9",
-      "origin": "OpenAI built-in image generation, 2026-10-29",
-      "original_pixels_preserved": true,
-      "generation_prompt": "Use case: stylized-concept. Asset type: finished in-game space background matte for a top-down mobile sci-fi MOBA, Dimensions Front. ONE coherent wide landscape image, 2:1 aspect ratio, edge-to-edge. Premium detailed astronomical matte painting with physically plausible space light, intricate nebula dust filaments, crisp tiny stars, sophisticated restrained palette and visual depth. A calm dark central area must stay readable behind a floating arena; put the distinctive large celestial shapes toward the lower sides and outer frame. NOT an equirectangular image: this is a camera-facing cinematic wide background. The image will be cropped to different landscape phone screens, so keep the main planetary feature within the middle 80% of the width and avoid important content at the extreme edge. No UI, no text, no labels, no watermarks, no border, no characters, no foreground terrain, no buildings, no spaceships, no collage, no baked shooting stars or bright streaks. Keep peak lights localized and the overall space dark, never a flat colorful wash. TOI 715 B: a rocky rust and ochre super-Earth crescent in the lower RIGHT. Fine desolate ridges, subtle dusty tan striations and a thin dim copper rim, no lava. Low-saturation reddish-brown haze, a tiny dim red star and a warm amber dust ribbon across the upper LEFT. Deep brown-black and maroon negative space through the center. Mature muted alien palette, visibly distinct from bright orange fire planets."
     }
   ],
   "noise_data": {
-    "path": "Assets/Alterverse/Resources/MapPanoramas/CosmicNoise.png",
+    "path": "Assets/Alterverse/Resources/FrontEnd/CosmicNoise.png",
     "source": "ArtSource/CosmicSkies/generate_noise.py",
     "seed": 20261029,
     "dimensions": [
@@ -201,5 +27,6 @@
       256
     ],
     "color_space": "linear"
-  }
+  },
+  "scope": "Main-menu background only; arena backgrounds restored to pre-change repository subtree on 2026-10-30."
 }

@@ -24,9 +24,8 @@ namespace Alterverse.Visuals
 
         private void Start()
         {
-            if(!CosmicSkyMaterial.RenderingAllowed){enabled=false;return;}
             if(GetComponent<PlanetLandscapeDetail>()==null)gameObject.AddComponent<PlanetLandscapeDetail>();
-            // Every arena has its own authored background; old geometry is a missing-asset fallback.
+            // Every arena uses the same universe panorama; habitat backdrops are fallback only.
             photoPanorama=new PhotoArenaPanorama();
             if(photoPanorama.Load())return;
             photoPanorama=null;
