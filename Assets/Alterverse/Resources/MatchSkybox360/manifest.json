@@ -1,11 +1,11 @@
 {
-  "title": "Dimensions Front 360 skybox: explicit offline editor preview",
+  "title": "Dimensions Front: automatic 360-degree match skybox",
   "created": "2026-10-30",
   "provenance": "Original procedural 3D artwork created for Dimensions Front; no third-party images or paid assets. Generator and standalone preview in the linked source package.",
   "source_package_library_file_id": "libfile_8f4d75bd328481918276adf0021ca794",
-  "baseline_commit": "43b84ee991f980bbb139724970328375bf63ce32",
-  "auto_start": false,
-  "player_build_enabled": false,
+  "baseline_commit": "584f4a07c5d3b9cc5a9787abb2baecc26fd9025b",
+  "auto_start": true,
+  "player_build_enabled": true,
   "native_unity_visual_test": false,
   "android_visual_test": false,
   "artwork": [
@@ -57,5 +57,12 @@
       ],
       "sha256": "3bde8fd03d869966d20efd9f2c755863e6563087d597b74b4e4d339ab6072eba"
     }
-  ]
+  ],
+  "regular_online_offline_matches": true,
+  "standard_shaders": [
+    "Skybox/Panoramic",
+    "Universal Render Pipeline/Lit",
+    "Universal Render Pipeline/Unlit"
+  ],
+  "build_dependencies": "Editor creates serialized materials in Resources/MatchSkybox360/Generated after import and before client builds."
 }

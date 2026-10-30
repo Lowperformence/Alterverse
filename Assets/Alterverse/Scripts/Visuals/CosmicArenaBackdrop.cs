@@ -9,6 +9,7 @@ namespace Alterverse.Visuals
     public sealed class CosmicArenaBackdrop : MonoBehaviour
     {
         private PhotoArenaPanorama photoPanorama;
+        private MatchSkybox360 matchSkybox;
         private readonly List<Material> materials=new List<Material>();
         private readonly List<Mesh> meshes=new List<Mesh>();
         private Transform stars;
@@ -25,7 +26,11 @@ namespace Alterverse.Visuals
         private void Start()
         {
             if(GetComponent<PlanetLandscapeDetail>()==null)gameObject.AddComponent<PlanetLandscapeDetail>();
-            // Every arena uses the same universe panorama; habitat backdrops are fallback only.
+            // The 360-degree sky is enabled for regular online and offline clients.
+            matchSkybox=new MatchSkybox360();
+            if(matchSkybox.Load(transform))return;
+            matchSkybox.Dispose();matchSkybox=null;
+            // Keep the working photograph/procedural environments as missing-asset fallbacks.
             photoPanorama=new PhotoArenaPanorama();
             if(photoPanorama.Load())return;
             photoPanorama=null;
@@ -275,6 +280,7 @@ namespace Alterverse.Visuals
 
         private void Update()
         {
+            if(matchSkybox!=null){matchSkybox.RefreshCamera();return;}
             if(photoPanorama!=null){photoPanorama.RefreshCamera();return;}
             if(Time.time<nextBackdropUpdate)return;nextBackdropUpdate=Time.time+.1f;
             if(stars!=null){float drift=Mathf.Sin(Time.time*.018f)*.35f;stars.rotation=starsStartRotation*Quaternion.Euler(0,drift,0);}
@@ -289,6 +295,7 @@ namespace Alterverse.Visuals
 
         private void OnDisable()
         {
+            matchSkybox?.RestoreCamera();
             photoPanorama?.RestoreCamera();
             if(exoplanetCamera!=null)
             {exoplanetCamera.backgroundColor=previousCameraColor;exoplanetCamera.clearFlags=previousCameraFlags;exoplanetCamera=null;}
@@ -296,6 +303,7 @@ namespace Alterverse.Visuals
 
         private void OnDestroy()
         {
+            matchSkybox?.Dispose();
             photoPanorama?.Dispose();
             if(exoplanetClouds!=null)Destroy(exoplanetClouds);
             foreach(Material m in materials)if(m!=null)Destroy(m);
@@ -303,3 +311,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

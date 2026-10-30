@@ -5,7 +5,7 @@ using System.Linq;
 using System.Numerics;
 namespace UnityEngine
 {
-    [Flags] public enum HideFlags { None=0,DontSaveInEditor=4,DontSaveInBuild=16,HideAndDontSave=61 }
+    [Flags] public enum HideFlags { None=0,DontSaveInEditor=4,DontSaveInBuild=16,DontSave=52,HideAndDontSave=61 }
     public class Object
     {
         public static readonly List<Object> All=new();public string name;public HideFlags hideFlags;public bool destroyed;
@@ -13,6 +13,7 @@ namespace UnityEngine
         public static bool operator==(Object a,Object b)=>ReferenceEquals(a,b)||((ReferenceEquals(a,null)||a.destroyed)&&(ReferenceEquals(b,null)||b.destroyed));
         public static bool operator!=(Object a,Object b)=>!(a==b);
         public override bool Equals(object o)=>ReferenceEquals(this,o);public override int GetHashCode()=>System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this);
+        public static void Destroy(Object obj)=>DestroyImmediate(obj);
         public static void DestroyImmediate(Object obj)
         {
             if(ReferenceEquals(obj,null)||obj.destroyed)return;obj.destroyed=true;
@@ -38,6 +39,7 @@ namespace UnityEngine
         public readonly List<Component> Components=new();public Transform transform;public bool activeSelf=true;public int layer;
         public bool activeInHierarchy=>activeSelf&&(transform.parent==null||transform.parent.gameObject.activeInHierarchy);
         public GameObject(string n){name=n;transform=new Transform{gameObject=this};Components.Add(transform);}
+        public void SetActive(bool active){activeSelf=active;}
         public static GameObject Find(string n)=>All.OfType<GameObject>().LastOrDefault(x=>!x.destroyed&&x.activeInHierarchy&&x.name==n);
         public T AddComponent<T>() where T:Component,new(){var c=new T{gameObject=this};Components.Add(c);return c;}
         public T GetComponent<T>() where T:Component=>Components.OfType<T>().FirstOrDefault(x=>!x.destroyed);
@@ -74,8 +76,11 @@ namespace UnityEngine
     public class Shader:Object
     {
         public static string Missing;public bool isSupported=true;
-        public static Shader Find(string n)=>n==Missing?null:new(){name=n};
+        public static readonly Dictionary<string,Shader> Cache=new();
+        public static Shader Find(string n){if(n==Missing)return null;if(!Cache.TryGetValue(n,out var value)||value.destroyed)Cache[n]=value=new(){name=n};return value;}
     }
+    public static class Application {public static bool isBatchMode;}
+    public static class Resources {public static readonly Dictionary<string,Object> Assets=new();public static int Loads;public static T Load<T>(string path) where T:Object {Loads++;return Assets.TryGetValue(path,out var v)?v as T:null;}}
     public class Texture:Object { }
     public class Texture2D:Texture
     {
@@ -87,7 +92,8 @@ namespace UnityEngine
     public class Material:Object
     {
         public Shader shader;public static int SkyPasses=1;public int passCount=>shader.name=="Skybox/Panoramic"?SkyPasses:1;
-        public readonly Dictionary<string,object> Properties=new();public Material(Shader s){shader=s;}
+        public readonly Dictionary<string,object> Properties=new();public Material(Shader s){shader=s;}public Material(Material source){shader=source.shader;foreach(var pair in source.Properties)Properties[pair.Key]=pair.Value;}
+        public void EnableKeyword(string keyword){Properties[keyword]=true;}
         public bool HasProperty(string p)=>true;public void SetTexture(string p,Texture2D t){Properties[p]=t;}
         public void SetFloat(string p,float v){Properties[p]=v;}public void SetColor(string p,Color c){Properties[p]=c;}public void SetInt(string p,int v){Properties[p]=v;}
     }
@@ -118,11 +124,13 @@ namespace UnityEngine.Rendering
 }
 namespace UnityEditor
 {
+    public class InitializeOnLoadMethod:Attribute {}
+    public static class EditorUtility {public static void SetDirty(UnityEngine.Object asset){}}
     public class MenuItem:Attribute {public MenuItem(string s){}}
     public class EditorWindow:UnityEngine.Object {public UnityEngine.GUIContent titleContent;public UnityEngine.Vector2 minSize;public static T GetWindow<T>() where T:EditorWindow,new()=>new();public void Show(){}public void Repaint(){}}
     public static class EditorApplication
     {
-        public static bool isPlaying=true,isCompiling;public static event Action update;public static event Action<PlayModeStateChange> playModeStateChanged;
+        public static bool isPlaying=true,isCompiling,isUpdating;public static bool isPlayingOrWillChangePlaymode=>isPlaying;public static event Action delayCall;public static void Delay(){var pending=delayCall;delayCall=null;pending?.Invoke();}public static event Action update;public static event Action<PlayModeStateChange> playModeStateChanged;
         public static void Tick()=>update?.Invoke();public static void State(PlayModeStateChange s)=>playModeStateChanged?.Invoke(s);
     }
     public static class AssemblyReloadEvents {public static event Action beforeAssemblyReload;public static void Reload()=>beforeAssemblyReload?.Invoke();}
@@ -131,12 +139,27 @@ namespace UnityEditor
     public static class EditorStyles {public static UnityEngine.GUIStyle boldLabel=new(),wordWrappedLabel=new();}
     public static class EditorGUILayout {public static void LabelField(string a,UnityEngine.GUIStyle b=null){}public static void HelpBox(string a,MessageType m){}public static void Space(){}}
     public static class EditorGUI {public class DisabledScope:IDisposable {public DisabledScope(bool b){}public void Dispose(){}}}
-    public static class AssetDatabase {public static readonly Dictionary<string,UnityEngine.Texture2D> Assets=new();public static T LoadAssetAtPath<T>(string p) where T:UnityEngine.Object=>Assets.TryGetValue(p,out var t)?t as T:null;}
+    public static class AssetDatabase
+    {
+        public static readonly Dictionary<string,UnityEngine.Object> Assets=new();public static readonly List<string> Writes=new();public static readonly HashSet<string> Folders=new();
+        public static T LoadAssetAtPath<T>(string path) where T:UnityEngine.Object=>Assets.TryGetValue(path,out var value)?value as T:null;
+        public static bool IsValidFolder(string path)=>Folders.Contains(path);
+        public static string CreateFolder(string parent,string name){Folders.Add(parent+"/"+name);Writes.Add(parent+"/"+name);return name;}
+        public static void CreateAsset(UnityEngine.Object asset,string path){Assets[path]=asset;Writes.Add(path);const string prefix="Assets/Alterverse/Resources/";if(path.StartsWith(prefix))UnityEngine.Resources.Assets[path[prefix.Length..].Replace(".mat","")]=asset;}
+        public static void SaveAssetIfDirty(UnityEngine.Object asset){Writes.Add(Assets.First(p=>p.Value==asset).Key);}
+    }
+
     public class AssetImporter { }public class AssetPostprocessor {public string assetPath;public AssetImporter assetImporter;}
+    public class TextureImporterPlatformSettings {public string name;public bool overridden;public int maxTextureSize,compressionQuality;public TextureImporterFormat format;}
+    public enum TextureImporterFormat {ASTC_6x6}
     public enum TextureImporterType {Default}public enum TextureImporterShape {Texture2D}public enum TextureImporterAlphaSource {None}public enum TextureImporterCompression {Compressed}
-    public class TextureImporter:AssetImporter {public TextureImporterType textureType;public TextureImporterShape textureShape;public bool sRGBTexture,isReadable,mipmapEnabled;public TextureImporterAlphaSource alphaSource;public UnityEngine.TextureWrapMode wrapModeU,wrapModeV;public int maxTextureSize,compressionQuality;public TextureImporterCompression textureCompression;}
+    public class TextureImporter:AssetImporter {public TextureImporterPlatformSettings platform;public void SetPlatformTextureSettings(TextureImporterPlatformSettings p){platform=p;}public TextureImporterType textureType;public TextureImporterShape textureShape;public bool sRGBTexture,isReadable,mipmapEnabled;public TextureImporterAlphaSource alphaSource;public UnityEngine.TextureWrapMode wrapModeU,wrapModeV;public int maxTextureSize,compressionQuality;public TextureImporterCompression textureCompression;}
 }
 namespace Alterverse.CameraSystem { public class MobaCamera:UnityEngine.MonoBehaviour { } }
 namespace Alterverse.UI {public static class MainMenuController {public static bool IsVisible;}}
 namespace Alterverse.Multiplayer {public static class CoopAuthority {public static bool Active;}}
 namespace Unity.Netcode {public class NetworkManager {public static NetworkManager Singleton;public bool IsListening;}}
+
+namespace UnityEditor.Build {public interface IPreprocessBuildWithReport {int callbackOrder{get;}void OnPreprocessBuild(Reporting.BuildReport report);}public class BuildFailedException:System.Exception {public BuildFailedException(string text):base(text){}}}
+namespace UnityEditor.Build.Reporting {public class BuildReport {}}
+namespace Alterverse.Match {public enum ArenaVariant {Moon,Mars,Earth}public static class ArenaVariantRuntime {public static ArenaVariant Current;}}
