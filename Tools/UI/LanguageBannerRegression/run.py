@@ -3,6 +3,7 @@ Does not replace a Unity build or an Android-device ad/typography test.
 """
 import argparse
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -12,6 +13,9 @@ parser.add_argument('--dotnet-root', type=Path, required=True)
 args = parser.parse_args()
 here = Path(__file__).resolve().parent
 root = here.parents[2]
+# Keep the controlled host API aligned with the actual partial class contract.
+review_source = (root / 'Assets/Alterverse/Scripts/UI/MainMenuReviewPrompt.cs').read_text(encoding='utf-8')
+assert re.search(r'public\s+static\s+bool\s+ReviewPromptVisible\b', review_source)
 catalog_path = root / 'Assets/Alterverse/Resources/Localization/InterfaceLanguages.json'
 catalog = json.loads(catalog_path.read_text(encoding='utf-8'))
 assert len(catalog['languages']) == 40
@@ -23,7 +27,7 @@ refs = sorted((args.dotnet_root / 'packs/Microsoft.NETCore.App.Ref').glob('*/ref
 runtime = sorted((args.dotnet_root / 'shared/Microsoft.NETCore.App').iterdir())[-1].name
 sources = [root / 'Assets/Alterverse/Scripts' / p for p in (
     'Profile/GameLanguage.cs', 'UI/LanguagePicker.cs', 'UI/LocalizedText.cs',
-    'UI/MenuBannerLayout.cs', 'Shop/MenuBannerAds.cs')]
+    'UI/MenuBannerLayout.cs', 'UI/MainMenuAdvertising.cs', 'Shop/MenuBannerAds.cs')]
 for defines in ('UNITY_ANDROID', 'UNITY_ANDROID,DEVELOPMENT_BUILD', 'UNITY_ANDROID,UNITY_EDITOR', 'UNITY_SERVER'):
     with tempfile.TemporaryDirectory(prefix='df-language-banner-') as tmp:
         tmp = Path(tmp)

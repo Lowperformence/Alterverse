@@ -42,11 +42,14 @@ namespace UnityEngine
     public class GUIStyleState { public Color textColor; }
     public class GUIStyle
     {
+        public GUIStyle() { }
+        public GUIStyle(GUIStyle other) {fontSize=other.fontSize;wordWrap=other.wordWrap;fontStyle=other.fontStyle;alignment=other.alignment;}
         public int fontSize=18; public bool wordWrap=true; public FontStyle fontStyle; public TextAnchor alignment;
         public GUIStyleState normal=new GUIStyleState();
     }
     public static class GUI
     {
+        public static Matrix4x4 matrix;
         public static bool enabled=true; public static Color color; public static string NextText;
         public static void FocusControl(string value) { }
         public static string TextField(Rect r,string value,int limit,GUIStyle style) {var text=NextText??value;NextText=null;return text;}
@@ -68,6 +71,8 @@ namespace UnityEngine
         public void Dispose() { }
     }
     public static class Time { public static float unscaledTime; public static int frameCount=10; }
+    public struct Matrix4x4 { public static Matrix4x4 identity=>new Matrix4x4(); }
+    public static class Screen { public static int height=1080; public static Rect safeArea=new Rect(0,0,1920,1080); }
     public static class Mathf
     {
         public static float Min(float a,float b)=>Math.Min(a,b);
@@ -109,7 +114,20 @@ namespace Alterverse.UI
         public bool Action(UnityEngine.Rect r,string label,bool primary=false,bool selected=false,bool enabled=true)
         { Actions++; if(!UnityEngine.GUI.enabled||!enabled||Click!=label)return false;Click=null;return true; }
     }
-    public static class MainMenuController { public static bool AllowsHomeBanner=true; }
+    public sealed partial class MainMenuController
+    {
+        enum Page { Home,Other }
+        static readonly MainMenuController instance=new MainMenuController();
+        Page page; bool launching;
+        readonly LanguagePicker languagePicker=new LanguagePicker();
+        readonly FrontEndTheme theme=new FrontEndTheme();
+        public static bool MockVisible=true;
+        public static bool IsVisible=>MockVisible;
+        public static bool ReviewPromptVisible {get;set;}
+    }
+    public static class OnlinePartyOverlay { public static bool IsOpen; }
+    public static class RankedPanel { public static bool Visible; }
+    public static class OnlineMatchLoadingScreen { public static bool IsVisible; }
 }
 namespace Alterverse.Shop
 {

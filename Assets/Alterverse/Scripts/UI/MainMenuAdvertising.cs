@@ -6,7 +6,7 @@ namespace Alterverse.UI
     public sealed partial class MainMenuController
     {
         public static bool AllowsHomeBanner => IsVisible && instance.page == Page.Home &&
-            !instance.launching && !instance.ReviewPromptVisible && !instance.languagePicker.IsOpen &&
+            !instance.launching && !ReviewPromptVisible && !instance.languagePicker.IsOpen &&
             !OnlinePartyOverlay.IsOpen && !RankedPanel.Visible && !OnlineMatchLoadingScreen.IsVisible;
         private MenuBannerLayout HomeAdvertisingLayout => MenuBannerLayout.Calculate(Screen.safeArea,
             Screen.height, MenuBannerAds.DeviceScale);

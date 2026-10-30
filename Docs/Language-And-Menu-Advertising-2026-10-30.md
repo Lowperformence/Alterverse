@@ -20,7 +20,7 @@ The existing service intentionally disables all rewarded ads in the Unity Editor
 
 ## Verification and rollout
 
-`python Tools/UI/LanguageBannerRegression/run.py --dotnet-root "$DOTNET_ROOT"` compiles the real preference, picker, international-text and banner code against controlled engine/ad fixtures for Android release/development, Editor and server. It checks persistence, aliases, missing-key fallback, immediate dialog selection, safe-area layout and consent/visibility/privacy lifecycle. The dedicated workflow also compiles the Java bridge against the runner's Android SDK. The existing rewarded/account regression workflow covers the unchanged reward delivery rules.
+`python Tools/UI/LanguageBannerRegression/run.py --dotnet-root "$DOTNET_ROOT"` compiles the real preference, picker, international-text, menu advertising partial class and banner code against controlled engine/ad fixtures for Android release/development, Editor and server. It checks persistence, aliases, missing-key fallback, immediate dialog selection, safe-area layout and consent/visibility/privacy lifecycle. The host fixture verifies the production review prompt's static API, preventing instance-qualified access such as the CS0176 error reported in Unity. The dedicated workflow also compiles the Java bridge against the runner's Android SDK. The existing rewarded/account regression workflow covers the unchanged reward delivery rules.
 
 A signed Android AAB must be rebuilt and installed/published for these client changes to appear. A dedicated-server rebuild is not required. Native Unity/Gradle rendering, real ad delivery and device typography still require Android validation.
 

@@ -93,10 +93,13 @@ static class Regression
         banner.Complete();Call(ads,"LateUpdate");Check(ads.Loaded&&banner.Visible,"A loaded banner becomes available");
         for(int i=0;i<100;i++)Call(ads,"LateUpdate");
         Check(banner.Loads==1&&BannerView.All.Count==1,"No application refresh loop or duplicate views");
-        MainMenuController.AllowsHomeBanner=false;Call(ads,"LateUpdate");
+        MainMenuController.MockVisible=false;Call(ads,"LateUpdate");
         Check(!banner.Visible,"Hide advertisements outside the home page and behind dialogs");
-        MainMenuController.AllowsHomeBanner=true;Call(ads,"LateUpdate");
+        MainMenuController.MockVisible=true;Call(ads,"LateUpdate");
         Check(banner.Visible&&banner.Loads==1,"Returning to the menu reuses the banner");
+        MainMenuController.ReviewPromptVisible=true;Call(ads,"LateUpdate");
+        Check(!banner.Visible,"The real menu eligibility property hides banners behind the static review prompt");
+        MainMenuController.ReviewPromptVisible=false;Call(ads,"LateUpdate");
         RewardedShardAds.Instance.ReadyForRequests=false;Call(ads,"LateUpdate");
         Check(!banner.Visible,"Fullscreen rewarded ads and privacy dialogs suppress the banner");
         RewardedShardAds.Instance.PrivacyRevision++;Call(ads,"LateUpdate");
