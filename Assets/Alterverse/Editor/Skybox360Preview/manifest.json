@@ -1,0 +1,61 @@
+{
+  "title": "Dimensions Front 360 skybox: explicit offline editor preview",
+  "created": "2026-10-30",
+  "provenance": "Original procedural 3D artwork created for Dimensions Front; no third-party images or paid assets. Generator and standalone preview in the linked source package.",
+  "source_package_library_file_id": "libfile_8f4d75bd328481918276adf0021ca794",
+  "baseline_commit": "43b84ee991f980bbb139724970328375bf63ce32",
+  "auto_start": false,
+  "player_build_enabled": false,
+  "native_unity_visual_test": false,
+  "android_visual_test": false,
+  "artwork": [
+    {
+      "file": "Textures/Sky360_StarsNebula.png",
+      "size": [
+        4096,
+        2048
+      ],
+      "sha256": "b80ce5e2df88df65215799efe70a3775836e82f384a9cd1da1942570eb78c449"
+    },
+    {
+      "file": "Textures/Planet_Azure.png",
+      "size": [
+        1024,
+        512
+      ],
+      "sha256": "459f75ab337bec61c4941f94360d69f9d1cfc20cf34a5848c229219ac781a116"
+    },
+    {
+      "file": "Textures/Planet_Copper.png",
+      "size": [
+        1024,
+        512
+      ],
+      "sha256": "0881625c1a2cac47a5d60e8a9996cfb28de035ec85a9015d777183bf4005304f"
+    },
+    {
+      "file": "Textures/Planet_Ice.png",
+      "size": [
+        1024,
+        512
+      ],
+      "sha256": "664996ef27564eb41d3f6ca5214e73fd7471f030bdd726b291bffca48ccc4e3a"
+    },
+    {
+      "file": "Textures/Planet_Violet.png",
+      "size": [
+        1024,
+        512
+      ],
+      "sha256": "e86959237abc515993724234aa2159ad60b6e7c4a04f76408b2cbfa009ddb9c0"
+    },
+    {
+      "file": "Textures/Planet_Moon.png",
+      "size": [
+        1024,
+        512
+      ],
+      "sha256": "3bde8fd03d869966d20efd9f2c755863e6563087d597b74b4e4d339ab6072eba"
+    }
+  ]
+}
