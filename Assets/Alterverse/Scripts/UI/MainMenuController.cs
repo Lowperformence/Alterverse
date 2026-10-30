@@ -78,15 +78,10 @@ namespace Alterverse.UI
             }
             if (instance != null && instance != this) { Destroy(gameObject); return; }
             instance = this;
-            selectedHero = Mathf.Clamp((int)PlayerHeroSelection.Selected,0,HeroIdentity.HeroCount-1);
-            playArenaBrowseIndex=ArenaShopCatalog.IndexOf(ArenaVariantRuntime.Selected);
-            mapShopPageStart=Mathf.Max(0,playArenaBrowseIndex-1);
-            master = PlayerProfile.MasterVolume; music = PlayerProfile.MusicVolume; sfx = PlayerProfile.SfxVolume;
             showcase = gameObject.AddComponent<MenuHeroShowcase>();
             cosmicBackground = gameObject.AddComponent<MenuUniverseBackground>();
-            collection=new CosmeticCollectionPanel();
             changeCollectionHero=ChangeHero;
-            UniversalCosmeticSelection.EnsureMigrated((HeroId)selectedHero);
+            PrepareAccountPresentation();
             if(GooglePlayLevelLeaderboard.IsConfigured)GooglePlayLevelLeaderboard.AuthenticateAndSync();
             MatchClock.Set(PauseReason.Menu,true);
         }
@@ -158,6 +153,7 @@ namespace Alterverse.UI
         private void Update()
         {
             if (!visible || suspended || OnlineMatchLoadingScreen.IsVisible) return;
+            if (!PrepareAccountPresentation()) return;
             UpdateReviewPrompt();
             if (ReviewPromptVisible)
             {
@@ -216,6 +212,7 @@ namespace Alterverse.UI
                 float y = Screen.height-safe.yMax+(safe.height-MenuHeight*scale)*.5f;
                 GUI.matrix = Matrix4x4.TRS(new Vector3(safe.x,y,0),Quaternion.identity,Vector3.one*scale);
                 theme ??= new FrontEndTheme();
+                if (!PrepareAccountPresentation()) { DrawAccountStartup(); return; }
                 if (ReviewPromptVisible) { DrawReviewPrompt(); return; }
                 if (launching) { DrawLaunch(); return; }
                 bool choosingLanguage = languagePicker.IsOpen;
@@ -1602,6 +1599,7 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 
 

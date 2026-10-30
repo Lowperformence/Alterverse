@@ -14,6 +14,11 @@ root = here.parents[2]
 sdk = sorted((args.dotnet_root / 'sdk').iterdir())[-1]
 runtime = sorted((args.dotnet_root / 'shared/Microsoft.NETCore.App').iterdir())[-1]
 files = ['GooglePlayAccountSession', 'AccountServerBootstrap', 'PlayerProfile', 'AccountProfilePrefs', 'SafeIdentityCatalog']
+menu = (root / 'Assets/Alterverse/Scripts/UI/MainMenuController.cs').read_text()
+assert menu.index('if (!PrepareAccountPresentation()) { DrawAccountStartup(); return; }') < menu.index('if (ReviewPromptVisible) { DrawReviewPrompt(); return; }')
+assert 'if (!PrepareAccountPresentation()) return;' in menu
+awake = menu[menu.index('private void Awake()'):menu.index('public static void ShowHome()')]
+assert 'PlayerHeroSelection.Selected' not in awake and 'PlayerProfile.MasterVolume' not in awake
 for target, defines in [('android', 'UNITY_ANDROID'), ('desktop', 'UNITY_EDITOR')]:
     with tempfile.TemporaryDirectory(prefix='df-google-name-') as directory:
         output = Path(directory) / 'GoogleNameRegression.dll'
@@ -22,9 +27,11 @@ for target, defines in [('android', 'UNITY_ANDROID'), ('desktop', 'UNITY_EDITOR'
             '-define:' + defines, '-out:' + str(output),
             *['-r:' + str(path) for path in runtime.glob('*.dll')],
             str(here / 'EngineStubs.cs'), str(here / 'Regression.cs'),
+            str(here / 'MenuStartupFixtures.cs'), str(root / 'Assets/Alterverse/Scripts/UI/MainMenuAccountStartup.cs'),
             *[str(root / 'Assets/Alterverse/Scripts/Profile' / (name + '.cs')) for name in files]]))
         subprocess.run([str(args.dotnet_root / 'dotnet'), str(sdk / 'Roslyn/bincore/csc.dll'), '@' + str(response)], check=True)
         output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions': {
             'tfm': 'net8.0', 'framework': {'name': 'Microsoft.NETCore.App', 'version': runtime.name}}}))
         subprocess.run([str(args.dotnet_root / 'dotnet'), str(output)], check=True,
             env=dict(os.environ, DF_TEST_IDENTITY_CATALOG=str(root / 'Assets/Alterverse/Resources/Social/SafeIdentityCatalog.json')))
+

@@ -89,7 +89,7 @@ namespace Alterverse.Characters {public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,
  public class HeroCombatProfile:MonoBehaviour {public float Health=100;public void Configure(HeroId h){}}
  public class HeroAbilityKit:MonoBehaviour {public void Configure(HeroId h){}}
 }
-namespace Alterverse.Combat {public class Health:MonoBehaviour {public static readonly List<Health> Active=new();public static int Lookups;public new T GetComponent<T>() where T:class{Lookups++;return gameObject.GetComponent<T>();}public float Current,Shield;public bool IsDead;public void Configure(float n){}public void ApplyNetworkSnapshot(float hp,float shield,bool dead){Current=hp;Shield=shield;IsDead=dead;}}public class CombatFeedback:MonoBehaviour {}}
+namespace Alterverse.Combat {public class Health:MonoBehaviour {public static readonly List<Health> Active=new();public static uint RegistryVersion=>(uint)Active.Count;public static int Lookups;public new T GetComponent<T>() where T:class{Lookups++;return gameObject.GetComponent<T>();}public float Current,Shield;public bool IsDead;public void Configure(float n){}public void ApplyNetworkSnapshot(float hp,float shield,bool dead){Current=hp;Shield=shield;IsDead=dead;}}public class CombatFeedback:MonoBehaviour {}}
 namespace Alterverse.Visuals {public class StylizedHeroVisual:MonoBehaviour {public void Build(){}}}
 namespace Alterverse.AI {
  public class BotPersonality:MonoBehaviour {public enum Style {One,Two,Three,Four,Five,Six}public float Aggression,Caution;public void Configure(Style s){}}
@@ -97,7 +97,7 @@ namespace Alterverse.AI {
  public class BotLanePlan:MonoBehaviour {public void Initialize(int t,float f){}}public class MobaBotMover:MonoBehaviour {}public class MobaBotCombat:MonoBehaviour {}public class HeroBotAbilities:MonoBehaviour {}public class MobaBotRespawn:MonoBehaviour {}
 }
 namespace Alterverse.Match {public enum ArenaVariant{Moon=0,Mars=1,GreenPlanet=2,Noxara=3,Kryon=4,Earth=5,Pyraxis=6,Neptune=7,Dark00=8,DiamondCore=9,GJ504b=10,Wasp76b=11,Trappist1e=12,Toi715b=13}public static class ArenaVariantRuntime {public static ArenaVariant Selected;public static bool ShuffleEnabled;public static ArenaVariant RandomOwnedArena(ArenaVariant a)=>a;}public class DimensionsFront {public bool HasEnded;public event Action<int> MatchEnded;}}
-namespace Alterverse.Profile {public enum BattleItemType{None,Shield}public static class BattleItemInventory {public static BattleItemType Equipped;}public static class GooglePlayAccountSession {public static bool Supported=>false;}public class AccountServerBootstrap {public static AccountServerBootstrap Instance;public static bool CloudProfileReady=>true;public bool Busy;public Task<bool> EnsureAuthenticatedAsync()=>Task.FromResult(true);}}
+namespace Alterverse.Profile {public enum BattleItemType{None,Shield}public static class BattleItemInventory {public static BattleItemType Equipped;}public static class GooglePlayAccountSession {public static bool Supported;public static string DisplayName=>null;}public class AccountServerBootstrap {public static AccountServerBootstrap Instance;public static bool CloudProfileReady=>!GooglePlayAccountSession.Supported||Instance!=null;public bool Busy;public Task<bool> EnsureAuthenticatedAsync()=>Task.FromResult(true);}}
 namespace Alterverse.UI {public sealed partial class MainMenuController {public static bool IsVisible=true;public static int PartyReturns,HomeReturns;public static void ShowCoopAfterMatch(string s){PartyReturns++;IsVisible=true;}public static void ShowHome(){HomeReturns++;IsVisible=true;}public static void ShowLaunchFailure(string s){}public bool launching,choosingMatchMode;public string launchMessage;bool PrepareSelectedMatch()=>true;}public class FrontEndTheme {public static object Background,Surface;public GUIStyle Title=new(),Heading=new(),Body=new(),Small=new();public static void Fill(UnityEngine.Rect r,object c){}public void Panel(UnityEngine.Rect r){}public void Label(UnityEngine.Rect r,string s,GUIStyleShim t,bool muted=false){}public void Label(UnityEngine.Rect r,string s,UnityEngine.GUIStyle t,bool muted=false){}public bool Action(UnityEngine.Rect r,string s,bool primary=false,bool enabled=true)=>false;} public class GUIStyleShim {} }
 namespace Alterverse.Multiplayer {
  public static class CoopAuthority {public static bool Active,LocalIsHost,LocalHasServerAuthority;public static bool CanSimulateHostGameplay=>!Active||LocalHasServerAuthority;public static CoopMatchPlan PreparedPlan,ActivePlan;public static bool BeginPreparedMatch(bool b)=>true;public static void Prepare(CoopMatchPlan p){PreparedPlan=p;}public static void ClearPrepared(){PreparedPlan=null;}public static void EndMatch(){Active=false;ActivePlan=PreparedPlan=null;}}
@@ -131,5 +131,6 @@ namespace Alterverse.Shop {
   public void Refresh(){}
  }
 }
+
 
 

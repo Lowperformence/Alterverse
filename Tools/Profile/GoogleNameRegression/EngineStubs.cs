@@ -32,7 +32,8 @@ namespace UnityEngine
   public static T FromJson<T>(string text)=>System.Text.Json.JsonSerializer.Deserialize<T>(text,options);
  }
  public static class Debug {public static void LogWarning(string value){}}
- public static class Mathf {public static int Max(int a,int b)=>Math.Max(a,b);public static float Clamp01(float f)=>Math.Clamp(f,0,1);}
+ public struct Rect {public Rect(float x,float y,float w,float h){}}
+ public static class Mathf {public static int Max(int a,int b)=>Math.Max(a,b);public static float Clamp01(float f)=>Math.Clamp(f,0,1);public static int Clamp(int n,int a,int b)=>Math.Clamp(n,a,b);public static float Min(float a,float b)=>Math.Min(a,b);}
  public static class PlayerPrefs
  {
   static readonly Dictionary<string,object> values=new();public static int Saves;
@@ -92,9 +93,9 @@ namespace GooglePlayGames
  {
   public class User {public string id="google-a";}
   public static PlayGamesPlatform Instance=new();public User localUser=new();public bool Authenticated=true;
-  public string Name="Chris Ä龍🎮";public bool ThrowName,ManualSucceeds;public int ManualSignIns;public static void Activate(){}
+  public string Name="Chris Ä龍🎮";public bool ThrowName,ManualSucceeds,DelayAuthentication;public Action<BasicApi.SignInStatus> PendingAuthentication;public int ManualSignIns;public static void Activate(){}
   public bool IsAuthenticated()=>Authenticated;public string GetUserDisplayName()=>ThrowName?throw new Exception():Name;
-  public void Authenticate(Action<BasicApi.SignInStatus> callback)=>callback(Authenticated?BasicApi.SignInStatus.Success:BasicApi.SignInStatus.Failed);
+  public void Authenticate(Action<BasicApi.SignInStatus> callback){if(DelayAuthentication){PendingAuthentication=callback;return;}callback(Authenticated?BasicApi.SignInStatus.Success:BasicApi.SignInStatus.Failed);}
   public void ManuallyAuthenticate(Action<BasicApi.SignInStatus> callback)
   {ManualSignIns++;if(ManualSucceeds)Authenticated=true;Authenticate(callback);}
   public void RequestServerSideAccess(bool refresh,Action<string> callback)=>callback("one-use-code");
@@ -108,7 +109,7 @@ namespace Alterverse.Shop
  public class GooglePlayShardStore {public static GooglePlayShardStore Instance;public bool Busy,PendingRecovery;public void Reconnect(){}}
  public class PaidShardCommerce
  {
-  public static PaidShardCommerce Instance;public static bool Spending;public bool Ready=true,HasPaidHistory,SaveOnFlush;public int FlushCalls;public string AccountHash;
+  public static PaidShardCommerce Instance;public static bool Spending;public bool Ready=true,HasPaidHistory,SaveOnFlush;public int FlushCalls;public string AccountHash,Status="Loading cloud profile...";
   public static event Action EntitlementsChanged;public static void Raise()=>EntitlementsChanged?.Invoke();
   public static int Connections;public static Action<string> OnConnect;
   public static void Connect(string endpoint,Func<string> token,string account){Connections++;OnConnect?.Invoke(account);Instance=new(){AccountHash=account};}
@@ -136,4 +137,5 @@ namespace Alterverse.Multiplayer
  public static class CoopAuthority {public static bool Active;}
  public static class DedicatedServerNetworkRuntime {public static bool Requested;}
 }
+
 

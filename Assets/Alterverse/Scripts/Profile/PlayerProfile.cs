@@ -20,6 +20,8 @@ namespace Alterverse.Profile
                     if (!AccountServerBootstrap.CloudProfileReady)
                         return AccountProfilePrefs.Attached || AccountServerBootstrap.Instance == null ||
                             AccountServerBootstrap.Instance.Busy ? "CONNECTING..." : "SIGN IN REQUIRED";
+                    string currentName=SafeIdentityCatalog.NormalizePlayGamesName(GooglePlayAccountSession.DisplayName);
+                    if(SafeIdentityCatalog.IsDisplayName(currentName))return currentName;
                     string savedName = AccountProfilePrefs.GetString(PlayGamesNameKey, "");
                     return SafeIdentityCatalog.IsDisplayName(savedName) ? savedName : "CONNECTING...";
                 }
@@ -83,3 +85,4 @@ namespace Alterverse.Profile
         public const string Language="English";
     }
 }
+

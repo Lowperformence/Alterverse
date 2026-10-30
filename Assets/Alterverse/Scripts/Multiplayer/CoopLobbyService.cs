@@ -113,7 +113,7 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> EnsureServicesAsync()
         {
-            if(busy)return servicesInitialized&&AuthenticationService.Instance.IsSignedIn;
+            if(busy)return servicesInitialized&&AuthenticationService.Instance.IsSignedIn&&AccountServerBootstrap.CloudProfileReady;
             try
             {
                 busy=true;lastError="";SetStatus("CONNECTING TO UNITY SERVICES");
@@ -126,6 +126,7 @@ namespace Alterverse.Multiplayer
                 {
                     if(!await Alterverse.Profile.AccountServerBootstrap.Instance.EnsureAuthenticatedAsync())return false;
                 }
+                else if(GooglePlayAccountSession.Supported)return false;
                 else if(!AuthenticationService.Instance.IsSignedIn)
                 {
                     // Without the account bootstrap only recover an existing session.
@@ -768,6 +769,7 @@ namespace Alterverse.Multiplayer
                 {
                     if(!await Alterverse.Profile.AccountServerBootstrap.Instance.EnsureAuthenticatedAsync())return false;
                 }
+                else if(GooglePlayAccountSession.Supported)return false;
                 else if(!AuthenticationService.Instance.IsSignedIn)
                 {
                     // Without the account bootstrap only recover an existing session.
@@ -958,6 +960,7 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 
 
 

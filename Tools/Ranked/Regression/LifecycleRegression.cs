@@ -16,6 +16,7 @@ partial class Regression
 
  static async Task LifecycleCases()
  {
+  await GoogleOnlyLobbyStartupCases();
   HotzoneReplicationCases();
   WorldRegistryCases();
   await GuestSessionSearchCases();
@@ -118,6 +119,32 @@ partial class Regression
   }
  }
 
+ static async Task GoogleOnlyLobbyStartupCases()
+ {
+  ResetLobby();
+  var bootstrap=Alterverse.Profile.AccountServerBootstrap.Instance;
+  Alterverse.Profile.GooglePlayAccountSession.Supported=true;
+  Alterverse.Profile.AccountServerBootstrap.Instance=null;
+  try
+  {
+   Check(!await CoopLobbyService.Instance.EnsureServicesAsync(),
+    "Android co-op cannot use a cached Unity account before the Google bootstrap exists");
+   Check(!await (Task<bool>)typeof(CoopLobbyService).GetMethod("EnsureServicesWhileBusyAsync",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(CoopLobbyService.Instance,null),
+    "Android co-op background setup cannot recover the old session independently");
+   Check(!await (Task<bool>)typeof(OnlinePartyService).GetMethod("EnsureServicesAsync",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(OnlinePartyService.Instance,null),
+    "Android party setup cannot bypass Google-only account selection");
+   Put(CoopLobbyService.Instance,"busy",true);
+   Check(!await CoopLobbyService.Instance.EnsureServicesAsync(),
+    "a busy Android lobby cannot report an unverified cached session as ready");
+  }
+  finally
+  {
+   Alterverse.Profile.GooglePlayAccountSession.Supported=false;
+   Alterverse.Profile.AccountServerBootstrap.Instance=bootstrap;
+   ResetLobby();
+  }
+ }
+
  static void WorldRegistryCases()
  {
   ResetLobby();CoopAuthority.Active=true;CoopAuthority.ActivePlan=EndPlan();CoopAuthority.LocalHasServerAuthority=false;
@@ -133,7 +160,7 @@ partial class Regression
   for(int i=0;i<19;i++)Invoke(sync,"OnState",0UL,new FastBufferReader(round,0,0));
   Check(Alterverse.Combat.Health.Lookups==220,"nineteen world chunks scan 110 entities once per frame instead of nineteen times");
   Time.frameCount++;Invoke(sync,"OnState",0UL,new FastBufferReader(round,0,0));
-  Check(Alterverse.Combat.Health.Lookups==440,"lookup cache refreshes on next frame");
+  Check(Alterverse.Combat.Health.Lookups==220,"unchanged entity membership reuses the lookup cache across frames");
   var spawned=new GameObject();var health=spawned.AddComponent<Alterverse.Combat.Health>();
   spawned.AddComponent<CoopWorldEntityKey>().Key="fresh";Alterverse.Combat.Health.Active.Add(health);
   Invoke(sync,"OnState",0UL,new FastBufferReader(round,1,new Unity.Collections.FixedString128Bytes("fresh"),2f,0f,3f,0f,42f,5f,false,1f,0));
@@ -179,3 +206,4 @@ partial class Regression
   Check(OnlinePartyService.Instance.InParty,"completed match cleanup keeps guest session");
  }
 }
+

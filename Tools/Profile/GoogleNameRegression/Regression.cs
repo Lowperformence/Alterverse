@@ -31,105 +31,110 @@ static class Regression
  static async Task StartupCases()
  {
   var b=NewStartup();var auth=AuthenticationService.Instance;var sdk=PlayGamesPlatform.Instance;
+  auth.IsSignedIn=auth.IsAuthorized=auth.SessionTokenExists=true;
+  auth.PlayerId="old-generated-account";auth.Provider=null;auth.GooglePlayerId="verified-google-delayed";
+  PlayerPrefs.SetInt("DF_KnownUnityAccountOnDevice_v1",1);
+  PlayerPrefs.SetString("DF_PlayerName","OldGeneratedPlayer");
+  PlayerPrefs.SetInt("DF_TestHero",1);PlayerPrefs.SetInt("DF_Shards",9999);
+  sdk.Authenticated=false;sdk.DelayAuthentication=true;
   var info=new TaskCompletionSource<PlayerInfo>();auth.Info=()=>info.Task;
-  string localName=PlayerPrefs.GetString("DF_PlayerName","");
+  var menu=new Alterverse.UI.MainMenuController();
+  Alterverse.Characters.PlayerHeroSelection.Reads=0;
   var first=b.EnsureAuthenticatedAsync();var second=b.EnsureAuthenticatedAsync();
-  Check(ReferenceEquals(first,second)&&auth.GoogleSignIns==1,"concurrent startup callers share one Google sign-in");
-  Check(auth.AnonymousSignIns==0&&auth.LastCreateAccount,"fresh Android uses Google directly, never an anonymous substitute");
-  Check(PaidShardCommerce.Connections==0&&!AccountProfilePrefs.Attached,"SignedIn cannot start wallet/profile sync before provider verification");
-  Check(PlayerProfile.PlayerName=="CONNECTING..."&&PlayerPrefs.GetString("DF_PlayerName","")==localName,
-   "waiting for verification never displays or persists a generated identity");
-  PaidShardCommerce.OnConnect=account=>Check(b.GooglePlayAccountReady&&account==Hash(auth.PlayerId),
-   "only the verified Unity/Google binding can connect its wallet");
+  Check(ReferenceEquals(first,second),"delayed startup callers share one native Google sign-in");
+  Check(!menu.PrepareForTest()&&Alterverse.Characters.PlayerHeroSelection.Reads==0&&menu.SelectedForTest==-1,
+   "cold menu never reads or initializes the old device profile before native Google sign-in");
+  menu.DrawStartupForTest();
+  Check(!string.Join(" ",Alterverse.UI.FrontEndTheme.Labels).Contains("OldGeneratedPlayer"),
+   "startup presentation contains no generated-account identity");
+  Check(auth.GoogleSignIns==0&&auth.AnonymousSignIns==0&&PaidShardCommerce.Connections==0,
+   "native authorization is required before any backend sign-in");
+  sdk.Authenticated=true;sdk.PendingAuthentication(GooglePlayGames.BasicApi.SignInStatus.Success);
+  Check(auth.GoogleSignIns==1&&auth.PlayerId=="verified-google-delayed"&&auth.Links==0&&auth.AnonymousSignIns==0&&!auth.LastCreateAccount,
+   "an existing installation selects its Google provider directly without restoring or linking the cached guest");
+  Check(PaidShardCommerce.Connections==0&&!menu.PrepareForTest()&&Alterverse.Characters.PlayerHeroSelection.Reads==0,
+   "provider verification remains a separate gate before profile activation");
   info.SetResult(new PlayerInfo{Google=sdk.localUser.id});
-  Check(await first&&await second&&PaidShardCommerce.Connections==1,"verified startup connects exactly one backend account");
-  Check(!AccountProfilePrefs.Attached,"native success does not fabricate a cloud profile");
-  Attach(auth.PlayerId);
-  Check(AccountProfilePrefs.GetString(PlayerProfile.PlayGamesNameKey,"")==""&&PlayerProfile.PlayerName=="CONNECTING...",
-   "first cloud frame waits for the verified Play alias instead of displaying the generated server name");
-  sdk.Name=null;
-  Check(PlayerProfile.PlayerName=="CONNECTING...","missing Google name never falls back to the server-generated name");
-  sdk.Name="Only Play Player";PaidShardCommerce.Raise();
-  Check(PlayerProfile.PlayerName==sdk.Name&&AccountProfilePrefs.GetInt("DF_Shards")==777,"Google-only display preserves the account's progress");
+  Check(await first&&await second&&PaidShardCommerce.Connections==1,
+   "verified Google startup connects exactly one backend account");
+  Check(!AccountProfilePrefs.Attached&&!menu.PrepareForTest()&&Alterverse.Characters.PlayerHeroSelection.Reads==0,
+   "native sign-in success cannot expose local progress while the cloud save is loading");
+  Attach(auth.PlayerId,1);
+  AccountProfilePrefs.SetInt("DF_TestHero",2);AccountProfilePrefs.SetInt("DF_TestArena",3);
+  AccountProfilePrefs.SetFloat("DF_MasterVolume",.25f);
+  AccountProfilePrefs.SetString(PlayerProfile.PlayGamesNameKey,"Old saved alias");
+  Check(menu.PrepareForTest()&&menu.SelectedForTest==2&&menu.ArenaForTest==3&&menu.MasterForTest==.25f,
+   "the first visible account menu initializes selections and audio from the verified cloud owner");
+  Check(PlayerProfile.PlayerName==sdk.Name&&AccountProfilePrefs.GetInt("DF_Shards")==777,
+   "native Google name and cloud balance appear together instead of the old cached alias/balance");
+  int reads=Alterverse.Characters.PlayerHeroSelection.Reads;
+  Check(menu.PrepareForTest()&&Alterverse.Characters.PlayerHeroSelection.Reads==reads,
+   "a stable menu account is initialized once instead of reloading preferences each frame");
+  Check(PlayerPrefs.GetString("DF_PlayerName")=="OldGeneratedPlayer"&&PlayerPrefs.GetInt("DF_Shards")==9999,
+   "ignoring the legacy profile does not delete its stored progress");
+  AccountProfilePrefs.Detach();
+  Check(!menu.PrepareForTest(),"losing the verified cloud attachment immediately hides account presentation");
 
+  b=NewStartup();auth=AuthenticationService.Instance;
+  Check(await b.EnsureAuthenticatedAsync()&&auth.GoogleSignIns==1&&auth.LastCreateAccount&&auth.AnonymousSignIns==0&&auth.Links==0,
+   "a fresh player creates only a Google-backed identity");
   b=NewStartup();auth=AuthenticationService.Instance;auth.SessionTokenExists=true;
-  auth.GooglePlayerId="existing-google-account";
-  Check(await b.EnsureAuthenticatedAsync()&&auth.PlayerId=="existing-google-account"&&
-   !auth.LastCreateAccount&&auth.AnonymousSignIns==0&&PaidShardCommerce.Connections==1,
-   "cached legacy session cannot replace an existing Google account or create another identity");
-
+  PlayerPrefs.SetInt("DF_KnownUnityAccountOnDevice_v1",1);auth.GooglePlayerId="existing-google-account";
+  Check(await b.EnsureAuthenticatedAsync()&&auth.PlayerId=="existing-google-account"&&!auth.LastCreateAccount&&auth.AnonymousSignIns==0,
+   "a previously connected installation restores the existing Google identity without replacement creation");
   b=NewStartup();auth=AuthenticationService.Instance;auth.IsSignedIn=auth.IsAuthorized=true;
-  auth.PlayerId="legacy-in-place";auth.Provider=null;
-  Check(await b.EnsureAuthenticatedAsync()&&auth.PlayerId=="legacy-in-place"&&auth.Links==1&&auth.GoogleSignIns==0&&auth.AnonymousSignIns==0,
-   "an already signed-in legacy identity is linked in place instead of creating a second account");
-  Check(PaidShardCommerce.Connections==1&&PaidShardCommerce.Instance.AccountHash==Hash("legacy-in-place"),
-   "legacy profile connects only once after its Google link is verified");
+  auth.PlayerId="legacy-unlinked";auth.Provider=null;
+  Check(await b.EnsureAuthenticatedAsync()&&auth.PlayerId==auth.GooglePlayerId&&auth.GoogleSignIns==1&&auth.Links==0&&auth.AnonymousSignIns==0,
+   "an already signed-in unlinked legacy account is not revived or linked automatically");
 
   b=NewStartup();auth=AuthenticationService.Instance;auth.SessionTokenExists=true;auth.FailGoogle=true;
-  Check(await b.EnsureAuthenticatedAsync()&&auth.AnonymousSignIns==1&&auth.AnonymousCreates==0&&auth.Links==1,
-   "legacy migration restores only an existing token after native Google authorization, then links the same identity");
-  Check(PaidShardCommerce.Connections==1&&b.GooglePlayAccountReady,"legacy restore cannot expose an unverified guest wallet");
-
-  b=NewStartup();auth=AuthenticationService.Instance;auth.SessionTokenExists=true;
-  PlayGamesPlatform.Instance.Authenticated=false;
+  Check(!await b.EnsureAuthenticatedAsync()&&auth.AnonymousSignIns==0&&auth.Links==0&&PaidShardCommerce.Connections==0&&!b.GooglePlayAccountReady,
+   "a failed Google provider sign-in cannot fall back to legacy session recovery");
+  b=NewStartup();auth=AuthenticationService.Instance;auth.SessionTokenExists=true;sdk=PlayGamesPlatform.Instance;sdk.Authenticated=false;
   Check(!await b.EnsureAuthenticatedAsync()&&auth.AnonymousSignIns==0&&auth.GoogleSignIns==0&&PaidShardCommerce.Connections==0,
-   "failed native Google login cannot restore or create a background guest account");
+   "a failed native sign-in cannot restore or create any account");
   Check(!AccountProfilePrefs.Attached&&PlayerProfile.PlayerName=="SIGN IN REQUIRED",
-   "failed login has no active local profile or generated display identity");
+   "failed login has no visible local identity");
 
-  // A cached Unity session survives app updates. A failed silent native login
-  // must still allow the shop/profile RECONNECT button to invoke interactive login.
   b=NewStartup();auth=AuthenticationService.Instance;auth.IsSignedIn=auth.IsAuthorized=true;
-  auth.PlayerId="cached-linked-player";sdk=PlayGamesPlatform.Instance;
+  auth.PlayerId=auth.GooglePlayerId="cached-google-player";sdk=PlayGamesPlatform.Instance;
   sdk.Authenticated=false;sdk.ManualSucceeds=true;
   Check(!await b.EnsureAuthenticatedAsync()&&PaidShardCommerce.Connections==0,
-   "silent native failure leaves a cached linked account inactive");
-  Check(await b.ConnectGoogleAsync()&&sdk.ManualSignIns==1&&b.GooglePlayAccountReady,
-   "manual reconnect recovers native Google sign-in for an existing signed-in Unity session");
-  Check(auth.PlayerId=="cached-linked-player"&&auth.GoogleSignIns==0&&auth.AnonymousSignIns==0&&auth.Links==0&&PaidShardCommerce.Connections==1,
-   "retry preserves the cached linked identity and connects its wallet once");
-
-  b=NewStartup();auth=AuthenticationService.Instance;auth.IsSignedIn=auth.IsAuthorized=true;
-  auth.PlayerId="cached-unlinked-player";auth.Provider=null;sdk=PlayGamesPlatform.Instance;
-  sdk.Authenticated=false;sdk.ManualSucceeds=true;
-  Check(!await b.EnsureAuthenticatedAsync()&&await b.ConnectGoogleAsync()&&sdk.ManualSignIns==1&&auth.Links==1,
-   "interactive retry links an existing legacy session in place");
-  Check(auth.PlayerId=="cached-unlinked-player"&&auth.GoogleSignIns==0&&auth.AnonymousSignIns==0&&PaidShardCommerce.Connections==1,
-   "legacy retry cannot create a replacement account");
+   "failed silent login leaves the cached Unity session inactive");
+  Check(await b.ConnectGoogleAsync()&&sdk.ManualSignIns==1&&b.GooglePlayAccountReady&&auth.PlayerId=="cached-google-player",
+   "interactive retry selects the actual Google identity");
+  Check(auth.GoogleSignIns==1&&auth.AnonymousSignIns==0&&auth.Links==0&&PaidShardCommerce.Connections==1,
+   "interactive recovery cannot revive or link an old guest account");
 
   b=NewStartup();auth=AuthenticationService.Instance;auth.IsSignedIn=auth.IsAuthorized=true;
   sdk=PlayGamesPlatform.Instance;sdk.Authenticated=false;
   Check(!await b.ConnectGoogleAsync()&&sdk.ManualSignIns==1&&PaidShardCommerce.Connections==0&&auth.GoogleSignIns==0&&auth.Links==0,
-   "cancelled interactive sign-in retains the account without activating wallet or linking");
-
-  b=NewStartup();auth=AuthenticationService.Instance;auth.IsSignedIn=auth.IsAuthorized=true;
-  auth.Provider="different-google";sdk=PlayGamesPlatform.Instance;sdk.Authenticated=false;sdk.ManualSucceeds=true;
-  Check(!await b.ConnectGoogleAsync()&&sdk.ManualSignIns==1&&b.GoogleRestoreAvailable&&auth.Links==0&&PaidShardCommerce.Connections==0,
-   "interactive retry still requires explicit restore for another Google player");
-
-  b=NewStartup();auth=AuthenticationService.Instance;auth.FailGoogle=true;
-  Check(!await b.EnsureAuthenticatedAsync()&&auth.AnonymousSignIns==0&&PaidShardCommerce.Connections==0,
-   "a fresh Google service failure never falls back to anonymous account creation");
-
+   "cancelled native login cannot activate the cached account");
   b=NewStartup();auth=AuthenticationService.Instance;auth.IsSignedIn=auth.IsAuthorized=true;
   auth.Provider="different-google";
-  Check(!await b.EnsureAuthenticatedAsync()&&PaidShardCommerce.Connections==0&&auth.Links==0,
-   "a cached Unity identity linked to another Google player never connects its profile in the background");
-  Check(!await b.SignInAsync("other-user","password",false)&&!await b.SignInAsync("other-user","password",true)&&
-   auth.UsernameSignIns==0,"Android compatibility APIs cannot switch to a second username account");
-  Check(await b.ConnectGoogleAsync(true)&&auth.PlayerId==auth.GooglePlayerId&&!auth.LastCreateAccount&&
-   auth.AnonymousSignIns==0&&PaidShardCommerce.Connections==1,
-   "manual restore can recover the existing Google account after an unverified cached provider mismatch");
+  Check(await b.EnsureAuthenticatedAsync()&&auth.PlayerId==auth.GooglePlayerId&&auth.Links==0&&PaidShardCommerce.Connections==1,
+   "a stale cached provider cannot override the Google account selected at startup");
+  Check(!await b.SignInAsync("other-user","password",false)&&!await b.SignInAsync("other-user","password",true)&&auth.UsernameSignIns==0,
+   "Android compatibility APIs cannot create or select a username account");
 
   b=NewStartup();auth=AuthenticationService.Instance;
-  Check(await b.EnsureAuthenticatedAsync(),"prepare a verified cloud account for an explicit Google-account change");
+  Check(await b.EnsureAuthenticatedAsync(),"prepare a verified cloud account for explicit account switching");
   Attach(auth.PlayerId);var oldBackend=PaidShardCommerce.Instance;oldBackend.SaveOnFlush=true;
   PlayGamesPlatform.Instance.localUser.id="google-b";auth.GooglePlayerId="unity-play-b";
-  Check(await b.ConnectGoogleAsync(true)&&oldBackend.FlushCalls>=2&&auth.PlayerId=="unity-play-b"&&
-   !auth.LastCreateAccount&&b.GooglePlayAccountReady,
-   "restoring from an active cloud profile still flushes existing progress before selecting the other verified Google account");
+  Check(await b.ConnectGoogleAsync(true)&&oldBackend.FlushCalls>=2&&auth.PlayerId=="unity-play-b"&&!auth.LastCreateAccount&&b.GooglePlayAccountReady,
+   "explicit active-account restore saves the existing cloud profile before selecting the other Google identity");
+
+  b=NewStartup();auth=AuthenticationService.Instance;auth.GooglePlayerId="saved-before-failed-restore";
+  Check(await b.EnsureAuthenticatedAsync(),"prepare account for failed restore");
+  Attach(auth.PlayerId);oldBackend=PaidShardCommerce.Instance;oldBackend.SaveOnFlush=true;
+  string savedHash=Hash(auth.PlayerId);
+  PlayGamesPlatform.Instance.localUser.id="google-c";auth.FailGoogle=true;
+  Check(!await b.ConnectGoogleAsync(true)&&!auth.IsSignedIn&&auth.AnonymousSignIns==0&&!AccountProfilePrefs.Attached,
+   "failed explicit restore stays signed out instead of recovering an old account anonymously");
+  Check(oldBackend.FlushCalls>=2&&PlayerPrefs.GetString("DF_AccountProfileCache_"+savedHash).Contains("777"),
+   "failed restore preserves the previous account's saved cloud-profile cache");
   Resources.AccountConfigured=false;PaidShardCommerce.OnConnect=null;
-  Console.WriteLine("PASS: Google-only startup, verified profile activation, safe in-place migration, failure isolation and no anonymous creation.");
+  Console.WriteLine("PASS: delayed Google-only startup, hidden legacy presentation, correct cloud selections, retry/restore isolation and no Android guest recovery.");
  }
  static async Task Main()
  {
@@ -182,4 +187,5 @@ static class Regression
   Console.WriteLine(checks+" production Google-name account checks passed (controlled SDK, not an Android device).");
  }
 }
+
 

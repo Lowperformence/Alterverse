@@ -49,7 +49,9 @@ namespace Alterverse.Multiplayer
  public sealed partial class CoopWorldEventSync:MonoBehaviour {Unity.Netcode.CustomMessagingManager messaging;}
  public class CoopWorldEntityKey:MonoBehaviour
  {
+  public static uint IdentityVersion=>0;
   public string Key;public void Configure(){}public void ApplyTarget(Vector3 position,float yaw,bool immediate,float sampledAt=float.NaN){transform.position=position;}
   public void ApplyAlivePresentation(bool alive){}
  }
 }
+
