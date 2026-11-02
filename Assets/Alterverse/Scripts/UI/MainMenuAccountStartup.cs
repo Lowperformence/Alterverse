@@ -14,7 +14,8 @@ namespace Alterverse.UI
         // Loading an old local hero/avatar/wallet first would expose a second account.
         bool PrepareAccountPresentation()
         {
-            if (StartupAppUpdateManager.Instance != null && StartupAppUpdateManager.Instance.UpdateRequired)
+            if (StartupAppUpdateManager.Instance != null &&
+                (!StartupAppUpdateManager.Instance.CheckCompleted || StartupAppUpdateManager.Instance.UpdateRequired))
             {
                 presentedAccount = null;
                 return false;
@@ -49,6 +50,15 @@ namespace Alterverse.UI
             theme.Panel(panel);
 
             var updater = StartupAppUpdateManager.Instance;
+            if (updater != null && !updater.CheckCompleted)
+            {
+                bool de = GameLanguage.Current != null && GameLanguage.Current.Code.StartsWith("de");
+                theme.FitLabel(new Rect(x + 24, 238, width - 48, 40),
+                    de ? "PRÜFE AKTUALISIERUNGEN" : "CHECKING FOR UPDATES", theme.Heading);
+                theme.Label(new Rect(x + 24, 292, width - 48, 72),
+                    de ? "Die verfügbare Spielversion wird bei Google Play geprüft…" : "Checking the available game version on Google Play…", theme.Body, true);
+                return;
+            }
             if (updater != null && updater.UpdateRequired)
             {
                 bool de = GameLanguage.Current != null && GameLanguage.Current.Code.StartsWith("de");

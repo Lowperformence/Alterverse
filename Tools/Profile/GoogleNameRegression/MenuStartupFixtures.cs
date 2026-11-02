@@ -41,3 +41,15 @@ namespace Alterverse.UI
   public int SelectedForTest=>selectedHero;public int ArenaForTest=>playArenaBrowseIndex;public float MasterForTest=>master;
  }
 }
+namespace Alterverse.Profile
+{
+ public static class GameLanguage {public sealed class Language{public string Code="en";}public static Language Current=new();}
+#if !STARTUP_UPDATE_FIXTURE
+ public class StartupAppUpdateManager
+ {
+  public static StartupAppUpdateManager Instance;
+  public bool CheckCompleted=true,Checking,UpdateRequired,UpdateFlowActive;public string StatusMessage;
+  public void TriggerUpdateNow(){}
+ }
+#endif
+}

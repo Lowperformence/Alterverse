@@ -179,21 +179,11 @@ namespace Alterverse.Profile
                     bool immediateAllowed = false;
                     try { immediateAllowed = info.Call<bool>("isUpdateTypeAllowed", ImmediateUpdateType); } catch { immediateAllowed = false; }
 
-                    if (launchNativeFlow && immediateAllowed)
+                    if (launchNativeFlow && (immediateAllowed || availability == UpdateAvailabilityInProgress))
                     {
                         UpdateFlowActive = true;
-                        try
-                        {
-                            using var optionsClass = new AndroidJavaClass("com.google.android.play.core.appupdate.AppUpdateOptions");
-                            using var options = optionsClass.CallStatic<AndroidJavaObject>("defaultOptions", ImmediateUpdateType);
-                            manager.Call<int>("startUpdateFlowForResult", info, activity, options, UpdateRequestCode);
-                            return true;
-                        }
-                        catch
-                        {
-                            try { manager.Call<bool>("startUpdateFlowForResult", info, ImmediateUpdateType, activity, UpdateRequestCode); return true; }
-                            catch { UpdateFlowActive = false; }
-                        }
+                        if (await StartImmediateFlowOnUiThread(manager, info, activity)) return true;
+                        UpdateFlowActive = false;
                     }
 
                     if (fallbackToStorePage) { NativeStoreReview.OpenStore(); return true; }
@@ -202,6 +192,25 @@ namespace Alterverse.Profile
             }
             catch { return false; }
             finally { UpdateFlowActive = false; }
+        }
+
+        private static async Task<bool> StartImmediateFlowOnUiThread(AndroidJavaObject manager, AndroidJavaObject info, AndroidJavaObject activity)
+        {
+            var completion = new TaskCompletionSource<bool>();
+            activity.Call("runOnUiThread", new AndroidJavaRunnable(() =>
+            {
+                try
+                {
+                    using var optionsClass = new AndroidJavaClass("com.google.android.play.core.appupdate.AppUpdateOptions");
+                    using var builder = optionsClass.CallStatic<AndroidJavaObject>("newBuilder", ImmediateUpdateType);
+                    using var options = builder.Call<AndroidJavaObject>("build");
+                    // The Java API returns boolean, not int. JNI signatures include the return type.
+                    completion.TrySetResult(manager.Call<bool>("startUpdateFlowForResult", info, activity, options, UpdateRequestCode));
+                }
+                catch { completion.TrySetResult(false); }
+            }));
+            if (await Task.WhenAny(completion.Task, Task.Delay(5000)) != completion.Task) return false;
+            return await completion.Task;
         }
 #endif
 
