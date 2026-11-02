@@ -1,4 +1,4 @@
-using Alterverse.AI;
+﻿using Alterverse.AI;
 using Alterverse.Match;
 using Alterverse.Multiplayer;
 using Alterverse.Profile;
@@ -319,8 +319,8 @@ namespace Alterverse.UI
                     CloseOverlay();
 
                 string destination = CoopAuthority.Active
-                    ? "LEAVE CO-OP  •  MAIN MENU"
-                    : "LEAVE MATCH  •  MAIN MENU";
+                    ? "LEAVE CO-OP  â€¢  MAIN MENU"
+                    : "LEAVE MATCH  â€¢  MAIN MENU";
                 if (theme.Action(new Rect(panel.x + 24, panel.yMax - 42, panel.width - 48, 32), destination))
                     confirmLeave = true;
             }
@@ -342,25 +342,25 @@ namespace Alterverse.UI
         private void DrawMatchFriendBar(Rect rect)
         {
             theme.HudPanel(rect, .55f);
-            theme.FitLabel(new Rect(rect.x + 12, rect.y + 4, rect.width - 24, 18), GameLanguage.Text("MATCH PLAYERS  •  TAP +FR TO SEND FRIEND REQUEST"), theme.Small, true);
+            theme.FitLabel(new Rect(rect.x + 12, rect.y + 4, rect.width - 24, 18), GameLanguage.Text("MATCH PLAYERS  â€¢  TAP +FR TO SEND FRIEND REQUEST"), theme.Small, true);
 
-            var controllers = FindObjectsByType<Alterverse.Characters.HeroController>(FindObjectsSortMode.None);
+            var controllers = FindObjectsByType<Alterverse.Characters.HeroIdentity>(FindObjectsSortMode.None);
             int shown = 0;
             float chipW = (rect.width - 24f - 18f) / 4f;
             for (int i = 0; i < controllers.Length && shown < 8; i++)
             {
                 var hc = controllers[i];
-                if (hc == null || hc.IsPlayerControlled) continue;
-                string pName = hc.DisplayName;
+                if (hc == null) continue;
+                string pName = hc.name;
                 if (string.IsNullOrWhiteSpace(pName)) continue;
-                var identity = hc.GetComponent<Alterverse.Characters.HeroIdentity>();
-                var hero = identity != null ? identity.Hero : Alterverse.Characters.HeroId.Veyr;
+                
+                var hero = hc.Hero;
                 int col = shown % 4;
                 int row = shown / 4;
                 Rect chip = new Rect(rect.x + 12f + col * (chipW + 6f), rect.y + 24f + row * 29f, chipW, 26f);
                 bool already = FriendStickerService.Instance.IsFriend(pName) || FriendStickerService.Instance.HasSentRequest(pName);
                 theme.FitLabel(new Rect(chip.x + 4, chip.y + 2, chip.width - 48, 22), pName, theme.Small);
-                if (theme.Action(new Rect(chip.xMax - 42, chip.y + 1, 40, 24), already ? "✓" : "+FR", !already, enabled: !already))
+                if (theme.Action(new Rect(chip.xMax - 42, chip.y + 1, 40, 24), already ? "âœ“" : "+FR", !already, enabled: !already))
                 {
                     FriendStickerService.Instance.SendFriendRequest(pName, pName, (int)hero);
                 }
@@ -373,7 +373,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(r.x, r.y, r.width - 90, 24), label, theme.Body);
             theme.Label(new Rect(r.xMax - 82, r.y, 82, 24), $"{Mathf.RoundToInt(value * 100)}%", theme.Small);
 
-            if (theme.Action(new Rect(r.x, r.y + 27, 48, 30), "−"))
+            if (theme.Action(new Rect(r.x, r.y + 27, 48, 30), "âˆ’"))
                 value = Mathf.Clamp01(value - .1f);
 
             Rect track = new Rect(r.x + 64, r.y + 39, r.width - 128, 8);
@@ -409,4 +409,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 

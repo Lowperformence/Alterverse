@@ -51,7 +51,7 @@ namespace Alterverse.UI
             var updater = StartupAppUpdateManager.Instance;
             if (updater != null && updater.UpdateRequired)
             {
-                bool de = GameLanguage.Current == LanguageCode.German;
+                bool de = GameLanguage.Current != null && GameLanguage.Current.Code.StartsWith("de");
                 theme.FitLabel(new Rect(x + 24, 238, width - 48, 40),
                     de ? "UPDATE ERFORDERLICH" : "UPDATE REQUIRED", theme.Heading);
 
@@ -112,3 +112,4 @@ namespace Alterverse.UI
         }
     }
 }
+
