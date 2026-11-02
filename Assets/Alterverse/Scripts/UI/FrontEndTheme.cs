@@ -16,6 +16,8 @@ namespace Alterverse.UI
         public static readonly Color Zero = new(.60f, .39f, .82f);
         public static readonly Color Positive = new(.37f, .86f, .73f);
         public static readonly Color Warning = new(.96f, .70f, .39f);
+        public static readonly Color Danger = new(.95f, .34f, .28f);
+        public static Texture2D Pixel => Texture2D.whiteTexture;
 
         // Thin steel frames and warm selected edges match the orbital artwork.
         private static readonly Color Outline = new(.30f, .43f, .57f, .76f);
