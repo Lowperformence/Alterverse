@@ -50,6 +50,7 @@ namespace Alterverse.AI
         private DimensionPlanet[] planets = System.Array.Empty<DimensionPlanet>();
         private Vector3 velocity;
         private Health chaseTarget;
+        private HeroIdentity chaseTargetHero;
         private float chaseStarted;
         private int rotationSlot;
         private static readonly float[] ExplosionEscapeAngles={0f,32f,-32f,64f,-64f,98f,-98f,132f,-132f};
@@ -90,7 +91,7 @@ namespace Alterverse.AI
             Health target = sensor != null ? sensor.CurrentTarget : null;
             bool planetPriority=ShouldPursuePlanet(brain.State,target!=null,
                 objective!=null&&objective.Available&&ShouldRotate());
-            if(brain.State!=MobaBotBrain.BotState.Fight){chaseTarget=null;chaseStarted=0;}
+            if(brain.State!=MobaBotBrain.BotState.Fight){chaseTarget=null;chaseTargetHero=null;chaseStarted=0;}
 
             if (target != null && !target.IsDead && brain.State == MobaBotBrain.BotState.Fight)
             {
@@ -106,7 +107,7 @@ namespace Alterverse.AI
 
             if (target != null && !target.IsDead && brain.State == MobaBotBrain.BotState.Fight)
             {
-                if(target!=chaseTarget){chaseTarget=target;chaseStarted=Time.time;keepingDistance=false;}
+                if(target!=chaseTarget){chaseTarget=target;chaseTargetHero=target.GetComponent<HeroIdentity>();chaseStarted=Time.time;keepingDistance=false;}
                 Vector3 delta = sensor.ObservedTargetPosition - transform.position; delta.y = 0;
                 float combatStop=SolidTargetStopDistance(target,CombatStop);
 
@@ -114,7 +115,7 @@ namespace Alterverse.AI
                 // prolonged pursuit of a target that keeps escaping, never normal combat.
                 if(delta.sqrMagnitude<=combatStop*combatStop*1.30f)chaseStarted=Time.time;
                 float maxChase=Mathf.Lerp(2.7f,4.8f,brain.Aggression)*brain.CommitmentRhythm;
-                HeroIdentity enemyHero=target.GetComponent<HeroIdentity>();
+                HeroIdentity enemyHero=chaseTargetHero;
                 if(enemyHero!=null)
                 {
                     // A visible hero's published running speed is known even when
@@ -188,7 +189,7 @@ namespace Alterverse.AI
                 else if(!retreating&&brain.FollowTeamCall)
                 {
                     HeroId role=profile!=null?profile.Hero:HeroId.Veyr;
-                    bool combat=brain.State==MobaBotBrain.BotState.Fight&&target!=null&&target.GetComponent<HeroIdentity>()!=null;
+                    bool combat=brain.State==MobaBotBrain.BotState.Fight&&target!=null&&chaseTargetHero!=null;
                     if(combat)
                     {
                         Vector3 formed=brain.Tactics.Formation(brain,role,sensor.ObservedTargetPosition,true);
@@ -229,7 +230,7 @@ namespace Alterverse.AI
             if(Time.time>=nextSharedWorldScan)
             {
                 nextSharedWorldScan=Time.time+.5f;
-                sharedPlanets=FindObjectsByType<DimensionPlanet>();
+                sharedPlanets=FindObjectsByType<DimensionPlanet>(FindObjectsSortMode.None);
                 sharedHotZone=FindAnyObjectByType<HotZoneDirector>();
             }
             planets=sharedPlanets;hotZone=sharedHotZone;
