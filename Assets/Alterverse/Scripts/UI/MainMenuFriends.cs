@@ -78,7 +78,7 @@ namespace Alterverse.UI
                 if (idx == selectedFriendIndex) theme.Frame(card, true);
 
                 HeroId hero = (HeroId)Mathf.Clamp(f.hero, 0, HeroIdentity.HeroCount - 1);
-                StylizedHeroCard.Draw(new Rect(Left + 12, y + 7, 46, 52), hero, FrontEndTheme.Pixel, idx == selectedFriendIndex);
+                StylizedHeroCard.Draw(new Rect(Left + 12, y + 7, 46, 52), hero, FrontEndTheme.Pixel, 0f);
 
                 theme.FitLabel(new Rect(Left + 70, y + 8, 250, 26), f.name, theme.Heading);
                 string clanLabel = string.IsNullOrEmpty(f.clanTag) ? "NO CLAN" : $"[{f.clanTag}] {f.clanName}";
@@ -354,4 +354,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 

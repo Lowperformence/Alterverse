@@ -358,11 +358,11 @@ namespace Alterverse.UI
                 int col = shown % 4;
                 int row = shown / 4;
                 Rect chip = new Rect(rect.x + 12f + col * (chipW + 6f), rect.y + 24f + row * 29f, chipW, 26f);
-                bool already = FriendStickerService.Instance.IsFriend(pName) || FriendStickerService.Instance.HasSentRequest(pName);
+                bool already = FriendStickerService.IsFriendOrRequested(pName);
                 theme.FitLabel(new Rect(chip.x + 4, chip.y + 2, chip.width - 48, 22), pName, theme.Small);
                 if (theme.Action(new Rect(chip.xMax - 42, chip.y + 1, 40, 24), already ? "âœ“" : "+FR", !already, enabled: !already))
                 {
-                    FriendStickerService.Instance.SendFriendRequest(pName, pName, (int)hero);
+                    FriendStickerService.SendFriendRequest(pName, hero, 1);
                 }
                 shown++;
             }
@@ -409,5 +409,6 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 
