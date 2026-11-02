@@ -118,17 +118,24 @@ namespace Alterverse.Visuals
             var rimVertices=new List<Vector3>(7000);
             var rimTriangles=new List<int>(12000);
 
+            bool lowEndMobile = (Application.isMobilePlatform || !Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled) &&
+                                Alterverse.Performance.MobilePerformanceProfile.Current == Alterverse.Performance.MobileQuality.Battery;
+            int majorSegments = lowEndMobile ? 20 : 48;
+
             for(int i=0;i<Major.Length;i++)
             {
                 Crater c=Major[i];
-                AddCrater(c.Center,c.Radius*scale,c.Ellipse,c.Rotation,c.Strength*heightScale,48,
+                AddCrater(c.Center,c.Radius*scale,c.Ellipse,c.Rotation,c.Strength*heightScale,majorSegments,
                     bowlVertices,bowlTriangles,rimVertices,rimTriangles,i*17+3);
             }
-            for(int i=0;i<Secondary.Length;i++)
+            if (!lowEndMobile)
             {
-                Crater c=Secondary[i];
-                AddCrater(c.Center,c.Radius*scale,c.Ellipse,c.Rotation,c.Strength*heightScale,22,
-                    bowlVertices,bowlTriangles,rimVertices,rimTriangles,i*29+101);
+                for(int i=0;i<Secondary.Length;i++)
+                {
+                    Crater c=Secondary[i];
+                    AddCrater(c.Center,c.Radius*scale,c.Ellipse,c.Rotation,c.Strength*heightScale,22,
+                        bowlVertices,bowlTriangles,rimVertices,rimTriangles,i*29+101);
+                }
             }
 
             bowlMesh=CreateMesh("DF_ReferenceCraterBowls",bowlVertices,bowlTriangles);

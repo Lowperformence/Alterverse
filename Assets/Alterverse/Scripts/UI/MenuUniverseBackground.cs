@@ -27,17 +27,26 @@ namespace Alterverse.UI
         void Update()
         {
             if(paused||unfocused||sky==null||Time.unscaledTime<nextFrame)return;
+            if ((Application.isMobilePlatform || !Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled) &&
+                Alterverse.Performance.MobilePerformanceProfile.Current == Alterverse.Performance.MobileQuality.Battery &&
+                ready)
+                return;
             RenderFrame();
         }
 
         void RenderFrame()
         {
             if(sky==null)return;
-            if(image==null||!image.IsCreated())
+            bool lowEnd = (Application.isMobilePlatform || !Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled) &&
+                          Alterverse.Performance.MobilePerformanceProfile.Current == Alterverse.Performance.MobileQuality.Battery;
+            bool midMobile = Application.isMobilePlatform &&
+                             Alterverse.Performance.MobilePerformanceProfile.Current == Alterverse.Performance.MobileQuality.Balanced;
+            int targetW = lowEnd ? 640 : midMobile ? 960 : TargetWidth;
+            if(image==null||!image.IsCreated()||image.width!=targetW)
             {
                 ReleaseTarget();
-                int height=Mathf.Max(1,Mathf.RoundToInt(TargetWidth*sky.Texture.height/(float)sky.Texture.width));
-                image=new RenderTexture(TargetWidth,height,0,RenderTextureFormat.ARGB32)
+                int height=Mathf.Max(1,Mathf.RoundToInt(targetW*sky.Texture.height/(float)sky.Texture.width));
+                image=new RenderTexture(targetW,height,0,RenderTextureFormat.ARGB32)
                 {name="DF_MenuCosmicBackground",filterMode=FilterMode.Bilinear,
                     wrapMode=TextureWrapMode.Clamp,useMipMap=false,autoGenerateMips=false};
                 if(!image.Create()) {Fail("Could not create the menu background target.");return;}
@@ -51,7 +60,7 @@ namespace Alterverse.UI
                 Graphics.Blit(sky.Texture,image,sky.Material,0);
                 // The first successful render is ready before OnGUI; retain the same target afterwards.
                 ready=true;
-                nextFrame=Time.unscaledTime+FrameInterval;
+                nextFrame=Time.unscaledTime+(lowEnd?2f:midMobile?(1f/15f):FrameInterval);
             }
             catch(System.Exception error)
             {

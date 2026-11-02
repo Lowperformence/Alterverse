@@ -36,6 +36,7 @@ namespace Alterverse.UI
         private readonly GUIContent measuredText = new GUIContent();
         public void FitLabel(Rect rect, string text, GUIStyle style, bool muted = false)
         {
+            text = Alterverse.Profile.GameLanguage.Text(text);
             Color original = GUI.color;
             bool originalWrap = style.wordWrap;
             style.wordWrap = false;
@@ -304,6 +305,7 @@ namespace Alterverse.UI
 
         public void Label(Rect rect, string text, GUIStyle style, bool muted = false)
         {
+            text = Alterverse.Profile.GameLanguage.Text(text);
             Color before = GUI.color;
             if (muted) GUI.color *= Muted;
             int size=style.fontSize;
@@ -326,6 +328,7 @@ namespace Alterverse.UI
         public bool Action(Rect rect, string text, bool primary = false, bool selected = false, bool enabled = true, bool locked = false, Color? accent = null)
         {
             enabled = enabled && !locked;
+            text = Alterverse.Profile.GameLanguage.Text(text ?? string.Empty);
             // Buttons are menu actions, not paragraphs: normalize any legacy hard line break.
             text = (text ?? string.Empty).Replace('\n', ' ').Replace('\r', ' ');
             rect = FitActionRect(rect, text);

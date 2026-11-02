@@ -21,6 +21,7 @@ namespace Alterverse.Profile
         private const string KnownAccountOnDeviceKey="DF_KnownUnityAccountOnDevice_v1";
         public string Status { get; private set; } = "Account server not configured.";
         public bool Busy { get; private set; }
+        public bool StartupAttemptFinished { get; private set; }
         string endpoint,connectedPlayer;
         bool subscribed;
         Task<bool> authenticating;
@@ -95,7 +96,7 @@ namespace Alterverse.Profile
                 return auth.IsAuthorized;
             }
             catch(Exception){Status="Account sign-in unavailable. Retry from Profile.";return false;}
-            finally{Busy=false;}
+            finally{Busy=false;StartupAttemptFinished=true;}
         }
         async Task<bool> SignInGooglePrimaryAsync(bool interactive,bool restore)
         {

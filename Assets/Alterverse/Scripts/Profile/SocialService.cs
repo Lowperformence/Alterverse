@@ -92,11 +92,11 @@ namespace Alterverse.Profile
         int generation;
         bool loadedSyncedProfile;
         float chatVisibleUntil,nextChatPoll;
-        bool chatFocused=true,chatPaused;
+        bool chatFocused=true,chatPaused,chatPolling;
         public void KeepChatOpen(){chatVisibleUntil=Time.unscaledTime+.3f;}
         void OnApplicationFocus(bool focused){chatFocused=focused;if(!focused)ClearChat();}
         void OnApplicationPause(bool paused){chatPaused=paused;if(paused)ClearChat();}
-        void ClearChat(string message="Connecting to clan chat…"){Chat=null;ChatStatus=message;if(State!=null)State.messages=null;nextChatPoll=Time.unscaledTime+2f;}
+        void ClearChat(string message="Connecting to clan chat…"){Chat=null;ChatStatus=message;if(State!=null)State.messages=null;chatPolling=false;nextChatPoll=Time.unscaledTime+2f;}
 
         public static void Connect(string address,Func<string> credential)
         {
@@ -122,7 +122,7 @@ namespace Alterverse.Profile
         {
             if(clanSpending)PaidShardCommerce.Instance?.EndSocialSpend(clanSpendSession,null,null);
             clanSpending=false;clanSubmitted=null;
-            generation++;StopAllCoroutines();Busy=false;
+            generation++;StopAllCoroutines();Busy=false;chatPolling=false;
             loadedSyncedProfile=false;
             State=Search=Levels=Clans=ClanLevels=null;
             Chat=Reports=null;SentOperationId=null;chatVisibleUntil=nextChatPoll=0;
@@ -134,11 +134,20 @@ namespace Alterverse.Profile
             // The account profile can arrive after the first social request at sign-in.
             if(!loadedSyncedProfile&&!Busy&&Connected&&PaidShardCommerce.Instance?.Ready==true&&AccountProfilePrefs.Attached)
             {loadedSyncedProfile=true;Load("/social/state");}
-            if(!Busy&&Connected&&chatFocused&&!chatPaused&&Time.unscaledTime<chatVisibleUntil&&Time.unscaledTime>=nextChatPoll&&
+            if(!Busy&&!chatPolling&&Connected&&chatFocused&&!chatPaused&&Time.unscaledTime<chatVisibleUntil&&Time.unscaledTime>=nextChatPoll&&
                 State?.chatEnabled==true&&State.chatAccepted&&State.clan!=null&&(State.role!="leader"||State.leaderAccepted))
             {
-                nextChatPoll=Time.unscaledTime+2f;
-                Load("/social/chat/read",new Request{clanId=State.clan.clanId,knownRevision=Chat?.chatRevision});
+                if(Chat==null)
+                {
+                    nextChatPoll=Time.unscaledTime+3f;
+                    Load("/social/chat/read",new Request{clanId=State.clan.clanId});
+                }
+                else
+                {
+                    nextChatPoll=Time.unscaledTime+4f;
+                    chatPolling=true;
+                    StartCoroutine(Send("/social/chat/read",new Request{clanId=State.clan.clanId,knownRevision=Chat.chatRevision},generation));
+                }
             }
         }
         public void CreateClan(Request draft)
@@ -159,10 +168,12 @@ namespace Alterverse.Profile
         {
             if(Busy)return;
             if(!Connected){Status="Connect your account to use friends, levels and clans.";return;}
+            chatPolling=false;
             Busy=true;StartCoroutine(Send(route,body??new Request(),generation));
         }
         IEnumerator Send(string route,Request body,int version)
         {
+            bool silentPoll=chatPolling&&!Busy&&route=="/social/chat/read"&&Chat!=null;
             // Try to publish current progression first. Social state and standings may
             // still read authoritative saved data when an unrelated profile save fails.
             var commerce=PaidShardCommerce.Instance;
@@ -172,18 +183,18 @@ namespace Alterverse.Profile
             {
                 var save=commerce.FlushProfileAsync();
                 while(!save.IsCompleted)yield return null;
-                if(version!=generation)yield break;
+                if(version!=generation){chatPolling=false;yield break;}
                 if(save.IsFaulted||save.IsCanceled||!save.Result)
                 {
                     if(route=="/social/clan/create")
-                    {Status="Account save pending. Retry after synchronization.";Busy=false;yield break;}
+                    {Status="Account save pending. Retry after synchronization.";Busy=false;chatPolling=false;yield break;}
                     usingSavedProfile=true;
                 }
             }
             if(route=="/social/clan/create")
             {
                 if(commerce==null||!commerce.TryBeginSocialSpend())
-                {Status="Account busy. Retry clan creation after synchronization.";Busy=false;yield break;}
+                {Status="Account busy. Retry clan creation after synchronization.";Busy=false;chatPolling=false;yield break;}
                 clanSpending=true;clanSpendSession=commerce.SessionVersion;
                 clanSubmitted=AccountProfilePrefs.Capture();body.expectedProfileRevision=AccountProfilePrefs.Revision;
             }
@@ -196,12 +207,12 @@ namespace Alterverse.Profile
                 if(clanSpending)commerce?.EndSocialSpend(clanSpendSession,null,null);
                 clanSpending=false;Status="Sign in to reconnect.";
                 if(route.StartsWith("/social/chat/",StringComparison.Ordinal))ClearChat(Status);
-                Busy=false;yield break;
+                Busy=false;chatPolling=false;yield break;
             }
             request.SetRequestHeader("Content-Type","application/json");
             request.SetRequestHeader("Authorization","Bearer "+credential);
             yield return request.SendWebRequest();
-            if(version!=generation)yield break;
+            if(version!=generation){chatPolling=false;yield break;}
             Response response=null;
             try{response=JsonUtility.FromJson<Response>(request.downloadHandler.text);}catch(Exception){}
             if(clanSpending)
@@ -226,7 +237,7 @@ namespace Alterverse.Profile
                     ClearChat(Status);nextChatPoll=Time.unscaledTime+5f;
                     if(request.responseCode==403){loadedSyncedProfile=false;State=null;Reports=null;}
                 }
-                Busy=false;yield break;
+                Busy=false;chatPolling=false;yield break;
             }
             // Unity's JSON serializer may materialize null class fields as empty objects.
             // An actual server-issued ID is required for membership and wallet data.
@@ -234,7 +245,7 @@ namespace Alterverse.Profile
             if(route=="/social/clan/create")
             {
                 if(response.social.wallet==null||string.IsNullOrEmpty(response.social.wallet.accountHash))
-                {Status="Clan response incomplete. Refresh your account before retrying.";commerce?.Refresh();Busy=false;yield break;}
+                {Status="Clan response incomplete. Refresh your account before retrying.";commerce?.Refresh();Busy=false;chatPolling=false;yield break;}
                 PlayerPrefs.DeleteKey(ClanOperationKey);PlayerPrefs.Save();
             }
             CleanSnapshot(response.social);
@@ -266,8 +277,10 @@ namespace Alterverse.Profile
             if(route=="/social/chat/send")SentOperationId=body.operationId;
             if(Chat!=null&&route.StartsWith("/social/chat/",StringComparison.Ordinal))ChatStatus="Connected to clan chat.";
             if(route=="/social/chat/report")nextChatPoll=Time.unscaledTime+5f;
-            Status=route=="/social/chat/report"?"Report saved for the game administration.":
-                usingSavedProfile?"Showing saved server data. Account synchronization pending.":"Synchronized.";Busy=false;
+            if(!silentPoll)
+                Status=route=="/social/chat/report"?"Report saved for the game administration.":
+                    usingSavedProfile?"Showing saved server data. Account synchronization pending.":"Synchronized.";
+            Busy=false;chatPolling=false;
         }
         // Also protects displays during a staggered client/server rollout.
         internal static void CleanSnapshot(Snapshot value)

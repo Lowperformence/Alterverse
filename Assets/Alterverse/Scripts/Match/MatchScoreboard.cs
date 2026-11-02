@@ -20,10 +20,10 @@ private bool resultSnapshotReady,resultSnapshotWarning;
 private int battlePassXpBefore;
 private BotDifficulty resultDifficulty;
 private string rewardId=System.Guid.NewGuid().ToString("N");private float nextRewardAttempt;private bool saveWarningShown;
-private sealed class Entry{public Health Health;public TeamMember Member;public string Name;public int Kills,Deaths,Assists;public int Score=>Kills*100+Assists*50-Deaths*15;
+private sealed class Entry{public Health Health;public TeamMember Member;public string Name;public int Kills,Deaths,Assists;public int Score=>Kills*100+Assists*75-Deaths*15;
 public float BoardPerformance;public bool BoardOwn;
 public string BoardName,BoardKills,BoardDeaths,BoardAssists,BoardScore;
-}public static MatchScoreboard Instance{get;private set;}[SerializeField]private float refreshInterval=.5f,assistWindow=8f;private readonly Dictionary<Health,Entry> entries=new();private readonly Dictionary<Health,Dictionary<TeamMember,float>> damageCredit=new();private float nextRefresh;private HeroRespawn playerRespawn;private CoopRespawnReplica coopRespawn;private DimensionsFront front;private bool matchEnded,rewardGranted,rewardPending;private int winningTeam,matchReward,matchXp,matchBaseReward,matchShardBonus,matchBaseXp,matchXpBonus,playerKills,playerDeaths,playerAssists,playerObjectives,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,battlePassLevelBefore=1;private float matchBonusPercent;private float playerDamageDealt,playerDamageTaken,playerHealing,playerFrontContribution;private UniversalHeroCosmetic matchBonusCosmetic=UniversalHeroCosmetic.Original;private BattleItemType matchItemDrop;
+}public static MatchScoreboard Instance{get;private set;}[SerializeField]private float refreshInterval=.5f,assistWindow=8f;private readonly Dictionary<Health,Entry> entries=new();private readonly Dictionary<Health,Dictionary<TeamMember,float>> damageCredit=new();private readonly Dictionary<TeamMember,Dictionary<TeamMember,float>> supportCredit=new();private float nextRefresh;private HeroRespawn playerRespawn;private CoopRespawnReplica coopRespawn;private DimensionsFront front;private bool matchEnded,rewardGranted,rewardPending;private int winningTeam,matchReward,matchXp,matchBaseReward,matchShardBonus,matchBaseXp,matchXpBonus,playerKills,playerDeaths,playerAssists,playerObjectives,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,battlePassLevelBefore=1;private float matchBonusPercent;private float playerDamageDealt,playerDamageTaken,playerHealing,playerFrontContribution;private UniversalHeroCosmetic matchBonusCosmetic=UniversalHeroCosmetic.Original;private BattleItemType matchItemDrop;
 private void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;rewardGranted=false;matchEnded=false;MatchClock.Set(PauseReason.Result,false);}
 private void Start(){RefreshRoster();RefreshLocalRespawn();front=Object.FindAnyObjectByType<DimensionsFront>();if(front!=null)front.MatchEnded+=OnMatchEnded;}
 private void Update(){if(Time.unscaledTime>=nextRefresh){nextRefresh=Time.unscaledTime+refreshInterval;RefreshRoster();RefreshLocalRespawn();if(front==null){front=Object.FindAnyObjectByType<DimensionsFront>();if(front!=null)front.MatchEnded+=OnMatchEnded;}}if(matchEnded)RefreshResultPresentation();else UpdateRespawnBoard();}
@@ -52,6 +52,7 @@ coopRespawn=slots[i].GetComponent<CoopRespawnReplica>();return;
 }
 }
 private static bool IsHero(TeamMember member)=>member!=null&&(member.GetComponent<HeroRespawn>()!=null||member.GetComponent<MobaBotRespawn>()!=null||member.GetComponent<CoopHeroSlot>()!=null);public void RecordDamage(Health victim,GameObject source){if(victim==null||source==null)return;TeamMember attacker=source.GetComponentInParent<TeamMember>(),victimTeam=victim.GetComponent<TeamMember>();if(!IsHero(attacker)||!IsHero(victimTeam)||attacker==victimTeam||attacker.Team==victimTeam.Team)return;if(!damageCredit.TryGetValue(victim,out Dictionary<TeamMember,float> credits)){credits=new Dictionary<TeamMember,float>();damageCredit[victim]=credits;}credits[attacker]=Time.time;}
+public void RecordSupport(Health target,GameObject source){if(target==null||source==null)return;TeamMember supporter=source.GetComponentInParent<TeamMember>(),ally=target.GetComponent<TeamMember>();if(!IsHero(supporter)||!IsHero(ally)||supporter==ally||supporter.Team!=ally.Team)return;if(!supportCredit.TryGetValue(ally,out Dictionary<TeamMember,float> credits)){credits=new Dictionary<TeamMember,float>();supportCredit[ally]=credits;}credits[supporter]=Time.time;}
 private void RefreshRoster()
 {
 // Health already maintains the active gameplay registry. Avoid sorting and allocating
@@ -61,7 +62,7 @@ for(int i=0;i<active.Count;i++)
 {
 Health health=active[i];if(health==null||entries.ContainsKey(health))continue;
 TeamMember member=health.GetComponent<TeamMember>();if(!IsHero(member))continue;
-HeroIdentity identity=member.GetComponent<HeroIdentity>();CoopHeroSlot coop=member.GetComponent<CoopHeroSlot>();string n=coop!=null?CoopDisplayName(coop):(member.GetComponent<HeroRespawn>()!=null?PlayerProfile.PlayerName:(identity!=null?identity.DisplayName:DisplayName(member.gameObject.name)));entries.Add(health,new Entry{Health=health,Member=member,Name=n});health.DiedWithSource+=OnHeroDied;}}private void OnHeroDied(Health victim,GameObject source){if(victim==null||!entries.TryGetValue(victim,out Entry victimEntry))return;victimEntry.Deaths++;TeamMember killer=source!=null?source.GetComponentInParent<TeamMember>():null;if(IsHero(killer)&&victimEntry.Member!=null&&killer.Team!=victimEntry.Member.Team){Entry killerEntry=FindEntry(killer);if(killerEntry!=null)killerEntry.Kills++;if(damageCredit.TryGetValue(victim,out Dictionary<TeamMember,float> credits))foreach(var credit in credits)if(IsHero(credit.Key)&&credit.Key!=killer&&Time.time-credit.Value<=assistWindow&&credit.Key.Team==killer.Team){Entry assist=FindEntry(credit.Key);if(assist!=null){assist.Assists++;MatchTelemetry.Instance?.RecordAssist(assist.Health);}}}damageCredit.Remove(victim);}private Entry FindEntry(TeamMember member){foreach(Entry e in entries.Values)if(e.Member==member)return e;return null;}
+HeroIdentity identity=member.GetComponent<HeroIdentity>();CoopHeroSlot coop=member.GetComponent<CoopHeroSlot>();string n=coop!=null?CoopDisplayName(coop):(member.GetComponent<HeroRespawn>()!=null?PlayerProfile.PlayerName:(identity!=null?identity.DisplayName:DisplayName(member.gameObject.name)));entries.Add(health,new Entry{Health=health,Member=member,Name=n});health.DiedWithSource+=OnHeroDied;}}private void OnHeroDied(Health victim,GameObject source){if(victim==null||!entries.TryGetValue(victim,out Entry victimEntry))return;victimEntry.Deaths++;TeamMember killer=source!=null?source.GetComponentInParent<TeamMember>():null;if(IsHero(killer)&&victimEntry.Member!=null&&killer.Team!=victimEntry.Member.Team){Entry killerEntry=FindEntry(killer);if(killerEntry!=null)killerEntry.Kills++;HashSet<TeamMember> credited=null;if(damageCredit.TryGetValue(victim,out Dictionary<TeamMember,float> credits))foreach(var credit in credits)if(IsHero(credit.Key)&&credit.Key!=killer&&Time.time-credit.Value<=assistWindow&&credit.Key.Team==killer.Team){credited??=new HashSet<TeamMember>();if(credited.Add(credit.Key)){Entry assist=FindEntry(credit.Key);if(assist!=null){assist.Assists++;MatchTelemetry.Instance?.RecordAssist(assist.Health);}}}if(supportCredit.TryGetValue(killer,out Dictionary<TeamMember,float> supCredits))foreach(var sup in supCredits)if(IsHero(sup.Key)&&sup.Key!=killer&&Time.time-sup.Value<=assistWindow&&sup.Key.Team==killer.Team){credited??=new HashSet<TeamMember>();if(credited.Add(sup.Key)){Entry assist=FindEntry(sup.Key);if(assist!=null){assist.Assists++;MatchTelemetry.Instance?.RecordAssist(assist.Health);}}}}damageCredit.Remove(victim);}private Entry FindEntry(TeamMember member){foreach(Entry e in entries.Values)if(e.Member==member)return e;return null;}
 // Absolute server snapshots repair packet loss without replaying death or reward events.
 public void GetNetworkScore(Health health,out int kills,out int deaths,out int assists)
 {
@@ -113,7 +114,8 @@ MatchTelemetry.HeroStats telemetry=playerEntry!=null?MatchTelemetry.Instance?.Ge
 playerObjectives=telemetry?.Objectives??0;playerQuestKills=telemetry?.Kills??playerKills;playerHotZoneCaptures=telemetry?.HotZoneCaptures??0;playerSoldierKills=telemetry?.SoldierKills??0;playerDamageDealt=telemetry?.DamageDealt??0;playerDamageTaken=telemetry?.DamageTaken??0;playerHealing=telemetry?.Healing??0;playerFrontContribution=telemetry?.FrontContribution??0;
 }
 
-try{MatchRewardResult reward=MatchRewardService.GrantMatchReward(won,playerKills,playerAssists,playerObjectives,rewardId,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,deaths:playerDeaths);matchReward=reward.Shards;matchXp=reward.Xp;matchBaseReward=reward.BaseShards;matchShardBonus=reward.ShardBonus;matchBaseXp=reward.BaseXp;matchXpBonus=reward.XpBonus;matchBonusCosmetic=reward.BonusCosmetic;matchBonusPercent=reward.BonusPercent;matchItemDrop=won?BattleItemInventory.RollVictoryDrop(rewardId):BattleItemType.None;rewardGranted=true;}catch(System.Exception){rewardPending=true;nextRewardAttempt=Time.unscaledTime+2;if(!saveWarningShown){saveWarningShown=true;Debug.LogWarning("DIMENSIONS FRONT: reward save pending; retrying the same receipt.");}}
+int rewardAssists=playerAssists+Mathf.FloorToInt(playerHealing/220f);
+try{MatchRewardResult reward=MatchRewardService.GrantMatchReward(won,playerKills,rewardAssists,playerObjectives,rewardId,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,deaths:playerDeaths);matchReward=reward.Shards;matchXp=reward.Xp;matchBaseReward=reward.BaseShards;matchShardBonus=reward.ShardBonus;matchBaseXp=reward.BaseXp;matchXpBonus=reward.XpBonus;matchBonusCosmetic=reward.BonusCosmetic;matchBonusPercent=reward.BonusPercent;matchItemDrop=won?BattleItemInventory.RollVictoryDrop(rewardId):BattleItemType.None;rewardGranted=true;}catch(System.Exception){rewardPending=true;nextRewardAttempt=Time.unscaledTime+2;if(!saveWarningShown){saveWarningShown=true;Debug.LogWarning("DIMENSIONS FRONT: reward save pending; retrying the same receipt.");}}
 }
 private void ApplyNetworkResultsToEntries(){foreach(Entry e in entries.Values){CoopHeroSlot slot=e.Member!=null?e.Member.GetComponent<CoopHeroSlot>():null;if(slot==null||!CoopMatchResultSync.TryGetSlotResult(slot.Slot,out CoopMatchResultSync.SlotResult s))continue;e.Kills=s.Kills;e.Deaths=s.Deaths;e.Assists=s.Assists;}}
 private float Performance(Entry e)
@@ -130,7 +132,7 @@ private float Performance(Entry e)
     return stats!=null?PerformanceScore(e.Kills,e.Deaths,e.Assists,stats.DamageDealt,stats.DamageTaken,stats.Healing,stats.FrontContribution):e.Score;
 }
 private static float PerformanceScore(int kills,int deaths,int assists,float damageDealt,float damageTaken,float healing,float contribution)
-    =>kills*110+assists*65-deaths*25+damageDealt*.055f+damageTaken*.025f+healing*.065f+contribution*38f;
+    =>kills*110+assists*85-deaths*25+damageDealt*.085f+damageTaken*.04f+healing*.14f+contribution*42f;
 private Entry Mvp(){Entry best=null;float bestScore=float.MinValue;foreach(Entry e in entries.Values){float score=Performance(e);if(best==null||score>bestScore){best=e;bestScore=score;}}return best;}
 private float HudScale=>Mathf.Max(.1f,Mathf.Min(Screen.safeArea.height/720f,Screen.safeArea.width/960f));
 private float HudWidth=>Screen.safeArea.width/HudScale;private float HudHeight=>Screen.safeArea.height/HudScale;
@@ -292,7 +294,17 @@ private void DrawTeam(List<Entry> team,float x,float y,float width,string title)
         Rect r=new Rect(x,rowY,width,38);boardTheme.Panel(r);
         if(e.BoardOwn)boardTheme.Frame(r,true);
         FrontEndTheme.Fill(new Rect(x+1,rowY+9,2,20),tint);
-        boardTheme.FitLabel(new Rect(x+10,rowY,nameWidth-14,38),e.BoardName,boardTheme.Small);
+        float addBtnWidth=e.BoardOwn?0f:42f;
+        boardTheme.FitLabel(new Rect(x+10,rowY,nameWidth-14-addBtnWidth,38),e.BoardName,boardTheme.Small);
+        if(!e.BoardOwn)
+        {
+            bool connected=FriendStickerService.IsFriendOrRequested(e.Name);
+            if(boardTheme.Action(new Rect(x+nameWidth-44,rowY+5,40,28),connected?"✓":"+FR",!connected,enabled:!connected))
+            {
+                HeroIdentity id=e.Health!=null?e.Health.GetComponent<HeroIdentity>():null;
+                FriendStickerService.SendFriendRequest(e.Name,id!=null?id.Hero:HeroId.Veyr,Mathf.Max(1,PlayerExperience.Level));
+            }
+        }
         for(int column=0;column<4;column++)
         {
             string value=column==0?e.BoardKills:column==1?e.BoardDeaths:column==2?e.BoardAssists:e.BoardScore;
@@ -300,7 +312,7 @@ private void DrawTeam(List<Entry> team,float x,float y,float width,string title)
         }
     }
 }
-private void OnDestroy(){foreach(var pair in entries)if(pair.Key!=null)pair.Key.DiedWithSource-=OnHeroDied;if(front!=null)front.MatchEnded-=OnMatchEnded;entries.Clear();if(Instance==this)Instance=null;}
+private void OnDestroy(){foreach(var pair in entries)if(pair.Key!=null)pair.Key.DiedWithSource-=OnHeroDied;if(front!=null)front.MatchEnded-=OnMatchEnded;entries.Clear();supportCredit.Clear();if(Instance==this)Instance=null;}
 }
 }
 

@@ -32,6 +32,7 @@ namespace Alterverse.Shop
         public static int Balance => Instance != null && Instance.Ready ? Instance.snapshot.balance : 0;
         public static bool Spending => Instance != null && (Instance.spending || Instance.socialSpending || Instance.fulfilling || !string.IsNullOrEmpty(Instance.AccountHash) && PlayerPrefs.HasKey(Instance.OperationKey));
         public bool Ready => ready && !string.IsNullOrEmpty(ReadCredential());
+        public bool Synchronizing => refreshing || saving || spending || socialSpending || fulfilling;
         public bool PurchasesReady => Ready && snapshot.billingReady;
         public bool SubscriptionsReady => PurchasesReady && snapshot.subscriptionsReady;
         public bool SubscriptionActive => Ready && snapshot.subscriptionActive;

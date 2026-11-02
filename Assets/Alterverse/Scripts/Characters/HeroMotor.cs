@@ -18,15 +18,15 @@ namespace Alterverse.Characters
 
         [Header("Movement")]
         [SerializeField, Min(.1f)] private float fallbackMoveSpeed = 6.5f;
-        [SerializeField, Min(.1f)] private float acceleration = 28f;
-        [SerializeField, Min(.1f)] private float deceleration = 36f;
-        [SerializeField, Min(.1f)] private float turnAcceleration = 72f;
-        [SerializeField, Range(0f, .35f)] private float inputDeadZone = .08f;
+        [SerializeField, Min(.1f)] private float acceleration = 42f;
+        [SerializeField, Min(.1f)] private float deceleration = 48f;
+        [SerializeField, Min(.1f)] private float turnAcceleration = 112f;
+        [SerializeField, Range(0f, .35f)] private float inputDeadZone = .05f;
         [SerializeField, Range(0f, 1f)] private float attackMovementMultiplier = .88f;
 
         [Header("Rotation")]
-        [SerializeField, Min(.1f)] private float rotationSharpness = 16f;
-        [SerializeField, Min(.1f)] private float steeringSharpness = 28f;
+        [SerializeField, Min(.1f)] private float rotationSharpness = 22f;
+        [SerializeField, Min(.1f)] private float steeringSharpness = 38f;
         [SerializeField] private Transform cameraTransform;
 
         [Header("Arena")]

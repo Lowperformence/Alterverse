@@ -82,9 +82,11 @@ namespace Alterverse.Combat
                 ? Mathf.Max(0f, heroBaseShieldRechargeAt - Time.time)
                 : 0f;
 
-        public void AddShield(float amount, float duration) => AddShield(amount, duration, true);
+        public void AddShield(float amount, float duration) => AddShield(amount, duration, true, null);
 
-        public void AddShield(float amount, float duration, bool playAudio)
+        public void AddShield(float amount, float duration, bool playAudio) => AddShield(amount, duration, playAudio, null);
+
+        public void AddShield(float amount, float duration, bool playAudio, GameObject source)
         {
             if (!Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState || IsDead || amount <= 0)
                 return;
@@ -93,6 +95,17 @@ namespace Alterverse.Combat
             float previousShield=TransientShield;
             shield = Mathf.Max(TransientShield, Mathf.Min(amount, maxHealth * .4f));
             shieldUntil = Mathf.Max(shieldUntil, Time.time + Mathf.Max(0, duration));
+            float granted = Mathf.Max(0f, shield - previousShield);
+            if (source != null)
+            {
+                Health supporter = source.GetComponentInParent<Health>();
+                if (supporter != null)
+                {
+                    float credit = granted > 0f ? granted : Mathf.Min(amount, maxHealth * .25f);
+                    MatchTelemetry.Instance?.RecordHealing(supporter, credit);
+                    MatchScoreboard.Instance?.RecordSupport(this, source);
+                }
+            }
             if (playAudio && shield > previousShield)
                 Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Shield, transform.position, .3f);
             Changed?.Invoke(Current, maxHealth);
@@ -358,10 +371,16 @@ namespace Alterverse.Combat
 
             float applied = Mathf.Min(amount, maxHealth - Current);
             Current = Mathf.Min(maxHealth, Current + amount);
+            Health healer = source != null ? source.GetComponentInParent<Health>() : this;
+            if (source != null && healer != null && healer != this)
+                MatchScoreboard.Instance?.RecordSupport(this, source);
             if (applied > 0)
             {
-                Health healer = source != null ? source.GetComponentInParent<Health>() : this;
-                MatchTelemetry.Instance?.RecordHealing(healer, applied);
+                // When actively healing an ally with an ability, reward effective combat triage equally with damage.
+                float credit = (source != null && healer != null && healer != this)
+                    ? Mathf.Max(applied, Mathf.Min(amount, applied * 1.25f))
+                    : applied;
+                MatchTelemetry.Instance?.RecordHealing(healer, credit);
                 if (playAudio)
                     Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Heal, transform.position, .18f);
             }

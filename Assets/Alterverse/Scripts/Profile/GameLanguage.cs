@@ -63,12 +63,161 @@ namespace Alterverse.Profile
             Version++;
             return true;
         }
+        static readonly Dictionary<string, Dictionary<string, string>> fallbackTranslations =
+            new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["de"] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["HOME"] = "START",
+                    ["PLAY"] = "SPIELEN",
+                    ["HEROES"] = "HELDEN",
+                    ["STORE"] = "SHOP",
+                    ["INVENTORY"] = "INVENTAR",
+                    ["BATTLE PASS"] = "BATTLE PASS",
+                    ["PROFILE"] = "PROFIL",
+                    ["FRIENDS"] = "FREUNDE",
+                    ["CLANS"] = "CLANS",
+                    ["DAILY"] = "MISSIONEN",
+                    ["RANKING"] = "RANGLISTE",
+                    ["SETTINGS"] = "OPTIONEN",
+                    ["Settings"] = "Einstellungen",
+                    ["Audio and language."] = "Audio und Sprache.",
+                    ["Audio, language and hardware graphics adaptation."] = "Audio, Sprache und automatische Hardware-Grafikanpassung.",
+                    ["Master volume"] = "Gesamtlautstärke",
+                    ["Music"] = "Musik",
+                    ["Sound effects"] = "Soundeffekte",
+                    ["Language"] = "Sprache",
+                    ["Graphics"] = "Grafik",
+                    ["Graphics & Hardware"] = "Grafik & Hardware",
+                    ["AUTO (HARDWARE)"] = "AUTO (HARDWARE)",
+                    ["LOW / SAVER"] = "NIEDRIG / AKKU",
+                    ["BALANCED"] = "AUSGEWOGEN",
+                    ["HIGH / 60 FPS"] = "HOCH / 60 FPS",
+                    ["AUTO"] = "AUTO",
+                    ["LOW"] = "NIEDRIG",
+                    ["HIGH"] = "HOCH",
+                    ["Optimized for older phones: 30 FPS, 65% render scale, reduced terrain & texture memory."] = "Optimiert für ältere Handys: 30 FPS, 65% Auflösung, reduzierter Terrain- & Texturspeicher.",
+                    ["Balanced mobile profile: 60 FPS, 82% render scale, medium shadows & textures."] = "Ausgewogenes Profil: 60 FPS, 82% Auflösung, mittlere Schatten & Texturen.",
+                    ["High performance profile: 60 FPS, 100% render scale, full lighting & details."] = "Hochleistungsprofil: 60 FPS, 100% Auflösung, volle Beleuchtung & Details.",
+                    ["Changes apply immediately."] = "Änderungen werden sofort übernommen.",
+                    ["Progress and settings are saved on this device."] = "Fortschritt und Einstellungen werden gespeichert.",
+                    ["Deployment"] = "Einsatz",
+                    ["Choose your hero and arena before entering the Front."] = "Wähle deinen Helden und die Arena für das nächste Gefecht.",
+                    ["READY TO PLAY"] = "EINSATZBEREIT",
+                    ["INVITE FRIENDS"] = "FREUNDE & LOBBY",
+                    ["PRIVATE CO-OP"] = "PRIVATES KOOP",
+                    ["READY FOR DEPLOYMENT"] = "BEREIT FÜR DEN EINSATZ",
+                    ["ARENA"] = "ARENA",
+                    ["SHUFFLE"] = "ZUFALL",
+                    ["SHUFFLE  ON"] = "ZUFALL AN",
+                    ["START MATCH"] = "MATCH STARTEN",
+                    ["FIND ONLINE MATCH"] = "ONLINE-MATCH SUCHEN",
+                    ["4v4 TACTICAL LOBBY"] = "4v4 TAKTISCHE LOBBY",
+                    ["ONLINE PARTY & MATCHMAKING"] = "ONLINE-GRUPPE & MATCHMAKING",
+                    ["CLOSE"] = "SCHLIESSEN",
+                    ["PARTY LINKED"] = "GRUPPE AKTIV",
+                    ["SOLO / OPEN"] = "SOLO / OFFEN",
+                    ["CREATE FRIEND PARTY"] = "GRUPPE ERSTELLEN",
+                    ["JOIN PARTY"] = "BEITRETEN",
+                    ["LEAVE PARTY"] = "VERLASSEN",
+                    ["READY"] = "BEREIT",
+                    ["READY ✓"] = "BEREIT ✓",
+                    ["NOT READY"] = "NICHT BEREIT",
+                    ["WAITING"] = "WARTET",
+                    ["OPEN SLOT"] = "FREIER PLATZ",
+                    ["INVITE FRIEND"] = "FREUND EINLADEN",
+                    ["COPY CODE"] = "CODE KOPIEREN",
+                    ["CANCEL SEARCH"] = "SUCHE ABBRECHEN",
+                    ["WAITING READY"] = "WARTE AUF BEREIT",
+                    ["FIND 4v4 MATCH"] = "4v4 MATCH SUCHEN",
+                    ["PREPARING BATTLEFIELD"] = "SCHLACHTFELD WIRD GELADEN",
+                    ["SYNCHRONIZING BATTLEFIELD"] = "SYNCHRONISIERE SCHLACHTFELD",
+                    ["Friends & Stickers"] = "Freunde & Sticker",
+                    ["Connect with squadmates, send collectible Shard Stickers, and invite friends to your clan."] = "Verbinde dich mit Freunden, verschicke Shard-Sticker (20% Umwandlung) und lade sie in deinen Clan ein.",
+                    ["MY FRIENDS"] = "MEINE FREUNDE",
+                    ["REQUESTS"] = "ANFRAGEN",
+                    ["STICKER SHOP & INBOX"] = "STICKER-SHOP & POSTFACH",
+                    ["CLAN INVITES"] = "CLAN-EINLADUNGEN",
+                    ["SEND REQUEST"] = "ANFRAGE SENDEN",
+                    ["SEND STICKER"] = "STICKER SENDEN",
+                    ["CLAN INVITE"] = "CLAN-EINLADUNG",
+                    ["ACCEPT"] = "ANNEHMEN",
+                    ["DECLINE"] = "ABLEHNEN",
+                    ["CONVERT TO SHARDS"] = "IN SHARDS UMWANDELN",
+                    ["MATCH OPTIONS"] = "MATCH-OPTIONEN",
+                    ["MATCH PAUSED"] = "MATCH PAUSIERT",
+                    ["CO-OP MATCH CONTINUES WHILE OPTIONS ARE OPEN"] = "KOOP-MATCH LÄUFT IM HINTERGRUND WEITER",
+                    ["RESUME MATCH"] = "WEITERSPIELEN",
+                    ["LEAVE MATCH  •  MAIN MENU"] = "MATCH VERLASSEN  •  HAUPTMENÜ",
+                    ["LEAVE CO-OP  •  MAIN MENU"] = "KOOP VERLASSEN  •  HAUPTMENÜ",
+                    ["LEAVE CURRENT MATCH?"] = "AKTUELLES MATCH VERLASSEN?",
+                    ["CANCEL"] = "ABBRECHEN",
+                    ["LEAVE MATCH"] = "VERLASSEN",
+                    ["MATCH PLAYERS  •  TAP +FR TO SEND FRIEND REQUEST"] = "SPIELER IM MATCH  •  TIPPE AUF +FR FÜR FREUNDSCHAFTSANFRAGE",
+                    ["RESPAWN IN "] = "WIEDERBELEBUNG IN ",
+                    ["ZERO TEAM"] = "TEAM ZERO",
+                    ["LUMEN TEAM"] = "TEAM LUMEN",
+                    ["ASSASSIN"] = "ASSASSINE",
+                    ["TANK"] = "TANK",
+                    ["MARKSMAN"] = "SCHÜTZE",
+                    ["MAGE"] = "MAGIER",
+                    ["SUPPORT"] = "UNTERSTÜTZER",
+                    ["BRUISER"] = "KÄMPFER",
+                    ["CHOOSE. DEPLOY. CONQUER."] = "WÄHLEN. KÄMPFEN. SIEGEN.",
+                    ["TWO REALITIES.\nONE FRONT."] = "ZWEI REALITÄTEN.\nEINE FRONT.",
+                    ["Choose your hero. Fight alongside your team. Claim the Hotzone and break the enemy core."] = "Wähle deinen Helden. Kämpfe mit deinem Team, erobere die Hotzone und zerstöre den gegnerischen Kern.",
+                    ["ENTER THE FRONT"] = "IN DEN KAMPF",
+                    ["MISSIONS"] = "MISSIONEN"
+                },
+                ["es"] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["HOME"] = "INICIO",
+                    ["PLAY"] = "JUGAR",
+                    ["HEROES"] = "HÉROES",
+                    ["STORE"] = "TIENDA",
+                    ["INVENTORY"] = "INVENTARIO",
+                    ["PROFILE"] = "PERFIL",
+                    ["FRIENDS"] = "AMIGOS",
+                    ["CLANS"] = "CLANES",
+                    ["DAILY"] = "DIARIO",
+                    ["RANKING"] = "CLASIFICACIÓN",
+                    ["SETTINGS"] = "AJUSTES",
+                    ["Graphics"] = "Gráficos",
+                    ["Graphics & Hardware"] = "Gráficos y Hardware"
+                },
+                ["fr"] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["HOME"] = "ACCUEIL",
+                    ["PLAY"] = "JOUER",
+                    ["HEROES"] = "HÉROS",
+                    ["STORE"] = "BOUTIQUE",
+                    ["INVENTORY"] = "INVENTAIRE",
+                    ["PROFILE"] = "PROFIL",
+                    ["FRIENDS"] = "AMIS",
+                    ["CLANS"] = "CLANS",
+                    ["DAILY"] = "MISSIONS",
+                    ["RANKING"] = "CLASSEMENT",
+                    ["SETTINGS"] = "PARAMÈTRES",
+                    ["Graphics"] = "Graphismes",
+                    ["Graphics & Hardware"] = "Graphismes & Matériel"
+                }
+            };
+
         public static string Text(string source)
         {
             if (string.IsNullOrEmpty(source)) return source ?? string.Empty;
             Option language = Current;
-            return indices.TryGetValue(source, out int index) && index < language.Words.Length &&
-                !string.IsNullOrEmpty(language.Words[index]) ? language.Words[index] : source;
+            if (indices.TryGetValue(source, out int index) && index < language.Words.Length &&
+                !string.IsNullOrEmpty(language.Words[index]))
+                return language.Words[index];
+            string code = language?.Code ?? "en";
+            int dash = code.IndexOf('-');
+            string baseCode = dash > 0 ? code.Substring(0, dash) : code;
+            if (fallbackTranslations.TryGetValue(code, out var map) && map.TryGetValue(source, out string translated))
+                return translated;
+            if (fallbackTranslations.TryGetValue(baseCode, out var baseMap) && baseMap.TryGetValue(source, out string baseTranslated))
+                return baseTranslated;
+            return source;
         }
         public static string Normalize(string code)
         {

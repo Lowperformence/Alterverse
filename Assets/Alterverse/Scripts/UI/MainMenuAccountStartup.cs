@@ -44,18 +44,33 @@ namespace Alterverse.UI
             theme.Panel(panel);
             theme.FitLabel(new Rect(x + 24, 238, width - 48, 40), "GOOGLE PLAY", theme.Heading);
             var service = AccountServerBootstrap.Instance;
+            var commerce = PaidShardCommerce.Instance;
             bool verified = service?.GooglePlayAccountReady == true;
-            theme.Label(new Rect(x + 24, 292, width - 48, 44),
-                verified ? "Loading your saved progress..." : service?.Busy == false ?
-                    "Sign in to load your Google Play profile." : "Loading your Google Play profile...",
-                theme.Body, true);
-            theme.Label(new Rect(x + 24, 344, width - 48, 72),
-                verified ? PaidShardCommerce.Instance?.Status ?? service.Status :
-                    service?.GoogleStatus ?? "Connecting to Google Play Games...", theme.Small, true);
-            if (theme.Action(new Rect(x + 24, 428, width - 48, 44), verified ? "TRY AGAIN" : "CONNECT GOOGLE", true,
+            string commerceStatus = commerce?.Status ?? string.Empty;
+            bool commerceLoading = verified && (commerce == null ||
+                commerceStatus.IndexOf("Synchronizing", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                commerceStatus.IndexOf("Connecting", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                commerceStatus.IndexOf("Loading", System.StringComparison.OrdinalIgnoreCase) >= 0);
+            bool syncing = service == null || !service.StartupAttemptFinished || service.Busy || commerceLoading;
+
+            string headline = syncing
+                ? (verified ? "Synchronizing your saved cloud profile…" : "Signing in with Google Play Games…")
+                : (verified ? "Cloud profile sync interrupted." : "Sign in to load your Google Play profile.");
+            string detail = verified
+                ? (commerce?.Status ?? service?.Status ?? "Loading your saved progress…")
+                : (service?.GoogleStatus ?? "Connecting to Google Play Games…");
+
+            theme.Label(new Rect(x + 24, 292, width - 48, 44), headline, theme.Body, true);
+            theme.Label(new Rect(x + 24, 344, width - 48, 72), detail, theme.Small, true);
+
+            if (syncing)
+            {
+                theme.Action(new Rect(x + 24, 428, width - 48, 44), "SIGNING IN  •  PLEASE WAIT…", false, enabled: false);
+            }
+            else if (theme.Action(new Rect(x + 24, 428, width - 48, 44), verified ? "TRY AGAIN" : "CONNECT GOOGLE", true,
                 enabled: service != null && !service.Busy))
             {
-                if (verified) PaidShardCommerce.Instance?.Refresh();
+                if (verified) commerce?.Refresh();
                 else _ = service.ConnectGoogleAsync();
             }
         }

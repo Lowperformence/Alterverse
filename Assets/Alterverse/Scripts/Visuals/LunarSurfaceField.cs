@@ -205,9 +205,33 @@ namespace Alterverse.Visuals
 
         public static void Bake(out Texture2D albedo,out Texture2D normals)
         {
-            // Sharper colour and macro normals on desktop across every arena variant.
-            // Smaller GPUs keep the established memory budget.
-            int size=SystemInfo.graphicsMemorySize>=4096?2048:1536;
+            // Adapt surface bake resolution to mobile hardware tier so older phones load instantly
+            // and stay well within mobile VRAM/CPU limits.
+            int size;
+            int aniso = 16;
+            if (Application.isMobilePlatform || !Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled)
+            {
+                var quality = Alterverse.Performance.MobilePerformanceProfile.Current;
+                if (quality == Alterverse.Performance.MobileQuality.Battery)
+                {
+                    size = 384;
+                    aniso = 1;
+                }
+                else if (quality == Alterverse.Performance.MobileQuality.Balanced)
+                {
+                    size = 512;
+                    aniso = 4;
+                }
+                else
+                {
+                    size = 1024;
+                    aniso = 8;
+                }
+            }
+            else
+            {
+                size = SystemInfo.graphicsMemorySize >= 4096 ? 2048 : 1536;
+            }
             const float spanX=96,spanZ=84;
             bool moon=IsMoon;
             Color32[] pixels=new Color32[size*size],normalPixels=new Color32[pixels.Length];float[] heights=new float[pixels.Length];
@@ -310,9 +334,10 @@ namespace Alterverse.Visuals
                 Vector3 n=new Vector3(-dx*normalStrength,-dz*normalStrength,1).normalized;
                 normalPixels[z*size+x]=new Color(n.x*.5f+.5f,n.y*.5f+.5f,n.z*.5f+.5f,1);
             }
-            albedo=new Texture2D(size,size,TextureFormat.RGBA32,true,false){name="DF_UniqueRegolithAlbedo",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=16};
-            normals=new Texture2D(size,size,TextureFormat.RGBA32,true,true){name="DF_UniqueRegolithNormal",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=16};
-            albedo.SetPixels32(pixels);albedo.Apply(true,true);normals.SetPixels32(normalPixels);normals.Apply(true,true);
+            FilterMode filter = aniso <= 1 ? FilterMode.Bilinear : FilterMode.Trilinear;
+            albedo=new Texture2D(size,size,TextureFormat.RGBA32,aniso > 1,false){name="DF_UniqueRegolithAlbedo",wrapMode=TextureWrapMode.Clamp,filterMode=filter,anisoLevel=aniso};
+            normals=new Texture2D(size,size,TextureFormat.RGBA32,aniso > 1,true){name="DF_UniqueRegolithNormal",wrapMode=TextureWrapMode.Clamp,filterMode=filter,anisoLevel=aniso};
+            albedo.SetPixels32(pixels);albedo.Apply(aniso > 1,true);normals.SetPixels32(normalPixels);normals.Apply(aniso > 1,true);
         }
     }
 }

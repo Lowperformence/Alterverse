@@ -54,6 +54,12 @@ namespace Alterverse.Visuals
 
         private IEnumerator Start()
         {
+            if ((Application.isMobilePlatform || !Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled) &&
+                Alterverse.Performance.MobilePerformanceProfile.Current == Alterverse.Performance.MobileQuality.Battery)
+            {
+                Destroy(gameObject);
+                yield break;
+            }
             ProductionLunarGround ground = null;
             for (int frame = 0; frame < 360 && ground == null; frame++)
             {

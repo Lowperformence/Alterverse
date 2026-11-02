@@ -267,55 +267,104 @@ namespace Alterverse.UI
 
         private void DrawOverlay(CombatHudLayout layout)
         {
-            FrontEndTheme.Fill(new Rect(0, 0, layout.Width, layout.Height), new Color(.008f, .012f, .02f, .82f));
+            FrontEndTheme.Fill(new Rect(0, 0, layout.Width, layout.Height), new Color(.008f, .012f, .02f, .86f));
 
-            // Fit all three audio controls and the leave/resume actions inside a 16:9 mobile safe area.
-            float width = Mathf.Min(720f, layout.Width - 28f);
-            float height = Mathf.Min(520f, layout.Height - 16f);
+            float width = Mathf.Min(780f, layout.Width - 24f);
+            float height = Mathf.Min(640f, layout.Height - 16f);
             Rect panel = new Rect((layout.Width - width) * .5f, (layout.Height - height) * .5f, width, height);
             theme.Panel(panel);
             FrontEndTheme.Fill(new Rect(panel.x, panel.y, panel.width, 2), FrontEndTheme.Accent);
 
-            theme.Label(new Rect(panel.x + 24, panel.y + 14, panel.width - 48, 36), GameLanguage.Text("MATCH OPTIONS"), theme.Heading);
+            theme.Label(new Rect(panel.x + 24, panel.y + 12, panel.width - 48, 32), GameLanguage.Text("MATCH OPTIONS"), theme.Heading);
             string state = CoopAuthority.Active
                 ? "CO-OP MATCH CONTINUES WHILE OPTIONS ARE OPEN"
                 : "MATCH PAUSED";
-            theme.Label(new Rect(panel.x + 24, panel.y + 50, panel.width - 48, 22), GameLanguage.Text(state), theme.Small, true);
+            theme.Label(new Rect(panel.x + 24, panel.y + 42, panel.width - 48, 20), GameLanguage.Text(state), theme.Small, true);
 
             float previousMaster = master, previousMusic = music, previousSfx = sfx;
-            const float rowStart = 78f;
-            const float rowStep = 64f;
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart, panel.width - 48, 60), GameLanguage.Text("Master volume"), ref master);
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep, panel.width - 48, 60), GameLanguage.Text("Music"), ref music);
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 2f, panel.width - 48, 60), GameLanguage.Text("Sound effects"), ref sfx);
+            const float rowStart = 66f;
+            const float rowStep = 56f;
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart, panel.width - 48, 52), GameLanguage.Text("Master volume"), ref master);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep, panel.width - 48, 52), GameLanguage.Text("Music"), ref music);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 2f, panel.width - 48, 52), GameLanguage.Text("Sound effects"), ref sfx);
             if (previousMaster != master || previousMusic != music || previousSfx != sfx)
                 ApplyAudioLive();
-            theme.Label(new Rect(panel.x + 24, panel.y + 284, 150, 42), GameLanguage.Text("Language"), theme.Body);
-            languagePicker.DrawControl(theme, new Rect(panel.x + 184, panel.y + 284, panel.width - 208, 42));
+
+            float langY = panel.y + 240f;
+            theme.Label(new Rect(panel.x + 24, langY, 150, 36), GameLanguage.Text("Language"), theme.Body);
+            languagePicker.DrawControl(theme, new Rect(panel.x + 184, langY, panel.width - 208, 36));
+
+            // Graphics Quality & Hardware Auto-Detection bar
+            float gfxY = langY + 44f;
+            theme.Label(new Rect(panel.x + 24, gfxY, 150, 34), GameLanguage.Text("Graphics"), theme.Body);
+            float gfxBtnW = (panel.width - 208f - 18f) / 4f;
+            bool isAuto = Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled;
+            var currentQ = Alterverse.Performance.MobilePerformanceProfile.Current;
+            if (theme.Action(new Rect(panel.x + 184, gfxY, gfxBtnW, 34), "AUTO", selected: isAuto))
+                Alterverse.Performance.MobilePerformanceProfile.EnableAutoHardwareProfile();
+            if (theme.Action(new Rect(panel.x + 184 + (gfxBtnW + 6f), gfxY, gfxBtnW, 34), "LOW", selected: !isAuto && currentQ == Alterverse.Performance.MobileQuality.Battery))
+                Alterverse.Performance.MobilePerformanceProfile.Current = Alterverse.Performance.MobileQuality.Battery;
+            if (theme.Action(new Rect(panel.x + 184 + (gfxBtnW + 6f) * 2f, gfxY, gfxBtnW, 34), "BALANCED", selected: !isAuto && currentQ == Alterverse.Performance.MobileQuality.Balanced))
+                Alterverse.Performance.MobilePerformanceProfile.Current = Alterverse.Performance.MobileQuality.Balanced;
+            if (theme.Action(new Rect(panel.x + 184 + (gfxBtnW + 6f) * 3f, gfxY, gfxBtnW, 34), "HIGH", selected: !isAuto && currentQ == Alterverse.Performance.MobileQuality.Performance))
+                Alterverse.Performance.MobilePerformanceProfile.Current = Alterverse.Performance.MobileQuality.Performance;
+
+            // In-Match Squad & Opponent Friend Requests
+            float socialY = gfxY + 42f;
+            DrawMatchFriendBar(new Rect(panel.x + 24, socialY, panel.width - 48, 86));
 
             if (!confirmLeave)
             {
-                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 100, panel.width - 48, 42), GameLanguage.Text("RESUME MATCH"), true))
+                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 86, panel.width - 48, 38), GameLanguage.Text("RESUME MATCH"), true))
                     CloseOverlay();
 
                 string destination = CoopAuthority.Active
                     ? "LEAVE CO-OP  •  MAIN MENU"
                     : "LEAVE MATCH  •  MAIN MENU";
-                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 50, panel.width - 48, 34), destination))
+                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 42, panel.width - 48, 32), destination))
                     confirmLeave = true;
             }
             else
             {
-                theme.Label(new Rect(panel.x + 24, panel.yMax - 116, panel.width - 48, 28), "LEAVE CURRENT MATCH?", theme.Heading);
+                theme.Label(new Rect(panel.x + 24, panel.yMax - 102, panel.width - 48, 24), "LEAVE CURRENT MATCH?", theme.Heading);
                 string warning = CoopAuthority.Active
                     ? "You will leave the current co-op session. No match reward will be granted."
                     : "The current match will end without a match reward.";
-                theme.Label(new Rect(panel.x + 24, panel.yMax - 86, panel.width - 48, 22), warning, theme.Small, true);
+                theme.Label(new Rect(panel.x + 24, panel.yMax - 78, panel.width - 48, 20), warning, theme.Small, true);
                 float gap = 12f, buttonWidth = (panel.width - 48 - gap) * .5f;
-                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 50, buttonWidth, 34), GameLanguage.Text("CANCEL")))
+                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 44, buttonWidth, 32), GameLanguage.Text("CANCEL")))
                     confirmLeave = false;
-                if (theme.Action(new Rect(panel.x + 24 + buttonWidth + gap, panel.yMax - 50, buttonWidth, 34), GameLanguage.Text("LEAVE MATCH"), true))
+                if (theme.Action(new Rect(panel.x + 24 + buttonWidth + gap, panel.yMax - 44, buttonWidth, 32), GameLanguage.Text("LEAVE MATCH"), true))
                     LeaveMatchNow();
+            }
+        }
+
+        private void DrawMatchFriendBar(Rect rect)
+        {
+            theme.HudPanel(rect, .55f);
+            theme.FitLabel(new Rect(rect.x + 12, rect.y + 4, rect.width - 24, 18), GameLanguage.Text("MATCH PLAYERS  •  TAP +FR TO SEND FRIEND REQUEST"), theme.Small, true);
+
+            var controllers = FindObjectsByType<Alterverse.Characters.HeroController>(FindObjectsSortMode.None);
+            int shown = 0;
+            float chipW = (rect.width - 24f - 18f) / 4f;
+            for (int i = 0; i < controllers.Length && shown < 8; i++)
+            {
+                var hc = controllers[i];
+                if (hc == null || hc.IsPlayerControlled) continue;
+                string pName = hc.DisplayName;
+                if (string.IsNullOrWhiteSpace(pName)) continue;
+                var identity = hc.GetComponent<Alterverse.Characters.HeroIdentity>();
+                var hero = identity != null ? identity.Hero : Alterverse.Characters.HeroId.Veyr;
+                int col = shown % 4;
+                int row = shown / 4;
+                Rect chip = new Rect(rect.x + 12f + col * (chipW + 6f), rect.y + 24f + row * 29f, chipW, 26f);
+                bool already = FriendStickerService.Instance.IsFriend(pName) || FriendStickerService.Instance.HasSentRequest(pName);
+                theme.FitLabel(new Rect(chip.x + 4, chip.y + 2, chip.width - 48, 22), pName, theme.Small);
+                if (theme.Action(new Rect(chip.xMax - 42, chip.y + 1, 40, 24), already ? "✓" : "+FR", !already, enabled: !already))
+                {
+                    FriendStickerService.Instance.SendFriendRequest(pName, pName, (int)hero);
+                }
+                shown++;
             }
         }
 

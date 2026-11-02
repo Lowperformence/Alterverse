@@ -304,7 +304,7 @@ namespace Alterverse.Visuals
             // Smooth direction in world space: facing an attack target must not make a
             // strafing/backpedalling hero keep marching forward. This only drives bones.
             if(!Dashing&&PlanarSpeed>.10f)
-                displayedTravelDirection=Vector3.Lerp(displayedTravelDirection,worldVelocity/PlanarSpeed,1-Mathf.Exp(-18f*dt));
+                displayedTravelDirection=Vector3.Lerp(displayedTravelDirection,worldVelocity/PlanarSpeed,1-Mathf.Exp(-24f*dt));
             Vector3 gaitDirection=Quaternion.Inverse(PresentedRotation)*displayedTravelDirection;
             float gaitForward=Mathf.Clamp(gaitDirection.z,-1f,1f);
             float gaitSide=Mathf.Clamp(gaitDirection.x,-1f,1f);
@@ -313,19 +313,19 @@ namespace Alterverse.Visuals
             localAcceleration=Vector3.ClampMagnitude(localAcceleration,45f);
             previousWorldVelocity=worldVelocity;
             // Ease the visible gait in and out while keeping collision and input immediate.
-            displayedSpeed=Mathf.Lerp(displayedSpeed,PlanarSpeed,1-Mathf.Exp(-(PlanarSpeed>displayedSpeed?12f:9f)*dt));
+            displayedSpeed=Mathf.Lerp(displayedSpeed,PlanarSpeed,1-Mathf.Exp(-(PlanarSpeed>displayedSpeed?18f:13f)*dt));
             // Let the legs settle promptly when physical travel stops at a wall or on
             // release, rather than retaining a high raised-foot pose as speed fades.
-            float response=1-Mathf.Exp(-(PlanarSpeed<.10f?20f:11f)*dt);
+            float response=1-Mathf.Exp(-(PlanarSpeed<.10f?24f:15f)*dt);
             // Tiny steering corrections should not restart the walk cycle. The gameplay root
             // can still settle by a few centimetres without making the hero visually shuffle.
             if(moving){if(displayedSpeed<.10f)moving=false;}
-            else if(displayedSpeed>.28f)moving=true;
+            else if(displayedSpeed>.22f)moving=true;
             if(GroundingSuspended)moving=false;
-            float desired=GroundingSuspended||!moving||PlanarSpeed<.10f?0f:Mathf.InverseLerp(.10f,1.1f,displayedSpeed);
+            float desired=GroundingSuspended||!moving||PlanarSpeed<.10f?0f:Mathf.InverseLerp(.08f,.95f,displayedSpeed);
             strideWeight=Mathf.Lerp(strideWeight,desired,response);
             // One complete gait cycle per traveled stride, not one per fixed time interval.
-            float runBlend=Mathf.InverseLerp(1.8f,4.5f,displayedSpeed)*strideWeight;
+            float runBlend=Mathf.InverseLerp(1.5f,4.1f,displayedSpeed)*strideWeight;
             RunBlend=runBlend;
             float strideLength=grounded!=null&&grounded.Ready?grounded.CycleStride(runBlend):(heavy?1.65f:1.45f);
             if(!GroundingSuspended)phase=Mathf.Repeat(phase+travel/Mathf.Max(.1f,strideLength)*Mathf.PI*2,Mathf.PI*2);
@@ -338,8 +338,8 @@ namespace Alterverse.Visuals
             Quaternion armBeforeL=displayedArmL,armBeforeR=displayedArmR;
             if(armL!=null)armL.localRotation=armBeforeL;
             if(armR!=null)armR.localRotation=armBeforeR;
-            float forwardLean=Mathf.Clamp(localAcceleration.z*.055f+localVelocity.z*.11f,-2.5f,5f);
-            lean=Mathf.Lerp(lean,forwardLean,1-Mathf.Exp(-13f*dt));
+            float forwardLean=Mathf.Clamp(localAcceleration.z*.075f+localVelocity.z*.16f,-3.5f,7.5f);
+            lean=Mathf.Lerp(lean,forwardLean,1-Mathf.Exp(-18f*dt));
             float t=Time.time;
             float idle=Mathf.Sin(t*1.8f)*.014f*(1-strideWeight);
             float bob=(1-Mathf.Cos(phase*2))*.035f*strideWeight*(heavy?.8f:1);
@@ -730,6 +730,10 @@ namespace Alterverse.Visuals
         private void UpdateCloth(float deltaTime,float time,Vector3 worldVelocity)
         {
             if(clothPanels.Count==0)return;
+            if (Alterverse.Performance.RuntimePerformanceMonitor.UnderBudget ||
+                ((Application.isMobilePlatform || !Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled) &&
+                 Alterverse.Performance.MobilePerformanceProfile.Current == Alterverse.Performance.MobileQuality.Battery))
+                return;
             float dt=Mathf.Clamp(deltaTime,0f,.05f);
             if(dt<=0f)return;
             Vector3 localVelocity=transform.InverseTransformDirection(worldVelocity);

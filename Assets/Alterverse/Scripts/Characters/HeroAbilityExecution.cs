@@ -169,7 +169,7 @@ namespace Alterverse.Characters
                     (slot == 2 ? ally.TemporaryShield > 5f : ally.Normalized >= .95f)) return false;
                 if (aimed.HasValue && !AimGeometry.Cone(transform.position, attackAim.Direction, ally.transform.position, aimSpec.castRange, aimSpec.coneAngle)) return false;
                 HeroCombatAudio.Cast(gameObject,slot);
-                if (slot == 1) ally.Heal(spec.Power,false,gameObject); else ally.AddShield(spec.Power, 4f,false);
+                if (slot == 1) ally.Heal(spec.Power,false,gameObject); else ally.AddShield(spec.Power, 4f,false,gameObject);
                 HeroSkillVfx.SupportLink(gameObject, ally);
                 HeroSkillVfx.Support(gameObject,ally,slot==2,4f);
             }
@@ -297,15 +297,15 @@ namespace Alterverse.Characters
                 bool ally=own!=null&&member!=null&&member.Team==own.Team&&h.GetComponent<HeroIdentity>()!=null;
                 if(identity.Hero==HeroId.Mira)
                 {
-                    if(ally){float supportBefore=h.Current+h.Shield;h.Heal(spec.Power,false,gameObject);h.AddShield(25,3,false);confirmed|=h.Current+h.Shield>supportBefore;HeroSkillVfx.Support(gameObject,h,false,.45f);HeroSkillVfx.Support(gameObject,h,true,3);}
+                    if(ally){float supportBefore=h.Current+h.Shield;h.Heal(spec.Power,false,gameObject);h.AddShield(25,3,false,gameObject);confirmed|=h.Current+h.Shield>supportBefore;HeroSkillVfx.Support(gameObject,h,false,.45f);HeroSkillVfx.Support(gameObject,h,true,3);}
                 }
                 else
                 {
-                    if(identity.Hero==HeroId.Kaelon&&slot==3&&ally){h.AddShield(60,3,false);HeroSkillVfx.Support(gameObject,h,true,3);}
+                    if(identity.Hero==HeroId.Kaelon&&slot==3&&ally){h.AddShield(60,3,false,gameObject);HeroSkillVfx.Support(gameObject,h,true,3);}
                     if(HeroCombatRules.Enemy(gameObject,h)){float before=h.Current+h.Shield;Hit(slot,h,false);confirmed|=h.Current+h.Shield<before;}
                 }
             }
-            if (identity.Hero == HeroId.Kaelon && slot == 3) { self.Heal(50, false);HeroSkillVfx.Support(gameObject,self,false,.45f); }
+            if (identity.Hero == HeroId.Kaelon && slot == 3) { self.Heal(50, false, gameObject);HeroSkillVfx.Support(gameObject,self,false,.45f); }
             if (identity.Hero == HeroId.Rook && slot == 3) { self.AddShield(65, 4,false);HeroSkillVfx.Support(gameObject,self,true,4); }
             if(confirmed)HeroCombatAudio.Impact(gameObject,slot,center);
             HeroSkillVfx.Area(gameObject, center, areaAim.aoeRadius, .3f, false,identity.Hero==HeroId.Mira,slot);

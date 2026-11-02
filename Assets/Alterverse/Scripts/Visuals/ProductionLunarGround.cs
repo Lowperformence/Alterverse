@@ -50,13 +50,18 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         // Surface variation, crater relief, rocks and impact details carry the lunar geology instead.
         var clearance=new SceneryBuildingClearance(ArenaLayout.LengthScale);
         int decorationStart=root.childCount;
+        bool lowEndMobile = (Application.isMobilePlatform || !Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled) &&
+                            Alterverse.Performance.MobilePerformanceProfile.Current == Alterverse.Performance.MobileQuality.Battery;
         BuildRocks();
         if(ArenaVariantRuntime.IsGreenPlanet)BuildAlienMineralAccents();
         if(ArenaVariantRuntime.IsKryon)BuildKryonIceAccents();
-        BuildDistributedCraterDebris();
-        BuildBattlefieldAccessories();
-        BuildSmallLandmarks();
-        BuildDensityClusters();
+        if (!lowEndMobile)
+        {
+            BuildDistributedCraterDebris();
+            BuildBattlefieldAccessories();
+            BuildSmallLandmarks();
+            BuildDensityClusters();
+        }
         BuildReferenceSilhouettes();
         // Filter before combining meshes; keep the floor and cliff shell intact.
         for(int i=decorationStart;i<root.childCount;i++)clearance.RemoveIfBlocked(root.GetChild(i).gameObject);
@@ -68,9 +73,15 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
 
     void BuildSurface()
     {
-        // Denser Mars silhouette supports the broad dunes without changing collision or pathing.
-        int xSeg=ArenaVariantRuntime.IsMars?192:144;
-        int zSeg=ArenaVariantRuntime.IsMars?160:128;
+        // Scale vertex density to device capability while preserving exact world dimensions.
+        var quality = Alterverse.Performance.MobilePerformanceProfile.Current;
+        bool isMobile = Application.isMobilePlatform || !Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled;
+        int xSeg = isMobile && quality == Alterverse.Performance.MobileQuality.Battery ? 72 :
+                   isMobile && quality == Alterverse.Performance.MobileQuality.Balanced ? 108 :
+                   ArenaVariantRuntime.IsMars ? 192 : 144;
+        int zSeg = isMobile && quality == Alterverse.Performance.MobileQuality.Battery ? 60 :
+                   isMobile && quality == Alterverse.Performance.MobileQuality.Balanced ? 96 :
+                   ArenaVariantRuntime.IsMars ? 160 : 128;
         Vector3[] v=new Vector3[(xSeg+1)*(zSeg+1)];Vector2[] uv=new Vector2[v.Length];
         int[] t=new int[xSeg*zSeg*6];
         for(int z=0;z<=zSeg;z++)for(int x=0;x<=xSeg;x++)

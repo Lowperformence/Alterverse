@@ -15,12 +15,12 @@ namespace Alterverse.UI
 {
     public sealed partial class MainMenuController : MonoBehaviour
     {
-        private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Quests, Leaderboard, Settings, Coop, BattlePass, Clans }
+        private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Quests, Leaderboard, Settings, Coop, BattlePass, Clans, Friends }
         private static MainMenuController instance;
         public static bool IsVisible => instance != null && instance.visible && instance.isActiveAndEnabled;
-        private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "BATTLE PASS", "PROFILE", "CLANS", "DAILY", "RANKING", "SETTINGS" };
-        private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.BattlePass, Page.Profile, Page.Clans, Page.Quests, Page.Leaderboard, Page.Settings };
-        private static readonly int[] HomeNavigation={0,1,2,3,5};
+        private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "BATTLE PASS", "PROFILE", "FRIENDS", "CLANS", "DAILY", "RANKING", "SETTINGS" };
+        private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.BattlePass, Page.Profile, Page.Friends, Page.Clans, Page.Quests, Page.Leaderboard, Page.Settings };
+        private static readonly int[] HomeNavigation={0,1,2,3,6};
         private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER", "TIDAL BRUISER", "FELINE ASSASSIN", "VOID DUELIST", "MECH / SHIELD BREAKER" };
         private static readonly string[] RoleDescriptions = {
             "Close the distance. Isolate a vulnerable target, strike, then disengage.",
@@ -194,17 +194,18 @@ namespace Alterverse.UI
             profileMessage = ""; shopMessage = ""; GUI.FocusControl(null);
             confirmRoute=confirmPlayer=confirmLabel=null;
             if(next==Page.Leaderboard)GooglePlayLevelLeaderboard.AuthenticateAndSync();
-            if(next==Page.Clans)SocialService.Instance?.Load("/social/state");
+            if(next==Page.Clans || next==Page.Friends)SocialService.Instance?.Load("/social/state");
         }
         private void OnGUI()
         {
-            if (!visible || (!ReviewPromptVisible && OnlinePartyOverlay.IsOpen) || RankedPanel.Visible || OnlineMatchLoadingScreen.IsVisible) return;
+            if (!visible || OnlineMatchLoadingScreen.IsVisible) return;
             Matrix4x4 oldMatrix = GUI.matrix; Color oldColor = GUI.color; bool oldEnabled = GUI.enabled;
             try
             {
                 GUI.color = Color.white; GUI.enabled = !launching;
                 backdrop ??= new MenuCosmicBackdrop();
                 backdrop.Draw(new Rect(0,0,Screen.width,Screen.height),cosmicBackground?.Image);
+                if ((!ReviewPromptVisible && OnlinePartyOverlay.IsOpen) || RankedPanel.Visible) return;
                 Rect safe = Screen.safeArea;
                 if (safe.width <= 0 || safe.height <= 0) return;
                 float scale = Mathf.Min(safe.height/MenuHeight,safe.width/1500f);
@@ -233,6 +234,7 @@ namespace Alterverse.UI
                     case Page.BattlePass: Heading("Battle Pass","Play matches. Unlock seasonal rewards. Claim your progress."); DrawBattlePassShop(); break;
                     case Page.Inventory: DrawInventory(); break;
                     case Page.Profile: DrawProfile(); break;
+                    case Page.Friends: DrawFriends(); break;
                     case Page.Quests: DrawQuests(); break;
                     case Page.Leaderboard: DrawLeaderboard(); break;
                     case Page.Settings: DrawSettings(); break;
@@ -254,9 +256,9 @@ namespace Alterverse.UI
             theme.FitLabel(new Rect(rail,26,208,35),"DIMENSIONS",theme.Heading);
             theme.Label(new Rect(rail,61,208,27),"F  R  O  N  T",theme.Small,true);
             FrontEndTheme.Fill(new Rect(rail+218,26,1,660),new Color(.53f,.64f,.75f,.22f));
-            if(theme.Navigation(new Rect(rail,116,202,46),GameLanguage.Text("HOME"),0,selected:page==Page.Home))SetPage(Page.Home);
+            if(theme.Navigation(new Rect(rail,110,202,42),GameLanguage.Text("HOME"),0,selected:page==Page.Home))SetPage(Page.Home);
             for(int i=0;i<NavigationLabels.Length;i++)
-                if(theme.Navigation(new Rect(rail,178+i*44,202,40),GameLanguage.Text(NavigationLabels[i]),NavigationIcon(NavigationPages[i]),
+                if(theme.Navigation(new Rect(rail,162+i*48,202,42),GameLanguage.Text(NavigationLabels[i]),NavigationIcon(NavigationPages[i]),
                     primary:i==0,selected:page==NavigationPages[i]))SetPage(NavigationPages[i]);
             theme.FitLabel(new Rect(Left,25,ContentWidth-300,30),"COMMAND DECK  /  "+page.ToString().ToUpperInvariant(),theme.Heading);
             theme.Label(new Rect(Left,57,ContentWidth-300,22),$"LEVEL {PlayerExperience.Level}",theme.Small,true);
@@ -273,7 +275,7 @@ namespace Alterverse.UI
         {
             Page.Play=>1, Page.Heroes=>2, Page.Shop=>3, Page.Inventory=>4,
             Page.Profile=>5, Page.Quests=>6, Page.Leaderboard=>7, Page.Settings=>8,
-            Page.BattlePass=>9, Page.Clans=>10, _=>0
+            Page.BattlePass=>9, Page.Clans=>10, Page.Friends=>5, _=>0
         };
 
         private void Heading(string title, string description)
@@ -480,17 +482,11 @@ namespace Alterverse.UI
             Heading("PRIVATE CO-OP", "Invite friends with a room code. Play together with up to four players.");
             CoopLobbyService coop = CoopLobbyService.Instance;
             Texture2D pixel = FrontEndTheme.Pixel;
-            Rect shell = new Rect(Left, 210, ContentWidth, 464);
-            theme.Panel(shell);
-            DimensionUiMotif.DrawSplitPanel(shell, pixel,
-                new Color(.013f, .022f, .038f, .96f),
-                new Color(.017f, .028f, .046f, .96f),
-                FrontEndTheme.Zero, FrontEndTheme.Positive, .24f);
-            DimensionUiMotif.DrawCornerCuts(shell, pixel, FrontEndTheme.Zero, FrontEndTheme.Positive);
 
             if (coop == null)
             {
-                theme.Label(new Rect(Left + 28, 264, ContentWidth - 56, 45),
+                theme.Panel(new Rect(Left, 210, ContentWidth, 120));
+                theme.Label(new Rect(Left + 28, 250, ContentWidth - 56, 45),
                     "Co-op is initializing. Please try again.", theme.Body, true);
                 return;
             }
@@ -498,143 +494,123 @@ namespace Alterverse.UI
             bool busy = coop.Busy;
             if (!coop.InLobby)
             {
-                float innerW = ContentWidth - 52f;
-                float colGap = 16f;
-                float colW = (innerW - colGap) * .5f;
-                float cardY = 232f;
-                float cardH = 372f;
+                float colGap = 20f;
+                float colW = (ContentWidth - colGap) * .5f;
+                float cardY = 214f;
+                float cardH = 388f;
 
                 // Left Card: Host Private Co-op Room
-                Rect hostCard = new Rect(Left + 26f, cardY, colW, cardH);
+                Rect hostCard = new Rect(Left, cardY, colW, cardH);
                 HeroId activeHero = PlayerHeroSelection.Selected;
                 Color heroAccent = Alterverse.Visuals.StylizedArtDirection.HeroAccent(activeHero);
-                FrontEndTheme.Fill(hostCard, new Color(.009f, .016f, .028f, .94f));
-                DimensionUiMotif.DrawCornerCuts(hostCard, pixel, heroAccent, FrontEndTheme.Zero);
-                FrontEndTheme.Fill(new Rect(hostCard.x, hostCard.y, hostCard.width, 3f), heroAccent);
+                theme.Panel(hostCard);
 
-                theme.StatusBadge(new Rect(hostCard.x + 20f, hostCard.y + 18f, 176f, 24f), "HOST CO-OP SQUAD", FrontEndTheme.Zero);
-                theme.Label(new Rect(hostCard.x + 20f, hostCard.y + 50f, hostCard.width - 40f, 32f),
+                theme.StatusBadge(new Rect(hostCard.x + 24f, hostCard.y + 20f, 184f, 26f), "HOST CO-OP SQUAD", FrontEndTheme.Zero);
+                theme.Label(new Rect(hostCard.x + 24f, hostCard.y + 52f, hostCard.width - 48f, 34f),
                     "CREATE A PRIVATE ROOM", theme.Heading);
-                theme.Label(new Rect(hostCard.x + 20f, hostCard.y + 84f, hostCard.width - 40f, 40f),
+                theme.Label(new Rect(hostCard.x + 24f, hostCard.y + 88f, hostCard.width - 48f, 40f),
                     "Assemble up to 4 friends against customizable AI bots on any unlocked arena.",
                     theme.Small, true);
 
-                Rect previewBox = new Rect(hostCard.x + 20f, hostCard.y + 134f, hostCard.width - 40f, 136f);
-                FrontEndTheme.Fill(previewBox, new Color(.006f, .011f, .020f, .92f));
-                FrontEndTheme.Fill(new Rect(previewBox.x, previewBox.y, 4f, previewBox.height), heroAccent);
-                StylizedHeroCard.Draw(new Rect(previewBox.x + 14f, previewBox.y + 14f, 92f, 108f), activeHero, pixel, Time.unscaledTime);
-                theme.Label(new Rect(previewBox.x + 120f, previewBox.y + 18f, previewBox.width - 134f, 18f), "ACTIVE CHAMPION", theme.Small, true);
-                theme.FitLabel(new Rect(previewBox.x + 120f, previewBox.y + 40f, previewBox.width - 134f, 28f),
-                    HeroIdentity.NameFor(activeHero).ToUpperInvariant(), theme.Body);
-                theme.StatusBadge(new Rect(previewBox.x + 120f, previewBox.y + 74f, Mathf.Min(160f, previewBox.width - 134f), 24f),
+                Rect previewBox = new Rect(hostCard.x + 24f, hostCard.y + 136f, hostCard.width - 48f, 148f);
+                theme.Panel(previewBox);
+                theme.Frame(previewBox, true);
+                StylizedHeroCard.Draw(new Rect(previewBox.x + 14f, previewBox.y + 14f, 96f, 120f), activeHero, pixel, Time.unscaledTime);
+                theme.Label(new Rect(previewBox.x + 126f, previewBox.y + 20f, previewBox.width - 140f, 20f), "ACTIVE CHAMPION", theme.Small, true);
+                theme.FitLabel(new Rect(previewBox.x + 126f, previewBox.y + 44f, previewBox.width - 140f, 30f),
+                    HeroIdentity.NameFor(activeHero).ToUpperInvariant(), theme.Heading);
+                theme.StatusBadge(new Rect(previewBox.x + 126f, previewBox.y + 82f, Mathf.Min(172f, previewBox.width - 140f), 26f),
                     HeroIdentity.RoleFor(activeHero).ToString().ToUpperInvariant(), heroAccent);
 
-                if (theme.Action(new Rect(hostCard.x + 20f, hostCard.y + 292f, hostCard.width - 40f, 56f),
+                if (theme.Action(new Rect(hostCard.x + 24f, hostCard.y + 306f, hostCard.width - 48f, 58f),
                     busy ? "PLEASE WAIT" : "CREATE ROOM", true, enabled: !busy))
                     _ = coop.CreateLobbyAsync();
 
                 // Right Card: Join Friend's Room Code
-                Rect joinCard = new Rect(Left + 26f + colW + colGap, cardY, colW, cardH);
-                FrontEndTheme.Fill(joinCard, new Color(.009f, .016f, .028f, .94f));
-                DimensionUiMotif.DrawCornerCuts(joinCard, pixel, FrontEndTheme.Accent, FrontEndTheme.Positive);
-                FrontEndTheme.Fill(new Rect(joinCard.x, joinCard.y, joinCard.width, 3f), FrontEndTheme.Positive);
+                Rect joinCard = new Rect(Left + colW + colGap, cardY, colW, cardH);
+                theme.Panel(joinCard);
 
-                theme.StatusBadge(new Rect(joinCard.x + 20f, joinCard.y + 18f, 176f, 24f), "DIRECT ROOM LINK", FrontEndTheme.Positive);
-                theme.Label(new Rect(joinCard.x + 20f, joinCard.y + 50f, joinCard.width - 40f, 32f),
+                theme.StatusBadge(new Rect(joinCard.x + 24f, joinCard.y + 20f, 184f, 26f), "DIRECT ROOM LINK", FrontEndTheme.Positive);
+                theme.Label(new Rect(joinCard.x + 24f, joinCard.y + 52f, joinCard.width - 48f, 34f),
                     "JOIN FRIEND'S ROOM", theme.Heading);
-                theme.Label(new Rect(joinCard.x + 20f, joinCard.y + 84f, joinCard.width - 40f, 40f),
+                theme.Label(new Rect(joinCard.x + 24f, joinCard.y + 88f, joinCard.width - 48f, 40f),
                     "Enter the invite code shared by your room host to join their squad immediately.",
                     theme.Small, true);
 
-                theme.Label(new Rect(joinCard.x + 20f, joinCard.y + 148f, joinCard.width - 40f, 22f),
+                theme.Label(new Rect(joinCard.x + 24f, joinCard.y + 150f, joinCard.width - 48f, 22f),
                     "ENTER FRIEND'S ROOM CODE", theme.Small, true);
-                coopInviteCode = GUI.TextField(new Rect(joinCard.x + 20f, joinCard.y + 178f, joinCard.width - 134f, 48f),
+                coopInviteCode = GUI.TextField(new Rect(joinCard.x + 24f, joinCard.y + 182f, joinCard.width - 146f, 48f),
                     coopInviteCode ?? "", 16, theme.Field);
-                if (theme.Action(new Rect(joinCard.xMax - 106f, joinCard.y + 178f, 86f, 48f), "PASTE",
+                if (theme.Action(new Rect(joinCard.xMax - 114f, joinCard.y + 182f, 90f, 48f), "PASTE",
                     enabled: !busy && !string.IsNullOrEmpty(GUIUtility.systemCopyBuffer)))
                 {
                     coopInviteCode = GUIUtility.systemCopyBuffer ?? "";
                     GUI.FocusControl(null);
                 }
 
-                if (theme.Action(new Rect(joinCard.x + 20f, joinCard.y + 292f, joinCard.width - 40f, 56f), "JOIN ROOM", true,
+                if (theme.Action(new Rect(joinCard.x + 24f, joinCard.y + 306f, joinCard.width - 48f, 58f), "JOIN ROOM", true,
                     enabled: !busy && CoopLobbyService.NormalizeJoinCode(coopInviteCode).Length >= 4))
                     _ = coop.JoinLobbyAsync(CoopLobbyService.NormalizeJoinCode(coopInviteCode));
 
-                Rect statusStrip = new Rect(Left + 26f, 616f, innerW, 42f);
-                FrontEndTheme.Fill(statusStrip, new Color(.007f, .012f, .022f, .92f));
-                DimensionUiMotif.DrawHeaderLine(new Rect(statusStrip.x, statusStrip.y, statusStrip.width, 2f),
-                    pixel, FrontEndTheme.Zero, FrontEndTheme.Positive);
+                Rect statusStrip = new Rect(Left, 616f, ContentWidth, 50f);
+                theme.Panel(statusStrip);
                 string initStatus = !string.IsNullOrEmpty(coop.LastError) ? coop.LastError : coop.Status;
-                theme.FitLabel(new Rect(statusStrip.x + 16f, statusStrip.y + 10f, statusStrip.width - 32f, 24f),
+                theme.FitLabel(new Rect(statusStrip.x + 22f, statusStrip.y + 12f, statusStrip.width - 44f, 26f),
                     string.IsNullOrEmpty(initStatus) ? "CO-OP RELAY READY  •  HOST A ROOM OR ENTER AN INVITE CODE" : initStatus,
                     theme.Small, true);
                 return;
             }
 
             // IN-LOBBY HEADER BAR
-            Rect headerBar = new Rect(Left + 24f, 224f, ContentWidth - 48f, 62f);
-            FrontEndTheme.Fill(headerBar, new Color(.008f, .014f, .025f, .92f));
-            DimensionUiMotif.DrawHeaderLine(new Rect(headerBar.x, headerBar.yMax - 2f, headerBar.width, 2f),
-                pixel, FrontEndTheme.Zero, FrontEndTheme.Positive);
-            theme.Label(new Rect(Left + 40f, 232f, 220f, 18f), "FRIEND INVITE CODE", theme.Small, true);
-            theme.FitLabel(new Rect(Left + 40f, 251f, 260f, 28f),
+            Rect headerBar = new Rect(Left, 212f, ContentWidth, 68f);
+            theme.Panel(headerBar);
+            theme.Label(new Rect(Left + 24f, 220f, 220f, 18f), "FRIEND INVITE CODE", theme.Small, true);
+            theme.FitLabel(new Rect(Left + 24f, 240f, 260f, 30f),
                 string.IsNullOrEmpty(coop.JoinCode) ? "GENERATING..." : coop.JoinCode, theme.Heading);
-            theme.StatusBadge(new Rect(Right - 412f, 238f, 196f, 34f),
+            theme.StatusBadge(new Rect(Right - 396f, 229f, 196f, 34f),
                 coop.IsStaging ? "STAGING MATCH" : $"SQUAD {coop.Members.Count}/{CoopLobbyService.MaxHumanPlayers}",
                 coop.IsStaging ? FrontEndTheme.Accent : FrontEndTheme.Positive);
-            if (theme.Action(new Rect(Right - 204f, 234f, 166f, 42f), "COPY CODE",
+            if (theme.Action(new Rect(Right - 188f, 225f, 166f, 42f), "COPY CODE",
                 enabled: !string.IsNullOrEmpty(coop.JoinCode)))
                 GUIUtility.systemCopyBuffer = coop.JoinCode;
 
             // 4-SLOT SQUAD ROSTER
             const int maxSlots = CoopLobbyService.MaxHumanPlayers;
-            float gap = 10f;
-            float slotWidth = (ContentWidth - 48f - (maxSlots - 1) * gap) / maxSlots;
+            float gap = 14f;
+            float slotWidth = (ContentWidth - (maxSlots - 1) * gap) / maxSlots;
             IReadOnlyList<CoopLobbyService.MemberView> members = coop.Members;
             for (int i = 0; i < maxSlots; i++)
             {
-                float x = Left + 24f + i * (slotWidth + gap);
-                Rect slotRect = new Rect(x, 296f, slotWidth, 146f);
+                float x = Left + i * (slotWidth + gap);
+                Rect slotRect = new Rect(x, 290f, slotWidth, 152f);
                 theme.Panel(slotRect);
                 if (i >= members.Count)
                 {
-                    DimensionUiMotif.DrawCornerCuts(slotRect, pixel, FrontEndTheme.Muted, FrontEndTheme.Zero);
-                    FrontEndTheme.Fill(new Rect(x, slotRect.y, slotWidth, 3f),
-                        new Color(FrontEndTheme.Zero.r, FrontEndTheme.Zero.g, FrontEndTheme.Zero.b, .32f));
-                    theme.Label(new Rect(x + 12f, 306f, slotWidth - 24f, 18f), $"SLOT 0{i + 1}", theme.Small, true);
-                    theme.Center(new Rect(x + 8f, 346f, slotWidth - 16f, 32f), "OPEN SLOT");
-                    theme.Label(new Rect(x + 12f, 396f, slotWidth - 24f, 18f), "AI BOT OR FRIEND", theme.Small, true);
+                    theme.Label(new Rect(x + 14f, 302f, slotWidth - 28f, 18f), $"SLOT 0{i + 1}", theme.Small, true);
+                    theme.Center(new Rect(x + 10f, 346f, slotWidth - 20f, 32f), "OPEN SLOT");
+                    theme.Center(new Rect(x + 10f, 392f, slotWidth - 20f, 18f), "AI BOT OR FRIEND");
                     continue;
                 }
                 CoopLobbyService.MemberView member = members[i];
-                Color heroColor = Alterverse.Visuals.StylizedArtDirection.HeroAccent(member.Hero);
-                DimensionUiMotif.DrawSplitPanel(slotRect, pixel,
-                    new Color(.014f, .024f, .042f, .95f),
-                    new Color(.010f, .018f, .032f, .95f),
-                    heroColor, member.Ready ? FrontEndTheme.Positive : FrontEndTheme.Zero, .30f);
-                DimensionUiMotif.DrawCornerCuts(slotRect, pixel, heroColor, member.Ready ? FrontEndTheme.Positive : FrontEndTheme.Zero);
-                FrontEndTheme.Fill(new Rect(x, slotRect.y, slotWidth, 4f), heroColor);
                 if (member.IsLocal) theme.Frame(slotRect, true);
 
-                StylizedHeroCard.Draw(new Rect(x + 10f, 312f, 48f, 58f), member.Hero, pixel, Time.unscaledTime + i * .35f);
-                float infoX = x + 66f;
-                float infoW = slotWidth - 76f;
-                theme.FitLabel(new Rect(infoX, 310f, infoW, 20f),
+                StylizedHeroCard.Draw(new Rect(x + 12f, 304f, 68f, 84f), member.Hero, pixel, Time.unscaledTime + i * .35f);
+                float infoX = x + 90f;
+                float infoW = slotWidth - 102f;
+                theme.FitLabel(new Rect(infoX, 306f, infoW, 20f),
                     member.DisplayName + (member.IsLocal ? " (YOU)" : ""), theme.Small, true);
-                theme.FitLabel(new Rect(infoX, 330f, infoW, 24f),
-                    HeroIdentity.NameFor(member.Hero), theme.Body);
-                theme.FitLabel(new Rect(infoX, 352f, infoW, 18f),
+                theme.FitLabel(new Rect(infoX, 328f, infoW, 24f),
+                    HeroIdentity.NameFor(member.Hero), theme.Heading);
+                theme.FitLabel(new Rect(infoX, 354f, infoW, 18f),
                     HeroIdentity.RoleFor(member.Hero).ToString().ToUpperInvariant(), theme.Small, true);
-                theme.StatusBadge(new Rect(x + 10f, 404f, slotWidth - 20f, 26f),
+                theme.StatusBadge(new Rect(x + 12f, 402f, slotWidth - 24f, 28f),
                     member.Ready ? "READY" : "NOT READY",
                     member.Ready ? FrontEndTheme.Positive : FrontEndTheme.Warning);
             }
 
             // LOCAL HERO & HOST SETTINGS BAR
-            Rect controlsBar = new Rect(Left + 24f, 452f, ContentWidth - 48f, 126f);
-            FrontEndTheme.Fill(controlsBar, new Color(.008f, .014f, .025f, .92f));
-            DimensionUiMotif.DrawCornerCuts(controlsBar, pixel, FrontEndTheme.Zero, FrontEndTheme.Accent);
+            Rect controlsBar = new Rect(Left, 452f, ContentWidth, 126f);
+            theme.Panel(controlsBar);
 
             bool editable = !busy && coop.IsLobby;
             theme.Label(new Rect(Left + 38f, 460f, 180f, 18f), "YOUR HERO LOADOUT", theme.Small, true);
@@ -1467,20 +1443,42 @@ namespace Alterverse.UI
 
         private void DrawSettings()
         {
-            Heading(GameLanguage.Text("Settings"),GameLanguage.Text("Audio and language."));
-            float w=ContentWidth*.64f;
-            theme.Panel(new Rect(Left,222,w,438));
+            Heading(GameLanguage.Text("Settings"),GameLanguage.Text("Audio, language and hardware graphics adaptation."));
+            float w=ContentWidth*.58f;
+            theme.Panel(new Rect(Left,222,w,448));
             float previousMaster=master, previousMusic=music, previousSfx=sfx;
-            DrawVolume(new Rect(Left+28,250,w-56,100),GameLanguage.Text("Master volume"),ref master);
-            DrawVolume(new Rect(Left+28,380,w-56,100),GameLanguage.Text("Music"),ref music);
-            DrawVolume(new Rect(Left+28,510,w-56,100),GameLanguage.Text("Sound effects"),ref sfx);
+            DrawVolume(new Rect(Left+28,248,w-56,100),GameLanguage.Text("Master volume"),ref master);
+            DrawVolume(new Rect(Left+28,378,w-56,100),GameLanguage.Text("Music"),ref music);
+            DrawVolume(new Rect(Left+28,508,w-56,100),GameLanguage.Text("Sound effects"),ref sfx);
             if(previousMaster!=master||previousMusic!=music||previousSfx!=sfx)
                 PlayerProfile.SetAudioVolumes(master,music,sfx,false);
-            float x=Left+w+32,rw=ContentWidth-w-32;
-            theme.Label(new Rect(x,250,rw,38),GameLanguage.Text("Language"),theme.Heading);
-            languagePicker.DrawControl(theme,new Rect(x,302,rw,54));
-            theme.Label(new Rect(x,374,rw,56),GameLanguage.Text("Changes apply immediately."),theme.Small,true);
-            theme.Label(new Rect(x,492,rw,68),GameLanguage.Text("Progress and settings are saved on this device."),theme.Small,true);
+            float x=Left+w+28,rw=ContentWidth-w-28;
+            theme.Panel(new Rect(x,222,rw,448));
+            theme.Label(new Rect(x+24,242,rw-48,34),GameLanguage.Text("Language"),theme.Heading);
+            languagePicker.DrawControl(theme,new Rect(x+24,284,rw-48,50));
+
+            theme.Label(new Rect(x+24,354,rw-48,32),GameLanguage.Text("Graphics & Hardware"),theme.Heading);
+            theme.FitLabel(new Rect(x+24,386,rw-48,22),Alterverse.Performance.MobilePerformanceProfile.HardwareSummary,theme.Small,true);
+
+            bool isAuto=Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled;
+            var currentQ=Alterverse.Performance.MobilePerformanceProfile.Current;
+            float btnW=(rw-48f-12f)*.5f;
+            if(theme.Action(new Rect(x+24,418,btnW,44),GameLanguage.Text("AUTO (HARDWARE)"),selected:isAuto,primary:isAuto))
+                Alterverse.Performance.MobilePerformanceProfile.EnableAutoHardwareProfile();
+            if(theme.Action(new Rect(x+24+btnW+12f,418,btnW,44),GameLanguage.Text("LOW / SAVER"),selected:!isAuto&&currentQ==Alterverse.Performance.MobileQuality.Battery))
+                Alterverse.Performance.MobilePerformanceProfile.Current=Alterverse.Performance.MobileQuality.Battery;
+            if(theme.Action(new Rect(x+24,472,btnW,44),GameLanguage.Text("BALANCED"),selected:!isAuto&&currentQ==Alterverse.Performance.MobileQuality.Balanced))
+                Alterverse.Performance.MobilePerformanceProfile.Current=Alterverse.Performance.MobileQuality.Balanced;
+            if(theme.Action(new Rect(x+24+btnW+12f,472,btnW,44),GameLanguage.Text("HIGH / 60 FPS"),selected:!isAuto&&currentQ==Alterverse.Performance.MobileQuality.Performance))
+                Alterverse.Performance.MobilePerformanceProfile.Current=Alterverse.Performance.MobileQuality.Performance;
+
+            string activeProfileDesc = currentQ == Alterverse.Performance.MobileQuality.Battery
+                ? "Optimized for older phones: 30 FPS, 65% render scale, reduced terrain & texture memory."
+                : currentQ == Alterverse.Performance.MobileQuality.Balanced
+                    ? "Balanced mobile profile: 60 FPS, 82% render scale, medium shadows & textures."
+                    : "High performance profile: 60 FPS, 100% render scale, full lighting & details.";
+            theme.Label(new Rect(x+24,528,rw-48,58),GameLanguage.Text(activeProfileDesc),theme.Small,true);
+            theme.Label(new Rect(x+24,596,rw-48,48),GameLanguage.Text("Progress and settings are saved on this device."),theme.Small,true);
         }
         private void DrawVolume(Rect r,string label,ref float value)
         {

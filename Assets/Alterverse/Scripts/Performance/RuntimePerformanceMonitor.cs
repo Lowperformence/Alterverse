@@ -58,7 +58,10 @@ namespace Alterverse.Performance
             if (elapsed < 1f) return;
             SmoothedFps = frames / Mathf.Max(.001f, elapsed);
             budget.Observe(SmoothedFps, elapsed, target);
+            bool previousUnderBudget = UnderBudget;
             UnderBudget = budget.UnderBudget;
+            if (previousUnderBudget != UnderBudget)
+                MobilePerformanceProfile.Apply(MobilePerformanceProfile.Current);
             elapsed = 0f; frames = 0;
         }
     }
