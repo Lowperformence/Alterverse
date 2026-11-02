@@ -479,7 +479,15 @@ namespace Alterverse.UI
         {
             Heading("PRIVATE CO-OP", "Invite friends with a room code. Play together with up to four players.");
             CoopLobbyService coop = CoopLobbyService.Instance;
-            theme.Panel(new Rect(Left, 214, ContentWidth, 456));
+            Texture2D pixel = FrontEndTheme.Pixel;
+            Rect shell = new Rect(Left, 210, ContentWidth, 464);
+            theme.Panel(shell);
+            DimensionUiMotif.DrawSplitPanel(shell, pixel,
+                new Color(.013f, .022f, .038f, .96f),
+                new Color(.017f, .028f, .046f, .96f),
+                FrontEndTheme.Zero, FrontEndTheme.Positive, .24f);
+            DimensionUiMotif.DrawCornerCuts(shell, pixel, FrontEndTheme.Zero, FrontEndTheme.Positive);
+
             if (coop == null)
             {
                 theme.Label(new Rect(Left + 28, 264, ContentWidth - 56, 45),
@@ -490,120 +498,207 @@ namespace Alterverse.UI
             bool busy = coop.Busy;
             if (!coop.InLobby)
             {
-                theme.Label(new Rect(Left + 30, 242, ContentWidth - 60, 36),
+                float innerW = ContentWidth - 52f;
+                float colGap = 16f;
+                float colW = (innerW - colGap) * .5f;
+                float cardY = 232f;
+                float cardH = 372f;
+
+                // Left Card: Host Private Co-op Room
+                Rect hostCard = new Rect(Left + 26f, cardY, colW, cardH);
+                HeroId activeHero = PlayerHeroSelection.Selected;
+                Color heroAccent = Alterverse.Visuals.StylizedArtDirection.HeroAccent(activeHero);
+                FrontEndTheme.Fill(hostCard, new Color(.009f, .016f, .028f, .94f));
+                DimensionUiMotif.DrawCornerCuts(hostCard, pixel, heroAccent, FrontEndTheme.Zero);
+                FrontEndTheme.Fill(new Rect(hostCard.x, hostCard.y, hostCard.width, 3f), heroAccent);
+
+                theme.StatusBadge(new Rect(hostCard.x + 20f, hostCard.y + 18f, 176f, 24f), "HOST CO-OP SQUAD", FrontEndTheme.Zero);
+                theme.Label(new Rect(hostCard.x + 20f, hostCard.y + 50f, hostCard.width - 40f, 32f),
                     "CREATE A PRIVATE ROOM", theme.Heading);
-                theme.Label(new Rect(Left + 30, 292, ContentWidth - 60, 48),
-                    "Create a room and share its code with friends, or join a friend's room below.",
-                    theme.Body, true);
-                if (theme.Action(new Rect(Left + 30, 353, ContentWidth - 60, 55),
+                theme.Label(new Rect(hostCard.x + 20f, hostCard.y + 84f, hostCard.width - 40f, 40f),
+                    "Assemble up to 4 friends against customizable AI bots on any unlocked arena.",
+                    theme.Small, true);
+
+                Rect previewBox = new Rect(hostCard.x + 20f, hostCard.y + 134f, hostCard.width - 40f, 136f);
+                FrontEndTheme.Fill(previewBox, new Color(.006f, .011f, .020f, .92f));
+                FrontEndTheme.Fill(new Rect(previewBox.x, previewBox.y, 4f, previewBox.height), heroAccent);
+                StylizedHeroCard.Draw(new Rect(previewBox.x + 14f, previewBox.y + 14f, 92f, 108f), activeHero, pixel, Time.unscaledTime);
+                theme.Label(new Rect(previewBox.x + 120f, previewBox.y + 18f, previewBox.width - 134f, 18f), "ACTIVE CHAMPION", theme.Small, true);
+                theme.FitLabel(new Rect(previewBox.x + 120f, previewBox.y + 40f, previewBox.width - 134f, 28f),
+                    HeroIdentity.NameFor(activeHero).ToUpperInvariant(), theme.Body);
+                theme.StatusBadge(new Rect(previewBox.x + 120f, previewBox.y + 74f, Mathf.Min(160f, previewBox.width - 134f), 24f),
+                    HeroIdentity.RoleFor(activeHero).ToString().ToUpperInvariant(), heroAccent);
+
+                if (theme.Action(new Rect(hostCard.x + 20f, hostCard.y + 292f, hostCard.width - 40f, 56f),
                     busy ? "PLEASE WAIT" : "CREATE ROOM", true, enabled: !busy))
                     _ = coop.CreateLobbyAsync();
 
-                theme.Label(new Rect(Left + 30, 438, ContentWidth - 60, 26),
+                // Right Card: Join Friend's Room Code
+                Rect joinCard = new Rect(Left + 26f + colW + colGap, cardY, colW, cardH);
+                FrontEndTheme.Fill(joinCard, new Color(.009f, .016f, .028f, .94f));
+                DimensionUiMotif.DrawCornerCuts(joinCard, pixel, FrontEndTheme.Accent, FrontEndTheme.Positive);
+                FrontEndTheme.Fill(new Rect(joinCard.x, joinCard.y, joinCard.width, 3f), FrontEndTheme.Positive);
+
+                theme.StatusBadge(new Rect(joinCard.x + 20f, joinCard.y + 18f, 176f, 24f), "DIRECT ROOM LINK", FrontEndTheme.Positive);
+                theme.Label(new Rect(joinCard.x + 20f, joinCard.y + 50f, joinCard.width - 40f, 32f),
+                    "JOIN FRIEND'S ROOM", theme.Heading);
+                theme.Label(new Rect(joinCard.x + 20f, joinCard.y + 84f, joinCard.width - 40f, 40f),
+                    "Enter the invite code shared by your room host to join their squad immediately.",
+                    theme.Small, true);
+
+                theme.Label(new Rect(joinCard.x + 20f, joinCard.y + 148f, joinCard.width - 40f, 22f),
                     "ENTER FRIEND'S ROOM CODE", theme.Small, true);
-                coopInviteCode = GUI.TextField(new Rect(Left + 30, 474, ContentWidth - 260, 52),
+                coopInviteCode = GUI.TextField(new Rect(joinCard.x + 20f, joinCard.y + 178f, joinCard.width - 134f, 48f),
                     coopInviteCode ?? "", 16, theme.Field);
-                if (theme.Action(new Rect(Right - 216, 474, 186, 52), "JOIN ROOM", true,
+                if (theme.Action(new Rect(joinCard.xMax - 106f, joinCard.y + 178f, 86f, 48f), "PASTE",
+                    enabled: !busy && !string.IsNullOrEmpty(GUIUtility.systemCopyBuffer)))
+                {
+                    coopInviteCode = GUIUtility.systemCopyBuffer ?? "";
+                    GUI.FocusControl(null);
+                }
+
+                if (theme.Action(new Rect(joinCard.x + 20f, joinCard.y + 292f, joinCard.width - 40f, 56f), "JOIN ROOM", true,
                     enabled: !busy && CoopLobbyService.NormalizeJoinCode(coopInviteCode).Length >= 4))
                     _ = coop.JoinLobbyAsync(CoopLobbyService.NormalizeJoinCode(coopInviteCode));
-                theme.FitLabel(new Rect(Left + 30, 595, ContentWidth - 60, 26),
-                    !string.IsNullOrEmpty(coop.LastError) ? coop.LastError : coop.Status, theme.Small, true);
+
+                Rect statusStrip = new Rect(Left + 26f, 616f, innerW, 42f);
+                FrontEndTheme.Fill(statusStrip, new Color(.007f, .012f, .022f, .92f));
+                DimensionUiMotif.DrawHeaderLine(new Rect(statusStrip.x, statusStrip.y, statusStrip.width, 2f),
+                    pixel, FrontEndTheme.Zero, FrontEndTheme.Positive);
+                string initStatus = !string.IsNullOrEmpty(coop.LastError) ? coop.LastError : coop.Status;
+                theme.FitLabel(new Rect(statusStrip.x + 16f, statusStrip.y + 10f, statusStrip.width - 32f, 24f),
+                    string.IsNullOrEmpty(initStatus) ? "CO-OP RELAY READY  •  HOST A ROOM OR ENTER AN INVITE CODE" : initStatus,
+                    theme.Small, true);
                 return;
             }
 
-            theme.Label(new Rect(Left + 28, 233, 270, 30), "FRIEND INVITE CODE", theme.Small, true);
-            theme.FitLabel(new Rect(Left + 28, 259, ContentWidth - 250, 31),
-                coop.JoinCode, theme.Heading);
-            if (theme.Action(new Rect(Right - 206, 240, 176, 48), "COPY CODE",
+            // IN-LOBBY HEADER BAR
+            Rect headerBar = new Rect(Left + 24f, 224f, ContentWidth - 48f, 62f);
+            FrontEndTheme.Fill(headerBar, new Color(.008f, .014f, .025f, .92f));
+            DimensionUiMotif.DrawHeaderLine(new Rect(headerBar.x, headerBar.yMax - 2f, headerBar.width, 2f),
+                pixel, FrontEndTheme.Zero, FrontEndTheme.Positive);
+            theme.Label(new Rect(Left + 40f, 232f, 220f, 18f), "FRIEND INVITE CODE", theme.Small, true);
+            theme.FitLabel(new Rect(Left + 40f, 251f, 260f, 28f),
+                string.IsNullOrEmpty(coop.JoinCode) ? "GENERATING..." : coop.JoinCode, theme.Heading);
+            theme.StatusBadge(new Rect(Right - 412f, 238f, 196f, 34f),
+                coop.IsStaging ? "STAGING MATCH" : $"SQUAD {coop.Members.Count}/{CoopLobbyService.MaxHumanPlayers}",
+                coop.IsStaging ? FrontEndTheme.Accent : FrontEndTheme.Positive);
+            if (theme.Action(new Rect(Right - 204f, 234f, 166f, 42f), "COPY CODE",
                 enabled: !string.IsNullOrEmpty(coop.JoinCode)))
                 GUIUtility.systemCopyBuffer = coop.JoinCode;
 
+            // 4-SLOT SQUAD ROSTER
             const int maxSlots = CoopLobbyService.MaxHumanPlayers;
-            float gap = 9f;
-            float slotWidth = (ContentWidth - 56 - (maxSlots - 1) * gap) / maxSlots;
+            float gap = 10f;
+            float slotWidth = (ContentWidth - 48f - (maxSlots - 1) * gap) / maxSlots;
             IReadOnlyList<CoopLobbyService.MemberView> members = coop.Members;
             for (int i = 0; i < maxSlots; i++)
             {
-                float x = Left + 28 + i * (slotWidth + gap);
-                theme.Panel(new Rect(x, 310, slotWidth, 117));
+                float x = Left + 24f + i * (slotWidth + gap);
+                Rect slotRect = new Rect(x, 296f, slotWidth, 146f);
+                theme.Panel(slotRect);
                 if (i >= members.Count)
                 {
-                    theme.Center(new Rect(x + 8, 342, slotWidth - 16, 35), "OPEN SLOT");
+                    DimensionUiMotif.DrawCornerCuts(slotRect, pixel, FrontEndTheme.Muted, FrontEndTheme.Zero);
+                    FrontEndTheme.Fill(new Rect(x, slotRect.y, slotWidth, 3f),
+                        new Color(FrontEndTheme.Zero.r, FrontEndTheme.Zero.g, FrontEndTheme.Zero.b, .32f));
+                    theme.Label(new Rect(x + 12f, 306f, slotWidth - 24f, 18f), $"SLOT 0{i + 1}", theme.Small, true);
+                    theme.Center(new Rect(x + 8f, 346f, slotWidth - 16f, 32f), "OPEN SLOT");
+                    theme.Label(new Rect(x + 12f, 396f, slotWidth - 24f, 18f), "AI BOT OR FRIEND", theme.Small, true);
                     continue;
                 }
                 CoopLobbyService.MemberView member = members[i];
-                theme.FitLabel(new Rect(x + 10, 320, slotWidth - 20, 23),
-                    member.DisplayName + (member.IsLocal ? " (YOU)" : ""), theme.Small);
-                theme.FitLabel(new Rect(x + 10, 350, slotWidth - 20, 26),
+                Color heroColor = Alterverse.Visuals.StylizedArtDirection.HeroAccent(member.Hero);
+                DimensionUiMotif.DrawSplitPanel(slotRect, pixel,
+                    new Color(.014f, .024f, .042f, .95f),
+                    new Color(.010f, .018f, .032f, .95f),
+                    heroColor, member.Ready ? FrontEndTheme.Positive : FrontEndTheme.Zero, .30f);
+                DimensionUiMotif.DrawCornerCuts(slotRect, pixel, heroColor, member.Ready ? FrontEndTheme.Positive : FrontEndTheme.Zero);
+                FrontEndTheme.Fill(new Rect(x, slotRect.y, slotWidth, 4f), heroColor);
+                if (member.IsLocal) theme.Frame(slotRect, true);
+
+                StylizedHeroCard.Draw(new Rect(x + 10f, 312f, 48f, 58f), member.Hero, pixel, Time.unscaledTime + i * .35f);
+                float infoX = x + 66f;
+                float infoW = slotWidth - 76f;
+                theme.FitLabel(new Rect(infoX, 310f, infoW, 20f),
+                    member.DisplayName + (member.IsLocal ? " (YOU)" : ""), theme.Small, true);
+                theme.FitLabel(new Rect(infoX, 330f, infoW, 24f),
                     HeroIdentity.NameFor(member.Hero), theme.Body);
-                theme.StatusBadge(new Rect(x + 10, 390, slotWidth - 20, 25),
+                theme.FitLabel(new Rect(infoX, 352f, infoW, 18f),
+                    HeroIdentity.RoleFor(member.Hero).ToString().ToUpperInvariant(), theme.Small, true);
+                theme.StatusBadge(new Rect(x + 10f, 404f, slotWidth - 20f, 26f),
                     member.Ready ? "READY" : "NOT READY",
                     member.Ready ? FrontEndTheme.Positive : FrontEndTheme.Warning);
             }
 
+            // LOCAL HERO & HOST SETTINGS BAR
+            Rect controlsBar = new Rect(Left + 24f, 452f, ContentWidth - 48f, 126f);
+            FrontEndTheme.Fill(controlsBar, new Color(.008f, .014f, .025f, .92f));
+            DimensionUiMotif.DrawCornerCuts(controlsBar, pixel, FrontEndTheme.Zero, FrontEndTheme.Accent);
+
             bool editable = !busy && coop.IsLobby;
-            theme.Label(new Rect(Left + 30, 439, 180, 23), "YOUR HERO", theme.Small, true);
-            if (theme.Action(new Rect(Left + 28, 465, 46, 44), "<", enabled: editable))
+            theme.Label(new Rect(Left + 38f, 460f, 180f, 18f), "YOUR HERO LOADOUT", theme.Small, true);
+            if (theme.Action(new Rect(Left + 38f, 480f, 44f, 40f), "<", enabled: editable))
                 _ = coop.CycleLocalHeroAsync(-1);
-            theme.FitLabel(new Rect(Left + 85, 472, 174, 30),
+            theme.FitLabel(new Rect(Left + 90f, 485f, 174f, 30f),
                 HeroIdentity.NameFor(coop.LocalHero), theme.Body);
-            if (theme.Action(new Rect(Left + 258, 465, 46, 44), ">", enabled: editable))
+            if (theme.Action(new Rect(Left + 268f, 480f, 44f, 40f), ">", enabled: editable))
                 _ = coop.CycleLocalHeroAsync(1);
-            if (theme.Action(new Rect(Left + 332, 465, 191, 44),
+            if (theme.Action(new Rect(Left + 328f, 480f, 196f, 40f),
                 coop.LocalReady ? "UNREADY" : "READY", true,
                 enabled: editable && (coop.LocalReady || !coop.HasHeroConflict)))
                 _ = coop.SetLocalReadyAsync(!coop.LocalReady);
 
             if (coop.IsHost)
             {
-                if (theme.Action(new Rect(Left + 28, 532, 40, 40), "<",
+                if (theme.Action(new Rect(Left + 38f, 530f, 40f, 38f), "<",
                     enabled: editable && coop.IsHost))
                     _ = coop.CycleHostArenaAsync(-1);
-                theme.FitLabel(new Rect(Left + 74, 532, 192, 40),
+                theme.FitLabel(new Rect(Left + 84f, 530f, 192f, 38f),
                     ArenaShopCatalog.For(coop.LobbyArena).Name, theme.Small);
-                if (theme.Action(new Rect(Left + 271, 532, 40, 40), ">",
+                if (theme.Action(new Rect(Left + 281f, 530f, 40f, 38f), ">",
                     enabled: editable && coop.IsHost))
                     _ = coop.CycleHostArenaAsync(1);
-                if (theme.Action(new Rect(Left + 330, 532, 135, 40),
+                if (theme.Action(new Rect(Left + 336f, 530f, 138f, 38f),
                     coop.LobbyArenaShuffle ? "SHUFFLE ON" : "SHUFFLE",
-                    enabled: editable))
+                    selected: coop.LobbyArenaShuffle, enabled: editable))
                     _ = coop.SetHostArenaShuffleAsync(!coop.LobbyArenaShuffle);
-                if (theme.Action(new Rect(Left + 480, 532, 36, 40), "<", enabled: editable))
+                if (theme.Action(new Rect(Left + 488f, 530f, 36f, 38f), "<", enabled: editable))
                     _ = coop.CycleHostDifficultyAsync(-1);
-                theme.FitLabel(new Rect(Left + 521, 532, 135, 40),
+                theme.FitLabel(new Rect(Left + 529f, 530f, 135f, 38f),
                     BotDifficultySettings.Label(coop.LobbyDifficulty), theme.Small);
-                if (theme.Action(new Rect(Left + 658, 532, 36, 40), ">", enabled: editable))
+                if (theme.Action(new Rect(Left + 668f, 530f, 36f, 38f), ">", enabled: editable))
                     _ = coop.CycleHostDifficultyAsync(1);
             }
             else
-                theme.Label(new Rect(Left + 28, 541, ContentWidth - 56, 25),
-                    "Waiting for the party host to configure the match.", theme.Small, true);
+                theme.Label(new Rect(Left + 38f, 538f, ContentWidth - 76f, 24f),
+                    "Waiting for the party host to configure arena and bot difficulty.", theme.Small, true);
 
             if (coop.IsStaging && coop.IsHost)
             {
-                if (theme.Action(new Rect(Left + 28, 592, 230, 50), "CANCEL PREP",
+                if (theme.Action(new Rect(Left + 24f, 590f, 224f, 48f), "CANCEL PREP",
                     enabled: !busy))
                     _ = coop.CancelMatchStagingAsync();
-                if (theme.Action(new Rect(Left + 269, 592, 238, 50),
+                if (theme.Action(new Rect(Left + 260f, 590f, 240f, 48f),
                     CoopPlanHandshake.PlanHandshakeReady ? "START MATCH" : "SYNCING PLAYERS",
                     true, enabled: !busy && CoopPlanHandshake.PlanHandshakeReady))
                     _ = coop.LaunchPreparedMatchAsync();
             }
             else if (coop.IsHost && coop.IsLobby)
             {
-                if (theme.Action(new Rect(Left + 28, 592, 265, 50),
+                if (theme.Action(new Rect(Left + 24f, 590f, 265f, 48f),
                     "PREPARE MATCH", true, enabled: !busy && coop.CanStageMatch))
                     _ = coop.BeginMatchStagingAsync();
             }
             else
-                theme.Label(new Rect(Left + 28, 602, 420, 26),
+                theme.Label(new Rect(Left + 28f, 600f, 420f, 26f),
                     coop.IsStaging ? CoopPlanHandshake.HandshakeStatus : "Waiting for host to start.",
                     theme.Small, true);
 
-            if (theme.Action(new Rect(Right - 200, 592, 170, 50),
+            if (theme.Action(new Rect(Right - 196f, 590f, 172f, 48f),
                 busy ? "PLEASE WAIT" : "LEAVE ROOM", enabled: !busy && !coop.IsLaunching))
                 _ = coop.LeaveLobbyAsync();
-            theme.FitLabel(new Rect(Left + 28, 645, ContentWidth - 56, 22),
+            theme.FitLabel(new Rect(Left + 28f, 644f, ContentWidth - 56f, 22f),
                 !string.IsNullOrEmpty(coop.LastError) ? coop.LastError :
                 coop.IsStaging ? CoopPlanHandshake.HandshakeStatus : coop.Status,
                 theme.Small, true);

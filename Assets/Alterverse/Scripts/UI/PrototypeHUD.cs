@@ -279,6 +279,8 @@ namespace Alterverse.UI
         private void DrawHealth()
         {
             Rect r=new Rect(16,16,218,76);theme.HudPanel(r);
+            DimensionUiMotif.DrawCornerCuts(r,FrontEndTheme.Pixel,accent,FrontEndTheme.Accent);
+            FrontEndTheme.Fill(new Rect(r.x,r.y+10,3,r.height-20),accent);
             FrontEndTheme.Fill(new Rect(r.x+12,r.y+3,r.width-24,1),FrontEndTheme.Accent);
             theme.Label(new Rect(r.x+12,r.y+5,194,24),heroName,centered);
             Rect bar=new Rect(r.x+12,r.y+34,194,9);
@@ -365,7 +367,9 @@ namespace Alterverse.UI
                 if(Time.unscaledTime<feedbackUntil)
                 {
                     Rect message=new Rect(layout.Width-410,layout.Action(2).y-54,390,28);
-                    theme.Panel(message);theme.Label(message,feedback,centered);
+                    theme.Panel(message);
+                    DimensionUiMotif.DrawCornerCuts(message,FrontEndTheme.Pixel,accent,FrontEndTheme.Accent);
+                    theme.Label(message,feedback,centered);
                 }
                 return;
             }
@@ -376,6 +380,8 @@ namespace Alterverse.UI
             if(r.y<layout.CancelZone.yMax+12)
             {r.x=layout.Action(3).x-r.width-24;r.y=layout.CancelZone.yMax+12;}
             theme.Panel(r);
+            DimensionUiMotif.DrawCornerCuts(r,FrontEndTheme.Pixel,accent,FrontEndTheme.Accent);
+            FrontEndTheme.Fill(new Rect(r.x,r.y+10,3,r.height-20),accent);
             theme.Label(new Rect(r.x+12,r.y+6,r.width-24,24),names[inspectedSlot],theme.Button);
             theme.Label(new Rect(r.x+14,r.y+34,r.width-28,42),descriptions[inspectedSlot],small);
             string detail=glyphs[inspectedSlot]==CombatGlyph.Dash?"DRAG TO CHOOSE DIRECTION · COLLISION MAY SHORTEN":details[inspectedSlot];
@@ -386,7 +392,8 @@ namespace Alterverse.UI
         {
             if(aiming==null||!aiming.Active)return;
             Rect zone=layout.CancelZone;
-            FrontEndTheme.Fill(zone,aiming.Cancelled?new Color(.9f,.2f,.18f,.8f):new Color(.12f,.15f,.2f,.8f));
+            FrontEndTheme.Fill(zone,aiming.Cancelled?new Color(.9f,.2f,.18f,.85f):new Color(.12f,.15f,.2f,.85f));
+            DimensionUiMotif.DrawCornerCuts(zone,FrontEndTheme.Pixel,aiming.Cancelled?FrontEndTheme.Danger:FrontEndTheme.Accent,FrontEndTheme.Zero);
             theme.Label(zone,"CANCEL",centered);
         }
     }
