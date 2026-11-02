@@ -6,17 +6,11 @@ using UnityEngine;
 
 namespace Alterverse.Profile
 {
-    /// <summary>
-    /// Enforces mandatory game updates on startup even when the player has disabled
-    /// automatic updates in the Google Play Store.
-    /// Uses Google Play In-App Updates API (AppUpdateType.IMMEDIATE) on Android
-    /// plus server-side minimum version enforcement via PaidShardCommerce.
-    /// </summary>
     public sealed class StartupAppUpdateManager : MonoBehaviour
     {
-        private const int ImmediateUpdateType = 1; // AppUpdateType.IMMEDIATE
-        private const int UpdateAvailabilityAvailable = 2; // UpdateAvailability.UPDATE_AVAILABLE
-        private const int UpdateAvailabilityInProgress = 3; // UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
+        private const int ImmediateUpdateType = 1;
+        private const int UpdateAvailabilityAvailable = 2;
+        private const int UpdateAvailabilityInProgress = 3;
         private const int UpdateRequestCode = 9417;
 
         public static StartupAppUpdateManager Instance { get; private set; }
@@ -134,9 +128,7 @@ namespace Alterverse.Profile
                 UpdateRequired = true;
                 AvailableVersionCode = Mathf.Max(AvailableVersionCode, minCode);
                 RequiredVersionLabel = !string.IsNullOrEmpty(minVersion) ? minVersion : ("Build #" + minCode);
-                StatusMessage = IsGerman()
-                    ? "Ein Pflicht-Update ist verfügbar (" + RequiredVersionLabel + "). Bitte aktualisiere jetzt im Google Play Store."
-                    : "A mandatory update is available (" + RequiredVersionLabel + "). Please update now via Google Play.";
+                StatusMessage = "Ein Pflicht-Update ist verfügbar (" + RequiredVersionLabel + "). Bitte aktualisiere jetzt im Google Play Store.";
                 return;
             }
 
@@ -144,9 +136,7 @@ namespace Alterverse.Profile
             {
                 UpdateRequired = true;
                 RequiredVersionLabel = minVersion;
-                StatusMessage = IsGerman()
-                    ? "Version " + minVersion + " ist erforderlich (installiert: " + Application.version + ")."
-                    : "Version " + minVersion + " is required (installed: " + Application.version + ").";
+                StatusMessage = "Version " + minVersion + " ist erforderlich (installiert: " + Application.version + ").";
             }
         }
 
@@ -173,10 +163,7 @@ namespace Alterverse.Profile
                     await Task.Delay(80);
                 }
 
-                if (!task.Call<bool>("isSuccessful"))
-                {
-                    return false;
-                }
+                if (!task.Call<bool>("isSuccessful")) return false;
 
                 using var info = task.Call<AndroidJavaObject>("getResult");
                 if (info == null) return false;
@@ -186,23 +173,11 @@ namespace Alterverse.Profile
                 {
                     UpdateRequired = true;
                     AvailableVersionCode = Mathf.Max(AvailableVersionCode, info.Call<int>("availableVersionCode"));
-                    RequiredVersionLabel = AvailableVersionCode > 0
-                        ? ("Build #" + AvailableVersionCode)
-                        : Application.version;
-
-                    StatusMessage = IsGerman()
-                        ? "Neues Update im Google Play Store gefunden (" + RequiredVersionLabel + "). Update wird gestartet…"
-                        : "New update found on Google Play (" + RequiredVersionLabel + "). Starting mandatory update…";
+                    RequiredVersionLabel = AvailableVersionCode > 0 ? ("Build #" + AvailableVersionCode) : Application.version;
+                    StatusMessage = "Neues Update im Google Play Store gefunden (" + RequiredVersionLabel + "). Update wird gestartet…";
 
                     bool immediateAllowed = false;
-                    try
-                    {
-                        immediateAllowed = info.Call<bool>("isUpdateTypeAllowed", ImmediateUpdateType);
-                    }
-                    catch (Exception)
-                    {
-                        immediateAllowed = false;
-                    }
+                    try { immediateAllowed = info.Call<bool>("isUpdateTypeAllowed", ImmediateUpdateType); } catch { immediateAllowed = false; }
 
                     if (launchNativeFlow && immediateAllowed)
                     {
@@ -214,36 +189,19 @@ namespace Alterverse.Profile
                             manager.Call<int>("startUpdateFlowForResult", info, activity, options, UpdateRequestCode);
                             return true;
                         }
-                        catch (Exception)
+                        catch
                         {
-                            try
-                            {
-                                manager.Call<bool>("startUpdateFlowForResult", info, ImmediateUpdateType, activity, UpdateRequestCode);
-                                return true;
-                            }
-                            catch (Exception)
-                            {
-                                UpdateFlowActive = false;
-                            }
+                            try { manager.Call<bool>("startUpdateFlowForResult", info, ImmediateUpdateType, activity, UpdateRequestCode); return true; }
+                            catch { UpdateFlowActive = false; }
                         }
                     }
 
-                    if (fallbackToStorePage)
-                    {
-                        NativeStoreReview.OpenStore();
-                        return true;
-                    }
+                    if (fallbackToStorePage) { NativeStoreReview.OpenStore(); return true; }
                 }
                 return false;
             }
-            catch (Exception)
-            {
-                return false;
-            }
-            finally
-            {
-                UpdateFlowActive = false;
-            }
+            catch { return false; }
+            finally { UpdateFlowActive = false; }
         }
 #endif
 
@@ -259,10 +217,7 @@ namespace Alterverse.Profile
                 using var pkgInfo = pm.Call<AndroidJavaObject>("getPackageInfo", pkgName, 0);
                 return pkgInfo.Get<int>("versionCode");
             }
-            catch (Exception)
-            {
-                return 0;
-            }
+            catch { return 0; }
 #else
             return 0;
 #endif
@@ -270,9 +225,7 @@ namespace Alterverse.Profile
 
         private static bool IsVersionLower(string currentVersion, string minimumVersion)
         {
-            if (string.IsNullOrWhiteSpace(currentVersion) || string.IsNullOrWhiteSpace(minimumVersion))
-                return false;
-
+            if (string.IsNullOrWhiteSpace(currentVersion) || string.IsNullOrWhiteSpace(minimumVersion)) return false;
             string[] curParts = currentVersion.Trim().Split('.');
             string[] minParts = minimumVersion.Trim().Split('.');
             int count = Mathf.Max(curParts.Length, minParts.Length);
@@ -284,11 +237,6 @@ namespace Alterverse.Profile
                 if (curVal > minVal) return false;
             }
             return false;
-        }
-
-        private static bool IsGerman()
-        {
-            return GameLanguage.Current == LanguageCode.German;
         }
     }
 }
