@@ -1,4 +1,4 @@
-# Public Java APIs called from C#/IL2CPP through JNI cannot be discovered by R8's
+﻿# Public Java APIs called from C#/IL2CPP through JNI cannot be discovered by R8's
 # Java call graph. Keep their names and entry points; allow body optimization.
 # Unity's generated proguard-unity.txt and dependency consumer rules still apply.
 
@@ -29,4 +29,8 @@
 
 # Interface text shaping bridge invoked from Unity C# through JNI.
 -keep,allowoptimization class com.dimensionsfront.ui.LocalizedTextBitmap { public static byte[] render(...); }
+
+
+-keep,allowoptimization class com.google.android.play.core.appupdate.** { public *; protected *; }
+-keep,allowoptimization class com.google.android.play.core.install.** { public *; protected *; }
 

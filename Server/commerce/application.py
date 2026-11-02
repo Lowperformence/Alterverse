@@ -1,9 +1,10 @@
-"""WSGI adapter: deployment injects authentication and an authorized Google API session.
+﻿"""WSGI adapter: deployment injects authentication and an authorized Google API session.
 Never deploy with an authenticator that simply decodes an unsigned JWT or trusts a header ID.
 """
 import json
 import hmac
 import logging
+import os
 from google.api_core.exceptions import FailedPrecondition
 from urllib.parse import quote
 from ledger import Ledger, PACKS, COSMETICS, ProfileConflict
@@ -29,6 +30,11 @@ class CommerceApplication:
         wallet['billingReady'] = self.google is not None and bool(self.package)
         wallet['subscriptionsReady'] = self.subscriptions is not None and self.subscriptions.ready
         wallet['subscriptionActive'] = self.subscriptions is not None and self.subscriptions.storage.active(account)
+        try:
+            wallet['minAndroidVersionCode'] = int(os.environ.get('MIN_ANDROID_VERSION_CODE', '0') or '0')
+        except ValueError:
+            wallet['minAndroidVersionCode'] = 0
+        wallet['minClientVersion'] = os.environ.get('MIN_CLIENT_VERSION', '')
         return wallet
 
     def __call__(self, env, start_response):
@@ -134,3 +140,4 @@ class CommerceApplication:
             # Do not expose purchase tokens/credentials in response or logs. Upstream outage is retryable.
             body = b'{"fulfilled":false}'; start_response('503 Service Unavailable', [('Content-Type', 'application/json')])
         return [body]
+

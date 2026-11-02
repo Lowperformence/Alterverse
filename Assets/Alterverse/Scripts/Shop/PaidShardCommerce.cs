@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -17,7 +17,8 @@ namespace Alterverse.Shop
             public int[] avatars;
             public string[] owned;
             public AccountProfilePrefs.Entry[] profile;
-            public string operationId,accountHash;
+            public string operationId,accountHash,minClientVersion;
+            public int minAndroidVersionCode;
         }
         [Serializable] sealed class Request
         {
@@ -36,6 +37,8 @@ namespace Alterverse.Shop
         public bool PurchasesReady => Ready && snapshot.billingReady;
         public bool SubscriptionsReady => PurchasesReady && snapshot.subscriptionsReady;
         public bool SubscriptionActive => Ready && snapshot.subscriptionActive;
+        public int MinAndroidVersionCode => snapshot?.minAndroidVersionCode ?? 0;
+        public string MinClientVersion => snapshot?.minClientVersion ?? string.Empty;
         // Revision survives spending the entire balance; switching must not strand paid history.
         public bool HasPaidHistory=>snapshot.revision>0||snapshot.balance>0||(snapshot.owned?.Length??0)>0;
         public string AccountHash { get; private set; }
@@ -209,7 +212,7 @@ namespace Alterverse.Shop
         }
         IEnumerator RecoverPurchase()
         {
-            spending = true; Status = "Saving purchase…";
+            spending = true; Status = "Saving purchaseâ€¦";
             PurchaseOperation op = null;
             try { op = JsonUtility.FromJson<PurchaseOperation>(PlayerPrefs.GetString(OperationKey)); }
             catch (Exception) { }
@@ -309,3 +312,4 @@ namespace Alterverse.Shop
         }
     }
 }
+

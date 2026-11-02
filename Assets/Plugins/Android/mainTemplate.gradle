@@ -1,4 +1,4 @@
-apply plugin: 'com.android.library'
+﻿apply plugin: 'com.android.library'
 apply from: '../shared/keepUnitySymbols.gradle'
 apply from: '../shared/common.gradle'
 **APPLY_PLUGINS**
@@ -12,7 +12,8 @@ dependencies {
     implementation 'com.google.android.gms:play-services-ads:25.4.0' // Packages/com.google.ads.mobile/GoogleMobileAds/Editor/GoogleMobileAdsDependencies.xml:7
     implementation 'com.google.android.gms:play-services-games-v2:22.0.0' // Packages/com.google.play.games/Editor/GooglePlayGamesPluginDependencies.xml:9
     implementation 'com.google.android.gms:play-services-nearby:18.5.0' // Packages/com.google.play.games/Editor/GooglePlayGamesPluginDependencies.xml:14
-    implementation 'com.google.android.play:core-common:2.0.4' // Packages/com.google.play.core/Editor/Dependencies.xml:3
+    implementation 'com.google.android.play:core-common:2.0.4'
+    implementation 'com.google.android.play:app-update:2.1.0' // Mandatory startup In-App Updates // Packages/com.google.play.core/Editor/Dependencies.xml:3
     implementation 'com.google.android.play:review:2.0.2' // Packages/com.google.play.review/Editor/Dependencies.xml:3
     implementation 'com.google.android.ump:user-messaging-platform:4.0.0' // Packages/com.google.ads.mobile/GoogleMobileAds/Editor/GoogleUmpDependencies.xml:7
 // Android Resolver Dependencies End
@@ -65,4 +66,5 @@ android {
 **IL_CPP_BUILD_SETUP**
 **SOURCE_BUILD_SETUP**
 **EXTERNAL_SOURCES**
+
 

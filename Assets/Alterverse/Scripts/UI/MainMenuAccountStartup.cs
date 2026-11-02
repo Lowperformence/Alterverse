@@ -1,4 +1,4 @@
-using Alterverse.Characters;
+﻿using Alterverse.Characters;
 using Alterverse.Match;
 using Alterverse.Profile;
 using Alterverse.Shop;
@@ -14,6 +14,11 @@ namespace Alterverse.UI
         // Loading an old local hero/avatar/wallet first would expose a second account.
         bool PrepareAccountPresentation()
         {
+            if (StartupAppUpdateManager.Instance != null && StartupAppUpdateManager.Instance.UpdateRequired)
+            {
+                presentedAccount = null;
+                return false;
+            }
             if (!AccountServerBootstrap.CloudProfileReady)
             {
                 presentedAccount = null;
@@ -42,6 +47,37 @@ namespace Alterverse.UI
             float x = (menuWidth - width) * .5f;
             Rect panel = new Rect(x, 214, width, 276);
             theme.Panel(panel);
+
+            var updater = StartupAppUpdateManager.Instance;
+            if (updater != null && updater.UpdateRequired)
+            {
+                bool de = GameLanguage.Current == LanguageCode.German;
+                theme.FitLabel(new Rect(x + 24, 238, width - 48, 40),
+                    de ? "UPDATE ERFORDERLICH" : "UPDATE REQUIRED", theme.Heading);
+
+                string updateHeadline = de
+                    ? "Eine neue Version von DIMENSIONS FRONT ist verfügbar."
+                    : "A new version of DIMENSIONS FRONT is available.";
+                string updateDetail = !string.IsNullOrEmpty(updater.StatusMessage)
+                    ? updater.StatusMessage
+                    : (de
+                        ? "Bitte aktualisiere das Spiel jetzt über Google Play, um weiterzuspielen (auch wenn automatische Updates deaktiviert sind)."
+                        : "Please update the game now via Google Play to continue playing (even if automatic updates are disabled).");
+
+                theme.Label(new Rect(x + 24, 292, width - 48, 44), updateHeadline, theme.Body, true);
+                theme.Label(new Rect(x + 24, 344, width - 48, 72), updateDetail, theme.Small, true);
+
+                string btnText = updater.Checking || updater.UpdateFlowActive
+                    ? (de ? "PRÜFE UPDATE  •  BITTE WARTEN…" : "CHECKING UPDATE  •  PLEASE WAIT…")
+                    : (de ? "JETZT AKTUALISIEREN" : "UPDATE NOW");
+                if (theme.Action(new Rect(x + 24, 428, width - 48, 44), btnText, true,
+                    enabled: !updater.Checking && !updater.UpdateFlowActive))
+                {
+                    updater.TriggerUpdateNow();
+                }
+                return;
+            }
+
             theme.FitLabel(new Rect(x + 24, 238, width - 48, 40), "GOOGLE PLAY", theme.Heading);
             var service = AccountServerBootstrap.Instance;
             var commerce = PaidShardCommerce.Instance;
