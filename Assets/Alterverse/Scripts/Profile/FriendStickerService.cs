@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Alterverse.Audio;
 using Alterverse.Characters;
@@ -591,68 +591,7 @@ namespace Alterverse.Profile
             if (!state.seeded)
             {
                 state.seeded = true;
-                state.friends.Add(new FriendEntry
-                {
-                    playerId = "plr_astra01",
-                    name = "AstraVanguard",
-                    hero = (int)HeroId.Mira,
-                    level = 18,
-                    clanTag = "NOVA",
-                    clanName = "NOVA GUARDIANS",
-                    online = true,
-                    stickersSent = 1
-                });
-                state.friends.Add(new FriendEntry
-                {
-                    playerId = "plr_kaelon02",
-                    name = "ChronosKnight",
-                    hero = (int)HeroId.Kaelon,
-                    level = 24,
-                    clanTag = "ZERO",
-                    clanName = "ZERO FRONTIER",
-                    online = true,
-                    stickersSent = 0
-                });
-                state.friends.Add(new FriendEntry
-                {
-                    playerId = "plr_nyra03",
-                    name = "SolarPulse99",
-                    hero = (int)HeroId.Nyra,
-                    level = 14,
-                    clanTag = "LUMN",
-                    clanName = "LUMEN CORPS",
-                    online = false,
-                    stickersSent = 0
-                });
-                state.incomingRequests.Add(new FriendEntry
-                {
-                    playerId = "plr_req01",
-                    name = "VoidHunterX",
-                    hero = (int)HeroId.VoidKnight,
-                    level = 16,
-                    clanTag = "VOID",
-                    clanName = "VOIDWALKERS",
-                    online = true
-                });
-                state.receivedStickers.Add(new ReceivedStickerGift
-                {
-                    giftId = "gift_initial_100",
-                    senderName = "AstraVanguard",
-                    senderHero = (int)HeroId.Mira,
-                    stickerId = 1, // Cosmic Heart (100 Shards -> 20 Shards)
-                    receivedAtUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-                });
-                state.clanInvites.Add(new ClanInviteEntry
-                {
-                    inviteId = "cinv_initial_01",
-                    clanId = "clan_nova",
-                    clanTag = "NOVA",
-                    clanName = "NOVA GUARDIANS",
-                    inviterName = "AstraVanguard",
-                    inviterHero = (int)HeroId.Mira,
-                    outgoing = false
-                });
-                Save();
+                state.friends.RemoveAll(f => f.playerId == "plr_astra01" || f.playerId == "plr_kaelon02" || f.playerId == "plr_nyra03"); state.incomingRequests.RemoveAll(f => f.playerId == "plr_req01"); state.clanInvites.RemoveAll(c => c.inviteId == "cinv_initial_01"); state.receivedStickers.RemoveAll(g => g.giftId == "gift_initial_100");
             }
         }
 
@@ -664,3 +603,4 @@ namespace Alterverse.Profile
         }
     }
 }
+

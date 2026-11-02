@@ -1,4 +1,4 @@
-using System.Collections.Generic;using Alterverse.AI;using Alterverse.Audio;using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Multiplayer;using Alterverse.Profile;using Alterverse.Shop;using Alterverse.UI;using UnityEngine;
+﻿using System.Collections.Generic;using Alterverse.AI;using Alterverse.Audio;using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Multiplayer;using Alterverse.Profile;using Alterverse.Shop;using Alterverse.UI;using UnityEngine;
 namespace Alterverse.Match
 {
 public sealed class MatchScoreboard:MonoBehaviour
@@ -155,7 +155,7 @@ private void RefreshRespawnBoard()
     {
         if(e.Member==null)continue;
         e.BoardPerformance=Performance(e);e.BoardOwn=e.Member==local;
-        e.BoardName=(e.BoardOwn&&FounderEntitlement.Owned?"◆ ":"")+e.Name;
+        e.BoardName=(e.BoardOwn&&FounderEntitlement.Owned?"â—† ":"")+e.Name;
         e.BoardKills=e.Kills.ToString();e.BoardDeaths=e.Deaths.ToString();
         e.BoardAssists=e.Assists.ToString();e.BoardScore=e.BoardPerformance.ToString("0");
         (e.Member.Team==0?respawnZero:respawnLumen).Add(e);
@@ -164,8 +164,8 @@ private void RefreshRespawnBoard()
     respawnLumen.Sort((a,b)=>b.BoardPerformance.CompareTo(a.BoardPerformance));
     if(front!=null)
     {
-        zeroFrontLabel=$"ZERO  •  FRONT {front.ZeroControl:0.0}%";
-        lumenFrontLabel=$"LUMEN  •  FRONT {front.LumenControl:0.0}%";
+        zeroFrontLabel=$"ZERO  â€¢  FRONT {front.ZeroControl:0.0}%";
+        lumenFrontLabel=$"LUMEN  â€¢  FRONT {front.LumenControl:0.0}%";
     }
     respawnBoardReady=true;
 }
@@ -236,7 +236,7 @@ private void RefreshResultPresentation()
     }
     var details=new List<MatchResultScreenData.Metric>(18);
     details.Add(new MatchResultScreenData.Metric("PLAYED HERO",snapshot.Hero));
-    details.Add(new MatchResultScreenData.Metric("TEAM KILLS  /  ZERO — LUMEN",TeamKills(0)+" — "+TeamKills(1)));
+    details.Add(new MatchResultScreenData.Metric("TEAM KILLS  /  ZERO â€” LUMEN",TeamKills(0)+" â€” "+TeamKills(1)));
     if(CoopAuthority.Active||stats!=null)
     {
         float dealt=CoopAuthority.Active?playerDamageDealt:stats.DamageDealt;
@@ -254,7 +254,7 @@ private void RefreshResultPresentation()
     if(mvp!=null)
     {
         details.Add(new MatchResultScreenData.Metric("MATCH MVP",mvp.Name));
-        details.Add(new MatchResultScreenData.Metric("MVP  /  KILLS — DEATHS — ASSISTS",mvp.Kills+" — "+mvp.Deaths+" — "+mvp.Assists));
+        details.Add(new MatchResultScreenData.Metric("MVP  /  KILLS â€” DEATHS â€” ASSISTS",mvp.Kills+" â€” "+mvp.Deaths+" â€” "+mvp.Assists));
     }
     if(rewardGranted)
     {
@@ -294,12 +294,12 @@ private void DrawTeam(List<Entry> team,float x,float y,float width,string title)
         Rect r=new Rect(x,rowY,width,38);boardTheme.Panel(r);
         if(e.BoardOwn)boardTheme.Frame(r,true);
         FrontEndTheme.Fill(new Rect(x+1,rowY+9,2,20),tint);
-        float addBtnWidth=e.BoardOwn?0f:42f;
+        bool isBot = e.Health != null && (e.Health.GetComponent<MobaBotRespawn>() != null || e.Health.GetComponent<Alterverse.AI.MobaBotMover>() != null); float addBtnWidth = (e.BoardOwn || isBot) ? 0f : 36f;
         boardTheme.FitLabel(new Rect(x+10,rowY,nameWidth-14-addBtnWidth,38),e.BoardName,boardTheme.Small);
-        if(!e.BoardOwn)
+        if(!e.BoardOwn && !isBot)
         {
             bool connected=FriendStickerService.IsFriendOrRequested(e.Name);
-            if(boardTheme.Action(new Rect(x+nameWidth-44,rowY+5,40,28),connected?"✓":"+FR",!connected,enabled:!connected))
+            if(boardTheme.Action(new Rect(x+nameWidth-38,rowY+5,34,28),connected?"âœ“":"+FR",!connected,enabled:!connected))
             {
                 HeroIdentity id=e.Health!=null?e.Health.GetComponent<HeroIdentity>():null;
                 FriendStickerService.SendFriendRequest(e.Name,id!=null?id.Hero:HeroId.Veyr,Mathf.Max(1,PlayerExperience.Level));
@@ -315,6 +315,7 @@ private void DrawTeam(List<Entry> team,float x,float y,float width,string title)
 private void OnDestroy(){foreach(var pair in entries)if(pair.Key!=null)pair.Key.DiedWithSource-=OnHeroDied;if(front!=null)front.MatchEnded-=OnMatchEnded;entries.Clear();supportCredit.Clear();if(Instance==this)Instance=null;}
 }
 }
+
 
 
 
