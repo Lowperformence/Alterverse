@@ -192,7 +192,7 @@ namespace Alterverse.Multiplayer
 namespace Alterverse.Performance
 {
  public enum MobileQuality {Battery,Balanced,Performance}
- public static class MobilePerformanceProfile {public static MobileQuality Current=MobileQuality.Balanced;}
+ public static class MobilePerformanceProfile {public static MobileQuality Current=MobileQuality.Balanced;public static void Apply(MobileQuality quality){Current=quality;}}
 }
 
 namespace Alterverse.Combat

@@ -8,6 +8,7 @@ namespace UnityEngine {
  public static class Time { public static float time,unscaledTime, deltaTime=1f/60f; public static int frameCount; }
  public static class Debug {public static void LogWarning(string s,object o=null){Console.WriteLine(s);}  public static void Log(string s,object o=null){} public static void LogError(string s,object o=null){throw new Exception(s);} }
  public static class Mathf {
+  public static int Max(int a,int b)=>Math.Max(a,b);
   public static int Clamp(int v,int a,int b)=>Math.Max(a,Math.Min(b,v));
   public const float PI=(float)Math.PI, Deg2Rad=PI/180f;
   public static float Clamp(float v,float a,float b){return Math.Max(a,Math.Min(b,v));}
