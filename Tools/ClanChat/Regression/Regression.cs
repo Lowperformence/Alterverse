@@ -10,7 +10,7 @@ namespace Alterverse.Profile {
 }
 namespace Alterverse.Shop {
  public class PaidShardCommerce {
-  public class Snapshot {public string accountHash;}
+  public class Snapshot {public string accountHash;public Alterverse.Profile.AccountProfilePrefs.Entry[] profile;}
   public static PaidShardCommerce Instance=new();public bool Ready=true;public string AccountHash="owner";public int SessionVersion;
   public int Flushes;public bool SaveSucceeds=true;
   public Task<bool> FlushProfileAsync(){Flushes++;return Task.FromResult(SaveSucceeds);}public bool TryBeginSocialSpend()=>true;

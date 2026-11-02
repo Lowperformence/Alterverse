@@ -25,6 +25,8 @@ namespace Alterverse.Profile
         }
         [Serializable] public sealed class Snapshot
         {
+            public int stickerProtocolVersion;
+            public StickerGift[] receivedStickers;
             public Player me;
             public PaidShardCommerce.Snapshot wallet;
             public Player[] friends,incoming,outgoing,blocked,applications,players;
@@ -43,6 +45,8 @@ namespace Alterverse.Profile
             public Message[] messages;
             public Report[] reports;
         }
+        [Serializable] public sealed class StickerGift
+        { public string giftId,senderName; public int senderHero,stickerId; public long receivedAtUnix; }
         [Serializable] public sealed class Message
         {public string messageId,playerId,name,text;public long createdAt;}
         [Serializable] public sealed class Evidence
@@ -52,6 +56,8 @@ namespace Alterverse.Profile
         [Serializable] public sealed class Request
         {
             public string playerId,clanId,query,name,tag,description,role,operationId;
+            public string giftId;
+            public int stickerId;
             public long expectedProfileRevision;
             public int avatar,descriptionId;
             public int offset;
@@ -69,12 +75,31 @@ namespace Alterverse.Profile
         public Snapshot ClanLevels { get; private set; }
         public Snapshot Chat { get; private set; }
         public Snapshot Reports { get; private set; }
+        public Snapshot Friends { get; private set; }
+        public string FriendsLastAction { get; private set; }
         public string SentOperationId { get; private set; }
         public string Status { get; private set; }="Sign in to load friends and clans.";
         public string ChatStatus { get; private set; }="Connecting to clan chat…";
         public bool Busy { get; private set; }
         public bool Connected=>!string.IsNullOrEmpty(endpoint)&&!string.IsNullOrEmpty(Credential());
         string ClanOperationKey=>"DF_CommerceClanCreate_"+PaidShardCommerce.Instance?.AccountHash;
+        string StickerOperationKey=>"DF_CommerceStickerGift_"+PaidShardCommerce.Instance?.AccountHash;
+        public bool HasPendingStickerGift=>PaidShardCommerce.Instance?.Ready==true&&PlayerPrefs.HasKey(StickerOperationKey);
+        public bool SendStickerGift(Request draft)
+        {
+            if(Busy||!Connected||PaidShardCommerce.Instance?.Ready!=true)return false;
+            Request body=draft;
+            if(HasPendingStickerGift)
+            {
+                try{body=JsonUtility.FromJson<Request>(PlayerPrefs.GetString(StickerOperationKey));}
+                catch(Exception){Status="Gift recovery needs support.";return false;}
+            }
+            if(body==null||string.IsNullOrEmpty(body.playerId))return false;
+            if(string.IsNullOrEmpty(body.operationId))body.operationId=Guid.NewGuid().ToString("N");
+            PlayerPrefs.SetString(StickerOperationKey,JsonUtility.ToJson(body));PlayerPrefs.Save();
+            Load("/social/sticker/send",body);return true;
+        }
+        static bool FriendRoute(string route)=>route.StartsWith("/social/friend/",StringComparison.Ordinal)||route.StartsWith("/social/sticker/",StringComparison.Ordinal);
         public bool HasPendingClanCreation=>PaidShardCommerce.Instance!=null&&!string.IsNullOrEmpty(PaidShardCommerce.Instance.AccountHash)&&PlayerPrefs.HasKey(ClanOperationKey);
         public Request PendingClanCreation
         {
@@ -125,7 +150,7 @@ namespace Alterverse.Profile
             generation++;StopAllCoroutines();Busy=false;chatPolling=false;
             loadedSyncedProfile=false;
             State=Search=Levels=Clans=ClanLevels=null;
-            Chat=Reports=null;SentOperationId=null;chatVisibleUntil=nextChatPoll=0;
+            Chat=Reports=Friends=null;FriendsLastAction=null;SentOperationId=null;chatVisibleUntil=nextChatPoll=0;
             ChatStatus="Connecting to clan chat…";
         }
         string Credential(){try{return token?.Invoke();}catch(Exception){return null;}}
@@ -169,6 +194,7 @@ namespace Alterverse.Profile
             if(Busy)return;
             if(!Connected){Status="Connect your account to use friends, levels and clans.";return;}
             chatPolling=false;
+            if(FriendRoute(route))Status="Synchronizing friends and gifts…";
             Busy=true;StartCoroutine(Send(route,body??new Request(),generation));
         }
         IEnumerator Send(string route,Request body,int version)
@@ -177,8 +203,10 @@ namespace Alterverse.Profile
             // Try to publish current progression first. Social state and standings may
             // still read authoritative saved data when an unrelated profile save fails.
             var commerce=PaidShardCommerce.Instance;
+            bool giftSpend=route=="/social/sticker/send"||route=="/social/sticker/claim";
+            bool accountSpend=route=="/social/clan/create"||giftSpend;
             bool usingSavedProfile=false;
-            bool needsProfile=route=="/social/state"||route=="/social/levels"||route=="/social/clan-levels"||route=="/social/clan/create";
+            bool needsProfile=route=="/social/state"||route=="/social/levels"||route=="/social/clan-levels"||accountSpend||route=="/social/friend/state";
             if(needsProfile&&commerce!=null&&commerce.Ready&&AccountProfilePrefs.Dirty)
             {
                 var save=commerce.FlushProfileAsync();
@@ -186,15 +214,15 @@ namespace Alterverse.Profile
                 if(version!=generation){chatPolling=false;yield break;}
                 if(save.IsFaulted||save.IsCanceled||!save.Result)
                 {
-                    if(route=="/social/clan/create")
+                    if(accountSpend)
                     {Status="Account save pending. Retry after synchronization.";Busy=false;chatPolling=false;yield break;}
                     usingSavedProfile=true;
                 }
             }
-            if(route=="/social/clan/create")
+            if(accountSpend)
             {
                 if(commerce==null||!commerce.TryBeginSocialSpend())
-                {Status="Account busy. Retry clan creation after synchronization.";Busy=false;chatPolling=false;yield break;}
+                {Status="Account busy. Retry after synchronization.";Busy=false;chatPolling=false;yield break;}
                 clanSpending=true;clanSpendSession=commerce.SessionVersion;
                 clanSubmitted=AccountProfilePrefs.Capture();body.expectedProfileRevision=AccountProfilePrefs.Revision;
             }
@@ -222,6 +250,9 @@ namespace Alterverse.Profile
             }
             if(request.result!=UnityWebRequest.Result.Success||response==null||!response.fulfilled||response.social==null)
             {
+                if(route=="/social/sticker/send"&&(request.responseCode==400||request.responseCode==403))
+                {PlayerPrefs.DeleteKey(StickerOperationKey);PlayerPrefs.Save();}
+                if(giftSpend)commerce?.Refresh();
                 if(route=="/social/clan/create")
                 {
                     if(request.responseCode==400&&!(response?.message??"").StartsWith("Too many",StringComparison.Ordinal))
@@ -229,7 +260,7 @@ namespace Alterverse.Profile
                     commerce?.Refresh();
                 }
                 if(request.responseCode==409){Status="Account changed. Refreshing your balance; retry after synchronization.";commerce?.Refresh();}
-                else if(request.responseCode==401){State=Search=Levels=Clans=ClanLevels=Reports=null;ClearChat();Status="Sign in to reconnect.";}
+                else if(request.responseCode==401){State=Search=Levels=Clans=ClanLevels=Reports=Friends=null;ClearChat();Status="Sign in to reconnect.";}
                 else Status=!string.IsNullOrEmpty(response?.message)?response.message:
                     request.responseCode==403?"Your clan role does not allow this action.":"Social server unavailable. Tap REFRESH to retry.";
                 if(route.StartsWith("/social/chat/",StringComparison.Ordinal))
@@ -237,6 +268,18 @@ namespace Alterverse.Profile
                     ClearChat(Status);nextChatPoll=Time.unscaledTime+5f;
                     if(request.responseCode==403){loadedSyncedProfile=false;State=null;Reports=null;}
                 }
+                Busy=false;chatPolling=false;yield break;
+            }
+            if(FriendRoute(route))
+            {
+                var wallet=response.social.wallet;
+                if(response.social.stickerProtocolVersion!=1||giftSpend&&(wallet==null||wallet.accountHash!=commerce?.AccountHash||wallet.profile==null))
+                {Status="Account server update required for friends and gifts.";commerce?.Refresh();Busy=false;chatPolling=false;yield break;}
+                if(route=="/social/sticker/send")
+                {PlayerPrefs.DeleteKey(StickerOperationKey);PlayerPrefs.Save();}
+                Friends=response.social;
+                FriendsLastAction=route;
+                Status=route=="/social/sticker/send"?"Gift delivered to your friend.":route=="/social/sticker/claim"?"Gift converted to Shards and saved.":"Friends and gifts synchronized.";
                 Busy=false;chatPolling=false;yield break;
             }
             // Unity's JSON serializer may materialize null class fields as empty objects.

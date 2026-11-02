@@ -3,9 +3,11 @@ import {readFile} from 'node:fs/promises';
 import {createHash,randomBytes,randomInt} from 'node:crypto';
 import {createInterface} from 'node:readline';
 import {attachStandaloneClans} from '../../Server/commerce/node/attach-standalone-clans.mjs';
+import {enableFriendStickerGifts} from '../../Server/commerce/node/enable-friend-sticker-gifts.mjs';
 const original=await readFile(new URL('./fixtures/node-2026-10-22.2-cloud-export.js',import.meta.url),'utf8');
-const patched=await attachStandaloneClans(original);
-let data=new Map(),reads=[],handler,failRead;
+const base=await attachStandaloneClans(original);
+const patched=process.env.DF_TEST_FRIEND_GIFTS==='1'?enableFriendStickerGifts(base):base;
+let data=new Map(),reads=[],handler,failRead,epoch=0;
 const copy=value=>structuredClone(value);
 class Ref{
   constructor(path){this.path=path;this.id=path.split('/').at(-1);}
@@ -32,11 +34,15 @@ class Query{
 class Firestore{
   collection(path){return new Query(path);}
   async runTransaction(action){
+    for(let attempt=0;attempt<32;attempt++){
+    const started=epoch;
     const source=copy(data),writes=[];
     const tx={get:async ref=>{if(writes.length)throw new Error('Firestore reads must precede writes');if(failRead&&ref.path===failRead)throw new Error('Fixture read unavailable');reads.push(ref instanceof Query?ref.path+'?'+JSON.stringify(ref.filters):ref.path);return ref instanceof Query?{docs:ref.list(source)}:snapshot(ref,source);},
       set:(ref,value,options)=>writes.push(()=>data.set(ref.path,options?.merge?{...data.get(ref.path),...copy(value)}:copy(value))),
       delete:ref=>writes.push(()=>data.delete(ref.path)),create:(ref,value)=>writes.push(()=>{if(data.has(ref.path))throw new Error('Already exists');data.set(ref.path,copy(value));})};
-    const value=await action(tx);for(const write of writes)write();return value;
+    const value=await action(tx);if(started!==epoch)continue;for(const write of writes)write();if(writes.length)epoch++;return value;
+    }
+    throw new Error('Fixture transaction retry limit');
   }
 }
 const unimport=source=>source.replace(/\bimport\s*(?:\{[^}]*\}|[A-Za-z_$][\w$]*)\s*from\s*(['"])[^'"]+\1\s*;?/g,'');
@@ -48,7 +54,8 @@ for await(const line of createInterface({input:process.stdin,crlfDelay:Infinity}
     request=JSON.parse(line);data=new Map(Object.entries(request.data??{}));reads=[];failRead=request.failRead;
     const config={...api.config(),...request.config,admins:new Set(request.config?.admins??[]),clock:()=>request.now??Date.now()};
     let result;
-    if(request.mode==='access')result=await api.access(request.account);
+    if(request.mode==='parallel')result=await Promise.all(request.requests.map(async item=>{try{return {ok:true,result:await api.dispatch(item.account,item.route,item.body??{},config)};}catch(error){return {ok:false,status:error.status??503,message:error.message};}}));
+    else if(request.mode==='access')result=await api.access(request.account);
     else if(request.mode==='sync')result=await api.sync(request.account);
     else if(request.mode==='functions')result=api.functions;
     else if(request.mode==='reserve')result=await api.reserve(config);

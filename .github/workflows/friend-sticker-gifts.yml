@@ -1,0 +1,39 @@
+name: Friend sticker gifts
+on:
+  push:
+    branches: ['codex/epic-toon-replacement-20261024']
+    paths: ['Assets/Alterverse/Scripts/Profile/**', 'Assets/Alterverse/Scripts/UI/MainMenuFriends.cs', 'Server/commerce/node/**', 'Tools/FriendGifts/**', 'Tools/ClanRestore/**', '.github/workflows/friend-sticker-gifts.yml']
+  pull_request:
+    paths: ['Assets/Alterverse/Scripts/Profile/**', 'Assets/Alterverse/Scripts/UI/MainMenuFriends.cs', 'Server/commerce/node/**', 'Tools/FriendGifts/**', 'Tools/ClanRestore/**', '.github/workflows/friend-sticker-gifts.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gifts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python -m pip install -r Server/commerce/requirements.txt
+      - run: python -m unittest discover -s Tools/FriendGifts -v
+      - run: node Tools/FriendGifts/test_patch.mjs
+      - run: python Tools/FriendGifts/Regression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/ClanChat/Regression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: PYTHONPATH=Server/commerce python -m unittest discover -s Tools/ClanRestore -p 'test_standalone.py' -q
+      - name: Start patched account source with unchanged real dependencies
+        run: |
+          mkdir -p "$RUNNER_TEMP/friend-gifts-runtime"
+          node Server/commerce/node/attach-standalone-clans.mjs Tools/ClanRestore/fixtures/node-2026-10-22.2-cloud-export.js "$RUNNER_TEMP/original-clan-index.js"
+          node Server/commerce/node/enable-friend-sticker-gifts.mjs "$RUNNER_TEMP/original-clan-index.js" "$RUNNER_TEMP/friend-gifts-runtime/index.js"
+          cp Tools/ClanRestore/fixtures/package.json "$RUNNER_TEMP/friend-gifts-runtime/package.json"
+          npm --prefix "$RUNNER_TEMP/friend-gifts-runtime" install --omit=dev --ignore-scripts --no-audit --no-fund
+          python Tools/ClanRestore/test_standalone_startup.py "$RUNNER_TEMP/friend-gifts-runtime" --revision 2026-10-24.clans.node.1.friend-gifts.1

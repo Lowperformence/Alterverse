@@ -12,7 +12,7 @@ import subprocess
 import time
 import urllib.request
 
-def check(directory):
+def check(directory,revision='2026-10-24.clans.node.1'):
     directory=Path(directory).resolve()
     with socket.socket() as available:
         available.bind(('127.0.0.1',0));port=available.getsockname()[1]
@@ -25,7 +25,7 @@ def check(directory):
                 with urllib.request.urlopen('http://127.0.0.1:'+str(port)+'/',timeout=1) as response:
                     body=json.load(response)
                     assert response.status==200
-                    assert body=={'ok':True,'revision':'2026-10-24.clans.node.1','service':'dimensions-front-purchase-server'}
+                    assert body=={'ok':True,'revision':revision,'service':'dimensions-front-purchase-server'}
                     print('Actual Node dependencies and Functions Framework startup/health passed; no cloud data accessed.')
                     return
             except OSError:
@@ -39,4 +39,5 @@ def check(directory):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('directory',type=Path)
-    check(parser.parse_args().directory)
+    parser.add_argument('--revision',default='2026-10-24.clans.node.1')
+    arguments=parser.parse_args();check(arguments.directory,arguments.revision)

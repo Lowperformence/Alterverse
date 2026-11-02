@@ -123,7 +123,7 @@ namespace Alterverse.Shop {
  public static class FounderEntitlement {public static bool Owned=>false;}
  public static class FounderPackCatalog {public const string FounderTitle="FOUNDER";}
  public class PaidShardCommerce {
-  public class Snapshot {public string accountHash;}
+  public class Snapshot {public string accountHash;public Alterverse.Profile.AccountProfilePrefs.Entry[] profile;}
   public static PaidShardCommerce Instance;public bool Ready;public string AccountHash;public int SessionVersion;
   public System.Threading.Tasks.Task<bool> FlushProfileAsync()=>System.Threading.Tasks.Task.FromResult(true);
   public bool TryBeginSocialSpend()=>true;

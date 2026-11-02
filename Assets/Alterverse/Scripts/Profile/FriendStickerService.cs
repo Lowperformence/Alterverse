@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Alterverse.Audio;
 using Alterverse.Characters;
+using Alterverse.Shop;
 using UnityEngine;
 
 namespace Alterverse.Profile
@@ -139,7 +140,17 @@ namespace Alterverse.Profile
         private static PersistentState state;
         private static string loadedAccount;
         private static readonly Dictionary<int, Texture2D> stickerIcons = new();
-        public static string Status { get; private set; } = "Manage friends, send stickers, and invite squadmates to your clan.";
+        private static string localStatus = "Connect your account to load friends and gifts.";
+        private static bool showServerStatus;
+        private static SocialService.Snapshot appliedFriends;
+        private static float nextFriendsRefresh;
+        public static bool Busy => SocialService.Instance?.Busy == true || PaidShardCommerce.Spending;
+        public static bool Ready => SocialService.Instance?.Connected == true && SocialService.Instance.Friends?.stickerProtocolVersion == 1 && PaidShardCommerce.Instance?.Ready == true;
+        public static string Status
+        {
+            get => showServerStatus && SocialService.Instance != null ? SocialService.Instance.Status : localStatus;
+            private set { localStatus = value; showServerStatus = false; }
+        }
 
         public static IReadOnlyList<FriendEntry> Friends
         {
@@ -196,129 +207,21 @@ namespace Alterverse.Profile
 
         public static bool SendFriendRequest(string nameOrId, HeroId hero = HeroId.Veyr, int level = 1)
         {
-            EnsureLoaded();
-            if (string.IsNullOrWhiteSpace(nameOrId))
-            {
-                Status = "Enter a valid player name or ID.";
-                return false;
-            }
+            if (string.IsNullOrWhiteSpace(nameOrId)) { Status = "Enter a player name or ID."; return false; }
             string clean = nameOrId.Trim();
-            if (string.Equals(clean, PlayerProfile.PlayerName, StringComparison.OrdinalIgnoreCase))
-            {
-                Status = "You cannot send a friend request to yourself.";
-                return false;
-            }
-            for (int i = 0; i < state.friends.Count; i++)
-            {
-                if (Matches(state.friends[i], clean))
-                {
-                    Status = clean + " is already on your friends list.";
-                    return false;
-                }
-            }
-            for (int i = 0; i < state.incomingRequests.Count; i++)
-            {
-                if (Matches(state.incomingRequests[i], clean))
-                {
-                    return AcceptFriendRequest(state.incomingRequests[i].playerId);
-                }
-            }
-            for (int i = 0; i < state.outgoingRequests.Count; i++)
-            {
-                if (Matches(state.outgoingRequests[i], clean))
-                {
-                    Status = "Friend request to " + clean + " is already pending.";
-                    return false;
-                }
-            }
-
-            string id = "plr_" + Mathf.Abs(clean.ToUpperInvariant().GetHashCode()).ToString("x8");
-            var entry = new FriendEntry
-            {
-                playerId = id,
-                name = clean,
-                hero = Mathf.Clamp((int)hero, 0, HeroIdentity.HeroCount - 1),
-                level = Mathf.Max(1, level),
-                clanTag = "VGD",
-                clanName = "VANGUARD",
-                online = true
-            };
-            state.outgoingRequests.Add(entry);
-            Save();
-            UiSoundRouter.Confirm();
-            Status = "Friend request sent to " + clean + ".";
-            return true;
+            bool isId = clean.Length == 20;
+            if (isId) foreach (char c in clean) if (!Uri.IsHexDigit(c)) { isId = false; break; }
+            return FriendAction("/social/friend/request", new SocialService.Request { playerId = isId ? clean.ToLowerInvariant() : null, query = isId ? null : clean });
         }
 
         public static bool AcceptFriendRequest(string playerId)
-        {
-            EnsureLoaded();
-            for (int i = 0; i < state.incomingRequests.Count; i++)
-            {
-                var req = state.incomingRequests[i];
-                if (!Matches(req, playerId)) continue;
-                state.incomingRequests.RemoveAt(i);
-                req.online = true;
-                state.friends.Insert(0, req);
-                Save();
-                UiSoundRouter.Confirm();
-                Status = req.name + " added to your friends list!";
-                return true;
-            }
-            // Also allow instant confirmation of outgoing requests in local/demo testing
-            for (int i = 0; i < state.outgoingRequests.Count; i++)
-            {
-                var req = state.outgoingRequests[i];
-                if (!Matches(req, playerId)) continue;
-                state.outgoingRequests.RemoveAt(i);
-                req.online = true;
-                state.friends.Insert(0, req);
-                Save();
-                UiSoundRouter.Confirm();
-                Status = req.name + " accepted your friend request!";
-                return true;
-            }
-            return false;
-        }
+        { return FriendAction("/social/friend/accept", new SocialService.Request { playerId = playerId }); }
 
         public static bool DeclineFriendRequest(string playerId)
-        {
-            EnsureLoaded();
-            for (int i = 0; i < state.incomingRequests.Count; i++)
-            {
-                if (!Matches(state.incomingRequests[i], playerId)) continue;
-                string removedName = state.incomingRequests[i].name;
-                state.incomingRequests.RemoveAt(i);
-                Save();
-                Status = "Declined friend request from " + removedName + ".";
-                return true;
-            }
-            for (int i = 0; i < state.outgoingRequests.Count; i++)
-            {
-                if (!Matches(state.outgoingRequests[i], playerId)) continue;
-                string removedName = state.outgoingRequests[i].name;
-                state.outgoingRequests.RemoveAt(i);
-                Save();
-                Status = "Canceled friend request to " + removedName + ".";
-                return true;
-            }
-            return false;
-        }
+        { return FriendAction("/social/friend/remove", new SocialService.Request { playerId = playerId }); }
 
         public static bool RemoveFriend(string playerId)
-        {
-            EnsureLoaded();
-            for (int i = 0; i < state.friends.Count; i++)
-            {
-                if (!Matches(state.friends[i], playerId)) continue;
-                string removedName = state.friends[i].name;
-                state.friends.RemoveAt(i);
-                Save();
-                Status = removedName + " was removed from your friends list.";
-                return true;
-            }
-            return false;
-        }
+        { return FriendAction("/social/friend/remove", new SocialService.Request { playerId = playerId }); }
 
         public static bool InviteFriendToClan(string playerId)
         {
@@ -405,66 +308,60 @@ namespace Alterverse.Profile
         public static bool SendStickerToFriend(string playerId, int stickerId)
         {
             EnsureLoaded();
-            FriendEntry friend = null;
-            for (int i = 0; i < state.friends.Count; i++)
-            {
-                if (Matches(state.friends[i], playerId))
-                {
-                    friend = state.friends[i];
-                    break;
-                }
-            }
-            if (friend == null)
-            {
-                Status = "Select a friend first to send a sticker.";
-                return false;
-            }
-
-            StickerCatalogItem sticker = GetSticker(stickerId);
-            if (PlayerWallet.Balance < sticker.priceShards)
-            {
-                Status = $"Not enough Shards! {sticker.name} costs {sticker.priceShards:N0} Shards.";
-                return false;
-            }
-            if (!PlayerWallet.TrySpend(sticker.priceShards))
-            {
-                Status = "Could not spend Shards right now.";
-                return false;
-            }
-
-            friend.stickersSent++;
-            // Friend also sends a thank-you sticker back when gifted so the player can experience
-            // receiving and converting stickers into 20% Shards immediately.
-            state.receivedStickers.Insert(0, new ReceivedStickerGift
-            {
-                giftId = Guid.NewGuid().ToString("N"),
-                senderName = friend.name,
-                senderHero = friend.hero,
-                stickerId = sticker.id,
-                receivedAtUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-            });
-            Save();
-            DimensionAudio.Play(DimensionSound.Purchase, .65f);
-            Status = $"Sent {sticker.name} ({sticker.priceShards:N0} Shards) to {friend.name}! {friend.name} can convert it for +{sticker.salvageShards:N0} Shards.";
-            return true;
+            if (!Ready || Busy) { Status = "Connect and synchronize your account before sending gifts."; return false; }
+            bool knownSticker = false;
+            foreach (var sticker in Stickers) if (sticker.id == stickerId) { knownSticker = true; break; }
+            if (!knownSticker || !state.friends.Exists(friend => friend.playerId == playerId))
+            { Status = "Choose an accepted friend and a valid sticker."; return false; }
+            showServerStatus = true;
+            return SocialService.Instance.SendStickerGift(new SocialService.Request { playerId = playerId, stickerId = stickerId });
         }
 
         public static bool ConvertReceivedStickerToShards(string giftId)
+        { return FriendAction("/social/sticker/claim", new SocialService.Request { giftId = giftId }); }
+
+        private static bool FriendAction(string route, SocialService.Request request)
         {
             EnsureLoaded();
-            for (int i = 0; i < state.receivedStickers.Count; i++)
+            if (!Ready || Busy) { Status = "Connect and synchronize your account before using friends and gifts."; return false; }
+            showServerStatus = true;
+            SocialService.Instance.Load(route, request);
+            return true;
+        }
+
+        private static List<FriendEntry> ServerFriends(SocialService.Player[] players)
+        {
+            var result = new List<FriendEntry>();
+            if (players != null) foreach (var player in players)
+                if (player != null && !string.IsNullOrEmpty(player.playerId))
+                    result.Add(new FriendEntry { playerId = player.playerId, name = player.name, level = player.level });
+            return result;
+        }
+
+        private static void SyncServerFriends()
+        {
+            var service = SocialService.Instance;
+            var snapshot = service?.Friends;
+            if (!ReferenceEquals(snapshot, appliedFriends))
             {
-                var gift = state.receivedStickers[i];
-                if (gift.giftId != giftId) continue;
-                StickerCatalogItem sticker = GetSticker(gift.stickerId);
-                state.receivedStickers.RemoveAt(i);
-                PlayerWallet.Grant(sticker.salvageShards);
-                Save();
-                DimensionAudio.Play(DimensionSound.Purchase, .7f);
-                Status = $"Converted {sticker.name} from {gift.senderName} into +{sticker.salvageShards:N0} Shards!";
-                return true;
+                appliedFriends = snapshot;
+                state.friends = ServerFriends(snapshot?.friends);
+                state.incomingRequests = ServerFriends(snapshot?.incoming);
+                state.outgoingRequests = ServerFriends(snapshot?.outgoing);
+                state.receivedStickers = new List<ReceivedStickerGift>();
+                if (snapshot?.stickerProtocolVersion == 1 && snapshot.receivedStickers != null)
+                    foreach (var gift in snapshot.receivedStickers)
+                        if (gift != null) state.receivedStickers.Add(new ReceivedStickerGift { giftId = gift.giftId, senderName = gift.senderName, senderHero = gift.senderHero, stickerId = gift.stickerId, receivedAtUnix = gift.receivedAtUnix });
+                if (snapshot != null && (service.FriendsLastAction == "/social/sticker/send" || service.FriendsLastAction == "/social/sticker/claim"))
+                    DimensionAudio.Play(DimensionSound.Purchase, .7f);
+                else if (snapshot != null && (service.FriendsLastAction == "/social/friend/request" || service.FriendsLastAction == "/social/friend/accept"))
+                    UiSoundRouter.Confirm();
             }
-            return false;
+            if (service?.Connected != true || PaidShardCommerce.Instance?.Ready != true || service.Busy || Time.unscaledTime < nextFriendsRefresh) return;
+            nextFriendsRefresh = Time.unscaledTime + 15f;
+            showServerStatus = true;
+            if (service.HasPendingStickerGift) service.SendStickerGift(null);
+            else service.Load("/social/friend/state");
         }
 
         public static Texture2D GetStickerIcon(int stickerId)
@@ -573,7 +470,9 @@ namespace Alterverse.Profile
         private static void EnsureLoaded()
         {
             string account = AccountProfilePrefs.Account ?? "local";
-            if (state != null && loadedAccount == account) return;
+            if (state != null && loadedAccount == account) { SyncServerFriends(); return; }
+            appliedFriends = null; nextFriendsRefresh = 0; showServerStatus = false;
+            state = null;
             loadedAccount = account;
             string json = AccountProfilePrefs.GetString(SaveKey, string.Empty);
             if (!string.IsNullOrEmpty(json))
@@ -582,17 +481,19 @@ namespace Alterverse.Profile
                 catch (Exception) { state = null; }
             }
             state ??= new PersistentState();
-            state.friends ??= new List<FriendEntry>();
-            state.incomingRequests ??= new List<FriendEntry>();
-            state.outgoingRequests ??= new List<FriendEntry>();
-            state.receivedStickers ??= new List<ReceivedStickerGift>();
+            // Legacy local entries are retained in the saved file, but cannot authorize a real gift.
+            state.friends = new List<FriendEntry>();
+            state.incomingRequests = new List<FriendEntry>();
+            state.outgoingRequests = new List<FriendEntry>();
+            state.receivedStickers = new List<ReceivedStickerGift>();
             state.clanInvites ??= new List<ClanInviteEntry>();
 
             if (!state.seeded)
             {
                 state.seeded = true;
-                state.friends.RemoveAll(f => f.playerId == "plr_astra01" || f.playerId == "plr_kaelon02" || f.playerId == "plr_nyra03"); state.incomingRequests.RemoveAll(f => f.playerId == "plr_req01"); state.clanInvites.RemoveAll(c => c.inviteId == "cinv_initial_01"); state.receivedStickers.RemoveAll(g => g.giftId == "gift_initial_100");
+                state.clanInvites.RemoveAll(c => c.inviteId == "cinv_initial_01");
             }
+            SyncServerFriends();
         }
 
         private static void Save()

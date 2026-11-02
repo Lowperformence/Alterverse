@@ -188,7 +188,7 @@ namespace Alterverse.UI
                     StylizedHeroCard.Draw(new Rect(outPanel.x + 16, ry + 4, 38, 44), h, FrontEndTheme.Pixel, 0f);
                     theme.FitLabel(new Rect(outPanel.x + 62, ry + 4, outPanel.width - 250, 24), req.name, theme.Body);
                     theme.FitLabel(new Rect(outPanel.x + 62, ry + 26, outPanel.width - 250, 18), $"PENDING  â€¢  LEVEL {req.level}", theme.Small, true);
-                    if (theme.Action(new Rect(outPanel.xMax - 182, ry + 8, 84, 36), "ACCEPT", true))
+                    if (theme.Action(new Rect(outPanel.xMax - 182, ry + 8, 84, 36), "PENDING", true, enabled: false))
                     {
                         FriendStickerService.AcceptFriendRequest(req.playerId);
                         return;
@@ -252,7 +252,7 @@ namespace Alterverse.UI
                 theme.StatusBadge(new Rect(card.x + 12, card.y + 74, card.width - 24, 26),
                     $"FRIEND CONVERTS TO +{item.salvageShards:N0} SHARDS", FrontEndTheme.Positive);
 
-                bool canSend = friends.Count > 0 && PlayerWallet.Balance >= item.priceShards;
+                bool canSend = FriendStickerService.Ready && !FriendStickerService.Busy && friends.Count > 0 && PlayerWallet.Balance >= item.priceShards;
                 if (theme.Action(new Rect(card.x + 12, card.y + 108, card.width - 24, 42),
                     $"GIFT  â€¢  {item.priceShards:N0} SHARDS", true, enabled: canSend))
                 {
@@ -291,7 +291,7 @@ namespace Alterverse.UI
                         $"FROM {gift.senderName.ToUpperInvariant()}  ({sticker.priceShards:N0} SHARDS)", theme.Small, true);
 
                     if (theme.Action(new Rect(rowRect.xMax - 138, rowRect.y + 14, 126, 42),
-                        $"+{sticker.salvageShards:N0} SHARDS", true))
+                        $"+{sticker.salvageShards:N0} SHARDS", true, enabled: FriendStickerService.Ready && !FriendStickerService.Busy))
                     {
                         FriendStickerService.ConvertReceivedStickerToShards(gift.giftId);
                         return;
