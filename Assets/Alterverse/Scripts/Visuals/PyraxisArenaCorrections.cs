@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Alterverse.Combat;
 using Alterverse.Match;
 using Alterverse.Combat;
@@ -392,6 +392,7 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
 

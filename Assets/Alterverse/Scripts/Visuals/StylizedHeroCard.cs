@@ -1,9 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Alterverse.Characters;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Alterverse.UI
+namespace Alterverse.Visuals
 {
     /// <summary>
     /// High-resolution 3D hero mini-portrait card composited over each champion's Origin World backdrop.
@@ -350,3 +350,4 @@ namespace Alterverse.UI
         }
     }
 }
+
