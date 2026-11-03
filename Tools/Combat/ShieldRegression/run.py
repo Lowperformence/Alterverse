@@ -12,6 +12,7 @@ a=p.parse_args();root=Path(__file__).resolve().parents[3]
 if not a.dotnet_root and not (a.mono_root and a.roslyn):
  p.error('provide --dotnet-root, or both --mono-root and --roslyn')
 engine=(root/'Tools/Aiming/Regression/EngineStubs.cs').read_text().split('namespace UnityEngine.InputSystem')[0]
+engine=engine.replace('public static class Mathf {','public static class Mathf {public static float Round(float x)=>(float)System.Math.Round(x);')
 engine=engine.replace('SubsystemRegistration,BeforeSceneLoad','SubsystemRegistration,BeforeSceneLoad,AfterSceneLoad')
 engine=engine.replace('FindObjectsInactive i) where','FindObjectsInactive i=FindObjectsInactive.Exclude) where')
 fixture=r'''
@@ -35,7 +36,7 @@ namespace Alterverse.Combat {
 }
 namespace Alterverse.Match {
  public class PlanetBuffReceiver:UnityEngine.MonoBehaviour{public float OutgoingDamageMultiplier=1,DamageTakenMultiplier=1;}
- public class MatchScoreboard{public static MatchScoreboard Instance;public void RecordDamage(Alterverse.Combat.Health h,UnityEngine.GameObject s){}}
+ public class MatchScoreboard{public static MatchScoreboard Instance;public void RecordDamage(Alterverse.Combat.Health h,UnityEngine.GameObject s){}public void RecordSupport(Alterverse.Combat.Health h,UnityEngine.GameObject s){}}
  public class MatchTelemetry{public static MatchTelemetry Instance;public void RecordDamage(Alterverse.Combat.Health h,UnityEngine.GameObject s,float a){}public void RecordDeath(Alterverse.Combat.Health h,UnityEngine.GameObject s){}public void RecordHealing(Alterverse.Combat.Health h,float a){}}
  public class FractureCorePickup{public static void Spawn(UnityEngine.Vector3 p){}}
 }
@@ -83,11 +84,11 @@ class ShieldRegression {
    x.ApplyNetworkSnapshot(200,10000,false);Near(x.Shield,expected+80,"replica clamps excess shield "+id);
    Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=true;UnityEngine.Time.time=0;
   }
-  var ione=Hero(Alterverse.Characters.HeroId.Elyra);ione.AddShield(20,2.25f,false);
-  Near(ione.TemporaryShield,20,"Phase Fold adds a temporary 20 HP shield");Near(ione.Shield,100,"Phase Fold preserves Ione's permanent shield");
-  ione.TakeDamage(7);Near(ione.TemporaryShield,13,"incoming damage consumes Phase Fold first");Near(ione.HeroBaseShield,80,"Phase Fold protects the base shield");Near(ione.Current,200,"Phase Fold protects health");
+  var ione=Hero(Alterverse.Characters.HeroId.Elyra);ione.AddShield(50,2.25f,false);
+  Near(ione.TemporaryShield,50,"Phase Fold adds a temporary 50 HP shield");Near(ione.Shield,130,"Phase Fold preserves Ione's permanent shield");
+  ione.TakeDamage(7);Near(ione.TemporaryShield,43,"incoming damage consumes Phase Fold first");Near(ione.HeroBaseShield,80,"Phase Fold protects the base shield");Near(ione.Current,200,"Phase Fold protects health");
   Near(ione.HeroBaseShieldRechargeRemaining,0,"ability shield hit does not damage a full base shield");
-  Refresh(ione,2.249f);Near(ione.TemporaryShield,13,"Phase Fold remains before its duration ends");
+  Refresh(ione,2.249f);Near(ione.TemporaryShield,43,"Phase Fold remains before its duration ends");
   Refresh(ione,2.25f);Near(ione.TemporaryShield,0,"Phase Fold expires on its duration boundary");Near(ione.HeroBaseShield,80,"expiry does not consume the permanent shield");
   UnityEngine.Time.time=0;
   var h=Hero(Alterverse.Characters.HeroId.Timmy);h.TakeDamage(25);Near(h.Shield,55,"Timmy absorbs damage into his 80 HP base shield");Near(h.Current,200,"shield protects health");
@@ -101,7 +102,7 @@ class ShieldRegression {
   h.TakeDamage(20);Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=false;Refresh(h,111.25f);Near(h.Shield,60,"client cannot authoritatively regenerate shield");
   Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=true;Refresh(h,111.25f);Near(h.Shield,80,"host applies due recharge");
   var neutral=new UnityEngine.GameObject().AddComponent<Alterverse.Combat.Health>();neutral.Configure(200);Near(neutral.HeroBaseShieldMax,0,"non-hero does not acquire a base shield");
-  System.Console.WriteLine("PASS "+checks+" production Health shield assertions: all existing heroes/bots +30 shield and BOLT-7 40 shield, 11.25s delay, Phase Fold unchanged, absorption, deadline/reset, snapshots, death/respawn and authority. Unity/network transport not tested.");
+  System.Console.WriteLine("PASS "+checks+" production Health shield assertions: all existing heroes/bots +30 shield and BOLT-7 40 shield, 11.25s delay, Phase Fold 50 shield, absorption, deadline/reset, snapshots, death/respawn and authority. Unity/network transport not tested.");
  }
 }
 '''

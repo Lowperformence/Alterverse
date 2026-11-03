@@ -35,6 +35,10 @@ namespace Alterverse.Combat
             for(int i=0;i<zones.Length;i++)if(zones[i].Contains(point.x,point.z))return i;
             return -1;
         }
+        // Shown to the owner and allies only while enemies outside the cloud cannot see this hero.
+        public static bool IsConcealed(Health target)
+            =>instance!=null&&target!=null&&!target.IsDead&&target.GetComponent<HeroIdentity>()!=null&&
+              instance.At(target.transform.position)>=0&&(target.GetComponent<CosmicNebulaState>()?.RevealRemaining??0)<=0;
         public static bool HiddenFrom(GameObject observer,Health target)
         {
             if(instance==null||observer==null||target==null||target.IsDead||observer==target.gameObject||

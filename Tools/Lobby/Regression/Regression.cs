@@ -40,6 +40,26 @@ static class Regression
         Check(!CombatVisibility.HiddenFrom(enemy,health),"attack reveals for enemy");
         Time.time+=2.1f;Check(CombatVisibility.HiddenFrom(enemy,health),"expired reveal hides again");
         Call(conceal,"OnDisable");Check(!renderer.forceRenderingOff,"disabled concealment restores renderer");
+        // Owner sees the concealed model at 40% opacity; shared source materials stay untouched.
+        var ownRenderer=target.AddComponent<MeshRenderer>();var source=new Material(new Shader());
+        source.SetColor("_BaseColor",new Color(.2f,.4f,.6f,1));ownRenderer.sharedMaterials=new[]{source};
+        LocalHeroContext.Member=target.GetComponent<TeamMember>();Time.unscaledTime+=1;Call(conceal,"LateUpdate");
+        var ghost=ownRenderer.sharedMaterials[0];
+        Check(ghost!=source&&Math.Abs(ghost.GetColor("_BaseColor").a-.4f)<.001,"owner sees concealed hero at 40% opacity");
+        Check(Math.Abs(source.GetColor("_BaseColor").a-1)<.001&&ghost.GetFloat("_Surface")==1,"shared material stays opaque and ghost uses blending");
+        LocalHeroContext.Member=enemy.GetComponent<TeamMember>();Call(conceal,"LateUpdate");
+        Check(ownRenderer.forceRenderingOff&&ownRenderer.sharedMaterials[0]==source,"enemy loses visibility immediately when outside cloud");
+        LocalHeroContext.Member=target.GetComponent<TeamMember>();Call(conceal,"LateUpdate");
+        Check(!ownRenderer.forceRenderingOff&&ownRenderer.sharedMaterials[0]!=source,"owner immediately sees ghost again");
+        CosmicNebulaState.OffensiveAction(target);Call(conceal,"LateUpdate");
+        Check(ownRenderer.sharedMaterials[0]==source,"attacking reveals owner and restores material");
+        Time.time+=2.1f;Time.unscaledTime+=1;Call(conceal,"LateUpdate");
+        Check(ownRenderer.sharedMaterials[0]!=source,"hero fades again after reveal expires");
+        target.transform.position=new Vector3(0,1,0);Call(conceal,"LateUpdate");
+        Check(ownRenderer.sharedMaterials[0]==source,"leaving cloud restores original material");
+        target.transform.position=new Vector3(cloud.X,1,cloud.Z);Time.unscaledTime+=1;Call(conceal,"LateUpdate");
+        var external=new Material(new Shader());ownRenderer.sharedMaterials=new[]{external};Call(conceal,"OnDisable");
+        Check(ownRenderer.sharedMaterials[0]==external,"restore preserves a material changed by another system");
         Application.isBatchMode=true;
         // Actual message writer/reader code, with server identity and time-aging checks.
         GameObject.All.Clear();CoopAuthority.Active=true;CoopAuthority.ActivePlan=new MatchPlan{MatchId="wire"};

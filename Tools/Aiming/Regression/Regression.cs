@@ -319,7 +319,7 @@ partial class Regression
   CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;Unlock(a.GetComponent<HeroAbilityExecution>());
   manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V7"](1,new Unity.Netcode.FastBufferReader(phasePacket));
   Near(a.transform.position.x,2.3f,"host clamps Phase Fold to 2.3 meters");
-  Near(a.GetComponent<Health>().TemporaryShield,20,"host applies Phase Fold shield once");
+  Near(a.GetComponent<Health>().TemporaryShield,50,"host applies Phase Fold shield once");
  }
  static void InterruptionsAndCapacity()
  {

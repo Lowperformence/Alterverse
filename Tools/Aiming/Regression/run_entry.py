@@ -13,6 +13,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dotnet-root', type=Path, required=True)
     parser.add_argument('--ranged-cones', action='store_true')
+    parser.add_argument('--phase-fold-network', action='store_true')
     parser.add_argument('--negative-held-basic', action='store_true', help='Restore send-time basic animation to prove the rejected-hold regression fails')
     parser.add_argument('--aim-jitter', action='store_true', help='Exercise actual HeroMotor facing and manual AOE edge placement')
     args = parser.parse_args()
@@ -81,7 +82,7 @@ public sealed partial class HeroSkillVfx {
                         *['-r:' + str(p) for p in refs.glob('*.dll')], *map(str, files)], check=True)
         output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions': {
             'tfm': 'net8.0', 'framework': {'name': 'Microsoft.NETCore.App', 'version': runtime.name}}}))
-        subprocess.run([str(dotnet / 'dotnet'), str(output), *(['--ranged-cones'] if args.ranged_cones else [])], check=True)
+        subprocess.run([str(dotnet / 'dotnet'), str(output), *(['--phase-fold-network'] if args.phase_fold_network else ['--ranged-cones'] if args.ranged_cones else [])], check=True)
 
 
 if __name__ == '__main__':

@@ -4,10 +4,11 @@ using Alterverse.Characters;
 using Alterverse.Combat;
 using Alterverse.Multiplayer;
 
-class EntryPoint { static void Main(string[] args) { if(Array.IndexOf(args,"--ranged-cones")>=0) Regression.RunRangedConeCases(); else Regression.RunEntryCases(); } }
+class EntryPoint { static void Main(string[] args) { if(Array.IndexOf(args,"--phase-fold-network")>=0) Regression.RunPhaseFoldNetwork(); else if(Array.IndexOf(args,"--ranged-cones")>=0) Regression.RunRangedConeCases(); else Regression.RunEntryCases(); } }
 
 partial class Regression
 {
+ public static void RunPhaseFoldNetwork(){Network();Console.WriteLine("PASS Phase Fold authoritative network regression.");}
  public static void RunEntryCases()
  {
   RequestedBalanceCases();

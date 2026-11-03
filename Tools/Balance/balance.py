@@ -108,7 +108,7 @@ def simulate(catalog,left,right,distance=8,duration=30,dt=DEFAULT_DT,kiting=True
                     delta=sign*min(spec['range'],max(0,d-1.5)) if u.p['range']<4 else -sign*spec['range']
                     u.dashready=t+spec['cooldown']
                     if u.p['id']=='Veyr':u.shield(30,2.25,t)
-                    if u.p['id']=='Elyra':u.shield(20,2.25,t)
+                    if u.p['id']=='Elyra':u.shield(50,2.25,t)
             moves.append((u,delta))
         for u,delta in moves:u.x+=delta
         for u in living:
