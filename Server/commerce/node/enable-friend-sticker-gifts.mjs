@@ -10,8 +10,8 @@ export function enableFriendStickerGifts(source) {
   for (const name of ['dfSyncDirectory','dfSocialKey','walletSnapshot','playerRef','readWallet']) if (!source.includes(name)) throw new Error('Missing account dependency: '+name);
   const revision = /(\bconst\s+SERVER_REVISION\s*=\s*)(['"])([^'"\r\n]+)\2/g;
   if ([...source.matchAll(revision)].length !== 1) throw new Error('Expected one account server revision.');
-  const module = readFileSync(new URL('./friend-sticker-gifts.inc.js', import.meta.url), 'utf8');
-  return source.replace(revision, (_,prefix,quote,value) => prefix+quote+value+'.friend-gifts.1'+quote).replace(dispatch, match => match+"\n  if (dfGiftRoutes.has(route)) return await dfFriendGiftDispatch(account, route, request);")+
+  const module = readFileSync(new URL('./friend-sticker-gifts.inc.js', import.meta.url), 'utf8')+'\n'+readFileSync(new URL('./party-invites.inc.js', import.meta.url), 'utf8');
+  return source.replace(revision, (_,prefix,quote,value) => prefix+quote+value+'.friend-gifts.2'+quote).replace(dispatch, match => match+"\n  if (route.startsWith('/social/party/')) return await dfPartyInviteDispatch(account, route, request);\n  if (dfGiftRoutes.has(route)) return await dfFriendGiftDispatch(account, route, request);")+
     '\n// DF_FRIEND_STICKER_GIFTS_BEGIN v1\n'+module+'\n// DF_FRIEND_STICKER_GIFTS_END v1\n';
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

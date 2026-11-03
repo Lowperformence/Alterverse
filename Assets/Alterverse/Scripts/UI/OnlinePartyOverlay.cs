@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Multiplayer;
+using Alterverse.Profile;
 using UnityEngine;
 
 namespace Alterverse.UI
@@ -13,9 +14,14 @@ namespace Alterverse.UI
     public sealed class OnlinePartyOverlay : MonoBehaviour
     {
         private static OnlinePartyOverlay instance;
-        public static bool IsOpen => instance != null && instance.open && MainMenuController.IsVisible;
+        public static bool IsOpen => instance != null && instance.open && OnlinePartyService.Instance != null && MainMenuController.IsVisible;
+        public static string LastError { get; private set; } = "";
         private FrontEndTheme theme;
         private bool open;
+        private bool heroPickerOpen,invitePanelOpen,inviteInbox;
+        private Vector2 invitationScroll;
+        private float nextFriendPoll;
+        private string consumedInvitation;
         private string friendInviteCode = "";
         private TouchScreenKeyboard inviteKeyboard;
         private const float ReferenceHeight = 720f;
@@ -30,8 +36,11 @@ namespace Alterverse.UI
 
         public static void Show()
         {
+            LastError="";
+            OnlinePartyService.EnsureAvailable();
             if (instance == null) AutoCreate();
-            if (instance != null) instance.open = true;
+            if (instance != null)
+            {instance.heroPickerOpen=false;instance.invitePanelOpen=false;instance.open=true;}
         }
 
         public static void Hide()
@@ -83,7 +92,21 @@ namespace Alterverse.UI
                 GUI.enabled = true;
                 theme ??= new FrontEndTheme();
 
+                GUI.enabled=!heroPickerOpen&&!invitePanelOpen&&PartyVoiceService.Instance?.NeedsConsent!=true;
                 DrawOverlay(menuWidth, online, edgegap);
+                GUI.enabled=true;
+                GUI.enabled=PartyVoiceService.Instance?.NeedsConsent!=true;
+                if(heroPickerOpen)DrawHeroPicker(menuWidth,online,edgegap);
+                if(invitePanelOpen)DrawInvitations(menuWidth,online,edgegap);
+                GUI.enabled=true;
+                if(PartyVoiceService.Instance?.NeedsConsent==true)DrawVoiceConsent(menuWidth);
+            }
+            catch (System.Exception error) when (!(error is ExitGUIException))
+            {
+                // A broken/initializing lobby must never leave only the menu backdrop.
+                LastError="Online lobby could not open. Please try again.";
+                open=false;
+                Debug.LogException(error);
             }
             finally
             {
@@ -105,11 +128,15 @@ namespace Alterverse.UI
             // Clean top header bar matching the main menu command deck
             Rect headerPanel = new(left, 36f, width, 84f);
             theme.Panel(headerPanel);
-            theme.Label(new Rect(left + 28f, 46f, width - 420f, 38f), "ONLINE MATCHMAKING", theme.Title);
-            theme.Label(new Rect(left + 28f, 84f, width - 420f, 22f),
+            theme.Label(new Rect(left + 28f, 46f, width - 620f, 38f), "ONLINE MATCHMAKING", theme.Title);
+            theme.Label(new Rect(left + 28f, 84f, width - 620f, 22f),
                 "4v4 TACTICAL ARENA  •  DEDICATED SERVER DEPLOYMENT & SQUAD LINK",
                 theme.Small, true);
 
+            var voice=PartyVoiceService.Instance;
+            if(online.InParty&&voice!=null&&theme.Action(new Rect(left+width-550f,59f,170f,38f),voice.Status,
+                enabled:!voice.Busy))
+            {if(voice.MicrophoneOn)voice.Mute();else voice.AskAgain();}
             bool searchingAny = edgegap != null && edgegap.IsSearching;
             theme.StatusBadge(new Rect(left + width - 368f, 59f, 200f, 38f),
                 searchingAny ? "QUEUE ACTIVE" : online.InParty ? "PARTY LINKED" : "4v4 ONLINE READY",
@@ -158,6 +185,7 @@ namespace Alterverse.UI
             Rect heroBox = new(quickCard.x + 24f, quickCard.y + 132f, quickCard.width - 48f, 172f);
             theme.Panel(heroBox);
             theme.Frame(heroBox, true);
+            if(theme.Action(new Rect(heroBox.xMax-190f,heroBox.yMax-38f,174f,30f),"CHOOSE HERO",enabled:!busy))heroPickerOpen=true;
 
             Rect portraitRect = new(heroBox.x + 16f, heroBox.y + 16f, 112f, 140f);
             StylizedHeroCard.Draw(portraitRect, selectedHero, pixel, Time.unscaledTime);
@@ -169,8 +197,7 @@ namespace Alterverse.UI
                 HeroIdentity.NameFor(selectedHero).ToUpperInvariant(), theme.Heading);
             theme.StatusBadge(new Rect(infoX, heroBox.y + 88f, Mathf.Min(184f, infoW), 26f),
                 HeroIdentity.RoleFor(selectedHero).ToString().ToUpperInvariant(), heroAccent);
-            theme.Label(new Rect(infoX, heroBox.y + 124f, infoW, 22f),
-                "TEAM ZERO vs TEAM LUMEN  •  HOT ZONE", theme.Small, true);
+
 
             // Matchmaking status strip
             Rect queueInfo = new(quickCard.x + 24f, quickCard.y + 320f, quickCard.width - 48f, 50f);
@@ -259,10 +286,14 @@ namespace Alterverse.UI
             theme.Panel(footerBar);
             string state = !string.IsNullOrEmpty(online.LastError) ? online.LastError :
                 edgegap != null && !string.IsNullOrEmpty(edgegap.LastError) ?
-                edgegap.LastError : online.Status;
-            theme.FitLabel(new Rect(footerBar.x + 24f, footerBar.y + 14f, footerBar.width - 48f, 26f),
+                edgegap.LastError : GameInviteShare.Status.Length>0?GameInviteShare.Status:online.Status;
+            theme.FitLabel(new Rect(footerBar.x + 24f, footerBar.y + 14f, footerBar.width - 500f, 26f),
                 string.IsNullOrEmpty(state) ? "ONLINE SERVICES READY  •  SELECT QUICK MATCH OR CREATE A FRIEND PARTY" : state,
                 theme.Small, true);
+            if(theme.Action(new Rect(left+width-230,630,208,36),"INVITE TO GAME",enabled:!GameInviteShare.Busy))_=GameInviteShare.ShareAsync();
+            int inviteCount=SocialService.Instance?.Friends?.partyInvites?.Length??0;
+            if(inviteCount>0&&theme.Action(new Rect(left+width-450,630,208,36),"INVITATIONS ("+inviteCount+")",true))
+            {invitePanelOpen=true;inviteInbox=true;}
         }
 
         private void DrawParty(float left, float width, OnlinePartyService online, EdgegapOnlineFlow edgegap)
@@ -354,13 +385,9 @@ namespace Alterverse.UI
                 if (member.IsLocal)
                 {
                     bool editable = online.CanEditParty && !edgegapSearching;
-                    if (theme.Action(new Rect(x + 16f, 414f, 42f, 44f), "<", enabled: editable))
-                        _ = online.CycleLocalHeroAsync(-1);
-                    if (theme.Action(new Rect(x + playerW - 58f, 414f, 42f, 44f), ">", enabled: editable))
-                        _ = online.CycleLocalHeroAsync(1);
-
-                    float readyX = x + 66f;
-                    float readyW = Mathf.Max(48f, playerW - 132f);
+                    if(theme.Action(new Rect(x+16f,414f,playerW*.48f-20f,44f),"CHOOSE HERO",enabled:editable))heroPickerOpen=true;
+                    float readyX = x + playerW*.48f;
+                    float readyW = playerW*.52f-16f;
                     string readyText = online.LocalReady ? "UNREADY" : "READY";
                     if (theme.Action(new Rect(readyX, 414f, readyW, 44f), readyText, true,
                         enabled: editable && (online.LocalReady || !online.HasHeroConflict)))
@@ -445,16 +472,105 @@ namespace Alterverse.UI
                 online.JoinCode.Length > 0 ? FrontEndTheme.Accent : FrontEndTheme.Muted);
 
             if (theme.Action(new Rect(left + width - 234f, 610f, 208f, 38f),
-                "COPY INVITE CODE", enabled: online.JoinCode.Length > 0 && !online.MatchmakingLocked))
-                GUIUtility.systemCopyBuffer = online.JoinCode;
+                "INVITE FRIENDS", enabled: online.JoinCode.Length > 0 && !online.MatchmakingLocked))
+                {invitePanelOpen=true;inviteInbox=false;}
 
+            if(theme.Action(new Rect(left+width-456f,610f,210f,38f),"INVITE TO GAME",enabled:!GameInviteShare.Busy))
+                _=GameInviteShare.ShareAsync();
             string state;
             if (edgegap != null && !string.IsNullOrEmpty(edgegap.LastError)) state = edgegap.LastError;
             else if (!string.IsNullOrEmpty(online.LastError)) state = online.LastError;
-            else state = DedicatedOnlineMatchHandshake.Status;
+            else state = GameInviteShare.Status.Length>0?GameInviteShare.Status:DedicatedOnlineMatchHandshake.Status;
             theme.FitLabel(new Rect(left + 26f, 646f, width - 280f, 22f),
                 string.IsNullOrEmpty(state) ? "SHARE YOUR INVITE CODE WITH UP TO 3 FRIENDS TO LOCK IN ON THE SAME TEAM" : state,
                 theme.Small, true);
+        }
+
+        private void DrawHeroPicker(float menuWidth,OnlinePartyService online,EdgegapOnlineFlow edgegap)
+        {
+            FrontEndTheme.Fill(new Rect(0,0,menuWidth,ReferenceHeight),new Color(0,0,0,.84f));
+            float width=Mathf.Min(1180,menuWidth-80),left=(menuWidth-width)/2;
+            Rect panel=new(left,210,width,290);theme.Panel(panel);
+            theme.Label(new Rect(left+24,230,width-48,32),"CHOOSE HERO",theme.Heading);
+            theme.Label(new Rect(left+24,267,width-48,24),"One hero per team. Locked and taken heroes cannot be selected.",theme.Small,true);
+            HeroId selected=online.InParty?online.LocalHero:PlayerHeroSelection.Selected;
+            bool editable=!online.Busy&&edgegap?.IsSearching!=true&&(!online.InParty||online.CanEditParty);
+            LobbyHeroPicker.Draw(theme,new Rect(left+24,305,width-48,125),selected,editable,
+                hero=>!online.InParty||!online.HeroBlockedForLocal(hero),hero=>_=PickHeroAsync(online,hero));
+            if(theme.Action(new Rect(left+width-190,447,166,36),"CLOSE"))heroPickerOpen=false;
+        }
+        private async System.Threading.Tasks.Task PickHeroAsync(OnlinePartyService online,HeroId hero)
+        {
+            if(online.InParty&&!await online.SetLocalHeroAsync(hero))return;
+            MainMenuController.SelectLobbyHero(hero);heroPickerOpen=false;
+        }
+
+        private void Update()
+        {
+            if(!open||!MainMenuController.IsVisible)return;
+            var social=SocialService.Instance;
+            if(social==null||social.Busy||!social.Connected||Alterverse.Shop.PaidShardCommerce.Instance?.Ready!=true)return;
+            if(consumedInvitation!=null)
+            {social.Load("/social/party/decline",new SocialService.Request{inviteId=consumedInvitation});consumedInvitation=null;return;}
+            if(Time.unscaledTime>=nextFriendPoll)
+            {nextFriendPoll=Time.unscaledTime+8f;social.Load("/social/friend/state");}
+        }
+        private void DrawInvitations(float menuWidth,OnlinePartyService online,EdgegapOnlineFlow edgegap)
+        {
+            FrontEndTheme.Fill(new Rect(0,0,menuWidth,ReferenceHeight),new Color(0,0,0,.88f));
+            float width=Mathf.Min(900,menuWidth-80),left=(menuWidth-width)/2;
+            theme.Panel(new Rect(left,160,width,440));
+            if(theme.Action(new Rect(left+20,180,250,40),"INVITE FRIENDS",selected:!inviteInbox))inviteInbox=false;
+            if(theme.Action(new Rect(left+282,180,250,40),"RECEIVED INVITATIONS",selected:inviteInbox))inviteInbox=true;
+            if(theme.Action(new Rect(left+width-140,180,120,40),"CLOSE"))invitePanelOpen=false;
+            var social=SocialService.Instance;
+            bool enabled=social!=null&&social.Connected&&!social.Busy&&!online.Busy&&edgegap?.IsSearching!=true;
+            var friends=social?.Friends?.friends??System.Array.Empty<SocialService.Player>();
+            var incoming=social?.Friends?.partyInvites??System.Array.Empty<SocialService.PartyInvitation>();
+            int count=inviteInbox?incoming.Length:friends.Length;
+            Rect viewport=new(left+20,240,width-40,275);
+            invitationScroll=GUI.BeginScrollView(viewport,invitationScroll,new Rect(0,0,viewport.width-20,Mathf.Max(275,count*66)));
+            if(count==0)theme.Label(new Rect(12,15,viewport.width-40,55),inviteInbox?"NO INVITATIONS":"NO ACCEPTED FRIENDS YET",theme.Body,true);
+            for(int i=0;i<count;i++)
+            {
+                float y=i*66;theme.Panel(new Rect(0,y,viewport.width-20,58));
+                if(inviteInbox)
+                {
+                    var invite=incoming[i];
+                    theme.FitLabel(new Rect(12,y+12,viewport.width-330,30),invite.senderName,theme.Body);
+                    bool fresh=invite.expiresAtUnix>System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    if(theme.Action(new Rect(viewport.width-306,y+9,132,40),"JOIN PARTY",true,enabled:enabled&&fresh))_=AcceptInvitation(online,invite);
+                    if(theme.Action(new Rect(viewport.width-164,y+9,132,40),"DECLINE",enabled:enabled))
+                        social.Load("/social/party/decline",new SocialService.Request{inviteId=invite.inviteId});
+                }
+                else
+                {
+                    var friend=friends[i];theme.FitLabel(new Rect(12,y+12,viewport.width-200,30),friend.name,theme.Body);
+                    if(theme.Action(new Rect(viewport.width-174,y+9,142,40),"INVITE",true,
+                        enabled:enabled&&online.InParty&&online.IsHost&&!online.IsPartyFull&&!online.MatchmakingLocked))
+                        social.Load("/social/party/invite",new SocialService.Request{playerId=friend.playerId,partyCode=online.JoinCode,partySessionId=online.VoiceRoomId});
+                }
+            }
+            GUI.EndScrollView();
+            theme.Label(new Rect(left+24,530,width-48,48),!inviteInbox&&!online.InParty?"CREATE A PARTY FIRST":social?.Status??"Sign in to load friends and clans.",theme.Small,true);
+        }
+        private async System.Threading.Tasks.Task AcceptInvitation(OnlinePartyService online,SocialService.PartyInvitation invite)
+        {
+            if(await online.JoinByCodeAsync(invite.partyCode))
+            {consumedInvitation=invite.inviteId;invitePanelOpen=false;}
+        }
+
+        private void DrawVoiceConsent(float menuWidth)
+        {
+            var voice=PartyVoiceService.Instance;
+            FrontEndTheme.Fill(new Rect(0,0,menuWidth,ReferenceHeight),new Color(0,0,0,.88f));
+            float width=Mathf.Min(760,menuWidth-80),left=(menuWidth-width)/2;
+            theme.Panel(new Rect(left,220,width,265));
+            theme.Label(new Rect(left+24,242,width-48,36),"USE AN OPEN MICROPHONE?",theme.Heading);
+            theme.Label(new Rect(left+24,292,width-48,75),
+                "Your party can hear you while the microphone is on. You can mute it at any time. Playing without voice is always possible.",theme.Body,true);
+            if(theme.Action(new Rect(left+24,394,(width-60)/2,58),"WITHOUT MICROPHONE"))voice.Decline();
+            if(theme.Action(new Rect(left+36+(width-60)/2,394,(width-60)/2,58),"ENABLE MICROPHONE",true))_=voice.EnableAsync();
         }
 
         private void OnDestroy()

@@ -27,7 +27,7 @@ namespace Alterverse.Multiplayer
 
         private static readonly HeroId[] HumanConflictPool =
         {
-            HeroId.Veyr, HeroId.Kaelon, HeroId.Nyra, HeroId.Elyra, HeroId.Mira, HeroId.Nerok, HeroId.Rook
+            HeroId.Veyr, HeroId.Kaelon, HeroId.Nyra, HeroId.Elyra, HeroId.Mira, HeroId.Rook
         };
 
         public static OnlineMatchPlan Build(
@@ -178,15 +178,18 @@ namespace Alterverse.Multiplayer
                 List<DedicatedMember> teamPlayers = playersByTeam[teamKeys[team]];
                 teamPlayers.Sort((a, b) => string.CompareOrdinal(a.PlayerId, b.PlayerId));
                 var usedHeroes = new HashSet<HeroId>();
+                var reservedHeroes = new HashSet<HeroId>();
+                foreach (var requested in teamPlayers) reservedHeroes.Add(requested.Hero);
                 int replacementCursor = 0;
 
                 for (int row = 0; row < teamPlayers.Count; row++)
                 {
                     DedicatedMember member = teamPlayers[row];
                     HeroId hero = member.Hero;
-                    if (!usedHeroes.Add(hero) && mode != SessionMode.OnlineRanked)
+                    if (!usedHeroes.Add(hero))
                     {
-                        hero = PickHumanReplacement(usedHeroes, ref replacementCursor);
+                        hero = PickHumanReplacement(reservedHeroes, ref replacementCursor);
+                        reservedHeroes.Add(hero);
                         usedHeroes.Add(hero);
                     }
 
@@ -254,6 +257,9 @@ namespace Alterverse.Multiplayer
                     throw new InvalidOperationException($"Authoritative online roster slot {i} is empty.");
                 if (mode == SessionMode.OnlineRanked && source.IsBot)
                     throw new InvalidOperationException("Ranked cannot start with bots.");
+                for(int other=0;other<i;other++)
+                    if(slots[other].Team==source.Team&&slots[other].Hero==source.Hero)
+                        throw new InvalidOperationException("Each hero can only appear once on a team.");
 
                 bool isLocal = !source.IsBot && !string.IsNullOrEmpty(localPlayerId) && source.PlayerId == localPlayerId;
                 MatchPlayerSlot copy = new()

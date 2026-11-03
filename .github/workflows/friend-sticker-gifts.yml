@@ -38,4 +38,4 @@ jobs:
           node Server/commerce/node/enable-friend-sticker-gifts.mjs "$RUNNER_TEMP/original-clan-index.js" "$RUNNER_TEMP/friend-gifts-runtime/index.js"
           cp Tools/ClanRestore/fixtures/package.json "$RUNNER_TEMP/friend-gifts-runtime/package.json"
           npm --prefix "$RUNNER_TEMP/friend-gifts-runtime" install --omit=dev --ignore-scripts --no-audit --no-fund
-          python Tools/ClanRestore/test_standalone_startup.py "$RUNNER_TEMP/friend-gifts-runtime" --revision 2026-10-24.clans.node.1.friend-gifts.1
+          python Tools/ClanRestore/test_standalone_startup.py "$RUNNER_TEMP/friend-gifts-runtime" --revision 2026-10-24.clans.node.1.friend-gifts.2

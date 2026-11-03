@@ -65,6 +65,7 @@ namespace Alterverse.Multiplayer
         public bool Busy => busy;
         public bool IsHost => session != null && session.IsHost;
         public string JoinCode => session?.Code ?? "";
+        public string VoiceRoomId => session?.CurrentPlayer!=null&&AuthenticationService.Instance.IsSignedIn&&session.CurrentPlayer.Id==AuthenticationService.Instance.PlayerId?session.Id:"";
         public int PlayerCount => session?.PlayerCount ?? 0;
         public int MaxPlayers => session?.MaxPlayers ?? MaxMatchPlayers;
         public int PartyCapacity => MaxPartyPlayers;
@@ -170,6 +171,8 @@ namespace Alterverse.Multiplayer
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        public static void EnsureAvailable() => Ensure();
+
         private static void Ensure()
         {
             if (Instance == null)
@@ -786,7 +789,7 @@ namespace Alterverse.Multiplayer
             catch { }
         }
 
-        private bool HeroBlockedForLocal(HeroId hero)
+        public bool HeroBlockedForLocal(HeroId hero)
         {
             if (session?.CurrentPlayer == null || !IsPartyMemberId(session.CurrentPlayer.Id)) return false;
             string localId = session.CurrentPlayer.Id;

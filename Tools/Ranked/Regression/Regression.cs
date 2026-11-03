@@ -41,7 +41,9 @@ partial class Regression {
   var plan=OnlineMatchPlan.BuildDedicated("match",ArenaVariant.Moon,BotDifficulty.Hard,players,SessionMode.OnlineRanked);
   Check(plan.Session.Mode==SessionMode.OnlineRanked,"mode propagated");
   Check(plan.HumanCount==8,"eight humans");
-  foreach(var slot in plan.Session.Slots){Check(!slot.IsBot,"no bot fill");Check(slot.Hero==HeroId.Veyr,"chosen heroes preserved");}
+  foreach(var slot in plan.Session.Slots)Check(!slot.IsBot,"no bot fill");
+  for(int team=0;team<2;team++){var unique=new HashSet<HeroId>();foreach(var slot in plan.Session.Slots)if(slot.Team==team)Check(unique.Add(slot.Hero),"ranked enforces unique heroes per team");}
+  LobbyPreparationCases();
   var client=OnlineMatchPlan.FromAuthoritativeSlots("match",ArenaVariant.Moon,BotDifficulty.Hard,plan.Session.Slots,"t0",SessionMode.OnlineRanked);
   Check(CoopPlanHandshake.Fingerprint(plan)==CoopPlanHandshake.Fingerprint(client),"server/client fingerprint");
   var casual=OnlineMatchPlan.FromAuthoritativeSlots("match",ArenaVariant.Moon,BotDifficulty.Hard,plan.Session.Slots,"t0");

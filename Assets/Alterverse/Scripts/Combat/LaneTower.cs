@@ -48,7 +48,7 @@ namespace Alterverse.Combat
             for (int i=0;i<Health.Active.Count;i++)
             {
                 Health candidate=Health.Active[i];
-                if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled)continue;
+                if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled||CombatVisibility.HiddenFrom(gameObject,candidate))continue;
                 LaneMinion minion=candidate.GetComponent<LaneMinion>();
                 if(minion==null||minion.Team!=attackingTeam)continue;
                 Vector3 delta=candidate.transform.position-transform.position;delta.y=0;
@@ -79,7 +79,7 @@ namespace Alterverse.Combat
 
         private bool IsValidTarget(Health candidate)
         {
-            if (candidate == null || candidate == health || candidate.IsDead || !candidate.isActiveAndEnabled) return false;
+            if (candidate == null || candidate == health || candidate.IsDead || !candidate.isActiveAndEnabled || CombatVisibility.HiddenFrom(gameObject,candidate)) return false;
             Vector3 delta = candidate.transform.position - transform.position; delta.y = 0;
             if (delta.sqrMagnitude > attackRange * attackRange) return false;
             LaneMinion minion = candidate.GetComponent<LaneMinion>();

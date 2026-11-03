@@ -46,7 +46,7 @@ namespace Alterverse.UI
         private void OnGUI()
         {
             Health target = targeting != null ? targeting.Current : null;
-            if (target == null || playerHealth == null || playerHealth.IsDead || VoidKnightState.HiddenFrom(playerHealth.gameObject,target) || MainMenuController.IsVisible ||
+            if (target == null || playerHealth == null || playerHealth.IsDead || CombatVisibility.HiddenFrom(playerHealth.gameObject,target) || MainMenuController.IsVisible ||
                 cachedCamera == null)
                 return;
 

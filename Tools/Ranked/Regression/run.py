@@ -16,7 +16,7 @@ if not a.dotnet_root and not (a.mono_root and a.roslyn):
 here=Path(__file__).resolve().parent
 root=here.parents[2]
 source=root/'Assets/Alterverse/Scripts'
-names=['AI/BotHeroPool.cs','Profile/SafeIdentityCatalog.cs','Profile/PlayerProfile.cs','Profile/AccountProfilePrefs.cs','Profile/SocialService.cs','Multiplayer/MatchSession.cs','Multiplayer/CoopLobbyService.cs','Multiplayer/OnlinePartyService.cs','Multiplayer/OnlinePlanHandshake.cs','Multiplayer/EdgegapOnlineFlow.cs','Multiplayer/MultiplayerGate.cs','Multiplayer/CoopMatchPlan.cs','Multiplayer/OnlineMatchPlan.cs','Prototype/FiveVsFiveTestRoster.cs','Combat/TeamMember.cs','Multiplayer/CoopPlanHandshake.cs',
+names=['Multiplayer/OfflineLobbyRoster.cs','Combat/CosmicNebulaLayout.cs','AI/BotHeroPool.cs','Profile/SafeIdentityCatalog.cs','Profile/PlayerProfile.cs','Profile/AccountProfilePrefs.cs','Profile/SocialService.cs','Multiplayer/MatchSession.cs','Multiplayer/CoopLobbyService.cs','Multiplayer/OnlinePartyService.cs','Multiplayer/OnlinePlanHandshake.cs','Multiplayer/EdgegapOnlineFlow.cs','Multiplayer/MultiplayerGate.cs','Multiplayer/CoopMatchPlan.cs','Multiplayer/OnlineMatchPlan.cs','Prototype/FiveVsFiveTestRoster.cs','Combat/TeamMember.cs','Multiplayer/CoopPlanHandshake.cs',
        'Multiplayer/RankedAvailability.cs','Multiplayer/RankedService.cs','Multiplayer/RankedMatchReporter.cs','Multiplayer/EdgegapMatchmakerClient.cs',
        'Multiplayer/DedicatedOnlineMatchHandshake.cs','Multiplayer/EdgegapDedicatedServerLifecycle.cs','UI/RankedPanel.cs','Match/MatchExit.cs','Match/PostMatchAutoLoop.cs','Multiplayer/NetworkRoundLoop.cs','Multiplayer/CoopConnectionWatchdog.cs','Multiplayer/CoopWorldStateSync.cs','Multiplayer/WorldSnapshotHistory.cs','Multiplayer/SnapshotCadence.cs']
 with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
@@ -66,7 +66,7 @@ with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
             '-r:'+str(runtime/'System.dll'),'-r:'+str(runtime/'System.Core.dll'),
             '-r:'+str(runtime/'System.Runtime.Serialization.dll'),
             '-r:'+str(runtime/'System.Xml.dll'),
-            str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'GoogleNameRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'FingerprintRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(here/'LifecycleFixtures.cs'),str(here/'LifecycleRegression.cs'),str(hotcode),str(ui),str(layout),
+            str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'LobbyPreparationRegression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'GoogleNameRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'FingerprintRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(here/'LifecycleFixtures.cs'),str(here/'LifecycleRegression.cs'),str(hotcode),str(ui),str(layout),
             *[str(source/name) for name in names]],env=env,check=True)
         subprocess.run([str(a.mono_root/'usr/bin/mono-sgen'),str(output)],env=env,check=True)
         raise SystemExit(0)
@@ -75,7 +75,7 @@ with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
     output=Path(directory)/'RankedRegression.dll'
     response=Path(directory)/'compile.rsp'
     response.write_text('\n'.join(['-nologo','-nowarn:0649,0067','-target:exe','-langversion:9','-out:'+str(output),
-        *['-r:'+str(path) for path in runtime.glob('*.dll')],str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'GoogleNameRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'FingerprintRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(here/'LifecycleFixtures.cs'),str(here/'LifecycleRegression.cs'),str(hotcode),str(ui),str(layout),
+        *['-r:'+str(path) for path in runtime.glob('*.dll')],str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'LobbyPreparationRegression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'GoogleNameRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'FingerprintRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(here/'LifecycleFixtures.cs'),str(here/'LifecycleRegression.cs'),str(hotcode),str(ui),str(layout),
         *[str(source/name) for name in names]]))
     subprocess.run([str(a.dotnet_root/'dotnet'),str(sdk/'Roslyn/bincore/csc.dll'),'@'+str(response)],check=True)
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))

@@ -98,10 +98,10 @@ namespace Alterverse.UI
                     selectedFriendIndex = idx;
                     FriendStickerService.InviteFriendToClan(f.playerId);
                 }
-                if (theme.Action(new Rect(Right - 212, y + 14, 110, 38), "PARTY", enabled: f.online))
+                if (theme.Action(new Rect(Right - 212, y + 14, 110, 38), "GAME LINK", enabled: !GameInviteShare.Busy))
                 {
                     selectedFriendIndex = idx;
-                    OnlinePartyOverlay.Show();
+                    _=GameInviteShare.ShareAsync();
                 }
                 if (theme.Action(new Rect(Right - 92, y + 14, 80, 38), "REMOVE"))
                 {

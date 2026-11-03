@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Alterverse.Characters;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -19,6 +19,24 @@ namespace Alterverse.Visuals
         private static readonly Dictionary<HeroId, Texture2D> PortraitCache = new Dictionary<HeroId, Texture2D>();
         private static readonly Dictionary<HeroId, Texture2D> BackdropCache = new Dictionary<HeroId, Texture2D>();
         private static Shader portraitShader;
+        private static readonly Queue<HeroId> Pending = new();
+        private static readonly HashSet<HeroId> Queued = new();
+        private static readonly Dictionary<HeroId,float> RetryAt = new();
+        private static HeroPortraitQueue worker;
+        internal static void ProcessOnePortrait()
+        {
+            if(Pending.Count==0)return;
+            HeroId hero=Pending.Dequeue();Queued.Remove(hero);
+            Texture2D rendered=RenderHeroBustPortrait(hero);
+            if(rendered!=null)PortraitCache[hero]=rendered;
+            else RetryAt[hero]=Time.unscaledTime+5f;
+        }
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetCache()
+        {
+            foreach(var texture in PortraitCache.Values)if(texture!=null)Object.Destroy(texture);
+            PortraitCache.Clear();BackdropCache.Clear();Pending.Clear();Queued.Clear();RetryAt.Clear();worker=null;
+        }
 
         public static void Draw(Rect rect, HeroId hero, Texture2D pixel, float time)
         {
@@ -93,10 +111,14 @@ namespace Alterverse.Visuals
             if (Application.isBatchMode || SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null)
                 return null;
 
-            Texture2D rendered = RenderHeroBustPortrait(hero);
-            if (rendered != null)
-                PortraitCache[hero] = rendered;
-            return rendered;
+            if(RetryAt.TryGetValue(hero,out float retry)&&Time.unscaledTime<retry)return null;
+            if(Queued.Add(hero))Pending.Enqueue(hero);
+            if(worker==null)
+            {
+                var go=new GameObject("DF_HeroPortraitQueue");
+                Object.DontDestroyOnLoad(go);worker=go.AddComponent<HeroPortraitQueue>();
+            }
+            return null;
         }
 
         private static Texture2D RenderHeroBustPortrait(HeroId hero)
@@ -169,7 +191,16 @@ namespace Alterverse.Visuals
                 cam.transform.position = camPos;
                 cam.transform.LookAt(lookTarget, Vector3.up);
                 cam.targetTexture = rt;
-                cam.Render();
+                cam.allowHDR=false;cam.allowMSAA=false;cam.useOcclusionCulling=false;
+                var data=camObj.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
+                data.renderPostProcessing=false;data.renderShadows=false;data.volumeLayerMask=0;
+                if(GraphicsSettings.currentRenderPipeline!=null)
+                {
+                    var request=new RenderPipeline.StandardRequest{destination=rt};
+                    if(!RenderPipeline.SupportsRenderRequest(cam,request))return null;
+                    RenderPipeline.SubmitRenderRequest(cam,request);
+                }
+                else cam.Render();
 
                 RenderTexture.active = rt;
                 Texture2D result = new Texture2D(PortraitWidth, PortraitHeight, TextureFormat.RGBA32, false)
@@ -182,6 +213,9 @@ namespace Alterverse.Visuals
                 result.ReadPixels(new Rect(0, 0, PortraitWidth, PortraitHeight), 0, 0, false);
                 result.Apply(false, false);
                 cam.targetTexture = null;
+                // Never cache an empty render: it otherwise leaves only the backdrop forever.
+                bool visible=false;foreach(Color32 color in result.GetPixels32())if(color.a>16){visible=true;break;}
+                if(!visible){Object.Destroy(result);return null;}
                 return result;
             }
             catch

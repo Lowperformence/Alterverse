@@ -216,6 +216,7 @@ namespace Alterverse.Characters
                 self.AddShield(20f,2f,false);
                 HeroSkillVfx.Support(gameObject,self,true,2f);
             }
+            CosmicNebulaState.OffensiveAction(gameObject);
             HeroSkillVfx.Cast(gameObject,slot,presentationWindup);
             if (!mobility) locomotion.FaceAction(aimSpec.targetingMode == TargetingMode.Cone ?
                 attackAim.Direction : attackAim.CastDirection(transform.position));

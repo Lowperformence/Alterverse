@@ -162,12 +162,11 @@ namespace Alterverse.UI
                 return;
             }
             EdgegapOnlineFlow onlineFlow = EdgegapOnlineFlow.Instance;
+            if(page==Page.Play&&!OnlinePartyOverlay.IsOpen&&OnlinePartyOverlay.LastError.Length>0)
+                launchMessage=OnlinePartyOverlay.LastError;
             if (page == Page.Play && onlineFlow != null &&
                 (onlineFlow.Busy || onlineFlow.IsSearching || !string.IsNullOrEmpty(onlineFlow.LastError)))
                 launchMessage = onlineFlow.Status;
-            CoopLobbyService coop=CoopLobbyService.Instance;
-            if(!launching&&page==Page.Coop&&coop!=null&&coop.InLobby&&coop.IsLaunching)
-                BeginCoopLaunch(coop);
             bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop&&!heroShop;
             bool previewInventory=page==Page.Inventory&&collection.InventoryPreview;
             bool previewWeapon=page==Page.Shop&&weaponShop;
@@ -375,11 +374,9 @@ namespace Alterverse.UI
             theme.StatusBadge(new Rect(Left+28,224,154,28),"READY TO PLAY",FrontEndTheme.Positive);
             theme.Label(new Rect(Left+28,252,w-56,42),"MATCH 4v4",theme.Title);
             theme.Label(new Rect(Left+28,300,w-56,48),"Four versus four.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
-            float lobbyButtonWidth=(w-64)/2;
-            if(theme.Action(new Rect(Left+28,354,lobbyButtonWidth,32),"INVITE FRIENDS",true))
-                _=BeginOnlineMatchmakingAsync();
-            if(theme.Action(new Rect(Left+36+lobbyButtonWidth,354,lobbyButtonWidth,32),"PRIVATE CO-OP"))
-                SetPage(Page.Coop);
+            float lobbyButtonWidth=w-56;
+            if(theme.Action(new Rect(Left+28,354,lobbyButtonWidth,32),"INVITE TO GAME",true,enabled:!GameInviteShare.Busy))
+                _=GameInviteShare.ShareAsync();
             BattleItemType equippedItem=BattleItemInventory.Equipped;
             theme.Label(new Rect(Left+28,396,w-56,18),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
             HeroId deploymentHero=(HeroId)selectedHero;
@@ -465,8 +462,8 @@ namespace Alterverse.UI
                 enabled:matchButtonsEnabled && HeroUnlockInventory.Owned((HeroId)selectedHero),locked:heroReleaseLocked || !RankedAvailability.Enabled))
             { PlayerHeroSelection.Select((HeroId)selectedHero); RankedPanel.Show(); }
             if (theme.Action(new Rect(Left+2*(matchButtonWidth+matchButtonGap),620,matchButtonWidth,58),"Play Offline",primary:true,
-                enabled:matchButtonsEnabled,locked:heroReleaseLocked)) _ = BeginOfflineMatchAsync();
-            theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
+                enabled:matchButtonsEnabled,locked:heroReleaseLocked)) OpenOfflineLobby();
+            theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:GameInviteShare.Status.Length>0?GameInviteShare.Status:
                 !AccountServerBootstrap.CloudProfileReady?"WAIT FOR CLOUD SYNC  /  PROFILE > GOOGLE ACCOUNT":
                 arenaShuffle?"ARENA SHUFFLE  /  RANDOM OWNED MAP":
                 $"SELECTED ARENA  /  {ArenaShopCatalog.For(selectedArena).Name}",theme.Small,true);
@@ -477,208 +474,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(x+24,578,rw-48,24),Roles[selectedHero],theme.Small,true);
             if (theme.Action(new Rect(x+24,620,rw-48,54),"CHANGE HERO")) SetPage(Page.Heroes);
         }
-        private void DrawCoop()
-        {
-            Heading("PRIVATE CO-OP", "Invite friends with a room code. Play together with up to four players.");
-            CoopLobbyService coop = CoopLobbyService.Instance;
-            Texture2D pixel = FrontEndTheme.Pixel;
-
-            if (coop == null)
-            {
-                theme.Panel(new Rect(Left, 210, ContentWidth, 120));
-                theme.Label(new Rect(Left + 28, 250, ContentWidth - 56, 45),
-                    "Co-op is initializing. Please try again.", theme.Body, true);
-                return;
-            }
-
-            bool busy = coop.Busy;
-            if (!coop.InLobby)
-            {
-                float colGap = 20f;
-                float colW = (ContentWidth - colGap) * .5f;
-                float cardY = 214f;
-                float cardH = 388f;
-
-                // Left Card: Host Private Co-op Room
-                Rect hostCard = new Rect(Left, cardY, colW, cardH);
-                HeroId activeHero = PlayerHeroSelection.Selected;
-                Color heroAccent = Alterverse.Visuals.StylizedArtDirection.HeroAccent(activeHero);
-                theme.Panel(hostCard);
-
-                theme.StatusBadge(new Rect(hostCard.x + 24f, hostCard.y + 20f, 184f, 26f), "HOST CO-OP SQUAD", FrontEndTheme.Zero);
-                theme.Label(new Rect(hostCard.x + 24f, hostCard.y + 52f, hostCard.width - 48f, 34f),
-                    "CREATE A PRIVATE ROOM", theme.Heading);
-                theme.Label(new Rect(hostCard.x + 24f, hostCard.y + 88f, hostCard.width - 48f, 40f),
-                    "Assemble up to 4 friends against customizable AI bots on any unlocked arena.",
-                    theme.Small, true);
-
-                Rect previewBox = new Rect(hostCard.x + 24f, hostCard.y + 136f, hostCard.width - 48f, 148f);
-                theme.Panel(previewBox);
-                theme.Frame(previewBox, true);
-                StylizedHeroCard.Draw(new Rect(previewBox.x + 14f, previewBox.y + 14f, 96f, 120f), activeHero, pixel, Time.unscaledTime);
-                theme.Label(new Rect(previewBox.x + 126f, previewBox.y + 20f, previewBox.width - 140f, 20f), "ACTIVE CHAMPION", theme.Small, true);
-                theme.FitLabel(new Rect(previewBox.x + 126f, previewBox.y + 44f, previewBox.width - 140f, 30f),
-                    HeroIdentity.NameFor(activeHero).ToUpperInvariant(), theme.Heading);
-                theme.StatusBadge(new Rect(previewBox.x + 126f, previewBox.y + 82f, Mathf.Min(172f, previewBox.width - 140f), 26f),
-                    HeroIdentity.RoleFor(activeHero).ToString().ToUpperInvariant(), heroAccent);
-
-                if (theme.Action(new Rect(hostCard.x + 24f, hostCard.y + 306f, hostCard.width - 48f, 58f),
-                    busy ? "PLEASE WAIT" : "CREATE ROOM", true, enabled: !busy))
-                    _ = coop.CreateLobbyAsync();
-
-                // Right Card: Join Friend's Room Code
-                Rect joinCard = new Rect(Left + colW + colGap, cardY, colW, cardH);
-                theme.Panel(joinCard);
-
-                theme.StatusBadge(new Rect(joinCard.x + 24f, joinCard.y + 20f, 184f, 26f), "DIRECT ROOM LINK", FrontEndTheme.Positive);
-                theme.Label(new Rect(joinCard.x + 24f, joinCard.y + 52f, joinCard.width - 48f, 34f),
-                    "JOIN FRIEND'S ROOM", theme.Heading);
-                theme.Label(new Rect(joinCard.x + 24f, joinCard.y + 88f, joinCard.width - 48f, 40f),
-                    "Enter the invite code shared by your room host to join their squad immediately.",
-                    theme.Small, true);
-
-                theme.Label(new Rect(joinCard.x + 24f, joinCard.y + 150f, joinCard.width - 48f, 22f),
-                    "ENTER FRIEND'S ROOM CODE", theme.Small, true);
-                coopInviteCode = GUI.TextField(new Rect(joinCard.x + 24f, joinCard.y + 182f, joinCard.width - 146f, 48f),
-                    coopInviteCode ?? "", 16, theme.Field);
-                if (theme.Action(new Rect(joinCard.xMax - 114f, joinCard.y + 182f, 90f, 48f), "PASTE",
-                    enabled: !busy && !string.IsNullOrEmpty(GUIUtility.systemCopyBuffer)))
-                {
-                    coopInviteCode = GUIUtility.systemCopyBuffer ?? "";
-                    GUI.FocusControl(null);
-                }
-
-                if (theme.Action(new Rect(joinCard.x + 24f, joinCard.y + 306f, joinCard.width - 48f, 58f), "JOIN ROOM", true,
-                    enabled: !busy && CoopLobbyService.NormalizeJoinCode(coopInviteCode).Length >= 4))
-                    _ = coop.JoinLobbyAsync(CoopLobbyService.NormalizeJoinCode(coopInviteCode));
-
-                Rect statusStrip = new Rect(Left, 616f, ContentWidth, 50f);
-                theme.Panel(statusStrip);
-                string initStatus = !string.IsNullOrEmpty(coop.LastError) ? coop.LastError : coop.Status;
-                theme.FitLabel(new Rect(statusStrip.x + 22f, statusStrip.y + 12f, statusStrip.width - 44f, 26f),
-                    string.IsNullOrEmpty(initStatus) ? "CO-OP RELAY READY  •  HOST A ROOM OR ENTER AN INVITE CODE" : initStatus,
-                    theme.Small, true);
-                return;
-            }
-
-            // IN-LOBBY HEADER BAR
-            Rect headerBar = new Rect(Left, 212f, ContentWidth, 68f);
-            theme.Panel(headerBar);
-            theme.Label(new Rect(Left + 24f, 220f, 220f, 18f), "FRIEND INVITE CODE", theme.Small, true);
-            theme.FitLabel(new Rect(Left + 24f, 240f, 260f, 30f),
-                string.IsNullOrEmpty(coop.JoinCode) ? "GENERATING..." : coop.JoinCode, theme.Heading);
-            theme.StatusBadge(new Rect(Right - 396f, 229f, 196f, 34f),
-                coop.IsStaging ? "STAGING MATCH" : $"SQUAD {coop.Members.Count}/{CoopLobbyService.MaxHumanPlayers}",
-                coop.IsStaging ? FrontEndTheme.Accent : FrontEndTheme.Positive);
-            if (theme.Action(new Rect(Right - 188f, 225f, 166f, 42f), "COPY CODE",
-                enabled: !string.IsNullOrEmpty(coop.JoinCode)))
-                GUIUtility.systemCopyBuffer = coop.JoinCode;
-
-            // 4-SLOT SQUAD ROSTER
-            const int maxSlots = CoopLobbyService.MaxHumanPlayers;
-            float gap = 14f;
-            float slotWidth = (ContentWidth - (maxSlots - 1) * gap) / maxSlots;
-            IReadOnlyList<CoopLobbyService.MemberView> members = coop.Members;
-            for (int i = 0; i < maxSlots; i++)
-            {
-                float x = Left + i * (slotWidth + gap);
-                Rect slotRect = new Rect(x, 290f, slotWidth, 152f);
-                theme.Panel(slotRect);
-                if (i >= members.Count)
-                {
-                    theme.Label(new Rect(x + 14f, 302f, slotWidth - 28f, 18f), $"SLOT 0{i + 1}", theme.Small, true);
-                    theme.Center(new Rect(x + 10f, 346f, slotWidth - 20f, 32f), "OPEN SLOT");
-                    theme.Center(new Rect(x + 10f, 392f, slotWidth - 20f, 18f), "AI BOT OR FRIEND");
-                    continue;
-                }
-                CoopLobbyService.MemberView member = members[i];
-                if (member.IsLocal) theme.Frame(slotRect, true);
-
-                StylizedHeroCard.Draw(new Rect(x + 12f, 304f, 68f, 84f), member.Hero, pixel, Time.unscaledTime + i * .35f);
-                float infoX = x + 90f;
-                float infoW = slotWidth - 102f;
-                theme.FitLabel(new Rect(infoX, 306f, infoW, 20f),
-                    member.DisplayName + (member.IsLocal ? " (YOU)" : ""), theme.Small, true);
-                theme.FitLabel(new Rect(infoX, 328f, infoW, 24f),
-                    HeroIdentity.NameFor(member.Hero), theme.Heading);
-                theme.FitLabel(new Rect(infoX, 354f, infoW, 18f),
-                    HeroIdentity.RoleFor(member.Hero).ToString().ToUpperInvariant(), theme.Small, true);
-                theme.StatusBadge(new Rect(x + 12f, 402f, slotWidth - 24f, 28f),
-                    member.Ready ? "READY" : "NOT READY",
-                    member.Ready ? FrontEndTheme.Positive : FrontEndTheme.Warning);
-            }
-
-            // LOCAL HERO & HOST SETTINGS BAR
-            Rect controlsBar = new Rect(Left, 452f, ContentWidth, 126f);
-            theme.Panel(controlsBar);
-
-            bool editable = !busy && coop.IsLobby;
-            theme.Label(new Rect(Left + 38f, 460f, 180f, 18f), "YOUR HERO LOADOUT", theme.Small, true);
-            if (theme.Action(new Rect(Left + 38f, 480f, 44f, 40f), "<", enabled: editable))
-                _ = coop.CycleLocalHeroAsync(-1);
-            theme.FitLabel(new Rect(Left + 90f, 485f, 174f, 30f),
-                HeroIdentity.NameFor(coop.LocalHero), theme.Body);
-            if (theme.Action(new Rect(Left + 268f, 480f, 44f, 40f), ">", enabled: editable))
-                _ = coop.CycleLocalHeroAsync(1);
-            if (theme.Action(new Rect(Left + 328f, 480f, 196f, 40f),
-                coop.LocalReady ? "UNREADY" : "READY", true,
-                enabled: editable && (coop.LocalReady || !coop.HasHeroConflict)))
-                _ = coop.SetLocalReadyAsync(!coop.LocalReady);
-
-            if (coop.IsHost)
-            {
-                if (theme.Action(new Rect(Left + 38f, 530f, 40f, 38f), "<",
-                    enabled: editable && coop.IsHost))
-                    _ = coop.CycleHostArenaAsync(-1);
-                theme.FitLabel(new Rect(Left + 84f, 530f, 192f, 38f),
-                    ArenaShopCatalog.For(coop.LobbyArena).Name, theme.Small);
-                if (theme.Action(new Rect(Left + 281f, 530f, 40f, 38f), ">",
-                    enabled: editable && coop.IsHost))
-                    _ = coop.CycleHostArenaAsync(1);
-                if (theme.Action(new Rect(Left + 336f, 530f, 138f, 38f),
-                    coop.LobbyArenaShuffle ? "SHUFFLE ON" : "SHUFFLE",
-                    selected: coop.LobbyArenaShuffle, enabled: editable))
-                    _ = coop.SetHostArenaShuffleAsync(!coop.LobbyArenaShuffle);
-                if (theme.Action(new Rect(Left + 488f, 530f, 36f, 38f), "<", enabled: editable))
-                    _ = coop.CycleHostDifficultyAsync(-1);
-                theme.FitLabel(new Rect(Left + 529f, 530f, 135f, 38f),
-                    BotDifficultySettings.Label(coop.LobbyDifficulty), theme.Small);
-                if (theme.Action(new Rect(Left + 668f, 530f, 36f, 38f), ">", enabled: editable))
-                    _ = coop.CycleHostDifficultyAsync(1);
-            }
-            else
-                theme.Label(new Rect(Left + 38f, 538f, ContentWidth - 76f, 24f),
-                    "Waiting for the party host to configure arena and bot difficulty.", theme.Small, true);
-
-            if (coop.IsStaging && coop.IsHost)
-            {
-                if (theme.Action(new Rect(Left + 24f, 590f, 224f, 48f), "CANCEL PREP",
-                    enabled: !busy))
-                    _ = coop.CancelMatchStagingAsync();
-                if (theme.Action(new Rect(Left + 260f, 590f, 240f, 48f),
-                    CoopPlanHandshake.PlanHandshakeReady ? "START MATCH" : "SYNCING PLAYERS",
-                    true, enabled: !busy && CoopPlanHandshake.PlanHandshakeReady))
-                    _ = coop.LaunchPreparedMatchAsync();
-            }
-            else if (coop.IsHost && coop.IsLobby)
-            {
-                if (theme.Action(new Rect(Left + 24f, 590f, 265f, 48f),
-                    "PREPARE MATCH", true, enabled: !busy && coop.CanStageMatch))
-                    _ = coop.BeginMatchStagingAsync();
-            }
-            else
-                theme.Label(new Rect(Left + 28f, 600f, 420f, 26f),
-                    coop.IsStaging ? CoopPlanHandshake.HandshakeStatus : "Waiting for host to start.",
-                    theme.Small, true);
-
-            if (theme.Action(new Rect(Right - 196f, 590f, 172f, 48f),
-                busy ? "PLEASE WAIT" : "LEAVE ROOM", enabled: !busy && !coop.IsLaunching))
-                _ = coop.LeaveLobbyAsync();
-            theme.FitLabel(new Rect(Left + 28f, 644f, ContentWidth - 56f, 22f),
-                !string.IsNullOrEmpty(coop.LastError) ? coop.LastError :
-                coop.IsStaging ? CoopPlanHandshake.HandshakeStatus : coop.Status,
-                theme.Small, true);
-        }
+        private void DrawCoop()=>DrawOfflineLobby();
         private void DrawHeroes()
         {
             const float rosterWidth=244f,rowStep=48f;

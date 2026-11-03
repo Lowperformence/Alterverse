@@ -5,8 +5,8 @@ import {createInterface} from 'node:readline';
 import {attachStandaloneClans} from '../../Server/commerce/node/attach-standalone-clans.mjs';
 import {enableFriendStickerGifts} from '../../Server/commerce/node/enable-friend-sticker-gifts.mjs';
 const original=await readFile(new URL('./fixtures/node-2026-10-22.2-cloud-export.js',import.meta.url),'utf8');
-const base=await attachStandaloneClans(original);
-const patched=process.env.DF_TEST_FRIEND_GIFTS==='1'?enableFriendStickerGifts(base):base;
+const base=process.env.DF_TEST_SOURCE?await readFile(process.env.DF_TEST_SOURCE,'utf8'):await attachStandaloneClans(original);
+const patched=process.env.DF_TEST_SOURCE?base:process.env.DF_TEST_FRIEND_GIFTS==='1'?enableFriendStickerGifts(base):base;
 let data=new Map(),reads=[],handler,failRead,epoch=0;
 const copy=value=>structuredClone(value);
 class Ref{

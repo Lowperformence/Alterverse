@@ -153,4 +153,42 @@ class FriendGifts(unittest.TestCase):
         self.assertFalse(denied['ok']);self.assertEqual(self.earned(self.b),2147483647)
         self.assertFalse(self.state[f'players/{self.b}/sticker-gifts/{0:064x}']['claimed'])
 
+    def invite(self, **changes):
+        body=dict(playerId='2'*20,partyCode='ABCD12',partySessionId='party_session_123')
+        body.update(changes)
+        return self.call(self.a,'/social/party/invite',body)
+    def test_party_invite_requires_accepted_friend_and_keeps_wallets(self):
+        self.assertFalse(self.invite()['ok'])
+        self.request_and_accept();before=copy.deepcopy([self.wallet(self.a),self.wallet(self.b)])
+        self.assertTrue(self.invite()['ok'])
+        invites=self.good(self.b,'/social/friend/state')['partyInvites']
+        self.assertEqual(len(invites),1);self.assertEqual(invites[0]['partyCode'],'ABCD12')
+        self.assertNotIn(self.a,json.dumps(invites));self.assertNotIn(self.b,json.dumps(invites))
+        self.assertEqual([self.wallet(self.a),self.wallet(self.b)],before)
+    def test_party_invitation_decline_is_private_and_repeated_send_is_bounded(self):
+        self.request_and_accept()
+        self.assertTrue(self.invite()['ok']);self.assertTrue(self.invite()['ok'])
+        invites=self.good(self.b,'/social/friend/state')['partyInvites'];self.assertEqual(len(invites),1)
+        gift=invites[0]['inviteId']
+        self.good(self.c,'/social/party/decline',dict(inviteId=gift))
+        self.assertEqual(len(self.good(self.b,'/social/friend/state')['partyInvites']),1)
+        self.good(self.b,'/social/party/decline',dict(inviteId=gift))
+        self.assertEqual(self.good(self.b,'/social/friend/state')['partyInvites'],[])
+    def test_party_invite_rate_limit_and_expiration(self):
+        self.request_and_accept()
+        for i in range(10):self.assertTrue(self.invite(partySessionId=f'party_session_{i:08d}')['ok'])
+        self.assertFalse(self.invite(partySessionId='another_session_123')['ok'])
+        for key,value in self.state.items():
+            if '/party-invites/' in key:value['expiresAt']=0
+        self.assertEqual(self.good(self.b,'/social/friend/state')['partyInvites'],[])
+        del self.state['dimensions-front-party-rate/'+self.a]
+        self.assertTrue(self.invite()['ok'])
+        self.assertEqual(len([key for key in self.state if '/party-invites/' in key]),1)
+    def test_party_invites_validate_inputs_and_account_suspension(self):
+        self.request_and_accept()
+        for changes in [dict(partyCode='../bad'),dict(partyCode='abc'),dict(partySessionId='bad'),dict(playerId='not-real')]:
+            self.assertFalse(self.invite(**changes)['ok'])
+        self.state['dimensions-front-chat-user-ban/'+self.b]=dict(until_at=-1)
+        self.assertFalse(self.invite()['ok'])
+
 if __name__=='__main__':unittest.main()

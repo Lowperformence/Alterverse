@@ -10,7 +10,7 @@ for(const name of ['node-2026-10-22.2.js','node-2026-10-22.2-cloud-export.js']){
   for(const before of [source,source.replace(/const\s+ITEMS\s*=\s*\{/,match=>match+'future_cosmetic:item(123),')]){
     const after=enableFriendStickerGifts(before);
     const boundary=after.indexOf('\n// DF_FRIEND_STICKER_GIFTS_BEGIN v1\n');
-    const restored=after.slice(0,boundary).replace('\n  if (dfGiftRoutes.has(route)) return await dfFriendGiftDispatch(account, route, request);','').replace('.friend-gifts.1','');
+    const restored=after.slice(0,boundary).replace('\n  if (dfGiftRoutes.has(route)) return await dfFriendGiftDispatch(account, route, request);','').replace("\n  if (route.startsWith('/social/party/')) return await dfPartyInviteDispatch(account, route, request);",'').replace('.friend-gifts.2','');
     assert.equal(restored,before,'All pre-existing account source must remain unchanged');checks++;
     assert.throws(()=>enableFriendStickerGifts(after),/already installed/);checks++;
     const parts=splitIndexFive(after);assert.equal(parts.length,5);assert.equal(parts.join(''),after);checks+=2;

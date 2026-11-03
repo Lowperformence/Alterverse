@@ -23,7 +23,7 @@ fixture+='namespace Alterverse.Prototype{using Alterverse.AI;using Alterverse.Ch
 refs=next((sdk/'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'));csc=next((sdk/'sdk').glob('*/Roslyn/bincore/csc.dll'))
 with tempfile.TemporaryDirectory(prefix='bot-roster-') as d:
  d=Path(d);(d/'Fixtures.cs').write_text(fixture);out=d/'Regression.dll'
- names=['AI/BotHeroPool.cs','Multiplayer/MatchSession.cs','Multiplayer/CoopMatchPlan.cs','Multiplayer/OnlineMatchPlan.cs']
+ names=['Multiplayer/OfflineLobbyRoster.cs','AI/BotHeroPool.cs','Multiplayer/MatchSession.cs','Multiplayer/CoopMatchPlan.cs','Multiplayer/OnlineMatchPlan.cs']
  r=subprocess.run([str(sdk/'dotnet'),str(csc),'-nologo','-langversion:9','-out:'+str(out),*['-r:'+str(f) for f in refs.glob('*.dll')],str(d/'Fixtures.cs'),str(here/'Regression.cs'),*[str(src/n) for n in names]])
  if r.returncode:raise SystemExit(r.returncode)
  out.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':'8.0.0'}}}))

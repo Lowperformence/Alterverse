@@ -26,7 +26,7 @@ async function dfGiftSnapshot(account) {
     const gift = doc.data();
     return {giftId:doc.id, senderName:gift.senderName, senderHero:gift.senderHero, stickerId:gift.stickerId, receivedAtUnix:Math.floor(gift.createdAt/1000)};
   }).sort((a,b) => b.receivedAtUnix-a.receivedAtUnix || a.giftId.localeCompare(b.giftId));
-  return {stickerProtocolVersion:1, me:dfGiftPublic(self.data()), friends, incoming, outgoing, receivedStickers};
+  return {stickerProtocolVersion:1, me:dfGiftPublic(self.data()), friends, incoming, outgoing, receivedStickers, partyInvites:await dfPartyInvitesSnapshot(account)};
 }
 function dfGiftProfile(value) {
   if (!value || !Number.isSafeInteger(value.balance) || value.balance < 0 || !Number.isSafeInteger(value.revision) || !Number.isSafeInteger(value.profileRevision) || !Array.isArray(value.profile)) throw new Error('Invalid account wallet');

@@ -85,10 +85,10 @@ namespace Alterverse.Combat
         {
             if (!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay || !isActiveAndEnabled || self == null || self.IsDead ||
                 !HeroCombatStatus.CanAct(gameObject) || !AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
-            if (spec.targetingMode == TargetingMode.Homing && (!HeroCombatRules.Enemy(gameObject, pose.Target) ||
+            if (spec.targetingMode == TargetingMode.Homing && (!HeroCombatRules.Enemy(gameObject, pose.Target) || CombatVisibility.HiddenFrom(gameObject,pose.Target) ||
                 HeroCombatRules.TargetDistance(transform.position, pose.Target) > spec.castRange)) return false;
             if (slot < 0 && spec.targetingMode == TargetingMode.AutoBasic && pose.Target != null &&
-                (!HeroCombatRules.Enemy(gameObject, pose.Target) || HeroCombatRules.TargetDistance(transform.position, pose.Target) > spec.castRange)) return false;
+                (!HeroCombatRules.Enemy(gameObject, pose.Target) || CombatVisibility.HiddenFrom(gameObject,pose.Target) || HeroCombatRules.TargetDistance(transform.position, pose.Target) > spec.castRange)) return false;
             for (int i = 0; i < pending.Length; i++)
             {
                 if (pending[i].Active) continue;
@@ -101,6 +101,7 @@ namespace Alterverse.Combat
                     Point = pose.Point, HasAimPoint = pose.HasAimPoint, Spec = spec,
                     Target = spec.targetingMode == TargetingMode.Homing || slot < 0 && spec.targetingMode == TargetingMode.AutoBasic ? pose.Target : null, ReleaseAt = Time.time + windup };
                 hasPending = true;
+                CosmicNebulaState.OffensiveAction(gameObject);
                 if (!volley) HeroCombatAudio.Windup(gameObject, slot + 1);
                 if (slot < 0)
                 {
@@ -344,7 +345,7 @@ namespace Alterverse.Combat
                 bool automatic = AutomaticBasic(p);
                 if (!p.Launched)
                 {
-                    if (automatic && (!HeroCombatRules.Enemy(gameObject, p.Target)||VoidKnightState.HiddenFrom(gameObject,p.Target)))
+                    if (automatic && (!HeroCombatRules.Enemy(gameObject, p.Target)||CombatVisibility.HiddenFrom(gameObject,p.Target)))
                     { pending[i] = default; continue; }
                     if (automatic) FaceBasicTarget(p);
                     if (Time.time < p.ReleaseAt) continue;

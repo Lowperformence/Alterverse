@@ -81,7 +81,7 @@ partial class Regression
    var plan=(OnlineMatchPlan)CoopAuthority.PreparedPlan;
    Check(plan!=null&&plan.HumanCount==2,"both new and legacy hello shapes join dedicated roster");
    Check(plan.Session.Slots.Where(s=>!s.IsBot).All(s=>mixed?SafeIdentityCatalog.IsPlayerName(s.DisplayName):s.DisplayName==alias),"dedicated roster negotiates display format for all clients");
-   Check(plan.Session.Slots.Where(s=>s.IsBot).All(s=>SafeIdentityCatalog.IsPlayerName(s.DisplayName)),"bot labels keep legacy-compatible format");
+   Check(plan.Session.Slots.Where(s=>s.IsBot).All(s=>mixed?SafeIdentityCatalog.IsPlayerName(s.DisplayName):!OnlineMatchPlan.IsSyntheticBotLabel(s.DisplayName)),"bot labels negotiate legacy and gamertag formats");
    if(mixed)
    {
     uint before=CoopPlanHandshake.Fingerprint(plan);

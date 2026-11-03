@@ -27,6 +27,7 @@ namespace Alterverse.Profile
         {
             public int stickerProtocolVersion;
             public StickerGift[] receivedStickers;
+            public PartyInvitation[] partyInvites;
             public Player me;
             public PaidShardCommerce.Snapshot wallet;
             public Player[] friends,incoming,outgoing,blocked,applications,players;
@@ -45,6 +46,8 @@ namespace Alterverse.Profile
             public Message[] messages;
             public Report[] reports;
         }
+        [Serializable] public sealed class PartyInvitation
+        {public string inviteId,senderName,partyCode;public long expiresAtUnix;}
         [Serializable] public sealed class StickerGift
         { public string giftId,senderName; public int senderHero,stickerId; public long receivedAtUnix; }
         [Serializable] public sealed class Message
@@ -56,7 +59,7 @@ namespace Alterverse.Profile
         [Serializable] public sealed class Request
         {
             public string playerId,clanId,query,name,tag,description,role,operationId;
-            public string giftId;
+            public string giftId,inviteId,partyCode,partySessionId;
             public int stickerId;
             public long expectedProfileRevision;
             public int avatar,descriptionId;
@@ -99,7 +102,7 @@ namespace Alterverse.Profile
             PlayerPrefs.SetString(StickerOperationKey,JsonUtility.ToJson(body));PlayerPrefs.Save();
             Load("/social/sticker/send",body);return true;
         }
-        static bool FriendRoute(string route)=>route.StartsWith("/social/friend/",StringComparison.Ordinal)||route.StartsWith("/social/sticker/",StringComparison.Ordinal);
+        static bool FriendRoute(string route)=>route.StartsWith("/social/friend/",StringComparison.Ordinal)||route.StartsWith("/social/sticker/",StringComparison.Ordinal)||route.StartsWith("/social/party/",StringComparison.Ordinal);
         public bool HasPendingClanCreation=>PaidShardCommerce.Instance!=null&&!string.IsNullOrEmpty(PaidShardCommerce.Instance.AccountHash)&&PlayerPrefs.HasKey(ClanOperationKey);
         public Request PendingClanCreation
         {

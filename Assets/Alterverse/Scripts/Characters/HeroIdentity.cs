@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 namespace Alterverse.Characters
 {
 public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok,Timmy,VoidKnight,Bolt7}
@@ -23,6 +23,7 @@ gameObject.AddComponent<Alterverse.Visuals.TahlaHealerVisualPolish>();
 }
 private void Start()
 {
+if(GetComponent<Alterverse.Combat.Health>()!=null&&GetComponent<Alterverse.Visuals.CosmicNebulaConcealment>()==null)gameObject.AddComponent<Alterverse.Visuals.CosmicNebulaConcealment>();
 if(hero==HeroId.Bolt7)
 {
 if(GetComponent<PlayerHeroAbilities>()!=null&&GetComponent<Alterverse.UI.AbilityRangePreviewOverlay>()==null)

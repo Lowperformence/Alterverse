@@ -124,6 +124,7 @@ string stage="arena and base guards";
 try
 {
 BuildArena(ref stage);
+world.AddComponent<CosmicNebulaField>();
 
 stage="local hero";
 GameObject player=null;
