@@ -291,7 +291,7 @@ namespace Alterverse.Visuals
                         float maxY = headPos.y + topPad;
                         float minY = Mathf.Min(torsoPos.y - bottomPad, headPos.y - Mathf.Max(0.42f, headToChest * 1.45f));
                         float height = Mathf.Clamp(maxY - minY, 0.56f, 1.05f);
-                        float centerY = maxY - height * 0.5f;
+                        float headCenterY = maxY - height * 0.5f;
                         float centerX = (headPos.x + torsoPos.x) * 0.5f;
                         float centerZ = (headPos.z + torsoPos.z) * 0.5f;
                         float shoulderSpan = 0.52f;
@@ -302,7 +302,7 @@ namespace Alterverse.Visuals
                         }
                         float width = Mathf.Max(shoulderSpan, height * 0.84f);
                         return new Bounds(
-                            new Vector3(centerX, centerY, centerZ),
+                            new Vector3(centerX, headCenterY, centerZ),
                             new Vector3(width, height, 0.8f));
                     }
                 }
