@@ -23,3 +23,5 @@ with tempfile.TemporaryDirectory(prefix='df-lobby-') as temp:
         subprocess.run([str(a.dotnet_root/'dotnet'),str(output)],check=True)
 from entrance import run
 run(a.dotnet_root,root)
+from offline_ui import run as compile_offline_ui
+compile_offline_ui(a.dotnet_root,root)
