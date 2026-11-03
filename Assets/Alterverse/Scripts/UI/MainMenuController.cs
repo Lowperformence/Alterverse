@@ -204,7 +204,12 @@ namespace Alterverse.UI
                 GUI.color = Color.white; GUI.enabled = !launching;
                 backdrop ??= new MenuCosmicBackdrop();
                 backdrop.Draw(new Rect(0,0,Screen.width,Screen.height),cosmicBackground?.Image);
-                if ((!ReviewPromptVisible && OnlinePartyOverlay.IsOpen) || RankedPanel.Visible) return;
+                if (!ReviewPromptVisible && OnlinePartyOverlay.IsOpen)
+                {
+                    OnlinePartyOverlay.DrawFromMenu();
+                    return;
+                }
+                if (RankedPanel.Visible) return;
                 Rect safe = Screen.safeArea;
                 if (safe.width <= 0 || safe.height <= 0) return;
                 float scale = Mathf.Min(safe.height/MenuHeight,safe.width/1500f);

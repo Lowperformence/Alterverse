@@ -12,7 +12,7 @@ def run(dotnet,root):
     source=(root/'Assets/Alterverse/Scripts/UI/OnlinePartyOverlay.cs').read_text()
     header=source[source.index('namespace Alterverse.UI'):source.index('        [RuntimeInitializeOnLoadMethod')]
     body='\n'.join(method(source,d) for d in ['private static void AutoCreate()','public static void Show()',
-        'public static void Hide()','private void Awake()','private void OnGUI()'])
+        'public static void Hide()','private void Awake()','public static void DrawFromMenu()','private void Draw()'])
     boundary='''
 public static bool FailDraw,ExitDraw;public static int Draws;
 private void DrawOverlay(float width,OnlinePartyService online,EdgegapOnlineFlow edgegap)
@@ -52,7 +52,7 @@ public static class OnlineMatchLoadingScreen {public static bool IsVisible;}
 }
 static class EntranceRegression {
 static void Check(bool value,string label){if(!value)throw new Exception(label);}
-static void Draw(){var field=typeof(OnlinePartyOverlay).GetField("instance",BindingFlags.Static|BindingFlags.NonPublic);try{typeof(OnlinePartyOverlay).GetMethod("OnGUI",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(field.GetValue(null),null);}catch(TargetInvocationException e){throw e.InnerException;}}
+static void Draw()=>OnlinePartyOverlay.DrawFromMenu();
 static void Main(){
 Check(Alterverse.Multiplayer.OnlinePartyService.Instance==null,"service starts absent");
 OnlinePartyOverlay.Show();Check(OnlinePartyOverlay.IsOpen&&Alterverse.Multiplayer.OnlinePartyService.Instance!=null,"opening creates missing service");

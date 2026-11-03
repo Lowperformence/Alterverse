@@ -59,7 +59,14 @@ namespace Alterverse.UI
             DontDestroyOnLoad(gameObject);
         }
 
-        private void OnGUI()
+        // The main menu draws the backdrop and lobby in one OnGUI callback, in that order.
+        // A separate callback could be sorted behind the opaque menu background.
+        public static void DrawFromMenu()
+        {
+            if (instance != null) instance.Draw();
+        }
+
+        private void Draw()
         {
             // Play Online opens this surface; a closed party must not draw over the menu.
             if (!MainMenuController.IsVisible || MainMenuController.ReviewPromptVisible || !open || OnlineMatchLoadingScreen.IsVisible) return;
