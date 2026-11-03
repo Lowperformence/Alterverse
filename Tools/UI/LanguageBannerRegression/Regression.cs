@@ -33,6 +33,10 @@ static class Regression
         }
         Check(PlayerPrefs.GetString("DF_Shards","")=="170","Language changes do not change currency or profile data");
         GameLanguage.Select("de");
+        Check(GameLanguage.Text("CHOOSE ONE BONUS")=="WÄHLE EINEN BONUS"&&GameLanguage.Text("MOVEMENT SPEED")=="BEWEGUNGSTEMPO"&&GameLanguage.Text("RECOMMENDED")=="EMPFOHLEN","Buff choices are translated into German");
+        GameLanguage.Select("es");Check(GameLanguage.Text("MAX HEALTH")=="SALUD MÁXIMA","Buff choices are translated into Spanish");
+        GameLanguage.Select("fr");Check(GameLanguage.Text("OUTGOING DAMAGE")=="DÉGÂTS INFLIGÉS","Buff choices are translated into French");
+        GameLanguage.Select("de");
         Check(!GameLanguage.Select("unconfigured-language")&&GameLanguage.Current.Code=="de","Invalid input preserves the existing selection");
         Check(GameLanguage.Normalize("ES_mx")=="es-MX"&&GameLanguage.Normalize("pt-BR")=="pt-BR","Regional variants remain distinct");
         Check(GameLanguage.Normalize("fr-CA")=="fr"&&GameLanguage.Normalize("no-NO")=="nb","Regional and legacy aliases resolve");

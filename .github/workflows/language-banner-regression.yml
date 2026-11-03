@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - 'Assets/Alterverse/Scripts/Profile/GameLanguage.cs'
+      - 'Assets/Alterverse/Scripts/Match/MidMatchPassiveDirector.cs'
+      - 'Tools/UI/MidMatchBuffRegression/**'
       - 'Assets/Alterverse/Scripts/UI/LanguagePicker.cs'
       - 'Assets/Alterverse/Scripts/UI/LocalizedText.cs'
       - 'Assets/Alterverse/Scripts/UI/MenuBannerLayout.cs'
@@ -19,6 +21,8 @@ on:
   pull_request:
     paths:
       - 'Assets/Alterverse/Scripts/Profile/GameLanguage.cs'
+      - 'Assets/Alterverse/Scripts/Match/MidMatchPassiveDirector.cs'
+      - 'Tools/UI/MidMatchBuffRegression/**'
       - 'Assets/Alterverse/Scripts/UI/**'
       - 'Assets/Alterverse/Scripts/Shop/MenuBannerAds.cs'
       - 'Assets/Alterverse/Resources/Localization/**'
@@ -39,6 +43,7 @@ jobs:
         with:
           dotnet-version: '8.0.x'
       - run: python Tools/UI/LanguageBannerRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/UI/MidMatchBuffRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - name: Compile Android text bridge
         shell: bash
         run: |
