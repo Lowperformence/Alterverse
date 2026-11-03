@@ -118,7 +118,6 @@ namespace Alterverse.Profile
                     ["DAILY"] = "MISSIONEN",
                     ["RANKING"] = "RANGLISTE",
                     ["SETTINGS"] = "OPTIONEN",
-                    ["Settings"] = "Einstellungen",
                     ["Audio and language."] = "Audio und Sprache.",
                     ["Audio, language and hardware graphics adaptation."] = "Audio, Sprache und automatische Hardware-Grafikanpassung.",
                     ["Master volume"] = "Gesamtlautstärke",
@@ -205,7 +204,74 @@ namespace Alterverse.Profile
                     ["TWO REALITIES.\nONE FRONT."] = "ZWEI REALITÄTEN.\nEINE FRONT.",
                     ["Choose your hero. Fight alongside your team. Claim the Hotzone and break the enemy core."] = "Wähle deinen Helden. Kämpfe mit deinem Team, erobere die Hotzone und zerstöre den gegnerischen Kern.",
                     ["ENTER THE FRONT"] = "IN DEN KAMPF",
-                    ["MISSIONS"] = "MISSIONEN"
+                    ["MISSIONS"] = "MISSIONEN",
+                    ["BATTLE PASS"] = "BATTLE PASS",
+                    ["SHARDS"] = "SPLITTER",
+                    ["BACK"] = "ZURÜCK",
+                    ["VICTORY"] = "SIEG",
+                    ["DEFEAT"] = "NIEDERLAGE",
+                    ["PLAY AGAIN"] = "NOCHMAL SPIELEN",
+                    ["MAIN MENU"] = "HAUPTMENÜ",
+                    ["SUMMARY"] = "ÜBERSICHT",
+                    ["SCOREBOARD"] = "RANGLISTE",
+                    ["DETAILS"] = "DETAILS",
+                    ["HERO"] = "HELD",
+                    ["RESULT"] = "ERGEBNIS",
+                    ["K / D / A"] = "K / T / A",
+                    ["KILLS"] = "KILLS",
+                    ["DEATHS"] = "TODE",
+                    ["ASSISTS"] = "ASSISTS",
+                    ["OBJECTIVES"] = "ZIELE",
+                    ["REWARDS"] = "BELOHNUNGEN",
+                    ["SHARDS EARNED"] = "VERDIENTE SPLITTER",
+                    ["PLAYER XP"] = "SPIELER-XP",
+                    ["BATTLE PASS XP"] = "BATTLE-PASS-XP",
+                    ["PROGRESSION"] = "FORTSCHRITT",
+                    ["MATCH RECAP"] = "MATCH-ZUSAMMENFASSUNG",
+                    ["TEAMWORK SCORE"] = "TEAMWORK-WERTUNG",
+                    ["PERFORMANCE"] = "LEISTUNG",
+                    ["COMBAT TELEMETRY"] = "KAMPF-TELEMETRIE",
+                    ["TEAM ROSTER"] = "TEAM-AUFSTELLUNG",
+                    ["MATCH MVP"] = "MATCH-MVP",
+                    ["★ MATCH MVP"] = "★ MATCH-MVP",
+                    ["COMBAT GRADE"] = "KAMPFWERTUNG",
+                    ["BASE"] = "BASIS",
+                    ["BONUS"] = "BONUS",
+                    ["LEVEL UP!"] = "STUFENAUFSTIEG!",
+                    ["ZERO TEAM"] = "TEAM ZERO",
+                    ["LUMEN TEAM"] = "TEAM LUMEN",
+                    ["ZERO REALITY"] = "ZERO-REALITÄT",
+                    ["LUMEN REALITY"] = "LUMEN-REALITÄT",
+                    ["ENEMY CORE DESTROYED"] = "GEGNERISCHER KERN ZERSTÖRT",
+                    ["ALLY CORE DESTROYED"] = "EIGENER KERN ZERSTÖRT",
+                    ["FRONT DOMINANCE VICTORY"] = "SIEG DURCH FRONT-DOMINANZ",
+                    ["FRONT LOST AT TIME LIMIT"] = "FRONT NACH ZEITABLAUF VERLOREN",
+                    ["HALFTIME PASSIVE UNLOCKED"] = "HALBZEIT-PASSIV FREIGESCHALTET",
+                    ["MID-MATCH AUGMENT READY"] = "HALBZEIT-AUGMENT BEREIT",
+                    ["SELECT 1 PERMANENT BUFF FOR THE REMAINDER OF THE MATCH  •  KEYS [1] [2] [3]"] = "WÄHLE 1 DAUERHAFTEN BONUS FÜR DEN REST DES MATCHES  •  TASTEN [1] [2] [3]",
+                    ["PASSIVE ACTIVE"] = "PASSIV AKTIV",
+                    ["PERMANENT HALFTIME AUGMENT"] = "DAUERHAFTER HALBZEIT-BONUS",
+                    ["+15% Movement Speed"] = "+15 % Bewegungstempo",
+                    ["+15% Outgoing Damage"] = "+15 % Verursachter Schaden",
+                    ["+15% Max Health"] = "+15 % Maximale LP",
+                    ["MOBILITY"] = "MOBILITÄT",
+                    ["OFFENSE"] = "OFFENSIVE",
+                    ["SURVIVABILITY"] = "ÜBERLEBENSKRAFT",
+                    ["OVERDRIVE STEP"] = "ÜBERSCHUB-SCHRITT",
+                    ["RIFT AMPLIFIER"] = "RISS-VERSTÄRKER",
+                    ["AEGIS CORE"] = "ÄGIS-KERN",
+                    ["SPRINT / STRAFE"] = "SPRINT / FLANKE",
+                    ["ALL ATTACKS & SKILLS"] = "ALLE ANGRIFFE & FÄHIGKEITEN",
+                    ["INSTANT HEAL + MAX HP"] = "SOFORTHEILUNG + MAX. LP",
+                    ["KEY [1]  •  TAP TO EQUIP"] = "TASTE [1]  •  TIPPEN ZUM AUSRÜSTEN",
+                    ["KEY [2]  •  TAP TO EQUIP"] = "TASTE [2]  •  TIPPEN ZUM AUSRÜSTEN",
+                    ["KEY [3]  •  TAP TO EQUIP"] = "TASTE [3]  •  TIPPEN ZUM AUSRÜSTEN",
+                    ["ENTERING THE FRONT"] = "BETRETE DIE FRONT",
+                    ["PREPARING BATTLEFIELD"] = "SCHLACHTFELD WIRD VORBEREITET",
+                    ["TACTICAL INTEL"] = "TAKTISCHE INFOS",
+                    ["CHAMPION"] = "CHAMPION",
+                    ["4v4 TACTICAL DEPLOYMENT"] = "4v4 TAKTISCHER EINSATZ",
+                    ["KILLS MATTER MOST WHEN THEY CREATE SPACE FOR YOUR TEAM TO MOVE THE FRONT."] = "KILLS SIND AM WICHTIGSTEN, WENN SIE DEINEM TEAM RAUM VERSCHAFFEN, DIE FRONT ZU VERSCHIEBEN."
                 },
                 ["es"] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
@@ -214,12 +280,54 @@ namespace Alterverse.Profile
                     ["HEROES"] = "HÉROES",
                     ["STORE"] = "TIENDA",
                     ["INVENTORY"] = "INVENTARIO",
+                    ["BATTLE PASS"] = "PASE DE BATALLA",
                     ["PROFILE"] = "PERFIL",
                     ["FRIENDS"] = "AMIGOS",
                     ["CLANS"] = "CLANES",
                     ["DAILY"] = "DIARIO",
                     ["RANKING"] = "CLASIFICACIÓN",
                     ["SETTINGS"] = "AJUSTES",
+                    ["SHARDS"] = "FRAGMENTOS",
+                    ["BACK"] = "ATRÁS",
+                    ["OFFLINE LOBBY"] = "SALA SIN CONEXIÓN",
+                    ["YOUR TEAM"] = "TU EQUIPO",
+                    ["OPPONENT TEAM"] = "EQUIPO RIVAL",
+                    ["YOU"] = "TÚ",
+                    ["AI BOT"] = "BOT IA",
+                    ["CHOOSE YOUR HERO"] = "ELIGE TU HÉROE",
+                    ["START OFFLINE MATCH"] = "INICIAR PARTIDA",
+                    ["SHUFFLE BOTS"] = "MEZCLAR BOTS",
+                    ["LOCKED"] = "BLOQUEADO",
+                    ["TAKEN"] = "OCUPADO",
+                    ["VICTORY"] = "VICTORIA",
+                    ["DEFEAT"] = "DERROTA",
+                    ["PLAY AGAIN"] = "JUGAR DE NUEVO",
+                    ["MAIN MENU"] = "MENÚ PRINCIPAL",
+                    ["SUMMARY"] = "RESUMEN",
+                    ["SCOREBOARD"] = "MARCADOR",
+                    ["DETAILS"] = "DETALLES",
+                    ["HERO"] = "HÉROE",
+                    ["RESULT"] = "RESULTADO",
+                    ["KILLS"] = "BAJAS",
+                    ["DEATHS"] = "MUERTES",
+                    ["ASSISTS"] = "ASISTENCIAS",
+                    ["OBJECTIVES"] = "OBJETIVOS",
+                    ["REWARDS"] = "RECOMPENSAS",
+                    ["SHARDS EARNED"] = "FRAGMENTOS GANADOS",
+                    ["PLAYER XP"] = "XP DE JUGADOR",
+                    ["BATTLE PASS XP"] = "XP DEL PASE",
+                    ["PROGRESSION"] = "PROGRESO",
+                    ["MATCH RECAP"] = "RESUMEN DE PARTIDA",
+                    ["TEAMWORK SCORE"] = "PUNTUACIÓN DE EQUIPO",
+                    ["MATCH MVP"] = "MVP DE LA PARTIDA",
+                    ["★ MATCH MVP"] = "★ MVP DE LA PARTIDA",
+                    ["COMBAT GRADE"] = "RANGO DE COMBATE",
+                    ["HALFTIME PASSIVE UNLOCKED"] = "PASIVA DE MEDIO TIEMPO",
+                    ["MID-MATCH AUGMENT READY"] = "MEJORA DE MITAD DE PARTIDA",
+                    ["PASSIVE ACTIVE"] = "PASIVA ACTIVA",
+                    ["+15% Movement Speed"] = "+15 % Velocidad de movimiento",
+                    ["+15% Outgoing Damage"] = "+15 % Daño infligido",
+                    ["+15% Max Health"] = "+15 % Salud máxima",
                     ["Graphics"] = "Gráficos",
                     ["Graphics & Hardware"] = "Gráficos y Hardware"
                 },
@@ -230,12 +338,54 @@ namespace Alterverse.Profile
                     ["HEROES"] = "HÉROS",
                     ["STORE"] = "BOUTIQUE",
                     ["INVENTORY"] = "INVENTAIRE",
+                    ["BATTLE PASS"] = "PASSE DE COMBAT",
                     ["PROFILE"] = "PROFIL",
                     ["FRIENDS"] = "AMIS",
                     ["CLANS"] = "CLANS",
                     ["DAILY"] = "MISSIONS",
                     ["RANKING"] = "CLASSEMENT",
                     ["SETTINGS"] = "PARAMÈTRES",
+                    ["SHARDS"] = "ÉCLATS",
+                    ["BACK"] = "RETOUR",
+                    ["OFFLINE LOBBY"] = "SALON HORS LIGNE",
+                    ["YOUR TEAM"] = "VOTRE ÉQUIPE",
+                    ["OPPONENT TEAM"] = "ÉQUIPE ADVERSE",
+                    ["YOU"] = "VOUS",
+                    ["AI BOT"] = "BOT IA",
+                    ["CHOOSE YOUR HERO"] = "CHOISISSEZ VOTRE HÉROS",
+                    ["START OFFLINE MATCH"] = "LANCER LA PARTIE",
+                    ["SHUFFLE BOTS"] = "MÉLANGER LES BOTS",
+                    ["LOCKED"] = "VERROUILLÉ",
+                    ["TAKEN"] = "PRIS",
+                    ["VICTORY"] = "VICTOIRE",
+                    ["DEFEAT"] = "DÉFAITE",
+                    ["PLAY AGAIN"] = "REJOUER",
+                    ["MAIN MENU"] = "MENU PRINCIPAL",
+                    ["SUMMARY"] = "RÉSUMÉ",
+                    ["SCOREBOARD"] = "TABLEAU DES SCORES",
+                    ["DETAILS"] = "DÉTAILS",
+                    ["HERO"] = "HÉROS",
+                    ["RESULT"] = "RÉSULTAT",
+                    ["KILLS"] = "ÉLIMINATIONS",
+                    ["DEATHS"] = "MORTS",
+                    ["ASSISTS"] = "ASSISTANCES",
+                    ["OBJECTIVES"] = "OBJECTIFS",
+                    ["REWARDS"] = "RÉCOMPENSES",
+                    ["SHARDS EARNED"] = "ÉCLATS GAGNÉS",
+                    ["PLAYER XP"] = "XP JOUEUR",
+                    ["BATTLE PASS XP"] = "XP PASSE DE COMBAT",
+                    ["PROGRESSION"] = "PROGRESSION",
+                    ["MATCH RECAP"] = "BILAN DU MATCH",
+                    ["TEAMWORK SCORE"] = "SCORE D'ÉQUIPE",
+                    ["MATCH MVP"] = "MVP DU MATCH",
+                    ["★ MATCH MVP"] = "★ MVP DU MATCH",
+                    ["COMBAT GRADE"] = "NOTE DE COMBAT",
+                    ["HALFTIME PASSIVE UNLOCKED"] = "PASSIF DE MI-TEMPS DÉBLOQUÉ",
+                    ["MID-MATCH AUGMENT READY"] = "AMÉLIORATION DE MI-PARTIE PRÊTE",
+                    ["PASSIVE ACTIVE"] = "PASSIF ACTIF",
+                    ["+15% Movement Speed"] = "+15 % Vitesse de déplacement",
+                    ["+15% Outgoing Damage"] = "+15 % Dégâts infligés",
+                    ["+15% Max Health"] = "+15 % PV max",
                     ["Graphics"] = "Graphismes",
                     ["Graphics & Hardware"] = "Graphismes & Matériel"
                 }
@@ -255,7 +405,88 @@ namespace Alterverse.Profile
                 return translated;
             if (fallbackTranslations.TryGetValue(baseCode, out var baseMap) && baseMap.TryGetValue(source, out string baseTranslated))
                 return baseTranslated;
+            if (TryTranslateDynamic(source, baseCode, out string dynamicTranslated))
+                return dynamicTranslated;
             return source;
+        }
+
+        static bool TryTranslateDynamic(string source, string baseCode, out string translated)
+        {
+            translated = null;
+            if (string.IsNullOrEmpty(source) || baseCode == "en")
+                return false;
+
+            if (source.StartsWith("RESPAWN IN ", StringComparison.OrdinalIgnoreCase))
+            {
+                string rest = source.Substring("RESPAWN IN ".Length);
+                translated = baseCode == "de" ? "WIEDERBELEBUNG IN " + rest
+                    : baseCode == "es" ? "REAPARICIÓN EN " + rest
+                    : baseCode == "fr" ? "RÉAPPARITION DANS " + rest : null;
+                return translated != null;
+            }
+            if (source.StartsWith("OBJECTIVES  ", StringComparison.OrdinalIgnoreCase))
+            {
+                string rest = source.Substring("OBJECTIVES  ".Length);
+                translated = baseCode == "de" ? "ZIELE  " + rest
+                    : baseCode == "es" ? "OBJETIVOS  " + rest
+                    : baseCode == "fr" ? "OBJECTIFS  " + rest : null;
+                return translated != null;
+            }
+            if (source.StartsWith("ACCOUNT  /  LEVEL ", StringComparison.OrdinalIgnoreCase))
+            {
+                string lvl = source.Substring("ACCOUNT  /  LEVEL ".Length);
+                translated = baseCode == "de" ? "KONTO  /  STUFE " + lvl
+                    : baseCode == "es" ? "CUENTA  /  NIVEL " + lvl
+                    : baseCode == "fr" ? "COMPTE  /  NIVEAU " + lvl : null;
+                return translated != null;
+            }
+            if (source.StartsWith("BATTLE PASS  /  LEVEL ", StringComparison.OrdinalIgnoreCase))
+            {
+                string lvl = source.Substring("BATTLE PASS  /  LEVEL ".Length);
+                translated = baseCode == "de" ? "BATTLE PASS  /  STUFE " + lvl
+                    : baseCode == "es" ? "PASE DE BATALLA  /  NIVEL " + lvl
+                    : baseCode == "fr" ? "PASSE DE COMBAT  /  NIVEAU " + lvl : null;
+                return translated != null;
+            }
+            if (source.StartsWith("MATCH DROP  /  ", StringComparison.OrdinalIgnoreCase))
+            {
+                string rest = source.Substring("MATCH DROP  /  ".Length);
+                translated = baseCode == "de" ? "MATCH-BEUTE  /  " + rest
+                    : baseCode == "es" ? "BOTÍN DE PARTIDA  /  " + rest
+                    : baseCode == "fr" ? "BUTIN DE MATCH  /  " + rest : null;
+                return translated != null;
+            }
+            if (source.StartsWith("DROPS ", StringComparison.OrdinalIgnoreCase))
+            {
+                string rest = source.Substring("DROPS ".Length);
+                translated = baseCode == "de" ? "BEUTE " + rest
+                    : baseCode == "es" ? "BOTÍN " + rest
+                    : baseCode == "fr" ? "BUTIN " + rest : null;
+                return translated != null;
+            }
+            if (source.EndsWith(" BONUS", StringComparison.OrdinalIgnoreCase) && source.Contains(" BASE"))
+            {
+                translated = baseCode == "de" ? source.Replace(" BASE", " BASIS")
+                    : baseCode == "es" ? source.Replace(" BONUS", " BONO") : null;
+                return translated != null;
+            }
+            if (source.EndsWith(" WING BONUS", StringComparison.OrdinalIgnoreCase))
+            {
+                string prefix = source.Substring(0, source.Length - " WING BONUS".Length);
+                translated = baseCode == "de" ? prefix + " FLÜGEL-BONUS"
+                    : baseCode == "es" ? prefix + " BONO DE ALAS"
+                    : baseCode == "fr" ? prefix + " BONUS D'AILES" : null;
+                return translated != null;
+            }
+            if (source.EndsWith("  •  LEVEL UP", StringComparison.OrdinalIgnoreCase))
+            {
+                string prefix = source.Substring(0, source.Length - "  •  LEVEL UP".Length);
+                translated = baseCode == "de" ? prefix + "  •  STUFENAUFSTIEG"
+                    : baseCode == "es" ? prefix + "  •  SUBIDA DE NIVEL"
+                    : baseCode == "fr" ? prefix + "  •  NIVEAU SUPÉRIEUR" : null;
+                return translated != null;
+            }
+            return false;
         }
         public static string Normalize(string code)
         {

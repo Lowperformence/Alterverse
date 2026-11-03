@@ -28,8 +28,23 @@ namespace Alterverse.Visuals
         private void LateUpdate()
         {
             if(Time.unscaledTime<nextScan)return;
-            nextScan=Time.unscaledTime+.10f;
-
+            bool inMatch = !Alterverse.UI.MainMenuController.IsVisible && Health.Active.Count > 0;
+            nextScan=Time.unscaledTime+(inMatch ? .35f : .15f);
+            if (inMatch)
+            {
+                var activeHealth = Health.Active;
+                for (int i = 0; i < activeHealth.Count; i++)
+                {
+                    Health h = activeHealth[i];
+                    if (h == null) continue;
+                    HeroIdentity hero = h.GetComponent<HeroIdentity>();
+                    if (hero == null) continue;
+                    OriginalWeaponColorwayState state = hero.GetComponent<OriginalWeaponColorwayState>();
+                    if (state == null) state = hero.gameObject.AddComponent<OriginalWeaponColorwayState>();
+                    state.Sync(hero);
+                }
+                return;
+            }
             HeroIdentity[] heroes=FindObjectsByType<HeroIdentity>(FindObjectsSortMode.None);
             for(int i=0;i<heroes.Length;i++)
             {

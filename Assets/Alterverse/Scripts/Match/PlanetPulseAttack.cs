@@ -149,14 +149,17 @@ namespace Alterverse.Match
         {
             if(authoritative)
             {
-                foreach (Health victim in FindObjectsByType<Health>())
+                var activeHealth = Health.Active;
+                for (int i = 0; i < activeHealth.Count; i++)
+                {
+                    Health victim = activeHealth[i];
                 {
                     if (victim == null || victim.IsDead || victim == health) continue;
                     if (victim.GetComponent<TeamMember>() == null && victim.GetComponent<LaneMinion>() == null) continue;
                     Vector3 delta = victim.transform.position - transform.position;
                     delta.y = 0;
                     if (delta.sqrMagnitude <= radius * radius) victim.TakeDamage(damage, gameObject);
-                }
+                }}
             }
 
             Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Explosion,transform.position,.6f);

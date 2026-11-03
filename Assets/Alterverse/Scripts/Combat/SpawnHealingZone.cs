@@ -8,7 +8,7 @@ public int Team=>team;
 public float Radius=>ArenaLayout.HealingRadius;
 public bool ContainsWorldPoint(Vector3 point)=>ArenaLayout.IsInsideHealingArea(point,transform.position);
 public void Initialize(Health playerHealth)=>legacyTarget=playerHealth;public void InitializeTeam(int assignedTeam)=>team=Mathf.Clamp(assignedTeam,0,1);
-private void Update(){if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;if(Time.time>=nextRefresh){nextRefresh=Time.time+Mathf.Max(.1f,refreshInterval);cachedMembers=Object.FindObjectsByType<TeamMember>();}if(legacyTarget!=null&&!legacyTarget.IsDead){TeamMember member=legacyTarget.GetComponent<TeamMember>();if(member==null||member.Team==team)HealIfInside(legacyTarget);}for(int i=0;i<cachedMembers.Length;i++){TeamMember member=cachedMembers[i];if(member==null||member.Team!=team)continue;Health health=member.GetComponent<Health>();if(health==null||health==legacyTarget||health.IsDead)continue;HealIfInside(health);}}
+private void Update(){if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;if(legacyTarget!=null&&!legacyTarget.IsDead){TeamMember member=legacyTarget.GetComponent<TeamMember>();if(member==null||member.Team==team)HealIfInside(legacyTarget);}var activeHealth=Health.Active;for(int i=0;i<activeHealth.Count;i++){Health health=activeHealth[i];if(health==null||health==legacyTarget||health.IsDead)continue;TeamMember member=health.GetComponent<TeamMember>();if(member==null||member.Team!=team)continue;HealIfInside(health);}}
 private void HealIfInside(Health health){if(ContainsWorldPoint(health.transform.position))health.Heal(healPerSecond*Time.deltaTime);}
 }
 }

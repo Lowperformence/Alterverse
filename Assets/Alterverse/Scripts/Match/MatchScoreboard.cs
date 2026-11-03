@@ -79,7 +79,8 @@ public void ApplyNetworkScore(Health health,int kills,int deaths,int assists)
  if(entry==null)return;
  entry.Kills=Mathf.Max(0,kills);entry.Deaths=Mathf.Max(0,deaths);entry.Assists=Mathf.Max(0,assists);
 }
-public static string ResolveDisplayName(HeroIdentity identity){if(identity==null)return "PLAYER";CoopHeroSlot slot=identity.GetComponent<CoopHeroSlot>();if(slot!=null)return CoopDisplayName(slot);if(identity.GetComponent<HeroRespawn>()!=null)return PlayerProfile.PlayerName;return !string.IsNullOrWhiteSpace(identity.DisplayName)?identity.DisplayName:DisplayName(identity.gameObject.name);}private static string CoopDisplayName(CoopHeroSlot slot){CoopMatchPlan plan=CoopAuthority.ActivePlan;if(slot!=null&&plan?.Session?.Slots!=null&&slot.Slot>=0&&slot.Slot<plan.Session.Slots.Length){MatchPlayerSlot data=plan.Session.Slots[slot.Slot];if(data!=null){if(plan is OnlineMatchPlan&&data.IsBot&&OnlineMatchPlan.IsSyntheticBotLabel(data.DisplayName))return OnlineMatchPlan.BotDisplayName(plan.MatchId,data.Team,slot.Slot,plan.Session.Slots);if(!string.IsNullOrWhiteSpace(data.DisplayName))return data.DisplayName;}}HeroIdentity identity=slot!=null?slot.GetComponent<HeroIdentity>():null;return identity!=null?identity.DisplayName:"PLAYER";}
+private static string CoopDisplayName(CoopHeroSlot slot){CoopMatchPlan plan=CoopAuthority.ActivePlan;if(slot!=null&&plan?.Session?.Slots!=null&&slot.Slot>=0&&slot.Slot<plan.Session.Slots.Length){MatchPlayerSlot data=plan.Session.Slots[slot.Slot];if(data!=null){if(plan is OnlineMatchPlan&&data.IsBot&&OnlineMatchPlan.IsSyntheticBotLabel(data.DisplayName))return OnlineMatchPlan.BotDisplayName(plan.MatchId,data.Team,slot.Slot,plan.Session.Slots);if(!string.IsNullOrWhiteSpace(data.DisplayName))return data.DisplayName;}}HeroIdentity identity=slot!=null?slot.GetComponent<HeroIdentity>():null;return identity!=null?identity.DisplayName:"PLAYER";}
+public static string ResolveDisplayName(HeroIdentity identity){if(identity==null)return "PLAYER";CoopHeroSlot slot=identity.GetComponent<CoopHeroSlot>();if(slot!=null)return CoopDisplayName(slot);if(identity.GetComponent<HeroRespawn>()!=null)return PlayerProfile.PlayerName;return !string.IsNullOrWhiteSpace(identity.DisplayName)?identity.DisplayName:DisplayName(identity.gameObject.name);}
 private TeamMember LocalPlayerMember()
 {
 RefreshLocalRespawn();
@@ -155,7 +156,7 @@ private void RefreshRespawnBoard()
     {
         if(e.Member==null)continue;
         e.BoardPerformance=Performance(e);e.BoardOwn=e.Member==local;
-        e.BoardName=(e.BoardOwn&&FounderEntitlement.Owned?"â—† ":"")+e.Name;
+        e.BoardName=(e.BoardOwn&&FounderEntitlement.Owned?"◆ ":"")+e.Name;
         e.BoardKills=e.Kills.ToString();e.BoardDeaths=e.Deaths.ToString();
         e.BoardAssists=e.Assists.ToString();e.BoardScore=e.BoardPerformance.ToString("0");
         (e.Member.Team==0?respawnZero:respawnLumen).Add(e);
@@ -164,8 +165,8 @@ private void RefreshRespawnBoard()
     respawnLumen.Sort((a,b)=>b.BoardPerformance.CompareTo(a.BoardPerformance));
     if(front!=null)
     {
-        zeroFrontLabel=$"ZERO  â€¢  FRONT {front.ZeroControl:0.0}%";
-        lumenFrontLabel=$"LUMEN  â€¢  FRONT {front.LumenControl:0.0}%";
+        zeroFrontLabel=$"ZERO  •  FRONT {front.ZeroControl:0.0}%";
+        lumenFrontLabel=$"LUMEN  •  FRONT {front.LumenControl:0.0}%";
     }
     respawnBoardReady=true;
 }
@@ -236,7 +237,7 @@ private void RefreshResultPresentation()
     }
     var details=new List<MatchResultScreenData.Metric>(18);
     details.Add(new MatchResultScreenData.Metric("PLAYED HERO",snapshot.Hero));
-    details.Add(new MatchResultScreenData.Metric("TEAM KILLS  /  ZERO â€” LUMEN",TeamKills(0)+" â€” "+TeamKills(1)));
+    details.Add(new MatchResultScreenData.Metric("TEAM KILLS  /  ZERO — LUMEN",TeamKills(0)+" — "+TeamKills(1)));
     if(CoopAuthority.Active||stats!=null)
     {
         float dealt=CoopAuthority.Active?playerDamageDealt:stats.DamageDealt;
@@ -253,9 +254,31 @@ private void RefreshResultPresentation()
     Entry mvp=Mvp();
     if(mvp!=null)
     {
+        snapshot.IsLocalMvp = entry != null && mvp == entry;
         details.Add(new MatchResultScreenData.Metric("MATCH MVP",mvp.Name));
-        details.Add(new MatchResultScreenData.Metric("MVP  /  KILLS â€” DEATHS â€” ASSISTS",mvp.Kills+" â€” "+mvp.Deaths+" â€” "+mvp.Assists));
+        details.Add(new MatchResultScreenData.Metric("MVP  /  KILLS — DEATHS — ASSISTS",mvp.Kills+" — "+mvp.Deaths+" — "+mvp.Assists));
     }
+    var rosterList = new List<MatchResultScreenData.RosterRow>(entries.Count);
+    foreach (Entry re in entries.Values)
+    {
+        if (re.Member == null) continue;
+        HeroIdentity rHero = re.Health != null ? re.Health.GetComponent<HeroIdentity>() : null;
+        float rScore = Performance(re);
+        rosterList.Add(new MatchResultScreenData.RosterRow
+        {
+            Team = re.Member.Team,
+            Name = re.Name,
+            Hero = rHero != null ? rHero.DisplayName : "HERO",
+            Kills = re.Kills,
+            Deaths = re.Deaths,
+            Assists = re.Assists,
+            Score = Mathf.RoundToInt(rScore),
+            IsLocal = re.Member == player,
+            IsMvp = mvp != null && re == mvp
+        });
+    }
+    rosterList.Sort((a, b) => a.Team != b.Team ? a.Team.CompareTo(b.Team) : b.Score.CompareTo(a.Score));
+    snapshot.Roster = rosterList.ToArray();
     if(rewardGranted)
     {
         details.Add(new MatchResultScreenData.Metric("ACCOUNT XP  /  TOTAL",matchXp.ToString("N0")));
@@ -299,7 +322,7 @@ private void DrawTeam(List<Entry> team,float x,float y,float width,string title)
         if(!hideFriendBtn)
         {
             bool connected=FriendStickerService.IsFriendOrRequested(e.Name);
-            if(boardTheme.Action(new Rect(x+nameWidth-38,rowY+5,34,28),connected?"âœ“":"+FR",!connected,enabled:!connected))
+            if(boardTheme.Action(new Rect(x+nameWidth-38,rowY+5,34,28),connected?"✓":"+FR",!connected,enabled:!connected))
             {
                 HeroIdentity id=e.Health!=null?e.Health.GetComponent<HeroIdentity>():null;
                 FriendStickerService.SendFriendRequest(e.Name,id!=null?id.Hero:HeroId.Veyr,Mathf.Max(1,PlayerExperience.Level));

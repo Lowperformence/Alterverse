@@ -29,7 +29,7 @@ namespace Alterverse.Visuals
             HeroId hero=Pending.Dequeue();Queued.Remove(hero);
             Texture2D rendered=RenderHeroBustPortrait(hero);
             if(rendered!=null)PortraitCache[hero]=rendered;
-            else RetryAt[hero]=Time.unscaledTime+5f;
+            else RetryAt[hero]=Time.unscaledTime+1f;
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetCache()
@@ -144,12 +144,20 @@ namespace Alterverse.Visuals
                 };
                 heroRoot.transform.SetParent(stage.transform, false);
                 heroRoot.transform.localPosition = Vector3.zero;
-                heroRoot.transform.localRotation = Quaternion.Euler(0f, GetPortraitYaw(hero), 0f);
+                heroRoot.transform.localRotation = Quaternion.identity;
 
                 HeroIdentity identity = heroRoot.AddComponent<HeroIdentity>();
                 identity.Configure(hero);
+                var preview = heroRoot.AddComponent<Alterverse.Shop.SkinPreviewSelection>();
+                preview.UniversalCosmetic = Alterverse.Shop.UniversalHeroCosmetic.Original;
+                preview.Headwear = Alterverse.Shop.UniversalHeroCosmetic.Original;
+                preview.WeaponOverdrive = false;
                 Alterverse.Visuals.StylizedHeroVisual visual = heroRoot.AddComponent<Alterverse.Visuals.StylizedHeroVisual>();
                 visual.Build();
+                heroRoot.GetComponent<MeleeBasicAttackAnimation>()?.EvaluatePose();
+                heroRoot.GetComponent<AuthoredHeroPresentation>()?.FinalizeCombatGrip();
+                heroRoot.GetComponent<VoidKnightPresentation>()?.ApplyUpperBody();
+                heroRoot.transform.localRotation = Quaternion.Euler(0f, GetPortraitYaw(hero), 0f);
 
                 ApplyPortraitMaterialsAndLayer(heroRoot);
 
@@ -251,6 +259,55 @@ namespace Alterverse.Visuals
 
         private static Bounds CalculateBustBounds(GameObject heroRoot, HeroId hero)
         {
+            if (hero != HeroId.Bolt7)
+            {
+                Transform[] parts = heroRoot.GetComponentsInChildren<Transform>(true);
+                Transform head = null, chest = null, spine = null, armL = null, armR = null;
+                for (int i = 0; i < parts.Length; i++)
+                {
+                    Transform t = parts[i];
+                    if (t == null) continue;
+                    switch (t.name)
+                    {
+                        case "Head": if (head == null) head = t; break;
+                        case "Chest": if (chest == null) chest = t; break;
+                        case "Spine": if (spine == null) spine = t; break;
+                        case "UpperArmL": if (armL == null) armL = t; break;
+                        case "UpperArmR": if (armR == null) armR = t; break;
+                    }
+                }
+                if (head != null && (chest != null || spine != null))
+                {
+                    Vector3 headPos = head.position;
+                    Vector3 torsoPos = chest != null ? chest.position : spine.position;
+                    if (!float.IsNaN(headPos.y) && !float.IsInfinity(headPos.y) &&
+                        (headPos - heroRoot.transform.position).sqrMagnitude < 25f)
+                    {
+                        float headToChest = Mathf.Max(0.18f, Mathf.Abs(headPos.y - torsoPos.y));
+                        float topPad = hero == HeroId.Timmy ? 0.44f
+                            : hero == HeroId.Mira || hero == HeroId.VoidKnight || hero == HeroId.Elyra ? 0.38f
+                            : 0.34f;
+                        float bottomPad = hero == HeroId.Timmy ? 0.22f : 0.20f;
+                        float maxY = headPos.y + topPad;
+                        float minY = Mathf.Min(torsoPos.y - bottomPad, headPos.y - Mathf.Max(0.42f, headToChest * 1.45f));
+                        float height = Mathf.Clamp(maxY - minY, 0.56f, 1.05f);
+                        float centerY = maxY - height * 0.5f;
+                        float centerX = (headPos.x + torsoPos.x) * 0.5f;
+                        float centerZ = (headPos.z + torsoPos.z) * 0.5f;
+                        float shoulderSpan = 0.52f;
+                        if (armL != null && armR != null)
+                        {
+                            shoulderSpan = Mathf.Clamp(Vector3.Distance(armL.position, armR.position) + 0.28f, 0.52f, 0.92f);
+                            centerX = (headPos.x + (armL.position.x + armR.position.x) * 0.5f) * 0.5f;
+                        }
+                        float width = Mathf.Max(shoulderSpan, height * 0.84f);
+                        return new Bounds(
+                            new Vector3(centerX, centerY, centerZ),
+                            new Vector3(width, height, 0.8f));
+                    }
+                }
+            }
+
             Renderer[] renderers = heroRoot.GetComponentsInChildren<Renderer>(true);
             Bounds full = new Bounds(heroRoot.transform.position + Vector3.up * 1.2f, new Vector3(0.7f, 0.8f, 0.7f));
             bool hasAny = false;
@@ -299,12 +356,24 @@ namespace Alterverse.Visuals
             }
 
             Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+            MaterialPropertyBlock showcaseBlock = null;
             for (int i = 0; i < renderers.Length; i++)
             {
                 Renderer r = renderers[i];
                 if (r == null) continue;
                 r.shadowCastingMode = ShadowCastingMode.Off;
                 r.receiveShadows = false;
+                if (r.sharedMaterial != null && r.sharedMaterial.HasProperty("_ShowcaseLighting"))
+                {
+                    showcaseBlock ??= new MaterialPropertyBlock();
+                    r.GetPropertyBlock(showcaseBlock);
+                    showcaseBlock.SetFloat("_ShowcaseLighting", 1f);
+                    r.SetPropertyBlock(showcaseBlock);
+                }
+                if (r is SkinnedMeshRenderer skin)
+                {
+                    skin.updateWhenOffscreen = true;
+                }
             }
         }
 

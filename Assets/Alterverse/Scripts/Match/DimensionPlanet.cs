@@ -21,7 +21,7 @@ public static void ApplyNetworkBuff(int team,PlanetBuffType type,float duration)
 if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
 ApplyBuffToTeam(team,type,duration);
 }
-private static void ApplyBuffToTeam(int team,PlanetBuffType type,float duration){foreach(TeamMember member in FindObjectsByType<TeamMember>()){if(member.Team!=team)continue;Health h=member.GetComponent<Health>();if(h==null||h.IsDead)continue;PlanetBuffReceiver receiver=member.GetComponent<PlanetBuffReceiver>()??member.gameObject.AddComponent<PlanetBuffReceiver>();receiver.Apply(type,duration);}}
+private static void ApplyBuffToTeam(int team,PlanetBuffType type,float duration){var activeHealth=Health.Active;for(int i=0;i<activeHealth.Count;i++){Health h=activeHealth[i];if(h==null||h.IsDead)continue;TeamMember member=h.GetComponent<TeamMember>();if(member==null||member.Team!=team)continue;PlanetBuffReceiver receiver=member.GetComponent<PlanetBuffReceiver>()??member.gameObject.AddComponent<PlanetBuffReceiver>();receiver.Apply(type,duration);}}
 private void SetVisible(bool value){RefreshVisualCache();foreach(Renderer r in visuals)if(r!=null)r.enabled=value;foreach(Collider c in colliders)if(c!=null)c.enabled=value;}private void OnDestroy(){if(health!=null)health.DiedWithSource-=OnDestroyed;}
 }
 }
