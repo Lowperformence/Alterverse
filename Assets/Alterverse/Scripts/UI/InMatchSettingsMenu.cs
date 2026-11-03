@@ -351,7 +351,13 @@ namespace Alterverse.UI
             {
                 var hc = controllers[i];
                 if (hc == null) continue;
-                string pName = hc.name;
+                bool isOnlineMatch = Alterverse.Multiplayer.CoopAuthority.ActivePlan is Alterverse.Multiplayer.OnlineMatchPlan;
+                if (isOnlineMatch)
+                {
+                    var slot = hc.GetComponent<Alterverse.Multiplayer.CoopHeroSlot>();
+                    if (slot != null && slot.IsLocalHuman) continue;
+                }
+                string pName = isOnlineMatch ? Alterverse.Match.MatchScoreboard.ResolveDisplayName(hc) : hc.name;
                 if (string.IsNullOrWhiteSpace(pName)) continue;
                 
                 var hero = hc.Hero;

@@ -448,7 +448,7 @@ namespace Alterverse.Multiplayer
                 // so every peer hashes the same names and can still connect.
                 bool allowPlayGamesNames = ordered.TrueForAll(human => human.SupportsDisplayNames);
                 foreach(var slot in plan.Session.Slots)
-                    slot.DisplayName=SafeIdentityCatalog.DisplayPlayerName(slot.DisplayName,null,allowPlayGamesNames&&!slot.IsBot);
+                    slot.DisplayName=SafeIdentityCatalog.DisplayPlayerName(slot.DisplayName,null,allowPlayGamesNames);
                 CoopAuthority.Prepare(plan);
                 planFingerprint = CoopPlanHandshake.Fingerprint(plan);
                 planAcks.Clear();

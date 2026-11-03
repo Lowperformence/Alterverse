@@ -79,7 +79,7 @@ public void ApplyNetworkScore(Health health,int kills,int deaths,int assists)
  if(entry==null)return;
  entry.Kills=Mathf.Max(0,kills);entry.Deaths=Mathf.Max(0,deaths);entry.Assists=Mathf.Max(0,assists);
 }
-private static string CoopDisplayName(CoopHeroSlot slot){CoopMatchPlan plan=CoopAuthority.ActivePlan;if(slot!=null&&plan?.Session?.Slots!=null&&slot.Slot>=0&&slot.Slot<plan.Session.Slots.Length){MatchPlayerSlot data=plan.Session.Slots[slot.Slot];if(data!=null&&!string.IsNullOrWhiteSpace(data.DisplayName))return data.DisplayName;}HeroIdentity identity=slot!=null?slot.GetComponent<HeroIdentity>():null;return identity!=null?identity.DisplayName:"PLAYER";}
+public static string ResolveDisplayName(HeroIdentity identity){if(identity==null)return "PLAYER";CoopHeroSlot slot=identity.GetComponent<CoopHeroSlot>();if(slot!=null)return CoopDisplayName(slot);if(identity.GetComponent<HeroRespawn>()!=null)return PlayerProfile.PlayerName;return !string.IsNullOrWhiteSpace(identity.DisplayName)?identity.DisplayName:DisplayName(identity.gameObject.name);}private static string CoopDisplayName(CoopHeroSlot slot){CoopMatchPlan plan=CoopAuthority.ActivePlan;if(slot!=null&&plan?.Session?.Slots!=null&&slot.Slot>=0&&slot.Slot<plan.Session.Slots.Length){MatchPlayerSlot data=plan.Session.Slots[slot.Slot];if(data!=null){if(plan is OnlineMatchPlan&&data.IsBot&&OnlineMatchPlan.IsSyntheticBotLabel(data.DisplayName))return OnlineMatchPlan.BotDisplayName(plan.MatchId,data.Team,slot.Slot,plan.Session.Slots);if(!string.IsNullOrWhiteSpace(data.DisplayName))return data.DisplayName;}}HeroIdentity identity=slot!=null?slot.GetComponent<HeroIdentity>():null;return identity!=null?identity.DisplayName:"PLAYER";}
 private TeamMember LocalPlayerMember()
 {
 RefreshLocalRespawn();
@@ -294,9 +294,9 @@ private void DrawTeam(List<Entry> team,float x,float y,float width,string title)
         Rect r=new Rect(x,rowY,width,38);boardTheme.Panel(r);
         if(e.BoardOwn)boardTheme.Frame(r,true);
         FrontEndTheme.Fill(new Rect(x+1,rowY+9,2,20),tint);
-        bool isBot = e.Health != null && (e.Health.GetComponent<MobaBotRespawn>() != null || e.Health.GetComponent<Alterverse.AI.MobaBotMover>() != null); float addBtnWidth = (e.BoardOwn || isBot) ? 0f : 36f;
+        bool isBot = e.Health != null && (e.Health.GetComponent<MobaBotRespawn>() != null || e.Health.GetComponent<Alterverse.AI.MobaBotMover>() != null); bool hideFriendBtn = e.BoardOwn || (isBot && CoopAuthority.ActivePlan is not OnlineMatchPlan); float addBtnWidth = hideFriendBtn ? 0f : 36f;
         boardTheme.FitLabel(new Rect(x+10,rowY,nameWidth-14-addBtnWidth,38),e.BoardName,boardTheme.Small);
-        if(!e.BoardOwn && !isBot)
+        if(!hideFriendBtn)
         {
             bool connected=FriendStickerService.IsFriendOrRequested(e.Name);
             if(boardTheme.Action(new Rect(x+nameWidth-38,rowY+5,34,28),connected?"âœ“":"+FR",!connected,enabled:!connected))

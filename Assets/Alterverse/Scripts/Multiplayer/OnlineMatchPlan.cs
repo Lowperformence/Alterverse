@@ -308,7 +308,8 @@ namespace Alterverse.Multiplayer
                 HeroId hero = BotHeroPool.Next(order,used,ref poolCursor);
                 used.Add(hero);
                 string id = $"online-bot-t{team}-{slot}";
-                if (!session.TryAssign(slot, BotSlot(id, hero, team)))
+                string displayName = BotDisplayName(session.SessionId, team, slot, session.Slots);
+                if (!session.TryAssign(slot, BotSlot(id, displayName, hero, team)))
                     throw new InvalidOperationException($"Could not assign online bot slot {slot}.");
             }
         }
@@ -341,10 +342,73 @@ namespace Alterverse.Multiplayer
             IsHost = member.IsHost
         };
 
-        private static MatchPlayerSlot BotSlot(string id, HeroId hero, int team) => new()
+        private static readonly string[] OnlineBotGamertags =
+        {
+            "KiraVex", "NightDrifter", "ShadowKael", "Valkyrie99",
+            "NovaStrike", "RiftHunter", "ZeroPulse", "DarkVoidX",
+            "TakumiGG", "LunarEcho", "AegisWolf", "Zephyr07",
+            "CryoBlade", "AstralFox", "BlazeRunner", "NyxShadow",
+            "Phantomisk", "Vortexia", "Kurogane", "Solstice",
+            "HyperionX", "ZenithPro", "raiden_mk", "SoraPlays",
+            "FrostByte", "EchoVanguard", "OmegaDrift", "Stryker_7",
+            "NebulaKnight", "VelvetStorm", "Drakon_9", "Celeste",
+            "PyroClast", "ArcaneVex", "TitanSlayer", "Mirage_X",
+            "SylphWind", "RogueStar", "Chronos_01", "OnyxBlade",
+            "Vanguardia", "Zentrix", "Kaelen_GG", "ShiroNeko",
+            "Akira_09", "MaverickX", "LumenGhost", "Eclipse_77",
+            "RiftWalker", "StormBreaker", "CyberLynx", "Valen_Pro",
+            "Duskblade", "Aetherion", "Spectre_X", "JinxedSoul",
+            "Ragnarok_9", "SilverFang", "VoidStalker", "NeroPlays",
+            "HexBlade", "StarlightX", "GrimReaper7", "Kitsune_GG"
+        };
+
+        public static string BotDisplayName(string matchId, int team, int slot, IReadOnlyList<MatchPlayerSlot> existingSlots = null)
+        {
+            uint hash = 2166136261u;
+            string seedText = string.IsNullOrWhiteSpace(matchId) ? "online-match" : matchId.Trim();
+            for (int i = 0; i < seedText.Length; i++)
+                hash = (hash ^ seedText[i]) * 16777619u;
+
+            int clampedSlot = Math.Clamp(slot, 0, MatchSession.MaxPlayers - 1);
+            int baseIndex = (int)((hash + (uint)(clampedSlot * 19 + team * 7)) % (uint)OnlineBotGamertags.Length);
+
+            for (int attempt = 0; attempt < OnlineBotGamertags.Length; attempt++)
+            {
+                string candidate = OnlineBotGamertags[(baseIndex + attempt * 7) % OnlineBotGamertags.Length];
+                bool taken = false;
+                if (existingSlots != null)
+                {
+                    for (int i = 0; i < existingSlots.Count; i++)
+                    {
+                        if (i == clampedSlot) continue;
+                        MatchPlayerSlot other = existingSlots[i];
+                        if (other != null && string.Equals(other.DisplayName, candidate, StringComparison.OrdinalIgnoreCase))
+                        {
+                            taken = true;
+                            break;
+                        }
+                    }
+                }
+                if (!taken) return candidate;
+            }
+
+            return OnlineBotGamertags[baseIndex];
+        }
+
+        public static bool IsSyntheticBotLabel(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return true;
+            if (value.StartsWith("online-bot-", StringComparison.OrdinalIgnoreCase) ||
+                value.StartsWith("round-bot-", StringComparison.OrdinalIgnoreCase) ||
+                value.StartsWith("bot-t", StringComparison.OrdinalIgnoreCase))
+                return true;
+            return SafeIdentityCatalog.IsPlayerName(value);
+        }
+
+        private static MatchPlayerSlot BotSlot(string id, string displayName, HeroId hero, int team) => new()
         {
             PlayerId = id,
-            DisplayName = id,
+            DisplayName = string.IsNullOrWhiteSpace(displayName) ? id : displayName,
             Team = team,
             Hero = hero,
             BattleItem = BattleItemType.None,

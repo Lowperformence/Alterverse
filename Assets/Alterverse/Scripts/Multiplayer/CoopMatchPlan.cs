@@ -108,7 +108,7 @@ namespace Alterverse.Multiplayer
                 HeroId hero=human?old.Hero:BotHeroPool.Next(botOrder[old.Team],used[old.Team],ref cursors[old.Team]);used[old.Team].Add(hero);
                 var slot = new MatchPlayerSlot {
                     PlayerId = human || old.IsBot ? old.PlayerId : "round-bot-" + i,
-                    DisplayName = human || old.IsBot ? old.DisplayName : hero.ToString(),
+                    DisplayName = human || old.IsBot ? old.DisplayName : (previous is OnlineMatchPlan ? OnlineMatchPlan.BotDisplayName(id, old.Team, i, next.Session.Slots) : hero.ToString()),
                     Team = old.Team, Hero = hero, BattleItem = BattleItemType.None, IsLocal = human && old.IsLocal,
                     IsBot = !human, Ready = true, Connected = true, IsHost = human && old.IsHost
                 };
