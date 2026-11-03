@@ -241,15 +241,34 @@ namespace Alterverse.Combat
             Heal(ticks * Alterverse.Characters.HeroAbilityKit.AurenPassiveRegenPerSecond, false);
         }
 
+        private bool midMatchVitalityApplied;
+
         public void Configure(float newMaxHealth, bool shouldDestroyOnDeath = false)
         {
             maxHealth = Mathf.Max(1, newMaxHealth);
             destroyOnDeath = shouldDestroyOnDeath;
+            midMatchVitalityApplied = false;
             ClearTransient();
             ConfigureHeroBaseShield(true);
             IsDead = false;
             Current = maxHealth;
             LastDamageSource = null;
+            Changed?.Invoke(Current, maxHealth);
+        }
+
+        public void ApplyMidMatchVitalityBonus(float bonusFraction = .15f)
+        {
+            if (midMatchVitalityApplied || bonusFraction <= 0f)
+                return;
+
+            midMatchVitalityApplied = true;
+            float previousMax = maxHealth;
+            maxHealth = Mathf.Round(maxHealth * (1f + bonusFraction));
+            float bonusHp = Mathf.Max(1f, maxHealth - previousMax);
+
+            if (!IsDead && Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState)
+                Current = Mathf.Min(maxHealth, Current + bonusHp);
+
             Changed?.Invoke(Current, maxHealth);
         }
 
