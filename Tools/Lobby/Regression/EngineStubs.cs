@@ -35,23 +35,28 @@ namespace UnityEngine
     }
     public class Transform{public Vector3 position;public void SetParent(Transform parent,bool world){}}
     public struct Vector3{public float x,y,z;public Vector3(float x,float y,float z){this.x=x;this.y=y;this.z=z;}}
-    public struct Color{public float r,g,b,a;public Color(float r,float g,float b,float a){this.r=r;this.g=g;this.b=b;this.a=a;}}
+    public struct Color{public float r,g,b,a;public Color(float r,float g,float b,float a){this.r=r;this.g=g;this.b=b;this.a=a;}public static Color white=>new Color(1,1,1,1);}
+    public struct Vector2{public float x,y;public Vector2(float x,float y){this.x=x;this.y=y;}}
     public static class Time{public static float time,unscaledTime,realtimeSinceStartup;}
     public static class Mathf{public static float Max(float a,float b)=>Math.Max(a,b);}
     public static class Application{public static bool isBatchMode=true;}
     public enum RuntimeInitializeLoadType{AfterSceneLoad}
     public class RuntimeInitializeOnLoadMethodAttribute:Attribute{public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType type){}}
     public class DefaultExecutionOrder:Attribute{public DefaultExecutionOrder(int order){}}
-    public class Shader:Object{}
+    public class Shader:Object{public bool isSupported=true;}
+    public class Texture:Object{}
     public class Material:Object
     {
         private readonly Dictionary<string,float> floats=new();private readonly Dictionary<string,Color> colors=new();
-        public int renderQueue;public Material(Shader shader){colors["_BaseColor"]=new Color(1,1,1,1);colors["_Color"]=new Color(1,1,1,1);}
-        public Material(Material other){name=other.name;foreach(var x in other.colors)colors[x.Key]=x.Value;foreach(var x in other.floats)floats[x.Key]=x.Value;}
+        public Shader shader;public int renderQueue;public Material(Shader shader){this.shader=shader;colors["_BaseColor"]=new Color(1,1,1,1);colors["_Color"]=new Color(1,1,1,1);}
+        public Material(Material other){shader=other.shader;name=other.name;foreach(var x in other.colors)colors[x.Key]=x.Value;foreach(var x in other.floats)floats[x.Key]=x.Value;}
         public bool HasProperty(string name)=>true;public void SetFloat(string name,float value)=>floats[name]=value;
         public float GetFloat(string name)=>floats.TryGetValue(name,out var value)?value:0;
         public Color GetColor(string name)=>colors.TryGetValue(name,out var value)?value:new Color(1,1,1,1);
         public void SetColor(string name,Color value)=>colors[name]=value;
+        public Texture GetTexture(string name)=>null;public void SetTexture(string name,Texture value){}
+        public Vector2 GetTextureScale(string name)=>new Vector2(1,1);public Vector2 GetTextureOffset(string name)=>new Vector2();
+        public void SetTextureScale(string name,Vector2 value){}public void SetTextureOffset(string name,Vector2 value){}
         public void SetOverrideTag(string name,string value){}public void EnableKeyword(string name){}public void DisableKeyword(string name){}
     }
     public class Renderer:Component{public bool forceRenderingOff,enabled=true;private Material[] materials=Array.Empty<Material>();public Material[] sharedMaterials{get=>(Material[])materials.Clone();set=>materials=(Material[])value.Clone();}}
@@ -69,7 +74,7 @@ namespace UnityEngine
         public void Stop(bool children,ParticleSystemStopBehavior behavior){}
         public void Simulate(float seconds,bool children,bool restart){}public void Play(){}
     }
-    public static class Resources{public static T Load<T>(string path) where T:class=>null;}
+    public static class Resources{public static T Load<T>(string path) where T:class=>path=="CombatVfx/VoidKnightStealth"?new Shader{name="DimensionsFront/VoidKnightStealth"} as T:null;}
 }
 namespace UnityEngine.Rendering{public enum ShadowCastingMode{Off}public enum BlendMode{SrcAlpha=5,OneMinusSrcAlpha=10}}
 namespace UnityEngine.Android
@@ -106,7 +111,7 @@ namespace Alterverse.Characters
 {
     public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok,Timmy,VoidKnight,Bolt7}
     public class HeroIdentity:UnityEngine.MonoBehaviour{public HeroId Hero;}
-    public static class VoidKnightState{public static bool HiddenFrom(UnityEngine.GameObject observer,Alterverse.Combat.Health target)=>false;}
+    public class VoidKnightState:UnityEngine.MonoBehaviour{public bool Cloaked;public static bool HiddenFrom(UnityEngine.GameObject observer,Alterverse.Combat.Health target)=>false;}
     public static class LocalHeroContext{public static Alterverse.Combat.TeamMember Member;}
 }
 namespace Alterverse.Combat
@@ -171,3 +176,5 @@ namespace UnityEngine {
   public T CallStatic<T>(string name,params object[] args) where T:class=>new AndroidJavaObject("chooser"){Text=((AndroidJavaObject)args[0]).Text} as T;
  }
 }
+
+namespace Alterverse.Visuals {public class VoidKnightStealth:UnityEngine.MonoBehaviour {public bool Applied;}}

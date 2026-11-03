@@ -53,7 +53,7 @@ public static float BaseHealth(HeroId id)
         HeroId.Elyra => 200f,
         HeroId.Veyr => 200f * GlobalHealthMultiplier,
         HeroId.Timmy => TimmyBalance.RawHealth * GlobalHealthMultiplier,
-        HeroId.Kaelon => (380f * 1.05f) * GlobalHealthMultiplier,
+        HeroId.Kaelon => (380f * 1.05f) * GlobalHealthMultiplier - 70f,
         HeroId.Mira => 230f * GlobalHealthMultiplier,
         HeroId.Rook => 300f * GlobalHealthMultiplier,
         HeroId.Traveler => (205f * 1.05f) * GlobalHealthMultiplier,
@@ -62,6 +62,6 @@ public static float BaseHealth(HeroId id)
     };
     return raw + 50f;
 }
-public static float AttackDamage(HeroId id)=>id switch{HeroId.Bolt7=>Bolt7Balance.BasicDamage,HeroId.VoidKnight=>VoidKnightBalance.BasicDamage,HeroId.Veyr=>22f,HeroId.Timmy=>TimmyBalance.BasicDamage,HeroId.Kaelon=>14f,HeroId.Nyra=>13f,HeroId.Elyra=>15f,HeroId.Mira=>15f,HeroId.Rook=>24f,HeroId.Traveler=>15f,HeroId.Nerok=>24f,_=>17f};
+public static float AttackDamage(HeroId id)=>id switch{HeroId.Bolt7=>Bolt7Balance.BasicDamage,HeroId.VoidKnight=>VoidKnightBalance.BasicDamage,HeroId.Veyr=>22f,HeroId.Timmy=>TimmyBalance.BasicDamage,HeroId.Kaelon=>14f,HeroId.Nyra=>13f,HeroId.Elyra=>15f,HeroId.Mira=>15f,HeroId.Rook=>20f,HeroId.Traveler=>15f,HeroId.Nerok=>24f,_=>17f};
 }
 }

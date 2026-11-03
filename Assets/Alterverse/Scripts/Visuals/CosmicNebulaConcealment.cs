@@ -2,10 +2,9 @@ using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Combat;
 using UnityEngine;
-using UnityEngine.Rendering;
 namespace Alterverse.Visuals
 {
-    [DefaultExecutionOrder(4100)]
+    [DefaultExecutionOrder(3100)]
     public sealed class CosmicNebulaConcealment:MonoBehaviour
     {
         // 60% transparent means 40% of the source material's original opacity.
@@ -15,6 +14,7 @@ namespace Alterverse.Visuals
         private readonly Dictionary<Material,Material> faded=new();
         private readonly List<Renderer> scan=new();
         private Health health;
+        private Shader ghostShader;
         private float nextScan;
         private bool wasHidden,wasGhost;
         private void LateUpdate()
@@ -24,7 +24,11 @@ namespace Alterverse.Visuals
             var viewer=LocalHeroContext.Member;
             if(viewer==null){Restore();return;}
             bool hiddenFromViewer=CosmicNebulaField.HiddenFrom(viewer.gameObject,health);
-            bool ghost=!hiddenFromViewer&&CosmicNebulaField.IsConcealed(health);
+            // Void Knight owns its materials while cloaked. Run before its presentation so
+            // it captures original materials, then wait for its restoration before fading.
+            var cloak=GetComponent<VoidKnightStealth>();
+            bool cloakOwnsMaterials=GetComponent<VoidKnightState>()?.Cloaked==true||cloak!=null&&cloak.Applied;
+            bool ghost=!hiddenFromViewer&&!cloakOwnsMaterials&&CosmicNebulaField.IsConcealed(health);
             if(hiddenFromViewer!=wasHidden||ghost!=wasGhost)nextScan=0;
             wasHidden=hiddenFromViewer;wasGhost=ghost;
             if(!hiddenFromViewer)RestoreHidden();
@@ -46,7 +50,20 @@ namespace Alterverse.Visuals
         }
         private void Fade(Renderer renderer)
         {
-            if(originals.ContainsKey(renderer))return;
+            if(originals.TryGetValue(renderer,out var previous))
+            {
+                var current=renderer.sharedMaterials;bool unchanged=current.Length==previous.Length;
+                for(int i=0;i<current.Length&&unchanged;i++)
+                    unchanged=previous[i]==null?current[i]==null:faded.TryGetValue(previous[i],out var prior)&&current[i]==prior;
+                if(unchanged)return;
+                // A skin or another presentation changed slots while concealed. Preserve it,
+                // but recover any slots still owned by this effect before fading again.
+                for(int i=0;i<current.Length&&i<previous.Length;i++)
+                    if(previous[i]!=null&&faded.TryGetValue(previous[i],out var prior)&&current[i]==prior)current[i]=previous[i];
+                renderer.sharedMaterials=current;originals.Remove(renderer);
+            }
+            if(ghostShader==null)ghostShader=Resources.Load<Shader>("CombatVfx/VoidKnightStealth");
+            if(ghostShader==null||!ghostShader.isSupported)return;
             var source=renderer.sharedMaterials;if(source==null||source.Length==0)return;
             var replacement=(Material[])source.Clone();bool changed=false;
             for(int i=0;i<source.Length;i++)
@@ -54,17 +71,24 @@ namespace Alterverse.Visuals
                 var original=source[i];if(original==null)continue;
                 if(!faded.TryGetValue(original,out var copy))
                 {
-                    copy=new Material(original){name=original.name+" (nebula)"};
-                    if(copy.HasProperty("_Surface"))copy.SetFloat("_Surface",1);
-                    if(copy.HasProperty("_Mode"))copy.SetFloat("_Mode",3);
-                    if(copy.HasProperty("_SrcBlend"))copy.SetFloat("_SrcBlend",(float)BlendMode.SrcAlpha);
-                    if(copy.HasProperty("_DstBlend"))copy.SetFloat("_DstBlend",(float)BlendMode.OneMinusSrcAlpha);
-                    if(copy.HasProperty("_ZWrite"))copy.SetFloat("_ZWrite",0);
-                    copy.SetOverrideTag("RenderType","Transparent");copy.renderQueue=3000;
-                    copy.DisableKeyword("_ALPHATEST_ON");copy.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-                    copy.EnableKeyword("_ALPHABLEND_ON");copy.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-                    foreach(string property in new[]{"_BaseColor","_Color"})
-                        if(copy.HasProperty(property)){Color c=copy.GetColor(property);c.a*=ConcealedOpacity;copy.SetColor(property,c);}
+                    // Custom hero shaders can ignore blend settings and color alpha. The
+                    // resource shader blends explicitly and survives Android stripping.
+                    copy=new Material(ghostShader){name=original.name+" (nebula)"};
+                    Color tint=original.HasProperty("_BaseColor")?original.GetColor("_BaseColor"):
+                        original.HasProperty("_Color")?original.GetColor("_Color"):Color.white;
+                    bool painted=original.shader!=null&&original.shader.name=="DimensionsFront/HeroSurface";
+                    if(painted&&tint.a<=0)tint=Color.white;
+                    copy.SetColor("_StealthTint",tint);
+                    copy.SetFloat("_StealthOpacity",ConcealedOpacity);
+                    copy.SetFloat("_StealthVertexColor",painted?1f:0f);
+                    string map=original.HasProperty("_BaseMap")?"_BaseMap":original.HasProperty("_MainTex")?"_MainTex":null;
+                    if(map!=null)
+                    {
+                        var texture=original.GetTexture(map);
+                        if(texture!=null)copy.SetTexture("_StealthMap",texture);
+                        copy.SetTextureScale("_StealthMap",original.GetTextureScale(map));
+                        copy.SetTextureOffset("_StealthMap",original.GetTextureOffset(map));
+                    }
                     faded.Add(original,copy);
                 }
                 replacement[i]=copy;changed=true;

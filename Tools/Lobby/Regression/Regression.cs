@@ -45,8 +45,8 @@ static class Regression
         source.SetColor("_BaseColor",new Color(.2f,.4f,.6f,1));ownRenderer.sharedMaterials=new[]{source};
         LocalHeroContext.Member=target.GetComponent<TeamMember>();Time.unscaledTime+=1;Call(conceal,"LateUpdate");
         var ghost=ownRenderer.sharedMaterials[0];
-        Check(ghost!=source&&Math.Abs(ghost.GetColor("_BaseColor").a-.4f)<.001,"owner sees concealed hero at 40% opacity");
-        Check(Math.Abs(source.GetColor("_BaseColor").a-1)<.001&&ghost.GetFloat("_Surface")==1,"shared material stays opaque and ghost uses blending");
+        Check(ghost!=source&&ghost.shader.name=="DimensionsFront/VoidKnightStealth"&&Math.Abs(ghost.GetFloat("_StealthOpacity")-.4f)<.001,"owner sees concealed hero using explicit 40% opacity shader");
+        Check(Math.Abs(source.GetColor("_BaseColor").a-1)<.001&&Math.Abs(ghost.GetColor("_StealthTint").g-.4f)<.001,"shared material remains unchanged and ghost keeps tint");
         LocalHeroContext.Member=enemy.GetComponent<TeamMember>();Call(conceal,"LateUpdate");
         Check(ownRenderer.forceRenderingOff&&ownRenderer.sharedMaterials[0]==source,"enemy loses visibility immediately when outside cloud");
         LocalHeroContext.Member=target.GetComponent<TeamMember>();Call(conceal,"LateUpdate");
@@ -58,8 +58,14 @@ static class Regression
         target.transform.position=new Vector3(0,1,0);Call(conceal,"LateUpdate");
         Check(ownRenderer.sharedMaterials[0]==source,"leaving cloud restores original material");
         target.transform.position=new Vector3(cloud.X,1,cloud.Z);Time.unscaledTime+=1;Call(conceal,"LateUpdate");
-        var external=new Material(new Shader());ownRenderer.sharedMaterials=new[]{external};Call(conceal,"OnDisable");
-        Check(ownRenderer.sharedMaterials[0]==external,"restore preserves a material changed by another system");
+        var external=new Material(new Shader());ownRenderer.sharedMaterials=new[]{external};Time.unscaledTime+=1;Call(conceal,"LateUpdate");
+        Check(ownRenderer.sharedMaterials[0]!=external,"replacement skin is faded on next scan");
+        Call(conceal,"OnDisable");Check(ownRenderer.sharedMaterials[0]==external,"restore preserves a material changed by another system");
+        Call(conceal,"LateUpdate");var cloakState=target.AddComponent<VoidKnightState>();var cloak=target.AddComponent<VoidKnightStealth>();
+        cloakState.Cloaked=true;Call(conceal,"LateUpdate");Check(ownRenderer.sharedMaterials[0]==external,"nebula releases materials before Void Knight cloak captures them");
+        cloak.Applied=true;cloakState.Cloaked=false;Call(conceal,"LateUpdate");Check(ownRenderer.sharedMaterials[0]==external,"nebula waits until cloak has restored its materials");
+        cloak.Applied=false;Call(conceal,"LateUpdate");Check(ownRenderer.sharedMaterials[0]!=external,"nebula fades again after cloak restoration");
+        Call(conceal,"OnDisable");Check(ownRenderer.sharedMaterials[0]==external,"final restore recovers replacement skin");
         Application.isBatchMode=true;
         // Actual message writer/reader code, with server identity and time-aging checks.
         GameObject.All.Clear();CoopAuthority.Active=true;CoopAuthority.ActivePlan=new MatchPlan{MatchId="wire"};

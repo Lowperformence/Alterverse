@@ -22,6 +22,7 @@ namespace Alterverse.Visuals
         private Shader shader;
         private float nextScan;
         private bool applied;
+        public bool Applied=>applied;
         private static readonly int OpacityId=Shader.PropertyToID("_StealthOpacity");
         private static readonly int TintId=Shader.PropertyToID("_StealthTint");
         private static readonly int TextureId=Shader.PropertyToID("_StealthMap");

@@ -4,10 +4,19 @@ using Alterverse.Characters;
 using Alterverse.Combat;
 using Alterverse.Multiplayer;
 
-class EntryPoint { static void Main(string[] args) { if(Array.IndexOf(args,"--phase-fold-network")>=0) Regression.RunPhaseFoldNetwork(); else if(Array.IndexOf(args,"--ranged-cones")>=0) Regression.RunRangedConeCases(); else Regression.RunEntryCases(); } }
+class EntryPoint { static void Main(string[] args) { if(Array.IndexOf(args,"--base-stats")>=0) Regression.RunBaseStats(); else if(Array.IndexOf(args,"--phase-fold-network")>=0) Regression.RunPhaseFoldNetwork(); else if(Array.IndexOf(args,"--ranged-cones")>=0) Regression.RunRangedConeCases(); else Regression.RunEntryCases(); } }
 
 partial class Regression
 {
+ public static void RunBaseStats()
+ {
+  Near(HeroIdentity.AttackDamage(HeroId.Rook),20f,"Brakk base attack");
+  Near(HeroIdentity.BaseHealth(HeroId.Kaelon),461.7925f,"Auren base health reduced by 70");
+  var profile=new GameObject().AddComponent<HeroCombatProfile>();profile.Configure(HeroId.Kaelon);
+  Near(profile.Health,461.7925f,"Auren gameplay profile uses adjusted health");
+  profile.Configure(HeroId.Rook);Near(profile.Attack,20f,"Brakk gameplay profile uses adjusted attack");
+  Console.WriteLine("PASS hero base-stat regression.");
+ }
  public static void RunPhaseFoldNetwork(){Network();Console.WriteLine("PASS Phase Fold authoritative network regression.");}
  public static void RunEntryCases()
  {
