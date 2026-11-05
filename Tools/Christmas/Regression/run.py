@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile the production Halloween event, visual and reward sources against engine/transport fixtures."""
+"""Compile the production Christmas event, visual and reward sources against engine/transport fixtures."""
 import argparse,json,subprocess,tempfile
 from pathlib import Path
 
@@ -11,10 +11,10 @@ runtime=args.dotnet_root.resolve()
 sdk=sorted((runtime/'sdk').iterdir())[-1]
 framework=sorted((runtime/'shared/Microsoft.NETCore.App').iterdir())[-1]
 scripts=root/'Assets/Alterverse/Scripts'
-production=['Match/HalloweenPumpkinRules.cs','Match/HalloweenPumpkinEvent.cs','Match/HalloweenPumpkinEvent.Network.cs',
-    'Visuals/HalloweenPumpkinVisual.cs','Profile/HalloweenPumpkinRewards.cs','Profile/ProfileTransaction.cs','Profile/PlayerWallet.cs',
+production=['Match/ChristmasSnowmanRules.cs','Match/ChristmasSnowmanEvent.cs','Match/ChristmasSnowmanEvent.Network.cs',
+    'Visuals/ChristmasSnowmanVisual.cs','UI/MainMenuNews.cs','Profile/ChristmasSnowmanRewards.cs','Profile/ProfileTransaction.cs','Profile/PlayerWallet.cs',
     'Multiplayer/CoopAuthority.cs','Multiplayer/CoopHeroSlot.cs','Multiplayer/MatchNetworkProtocol.cs','Combat/GameplayCollision.cs']
-with tempfile.TemporaryDirectory(prefix='df-halloween-') as tmp:
+with tempfile.TemporaryDirectory(prefix='df-christmas-') as tmp:
     tmp=Path(tmp);out=tmp/'Regression.dll'
     sources=[Path(__file__).with_name('EngineFixtures.cs'),Path(__file__).with_name('Regression.cs')]+[scripts/p for p in production]
     response=tmp/'compile.rsp'
@@ -23,3 +23,4 @@ with tempfile.TemporaryDirectory(prefix='df-halloween-') as tmp:
     subprocess.run([str(runtime/'dotnet'),str(sdk/'Roslyn/bincore/csc.dll'),'@'+str(response)],check=True)
     out.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':framework.name}}}))
     subprocess.run([str(runtime/'dotnet'),str(out)],check=True)
+

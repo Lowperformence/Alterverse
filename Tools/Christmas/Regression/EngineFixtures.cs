@@ -35,11 +35,20 @@ namespace UnityEngine
   public static Vector3 operator*(Vector3 a,float b)=>new(a.x*b,a.y*b,a.z*b);
  }
  public struct Quaternion { public static Quaternion Euler(float x,float y,float z)=>default; }
- public struct Color { public float r,g,b,a;public Color(float r,float g,float b,float a=1){this.r=r;this.g=g;this.b=b;this.a=a;}public static Color operator*(Color a,float v)=>new(a.r*v,a.g*v,a.b*v,a.a);}
+ public struct Color { public float r,g,b,a;public Color(float r,float g,float b,float a=1){this.r=r;this.g=g;this.b=b;this.a=a;}public static Color clear=>new(0,0,0,0);public static Color operator*(Color a,float v)=>new(a.r*v,a.g*v,a.b*v,a.a);}
+ public struct Color32 {public byte r,g,b,a;public static implicit operator Color32(Color c)=>new(){r=(byte)(Math.Clamp(c.r,0,1)*255),g=(byte)(Math.Clamp(c.g,0,1)*255),b=(byte)(Math.Clamp(c.b,0,1)*255),a=(byte)(Math.Clamp(c.a,0,1)*255)};}
+ public struct Rect {public float x,y,width,height;public Rect(float x,float y,float w,float h){this.x=x;this.y=y;width=w;height=h;}}
+ public enum FontStyle {Normal,Bold} public enum ScaleMode {ScaleToFit} public enum TextureFormat {RGBA32}
+ public enum HideFlags {HideAndDontSave} public enum TextureWrapMode {Clamp} public enum FilterMode {Bilinear}
+ public class GUIStyleState {public Color textColor;}
+ public class GUIStyle {public int fontSize;public FontStyle fontStyle;public GUIStyleState normal=new();public GUIStyle(){}public GUIStyle(GUIStyle source){}}
+ public class Texture2D:Object {public int width,height;public Color32[] Pixels;public HideFlags hideFlags;public TextureWrapMode wrapMode;public FilterMode filterMode;public Texture2D(int w,int h,TextureFormat f,bool mip){width=w;height=h;}public void SetPixels32(Color32[] p){Pixels=p;}public void Apply(bool mip,bool release){}}
+ public static class GUI {public static Texture2D LastTexture;public static void DrawTexture(Rect r,Texture2D t,ScaleMode m,bool alpha){LastTexture=t;}}
  public static class Mathf {public const float PI=(float)Math.PI,Deg2Rad=PI/180;
   public static float Abs(float v)=>Math.Abs(v);public static float Sin(float v)=>(float)Math.Sin(v);public static float Cos(float v)=>(float)Math.Cos(v);
   public static int Max(int a,int b)=>Math.Max(a,b);public static float Max(float a,float b)=>Math.Max(a,b);public static float Min(float a,float b)=>Math.Min(a,b);
   public static int Clamp(int v,int a,int b)=>Math.Clamp(v,a,b);public static float Clamp(float v,float a,float b)=>Math.Clamp(v,a,b);
+  public static float Clamp01(float v)=>Math.Clamp(v,0,1);
  }
  public static class Random {static System.Random r=new(42);public static float Range(float a,float b)=>a+(float)r.NextDouble()*(b-a);}
  public static class Time {public static float time,deltaTime,realtimeSinceStartup,timeScale=1;}
@@ -118,3 +127,19 @@ namespace Alterverse.Profile
  }
 }
 namespace Alterverse.Shop {public sealed class PaidShardCommerce {public static int Balance;public static bool Spending;public static PaidShardCommerce Instance;public bool Ready;public bool BeginPurchase(string s)=>false;}}
+
+namespace Alterverse.UI
+{
+ using UnityEngine;
+ public class FrontEndTheme {
+  public GUIStyle Small=new(),Heading=new(),Body=new();public readonly List<string> Labels=new();
+  public void Panel(UnityEngine.Rect r){}public static void Fill(UnityEngine.Rect r,UnityEngine.Color c){}
+  public void FitLabel(UnityEngine.Rect r,string s,GUIStyle style,bool flag=false){Labels.Add(s);}
+  public void StatusBadge(UnityEngine.Rect r,string s,UnityEngine.Color c){Labels.Add(s);}
+ }
+ public sealed partial class MainMenuController {
+  public float Right=1280,Left=0,ContentWidth=1280;public bool HomeAdvertisingActive;
+  public UnityEngine.Rect HomeBannerMenuRect=new(0,700,100,100);public FrontEndTheme theme=new();
+ }
+}
+

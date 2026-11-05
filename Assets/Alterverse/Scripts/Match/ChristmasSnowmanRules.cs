@@ -4,10 +4,10 @@ using System.Collections.Generic;
 namespace Alterverse.Match
 {
     /// <summary>Match-time cadence and single-claim ownership; independent of presentation/transport.</summary>
-    public sealed class HalloweenPumpkinRules
+    public sealed class ChristmasSnowmanRules
     {
         public const float SpawnInterval = 120f;
-        public const int ShardsPerPumpkin = 1;
+        public const int ShardsPerSnowman = 1;
         public const float PickupRadius = 1.35f;
         public const float PickupHeight = 2f;
         readonly HashSet<int> available = new();
@@ -47,3 +47,4 @@ namespace Alterverse.Match
         }
     }
 }
+

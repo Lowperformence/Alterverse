@@ -11,15 +11,15 @@ using UnityEngine;
 
 namespace Alterverse.Match
 {
-    /// <summary>One pumpkin every 120 seconds of active match time, in offline and server-owned matches.</summary>
-    public sealed partial class HalloweenPumpkinEvent : MonoBehaviour
+    /// <summary>One snowman every 120 seconds of active match time, in offline and server-owned matches.</summary>
+    public sealed partial class ChristmasSnowmanEvent : MonoBehaviour
     {
         sealed class Pickup
         {
             public Vector3 Ground;
             public GameObject Visual;
         }
-        readonly HalloweenPumpkinRules rules = new();
+        readonly ChristmasSnowmanRules rules = new();
         readonly Dictionary<int,Pickup> pickups = new();
         readonly List<int> scratch = new();
         DimensionsFront front;
@@ -93,7 +93,7 @@ namespace Alterverse.Match
         {
             if (id <= 0 || pickups.ContainsKey(id)) return;
             var pickup = new Pickup { Ground = ground };
-            if (Presentation) pickup.Visual = HalloweenPumpkinVisual.Create(transform,ground,id);
+            if (Presentation) pickup.Visual = ChristmasSnowmanVisual.Create(transform,ground,id);
             pickups.Add(id,pickup);
         }
 
@@ -116,15 +116,15 @@ namespace Alterverse.Match
                     Health health = Health.Active[i];
                     if (!TryHuman(health,out int slot)) continue;
                     Vector3 delta = health.transform.position-pickup.Ground;
-                    bool eligible = HalloweenPumpkinRules.Eligible(true,!health.IsDead,health.isActiveAndEnabled,
+                    bool eligible = ChristmasSnowmanRules.Eligible(true,!health.IsDead,health.isActiveAndEnabled,
                         delta.x*delta.x+delta.z*delta.z,delta.y);
-                    // Removal in the rules ledger precedes every reward/send: two players cannot win the same pumpkin.
+                    // Removal in the rules ledger precedes every reward/send: two players cannot win the same snowman.
                     if (!rules.TryCollect(id,slot,eligible,out int total)) continue;
                     RemovePickup(id);
                     ConfirmReward(slot,total);
                     BroadcastClaim(id,slot,total);
                     if (Presentation)
-                        PrototypeVfx.Ring(pickup.Ground,new Color(1f,.40f,.04f),1.15f,.28f);
+                        PrototypeVfx.Ring(pickup.Ground,new Color(.55f,.88f,1f),1.15f,.28f);
                     break;
                 }
             }
@@ -168,10 +168,11 @@ namespace Alterverse.Match
         void ConfirmReward(int slot,int total)
         {
             if (localSlot < 0 || slot != localSlot) return; // A dedicated server never writes a player's wallet.
-            HalloweenPumpkinRewards.Apply(matchId,total,account);
+            ChristmasSnowmanRewards.Apply(matchId,total,account);
         }
 
         void OnDisable() { DetachTransport(); }
         void OnDestroy() { DetachTransport(); }
     }
 }
+

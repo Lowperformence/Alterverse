@@ -6,8 +6,9 @@ using UnityEngine;
 
 namespace Alterverse.Match
 {
-    public sealed partial class HalloweenPumpkinEvent
+    public sealed partial class ChristmasSnowmanEvent
     {
+        // Keep the existing wire names so rolling client/server updates preserve pickup synchronization.
         const string SpawnMessage="DF_HALLOWEEN_SPAWN_V1",ClaimMessage="DF_HALLOWEEN_CLAIM_V1";
         const string RequestMessage="DF_HALLOWEEN_SYNC_REQUEST_V1",BeginMessage="DF_HALLOWEEN_SYNC_BEGIN_V1";
         const string ItemMessage="DF_HALLOWEEN_SYNC_ITEM_V1",EndMessage="DF_HALLOWEEN_SYNC_END_V1";
@@ -169,3 +170,4 @@ namespace Alterverse.Match
         }
     }
 }
+
