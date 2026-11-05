@@ -85,7 +85,10 @@ namespace Alterverse.Profile
             int wingShardBase=ProfileTransaction.Add(baseShards,difficultyShardBonus);
             int wingShardBonus=WingMatchRewardBonus.CalculateBonus(wingShardBase,cosmetic);
             int shardBonus=ProfileTransaction.Add(difficultyShardBonus,wingShardBonus);
-            int shards=ProfileTransaction.Add(baseShards,shardBonus);
+            // Halve the complete match payout after all bonuses; whole Shards round down.
+            int shards=ProfileTransaction.Add(baseShards,shardBonus)/2;
+            baseShards/=2;
+            shardBonus=shards-baseShards;
 
             long before=PlayerExperience.TotalXp;
             long cap=PlayerExperience.XpForLevel(PlayerExperience.MaxLevel);
