@@ -1,4 +1,5 @@
-﻿using Alterverse.AI;
+﻿using System.Collections.Generic;
+using Alterverse.AI;
 using Alterverse.Match;
 using Alterverse.Multiplayer;
 using Alterverse.Profile;
@@ -25,6 +26,9 @@ namespace Alterverse.UI
         private readonly LanguagePicker languagePicker = new LanguagePicker();
         private float master, music, sfx;
         private Texture2D settingsGearIcon;
+        private bool showVoicePlayers;
+        private Vector2 voiceScroll;
+        private readonly List<PartyVoiceService.VoicePlayer> voicePlayers = new();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Ensure()
@@ -70,6 +74,8 @@ namespace Alterverse.UI
             audioDirty = false;
             confirmLeave = false;
             IsOpen = true;
+            showVoicePlayers = false;
+            voiceScroll = Vector2.zero;
 
             combatHud = FindAnyObjectByType<PrototypeHUD>();
             combatHudWasEnabled = combatHud != null && combatHud.enabled;
@@ -275,43 +281,53 @@ namespace Alterverse.UI
             theme.Panel(panel);
             FrontEndTheme.Fill(new Rect(panel.x, panel.y, panel.width, 2), FrontEndTheme.Accent);
 
-            theme.Label(new Rect(panel.x + 24, panel.y + 12, panel.width - 48, 32), GameLanguage.Text("MATCH OPTIONS"), theme.Heading);
+            theme.Label(new Rect(panel.x + 24, panel.y + 12, panel.width - 252, 32), GameLanguage.Text("MATCH OPTIONS"), theme.Heading);
+            if (theme.Action(new Rect(panel.xMax - 204, panel.y + 12, 180, 32),
+                GameLanguage.Text(showVoicePlayers ? "AUDIO SETTINGS" : "VOICE / MUTE"), selected: showVoicePlayers))
+                showVoicePlayers = !showVoicePlayers;
             string state = CoopAuthority.Active
                 ? "CO-OP MATCH CONTINUES WHILE OPTIONS ARE OPEN"
                 : "MATCH PAUSED";
             theme.Label(new Rect(panel.x + 24, panel.y + 42, panel.width - 48, 20), GameLanguage.Text(state), theme.Small, true);
 
-            float previousMaster = master, previousMusic = music, previousSfx = sfx;
-            const float rowStart = 66f;
-            const float rowStep = 56f;
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart, panel.width - 48, 52), GameLanguage.Text("Master volume"), ref master);
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep, panel.width - 48, 52), GameLanguage.Text("Music"), ref music);
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 2f, panel.width - 48, 52), GameLanguage.Text("Sound effects"), ref sfx);
-            if (previousMaster != master || previousMusic != music || previousSfx != sfx)
-                ApplyAudioLive();
+            if (showVoicePlayers)
+            {
+                DrawVoicePlayers(new Rect(panel.x + 24, panel.y + 66, panel.width - 48, Mathf.Max(40, panel.height - 168)));
+            }
+            else
+            {
+                float previousMaster = master, previousMusic = music, previousSfx = sfx;
+                const float rowStart = 66f;
+                const float rowStep = 56f;
+                DrawVolume(new Rect(panel.x + 24, panel.y + rowStart, panel.width - 48, 52), GameLanguage.Text("Master volume"), ref master);
+                DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep, panel.width - 48, 52), GameLanguage.Text("Music"), ref music);
+                DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 2f, panel.width - 48, 52), GameLanguage.Text("Sound effects"), ref sfx);
+                if (previousMaster != master || previousMusic != music || previousSfx != sfx)
+                    ApplyAudioLive();
 
-            float langY = panel.y + 240f;
-            theme.Label(new Rect(panel.x + 24, langY, 150, 36), GameLanguage.Text("Language"), theme.Body);
-            languagePicker.DrawControl(theme, new Rect(panel.x + 184, langY, panel.width - 208, 36));
+                float langY = panel.y + 240f;
+                theme.Label(new Rect(panel.x + 24, langY, 150, 36), GameLanguage.Text("Language"), theme.Body);
+                languagePicker.DrawControl(theme, new Rect(panel.x + 184, langY, panel.width - 208, 36));
 
-            // Graphics Quality & Hardware Auto-Detection bar
-            float gfxY = langY + 44f;
-            theme.Label(new Rect(panel.x + 24, gfxY, 150, 34), GameLanguage.Text("Graphics"), theme.Body);
-            float gfxBtnW = (panel.width - 208f - 18f) / 4f;
-            bool isAuto = Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled;
-            var currentQ = Alterverse.Performance.MobilePerformanceProfile.Current;
-            if (theme.Action(new Rect(panel.x + 184, gfxY, gfxBtnW, 34), "AUTO", selected: isAuto))
-                Alterverse.Performance.MobilePerformanceProfile.EnableAutoHardwareProfile();
-            if (theme.Action(new Rect(panel.x + 184 + (gfxBtnW + 6f), gfxY, gfxBtnW, 34), "LOW", selected: !isAuto && currentQ == Alterverse.Performance.MobileQuality.Battery))
-                Alterverse.Performance.MobilePerformanceProfile.Current = Alterverse.Performance.MobileQuality.Battery;
-            if (theme.Action(new Rect(panel.x + 184 + (gfxBtnW + 6f) * 2f, gfxY, gfxBtnW, 34), "BALANCED", selected: !isAuto && currentQ == Alterverse.Performance.MobileQuality.Balanced))
-                Alterverse.Performance.MobilePerformanceProfile.Current = Alterverse.Performance.MobileQuality.Balanced;
-            if (theme.Action(new Rect(panel.x + 184 + (gfxBtnW + 6f) * 3f, gfxY, gfxBtnW, 34), "HIGH", selected: !isAuto && currentQ == Alterverse.Performance.MobileQuality.Performance))
-                Alterverse.Performance.MobilePerformanceProfile.Current = Alterverse.Performance.MobileQuality.Performance;
+                // Graphics Quality & Hardware Auto-Detection bar
+                float gfxY = langY + 44f;
+                theme.Label(new Rect(panel.x + 24, gfxY, 150, 34), GameLanguage.Text("Graphics"), theme.Body);
+                float gfxBtnW = (panel.width - 208f - 18f) / 4f;
+                bool isAuto = Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled;
+                var currentQ = Alterverse.Performance.MobilePerformanceProfile.Current;
+                if (theme.Action(new Rect(panel.x + 184, gfxY, gfxBtnW, 34), "AUTO", selected: isAuto))
+                    Alterverse.Performance.MobilePerformanceProfile.EnableAutoHardwareProfile();
+                if (theme.Action(new Rect(panel.x + 184 + (gfxBtnW + 6f), gfxY, gfxBtnW, 34), "LOW", selected: !isAuto && currentQ == Alterverse.Performance.MobileQuality.Battery))
+                    Alterverse.Performance.MobilePerformanceProfile.Current = Alterverse.Performance.MobileQuality.Battery;
+                if (theme.Action(new Rect(panel.x + 184 + (gfxBtnW + 6f) * 2f, gfxY, gfxBtnW, 34), "BALANCED", selected: !isAuto && currentQ == Alterverse.Performance.MobileQuality.Balanced))
+                    Alterverse.Performance.MobilePerformanceProfile.Current = Alterverse.Performance.MobileQuality.Balanced;
+                if (theme.Action(new Rect(panel.x + 184 + (gfxBtnW + 6f) * 3f, gfxY, gfxBtnW, 34), "HIGH", selected: !isAuto && currentQ == Alterverse.Performance.MobileQuality.Performance))
+                    Alterverse.Performance.MobilePerformanceProfile.Current = Alterverse.Performance.MobileQuality.Performance;
 
-            // In-Match Squad & Opponent Friend Requests
-            float socialY = gfxY + 42f;
-            DrawMatchFriendBar(new Rect(panel.x + 24, socialY, panel.width - 48, 86));
+                // In-Match Squad & Opponent Friend Requests
+                float socialY = gfxY + 42f;
+                DrawMatchFriendBar(new Rect(panel.x + 24, socialY, panel.width - 48, 86));
+            }
 
             if (!confirmLeave)
             {
@@ -319,8 +335,8 @@ namespace Alterverse.UI
                     CloseOverlay();
 
                 string destination = CoopAuthority.Active
-                    ? "LEAVE CO-OP  â€¢  MAIN MENU"
-                    : "LEAVE MATCH  â€¢  MAIN MENU";
+                    ? "LEAVE CO-OP  •  MAIN MENU"
+                    : "LEAVE MATCH  •  MAIN MENU";
                 if (theme.Action(new Rect(panel.x + 24, panel.yMax - 42, panel.width - 48, 32), destination))
                     confirmLeave = true;
             }
@@ -339,10 +355,55 @@ namespace Alterverse.UI
             }
         }
 
+        private void DrawVoicePlayers(Rect rect)
+        {
+            var voice = PartyVoiceService.Instance;
+            theme.Label(new Rect(rect.x, rect.y, rect.width - 190, 28), GameLanguage.Text("VOICE PLAYERS"), theme.Body);
+            bool microphoneOn = voice?.MicrophoneOn == true;
+            if (theme.Action(new Rect(rect.xMax - 184, rect.y, 184, 30),
+                GameLanguage.Text(microphoneOn ? "MUTE MY MICROPHONE" : "ENABLE MY MICROPHONE"),
+                selected: microphoneOn, enabled: voice != null && voice.HasVoiceRoom && !voice.Busy))
+            {
+                if (microphoneOn) voice.Mute();
+                else _ = voice.EnableAsync();
+            }
+            theme.Label(new Rect(rect.x, rect.y + 34, rect.width, 34),
+                GameLanguage.Text("Muted players are silent only for you. Enabling your microphone lets your party hear you."), theme.Small, true);
+            voicePlayers.Clear();
+            voice?.CopyVoicePlayers(voicePlayers);
+            if (voicePlayers.Count == 0)
+            {
+                theme.Label(new Rect(rect.x, rect.y + 82, rect.width, 52),
+                    GameLanguage.Text("No voice players connected. Join your party's voice chat to manage participants."), theme.Body, true);
+                return;
+            }
+            Rect viewport = new Rect(rect.x, rect.y + 76, rect.width, Mathf.Max(0, rect.height - 100));
+            Rect content = new Rect(0, 0, Mathf.Max(1, viewport.width - 20), voicePlayers.Count * 46f);
+            voiceScroll = GUI.BeginScrollView(viewport, voiceScroll, content);
+            try
+            {
+                for (int i = 0; i < voicePlayers.Count; i++)
+                {
+                    var player = voicePlayers[i];
+                    Rect row = new Rect(0, i * 46f, content.width, 42);
+                    theme.HudPanel(row, .55f);
+                    theme.FitLabel(new Rect(row.x + 12, row.y + 4, row.width - 158, 34), player.DisplayName, theme.Body);
+                    string action = player.Pending ? "APPLYING…" : player.Muted ? "UNMUTE PLAYER" : "MUTE PLAYER";
+                    if (theme.Action(new Rect(row.xMax - 138, row.y + 4, 130, 34), GameLanguage.Text(action),
+                        selected: player.Muted, enabled: !player.Pending))
+                        voice.SetPlayerMuted(player.PlayerId, !player.Muted);
+                }
+            }
+            finally { GUI.EndScrollView(); }
+            if (!string.IsNullOrEmpty(voice.PlayerMuteStatus))
+                theme.Label(new Rect(rect.x, rect.yMax - 22, rect.width, 22),
+                    GameLanguage.Text(voice.PlayerMuteStatus), theme.Small, true);
+        }
+
         private void DrawMatchFriendBar(Rect rect)
         {
             theme.HudPanel(rect, .55f);
-            theme.FitLabel(new Rect(rect.x + 12, rect.y + 4, rect.width - 24, 18), GameLanguage.Text("MATCH PLAYERS  â€¢  TAP +FR TO SEND FRIEND REQUEST"), theme.Small, true);
+            theme.FitLabel(new Rect(rect.x + 12, rect.y + 4, rect.width - 24, 18), GameLanguage.Text("MATCH PLAYERS  •  TAP +FR TO SEND FRIEND REQUEST"), theme.Small, true);
 
             var controllers = FindObjectsByType<Alterverse.Characters.HeroIdentity>(FindObjectsSortMode.None);
             int shown = 0;
@@ -366,7 +427,7 @@ namespace Alterverse.UI
                 Rect chip = new Rect(rect.x + 12f + col * (chipW + 6f), rect.y + 24f + row * 29f, chipW, 26f);
                 bool already = FriendStickerService.IsFriendOrRequested(pName);
                 theme.FitLabel(new Rect(chip.x + 4, chip.y + 2, chip.width - 48, 22), pName, theme.Small);
-                if (theme.Action(new Rect(chip.xMax - 42, chip.y + 1, 40, 24), already ? "âœ“" : "+FR", !already, enabled: !already))
+                if (theme.Action(new Rect(chip.xMax - 42, chip.y + 1, 40, 24), already ? "OK" : "+FR", !already, enabled: !already))
                 {
                     FriendStickerService.SendFriendRequest(pName, hero, 1);
                 }
@@ -379,7 +440,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(r.x, r.y, r.width - 90, 24), label, theme.Body);
             theme.Label(new Rect(r.xMax - 82, r.y, 82, 24), $"{Mathf.RoundToInt(value * 100)}%", theme.Small);
 
-            if (theme.Action(new Rect(r.x, r.y + 27, 48, 30), "âˆ’"))
+            if (theme.Action(new Rect(r.x, r.y + 27, 48, 30), "-"))
                 value = Mathf.Clamp01(value - .1f);
 
             Rect track = new Rect(r.x + 64, r.y + 39, r.width - 128, 8);

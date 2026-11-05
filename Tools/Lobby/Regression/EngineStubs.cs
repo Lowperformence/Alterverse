@@ -11,6 +11,9 @@ namespace UnityEngine
         public static void DontDestroyOnLoad(Object value){}
         public static T[] FindObjectsByType<T>(FindObjectsInactive flags) where T:class
             =>GameObject.All.SelectMany(o=>o.Components).OfType<T>().ToArray();
+        public static T[] FindObjectsByType<T>(FindObjectsSortMode flags) where T:class
+            =>GameObject.All.SelectMany(o=>o.Components).OfType<T>().ToArray();
+        public static T FindAnyObjectByType<T>() where T:class=>GameObject.All.SelectMany(o=>o.Components).OfType<T>().FirstOrDefault();
     }
     public enum FindObjectsInactive{Exclude}
     public class Component:Object
@@ -20,7 +23,7 @@ namespace UnityEngine
         public T GetComponent<T>() where T:class=>gameObject.GetComponent<T>();
         public void GetComponentsInChildren<T>(bool inactive,List<T> values)=>values.AddRange(gameObject.Components.OfType<T>());
     }
-    public class MonoBehaviour:Component{}
+    public class MonoBehaviour:Component{public bool enabled=true;}
     public class GameObject:Object
     {
         public static List<GameObject> All=new();
@@ -36,9 +39,9 @@ namespace UnityEngine
     public class Transform{public Vector3 position;public void SetParent(Transform parent,bool world){}}
     public struct Vector3{public float x,y,z;public Vector3(float x,float y,float z){this.x=x;this.y=y;this.z=z;}}
     public struct Color{public float r,g,b,a;public Color(float r,float g,float b,float a){this.r=r;this.g=g;this.b=b;this.a=a;}public static Color white=>new Color(1,1,1,1);}
-    public struct Vector2{public float x,y;public Vector2(float x,float y){this.x=x;this.y=y;}}
-    public static class Time{public static float time,unscaledTime,realtimeSinceStartup;}
-    public static class Mathf{public static float Max(float a,float b)=>Math.Max(a,b);}
+    public struct Vector2{public float x,y;public Vector2(float x,float y){this.x=x;this.y=y;}public static Vector2 zero=>new();}
+    public static class Time{public static float time,unscaledTime,realtimeSinceStartup,timeScale=1;}
+    public static class Mathf{public const float PI=(float)Math.PI;public static float Max(float a,float b)=>Math.Max(a,b);public static float Min(float a,float b)=>Math.Min(a,b);public static float Sqrt(float x)=>(float)Math.Sqrt(x);public static float Sin(float x)=>(float)Math.Sin(x);public static float Cos(float x)=>(float)Math.Cos(x);public static float Abs(float x)=>Math.Abs(x);public static float Clamp01(float x)=>Math.Clamp(x,0,1);public static int RoundToInt(float x)=>(int)Math.Round(x);}
     public static class Application{public static bool isBatchMode=true;}
     public enum RuntimeInitializeLoadType{AfterSceneLoad}
     public class RuntimeInitializeOnLoadMethodAttribute:Attribute{public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType type){}}
@@ -124,21 +127,33 @@ namespace Alterverse.Multiplayer
 {
     public class MatchPlan{public string MatchId="fixture";}
     public static class CoopAuthority{public static bool Active;public static bool CanSimulateHostGameplay=true;public static MatchPlan ActivePlan;}
-    public class CoopHeroSlot:UnityEngine.MonoBehaviour{public int Slot;}
+    public class CoopHeroSlot:UnityEngine.MonoBehaviour{public int Slot;public bool IsLocalHuman;}
+    public class OnlineMatchPlan:MatchPlan{}
     public static class MatchSession{public const int TeamSize=4,MaxPlayers=8;}
     public class OnlinePartyService{public static OnlinePartyService Instance=new();public string VoiceRoomId="",JoinCode="";public bool InParty,MatchmakingLocked,IsPartyFull;}
 }
 namespace Unity.Services.Authentication
 {
-    public class AuthenticationService{public static AuthenticationService Instance=new();public bool IsSignedIn=true;}
+    public class AuthenticationService{public static AuthenticationService Instance=new();public bool IsSignedIn=true;public string PlayerId="local-player";}
 }
 namespace Unity.Services.Vivox
 {
     public enum ChatCapability{AudioOnly}
-    public class LoginOptions{public bool EnableTTS;}
+    public class LoginOptions{public bool EnableTTS;public string DisplayName;}
+    public class VivoxParticipant
+    {
+        public string PlayerId,DisplayName,ChannelName;public bool IsSelf,IsMuted,DelayMute,Fail;
+        public int Mutes,Unmutes;
+        public void MutePlayerLocally(){if(Fail)throw new Exception("mute failed");Mutes++;if(!DelayMute)IsMuted=true;}
+        public void UnmutePlayerLocally(){if(Fail)throw new Exception("unmute failed");Unmutes++;if(!DelayMute)IsMuted=false;}
+    }
     public class VivoxService
     {
         public static VivoxService Instance=new();
+        public readonly Dictionary<string,List<VivoxParticipant>> ActiveChannels=new();
+        public event Action<VivoxParticipant> ParticipantAddedToChannel;
+        public int ParticipantHandlers=>ParticipantAddedToChannel?.GetInvocationList().Length??0;
+        public void Add(VivoxParticipant p){if(!ActiveChannels.TryGetValue(p.ChannelName,out var list))ActiveChannels[p.ChannelName]=list=new();list.Add(p);ParticipantAddedToChannel?.Invoke(p);}
         public bool IsLoggedIn;public int Initializations,Unmutes,Logouts;public bool Muted=true,Fail;
         public TaskCompletionSource<bool> JoinPending;public string Channel;
         public Task InitializeAsync(){Initializations++;if(Fail)throw new Exception("fixture unavailable");return Task.CompletedTask;}
@@ -150,9 +165,9 @@ namespace Unity.Services.Vivox
     }
 }
 
-namespace Alterverse.Profile {public static class GameLanguage{public static string Text(string value)=>value;}}
+namespace Alterverse.Profile {public static class GameLanguage{public static string Text(string value)=>value;}public static class PlayerProfile{public static string PlayerName=>"Local Display Name";public static float MasterVolume=1,MusicVolume=1,SfxVolume=1;public static void SetAudioVolumes(float a,float b,float c,bool save){MasterVolume=a;MusicVolume=b;SfxVolume=c;}}}
 namespace UnityEngine {
- public static class GUIUtility{public static string systemCopyBuffer;}
+ public static class GUIUtility{public static string systemCopyBuffer;public static int hotControl;public static int GetControlID(FocusType f,Rect r)=>1;}
  public delegate void AndroidJavaRunnable();
  public class AndroidJavaObject:System.IDisposable {
   public static System.Collections.Generic.Queue<AndroidJavaRunnable> Ui=new();

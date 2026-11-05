@@ -213,7 +213,7 @@ namespace Alterverse.Shop
         }
         IEnumerator RecoverPurchase()
         {
-            spending = true; Status = "Saving purchaseâ€¦";
+            spending = true; Status = "Saving purchase...";
             PurchaseOperation op = null;
             try { op = JsonUtility.FromJson<PurchaseOperation>(PlayerPrefs.GetString(OperationKey)); }
             catch (Exception) { }

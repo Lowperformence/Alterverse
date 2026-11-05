@@ -9,14 +9,14 @@ runtime=sorted((a.dotnet_root/'shared/Microsoft.NETCore.App').iterdir())[-1]
 csc=sorted((a.dotnet_root/'sdk').glob('*/Roslyn/bincore/csc.dll'))[-1]
 names=['UI/GameInviteShare.cs','Combat/CosmicNebulaLayout.cs','Combat/CosmicNebulaField.cs','Combat/CosmicNebulaState.cs',
        'Combat/CombatVisibility.cs','Visuals/CosmicNebulaConcealment.cs','Multiplayer/PartyVoiceService.cs',
-       'Multiplayer/OfflineLobbyRoster.cs','AI/BotHeroPool.cs']
+       'Multiplayer/OfflineLobbyRoster.cs','AI/BotHeroPool.cs','UI/InMatchSettingsMenu.cs']
 with tempfile.TemporaryDirectory(prefix='df-lobby-') as temp:
     temp=Path(temp)
     for platform in ['UNITY_EDITOR','UNITY_ANDROID','UNITY_SERVER']:
         output=temp/(platform+'.dll');rsp=temp/'compile.rsp'
         rsp.write_text('\n'.join(['-nologo','-langversion:9','-nowarn:0649,0414,0067','-define:'+platform,
             '-out:'+str(output),*['-r:'+str(x) for x in runtime.glob('*.dll')],
-            str(here/'EngineStubs.cs'),str(here/'Regression.cs'),*[str(source/n) for n in names]]))
+            str(here/'EngineStubs.cs'),str(here/'VoiceMenuFixtures.cs'),str(here/'Regression.cs'),*[str(source/n) for n in names]]))
         subprocess.run([str(a.dotnet_root/'dotnet'),str(csc),'@'+str(rsp)],check=True)
         output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{
             'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))

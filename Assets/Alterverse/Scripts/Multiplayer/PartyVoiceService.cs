@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,20 @@ namespace Alterverse.Multiplayer
         public bool NeedsConsent{get;private set;}
         public bool Busy{get;private set;}
         public bool MicrophoneOn{get;private set;}
+        public bool HasVoiceRoom=>room.Length>0;
+        public string PlayerMuteStatus{get;private set;}="";
+        public readonly struct VoicePlayer
+        {
+            public readonly string PlayerId,DisplayName;
+            public readonly bool Muted,Pending;
+            public VoicePlayer(string id,string name,bool muted,bool pending)
+            {PlayerId=id;DisplayName=name;Muted=muted;Pending=pending;}
+        }
+        // Session-only preferences are keyed by identity, never a duplicate/changeable display name.
+        private readonly Dictionary<string,bool> playerMutes=new(StringComparer.Ordinal);
+        private readonly Dictionary<string,float> muteRequestTimes=new(StringComparer.Ordinal);
+        private string muteOwner="";
+        private bool participantEventsBound;
         public string Status{get;private set;}="VOICE OFF";
         private string room="",joinedRoom="";
         private int generation;
@@ -30,10 +45,12 @@ namespace Alterverse.Multiplayer
         private void Update()
         {
 #if !UNITY_SERVER
+            RefreshMuteOwner();
             string next=OnlinePartyService.Instance?.VoiceRoomId??"";
             if(next!=room)
             {
                 generation++;Mute();room=next;NeedsConsent=room.Length>0;
+                playerMutes.Clear();muteRequestTimes.Clear();PlayerMuteStatus="";
                 Status="VOICE OFF";
             }
             if(!Busy&&joinedRoom.Length>0&&joinedRoom!=room)_=DisconnectAsync();
@@ -56,8 +73,12 @@ namespace Alterverse.Multiplayer
                 if(!AuthenticationService.Instance.IsSignedIn){Status="VOICE UNAVAILABLE";return;}
                 if(joinedRoom!=target&&VivoxService.Instance.IsLoggedIn)await DisconnectCoreAsync();
                 if(!initialized){await VivoxService.Instance.InitializeAsync();initialized=true;}
+                RefreshMuteOwner();
+                if(!participantEventsBound)
+                {VivoxService.Instance.ParticipantAddedToChannel+=OnVoiceParticipantAdded;participantEventsBound=true;}
                 VivoxService.Instance.MuteInputDevice();
-                if(!VivoxService.Instance.IsLoggedIn)await VivoxService.Instance.LoginAsync(new LoginOptions{EnableTTS=false});
+                if(!VivoxService.Instance.IsLoggedIn)await VivoxService.Instance.LoginAsync(new LoginOptions{
+                    EnableTTS=false,DisplayName=Alterverse.Profile.PlayerProfile.PlayerName});
                 if(own!=generation||!focused||paused)return;
                 if(joinedRoom!=target)
                 {
@@ -86,6 +107,83 @@ namespace Alterverse.Multiplayer
             MicrophoneOn=false;
             if(Status=="MICROPHONE ON")Status="MICROPHONE MUTED";
         }
+
+        public void CopyVoicePlayers(List<VoicePlayer> destination)
+        {
+            if(destination==null)return;
+            destination.Clear();
+#if !UNITY_SERVER
+            RefreshMuteOwner();
+            if(!initialized||joinedRoom!=room||room.Length==0||!VivoxService.Instance.IsLoggedIn)return;
+            if(!VivoxService.Instance.ActiveChannels.TryGetValue(ChannelFor(room),out var participants))return;
+            foreach(var participant in participants)
+            {
+                if(participant==null||participant.IsSelf||string.IsNullOrEmpty(participant.PlayerId))continue;
+                bool pending=false;
+                if(playerMutes.TryGetValue(participant.PlayerId,out bool desired)&&desired!=participant.IsMuted&&
+                    muteRequestTimes.TryGetValue(participant.PlayerId,out float requestedAt))
+                {
+                    pending=Time.realtimeSinceStartup-requestedAt<5f;
+                    if(!pending)PlayerMuteStatus="Voice control failed. Please try again.";
+                }
+                destination.Add(new VoicePlayer(participant.PlayerId,
+                    string.IsNullOrWhiteSpace(participant.DisplayName)?"PLAYER":participant.DisplayName,
+                    participant.IsMuted,pending));
+            }
+#endif
+        }
+
+        public bool SetPlayerMuted(string playerId,bool muted)
+        {
+#if !UNITY_SERVER
+            RefreshMuteOwner();
+            if(!initialized||room.Length==0||joinedRoom!=room||string.IsNullOrEmpty(playerId)||
+                !VivoxService.Instance.IsLoggedIn||playerId==AuthenticationService.Instance.PlayerId)return false;
+            bool found=false;
+            try
+            {
+                if(!VivoxService.Instance.ActiveChannels.TryGetValue(ChannelFor(room),out var party))return false;
+                foreach(var participant in party)
+                    if(participant.PlayerId==playerId&&!participant.IsSelf){found=true;break;}
+                if(!found)return false;
+                // Apply locally in every active channel so a second channel cannot bypass this mute.
+                foreach(var channel in VivoxService.Instance.ActiveChannels.Values)
+                    foreach(var participant in channel)
+                        if(participant.PlayerId==playerId&&!participant.IsSelf)
+                        {
+                            if(muted)participant.MutePlayerLocally();
+                            else participant.UnmutePlayerLocally();
+                        }
+                playerMutes[playerId]=muted;muteRequestTimes[playerId]=Time.realtimeSinceStartup;PlayerMuteStatus="";
+                return true;
+            }
+            catch(Exception){PlayerMuteStatus="Voice control failed. Please try again.";return false;}
+#else
+            return false;
+#endif
+        }
+#if !UNITY_SERVER
+        private void RefreshMuteOwner()
+        {
+            if(!initialized)return; // Do not touch Unity Authentication before voice has initialized.
+            string owner=AuthenticationService.Instance.IsSignedIn?AuthenticationService.Instance.PlayerId??"":"";
+            if(owner==muteOwner)return;
+            muteOwner=owner;playerMutes.Clear();muteRequestTimes.Clear();PlayerMuteStatus="";
+        }
+        private void OnVoiceParticipantAdded(VivoxParticipant participant)
+        {
+            RefreshMuteOwner();
+            if(participant==null||participant.IsSelf||room.Length==0||
+                !playerMutes.TryGetValue(participant.PlayerId,out bool muted))return;
+            try
+            {
+                muteRequestTimes[participant.PlayerId]=Time.realtimeSinceStartup;
+                if(muted)participant.MutePlayerLocally();
+                else participant.UnmutePlayerLocally();
+            }
+            catch(Exception){PlayerMuteStatus="Voice control failed. Please try again.";}
+        }
+#endif
         private async Task DisconnectAsync()
         {
             Busy=true;
@@ -143,6 +241,14 @@ namespace Alterverse.Multiplayer
         }
         private void OnApplicationFocus(bool value){focused=value;if(!value)Mute();}
         private void OnApplicationPause(bool value){paused=value;if(value)Mute();}
-        private void OnDestroy(){if(Instance!=this)return;generation++;Mute();if(!Busy)_=DisconnectAsync();Instance=null;}
+        private void OnDestroy()
+        {
+            if(Instance!=this)return;
+#if !UNITY_SERVER
+            if(participantEventsBound)VivoxService.Instance.ParticipantAddedToChannel-=OnVoiceParticipantAdded;
+#endif
+            participantEventsBound=false;playerMutes.Clear();muteRequestTimes.Clear();generation++;Mute();
+            if(!Busy)_=DisconnectAsync();Instance=null;
+        }
     }
 }

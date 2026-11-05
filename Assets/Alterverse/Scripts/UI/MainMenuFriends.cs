@@ -83,7 +83,7 @@ namespace Alterverse.UI
                 theme.FitLabel(new Rect(Left + 70, y + 8, 250, 26), f.name, theme.Heading);
                 string clanLabel = string.IsNullOrEmpty(f.clanTag) ? "NO CLAN" : $"[{f.clanTag}] {f.clanName}";
                 theme.FitLabel(new Rect(Left + 70, y + 36, 320, 20),
-                    $"LEVEL {f.level}  â€¢  {HeroIdentity.NameFor(hero).ToUpperInvariant()}  â€¢  {clanLabel}", theme.Small, true);
+                    $"LEVEL {f.level} / {HeroIdentity.NameFor(hero).ToUpperInvariant()} / {clanLabel}", theme.Small, true);
 
                 theme.StatusBadge(new Rect(Left + 390, y + 18, 96, 28), f.online ? "ONLINE" : "OFFLINE",
                     f.online ? FrontEndTheme.Positive : FrontEndTheme.Muted);
@@ -115,7 +115,7 @@ namespace Alterverse.UI
                 if (theme.Action(new Rect(Left, 626, 110, 34), "PREVIOUS", enabled: friendsListOffset > 0))
                     friendsListOffset = Mathf.Max(0, friendsListOffset - pageSize);
                 theme.Center(new Rect(Left + 120, 626, ContentWidth - 240, 34),
-                    $"{friendsListOffset + 1}â€“{friendsListOffset + count} / {friends.Count}");
+                    $"{friendsListOffset + 1}-{friendsListOffset + count} / {friends.Count}");
                 if (theme.Action(new Rect(Right - 110, 626, 110, 34), "NEXT", enabled: friendsListOffset + count < friends.Count))
                     friendsListOffset += pageSize;
             }
@@ -156,7 +156,7 @@ namespace Alterverse.UI
                     HeroId h = (HeroId)Mathf.Clamp(req.hero, 0, HeroIdentity.HeroCount - 1);
                     StylizedHeroCard.Draw(new Rect(inPanel.x + 16, ry + 4, 38, 44), h, FrontEndTheme.Pixel, 0f);
                     theme.FitLabel(new Rect(inPanel.x + 62, ry + 4, inPanel.width - 250, 24), req.name, theme.Body);
-                    theme.FitLabel(new Rect(inPanel.x + 62, ry + 26, inPanel.width - 250, 18), $"LEVEL {req.level}  â€¢  {HeroIdentity.NameFor(h)}", theme.Small, true);
+                    theme.FitLabel(new Rect(inPanel.x + 62, ry + 26, inPanel.width - 250, 18), $"LEVEL {req.level} / {HeroIdentity.NameFor(h)}", theme.Small, true);
                     if (theme.Action(new Rect(inPanel.xMax - 182, ry + 8, 84, 36), "ACCEPT", true))
                     {
                         FriendStickerService.AcceptFriendRequest(req.playerId);
@@ -187,7 +187,7 @@ namespace Alterverse.UI
                     HeroId h = (HeroId)Mathf.Clamp(req.hero, 0, HeroIdentity.HeroCount - 1);
                     StylizedHeroCard.Draw(new Rect(outPanel.x + 16, ry + 4, 38, 44), h, FrontEndTheme.Pixel, 0f);
                     theme.FitLabel(new Rect(outPanel.x + 62, ry + 4, outPanel.width - 250, 24), req.name, theme.Body);
-                    theme.FitLabel(new Rect(outPanel.x + 62, ry + 26, outPanel.width - 250, 18), $"PENDING  â€¢  LEVEL {req.level}", theme.Small, true);
+                    theme.FitLabel(new Rect(outPanel.x + 62, ry + 26, outPanel.width - 250, 18), $"PENDING / LEVEL {req.level}", theme.Small, true);
                     if (theme.Action(new Rect(outPanel.xMax - 182, ry + 8, 84, 36), "PENDING", true, enabled: false))
                     {
                         FriendStickerService.AcceptFriendRequest(req.playerId);
@@ -254,7 +254,7 @@ namespace Alterverse.UI
 
                 bool canSend = FriendStickerService.Ready && !FriendStickerService.Busy && friends.Count > 0 && PlayerWallet.Balance >= item.priceShards;
                 if (theme.Action(new Rect(card.x + 12, card.y + 108, card.width - 24, 42),
-                    $"GIFT  â€¢  {item.priceShards:N0} SHARDS", true, enabled: canSend))
+                    $"GIFT {item.priceShards:N0} SHARDS", true, enabled: canSend))
                 {
                     FriendStickerService.SendStickerToFriend(friends[selectedFriendIndex].playerId, item.id);
                 }
