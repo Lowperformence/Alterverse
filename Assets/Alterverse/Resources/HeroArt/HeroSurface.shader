@@ -76,12 +76,14 @@ Shader "DimensionsFront/HeroSurface"
     half rimSide=smoothstep(-.35h,.75h,nv.x);
     half3 rimColor=lerp(half3(.30h,.42h,.65h),half3(.38h,.72h,.95h),rimSide);
     half upper=saturate(n.y*.5h+.5h);
-    half3 bounce=albedo*half3(.08h,.11h,.16h)*(1.0h-upper);
-    half silhouette=pow(1.0h-saturate(dot(n,view)),2.4h);
-    half3 lit=lerp(worldLight,studio,_ShowcaseLighting)+bounce;
-    lit+=rimColor*silhouette*lerp(.22h,.48h,_ShowcaseLighting)*(1.0h-metal*.18h);
-    lit+=albedo*fresnel*metal*.13h;
-    half3 energy=albedo*(1.42h+_EnergyBoost*.60h)+rimColor*fresnel*.30h;
+    half topGradient=lerp(.90h,1.07h,smoothstep(-.25h,.85h,n.y));
+    half3 bounce=albedo*half3(.09h,.125h,.18h)*(1.0h-upper);
+    half silhouette=pow(1.0h-saturate(dot(n,view)),2.25h);
+    half3 lit=lerp(worldLight*topGradient,studio,_ShowcaseLighting)+bounce;
+    lit+=rimColor*silhouette*lerp(.31h,.50h,_ShowcaseLighting)*(1.0h-metal*.16h);
+    lit+=rimColor*fresnel*.14h*(.45h+smoothness*.55h);
+    lit+=albedo*fresnel*metal*.16h;
+    half3 energy=albedo*(1.52h+_EnergyBoost*.68h)+rimColor*fresnel*.36h;
     return half4(lerp(lit,energy,saturate(i.color.a)),1);
    }
    ENDHLSL

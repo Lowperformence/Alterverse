@@ -62,20 +62,20 @@ namespace Alterverse.Visuals
 
         public static ArenaLightingProfile For(ArenaVariant planet)=>planet switch
         {
-            ArenaVariant.Moon=>new(new(.92f,.955f,1f),new(.38f,.41f,.47f),new(.23f,.25f,.29f),new(.12f,.13f,.16f)),
-            ArenaVariant.Mars=>new(new(1f,.84f,.71f),new(.36f,.30f,.28f),new(.25f,.21f,.20f),new(.16f,.105f,.08f),1.40f,.60f,.28f),
-            ArenaVariant.GreenPlanet=>new(new(.92f,1f,.86f),new(.29f,.37f,.34f),new(.19f,.26f,.24f),new(.10f,.15f,.12f),1.40f,.58f,.34f),
-            ArenaVariant.Noxara=>new(new(.80f,.87f,1f),new(.27f,.30f,.42f),new(.17f,.20f,.31f),new(.09f,.11f,.19f),1.36f,.56f,.42f),
-            ArenaVariant.Kryon=>new(new(.87f,.96f,1f),new(.39f,.46f,.52f),new(.22f,.29f,.34f),new(.12f,.17f,.21f),1.36f,.54f,.46f),
-            ArenaVariant.Earth=>new(new(1f,.96f,.85f),new(.32f,.39f,.43f),new(.23f,.28f,.26f),new(.12f,.15f,.095f),1.40f,.60f,.34f),
-            ArenaVariant.Pyraxis=>new(new(1f,.89f,.76f),new(.32f,.28f,.29f),new(.24f,.18f,.17f),new(.21f,.075f,.025f),1.34f,.60f,.30f),
-            ArenaVariant.Neptune=>new(new(.81f,.95f,1f),new(.25f,.39f,.46f),new(.15f,.25f,.32f),new(.065f,.13f,.19f),1.38f,.54f,.48f),
+            ArenaVariant.Moon=>new(new(.93f,.965f,1f),new(.40f,.435f,.50f),new(.24f,.265f,.31f),new(.115f,.128f,.165f),1.44f,.62f,.42f),
+            ArenaVariant.Mars=>new(new(1f,.85f,.70f),new(.38f,.31f,.29f),new(.26f,.21f,.20f),new(.165f,.102f,.075f),1.45f,.64f,.32f),
+            ArenaVariant.GreenPlanet=>new(new(.91f,1f,.85f),new(.30f,.395f,.36f),new(.20f,.275f,.25f),new(.095f,.148f,.118f),1.44f,.61f,.38f),
+            ArenaVariant.Noxara=>new(new(.79f,.88f,1f),new(.28f,.32f,.45f),new(.175f,.215f,.33f),new(.085f,.108f,.195f),1.40f,.59f,.46f),
+            ArenaVariant.Kryon=>new(new(.86f,.965f,1f),new(.41f,.485f,.55f),new(.23f,.305f,.36f),new(.115f,.17f,.215f),1.40f,.57f,.50f),
+            ArenaVariant.Earth=>new(new(1f,.965f,.86f),new(.34f,.415f,.46f),new(.24f,.295f,.27f),new(.118f,.152f,.095f),1.45f,.63f,.38f),
+            ArenaVariant.Pyraxis=>new(new(1f,.88f,.74f),new(.34f,.29f,.30f),new(.25f,.185f,.175f),new(.22f,.078f,.025f),1.38f,.63f,.34f),
+            ArenaVariant.Neptune=>new(new(.80f,.955f,1f),new(.26f,.41f,.49f),new(.155f,.265f,.34f),new(.062f,.132f,.198f),1.42f,.57f,.52f),
             ArenaVariant.Dark00=>new(new(.72f,.78f,.86f),new(.006f,.007f,.009f),new(.004f,.005f,.006f),new(.002f,.003f,.004f),.075f,.18f,.04f),
-            ArenaVariant.DiamondCore=>new(new(.91f,.97f,1f),new(.38f,.45f,.51f),new(.22f,.28f,.34f),new(.11f,.16f,.21f),1.34f,.52f,.48f),
-            ArenaVariant.GJ504b=>new(new(1f,.91f,.96f),new(.40f,.29f,.37f),new(.28f,.20f,.26f),new(.16f,.095f,.14f),1.38f,.58f,.30f),
-            ArenaVariant.Wasp76b=>new(new(1f,.88f,.72f),new(.40f,.32f,.27f),new(.26f,.22f,.21f),new(.17f,.10f,.07f),1.36f,.60f,.44f),
-            ArenaVariant.Trappist1e=>new(new(.92f,.88f,1f),new(.32f,.35f,.43f),new(.20f,.25f,.30f),new(.095f,.14f,.16f),1.38f,.56f,.42f),
-            ArenaVariant.Toi715b=>new(new(1f,.86f,.73f),new(.40f,.31f,.27f),new(.27f,.21f,.19f),new(.17f,.10f,.08f),1.40f,.60f,.30f),
+            ArenaVariant.DiamondCore=>new(new(.90f,.975f,1f),new(.40f,.475f,.54f),new(.23f,.295f,.36f),new(.108f,.162f,.215f),1.38f,.55f,.52f),
+            ArenaVariant.GJ504b=>new(new(1f,.90f,.96f),new(.42f,.305f,.39f),new(.29f,.205f,.27f),new(.16f,.092f,.142f),1.42f,.61f,.34f),
+            ArenaVariant.Wasp76b=>new(new(1f,.875f,.71f),new(.42f,.335f,.28f),new(.27f,.225f,.21f),new(.172f,.098f,.068f),1.40f,.63f,.48f),
+            ArenaVariant.Trappist1e=>new(new(.91f,.885f,1f),new(.335f,.37f,.455f),new(.205f,.26f,.315f),new(.092f,.14f,.165f),1.42f,.59f,.46f),
+            ArenaVariant.Toi715b=>new(new(1f,.855f,.72f),new(.42f,.325f,.28f),new(.28f,.215f,.195f),new(.17f,.098f,.078f),1.44f,.63f,.34f),
             _=>throw new System.ArgumentOutOfRangeException(nameof(planet))
         };
     }

@@ -20,8 +20,8 @@ namespace Alterverse.Match
             Shader shader=Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
             if(shader==null){enabled=false;return;}material=new Material(shader){name="DF_FrontFractureInk"};
             fault=Stroke("DF_GeologicalFront",.19f,new Color(.035f,.045f,.065f));
-            zeroEdge=Stroke("DF_ZeroFractureEdge",.038f,Color.Lerp(StylizedArtDirection.ZeroEnergy,Color.gray,.35f));
-            lumenEdge=Stroke("DF_LumenFractureEdge",.038f,Color.Lerp(StylizedArtDirection.LumenEnergy,Color.gray,.35f));
+            zeroEdge=Stroke("DF_ZeroFractureEdge",.044f,Color.Lerp(StylizedArtDirection.ZeroEnergy,Color.white,.15f));
+            lumenEdge=Stroke("DF_LumenFractureEdge",.044f,Color.Lerp(StylizedArtDirection.LumenEnergy,Color.white,.15f));
             if(front!=null){targetX=ControlToX(front.LumenControl);front.ControlChanged+=OnControlChanged;}
             for(int i=0;i<segmentCount;i++)center[i]=new Vector3(targetX,.14f,-frontLength*.5f+i*frontLength/(segmentCount-1));
             UpdateLines(1);
@@ -47,6 +47,14 @@ namespace Alterverse.Match
                 Vector3 p=center[i];p.x=Mathf.Lerp(p.x,targetX+fracture+impact,blend);center[i]=p;
                 zero[i]=p+new Vector3(-.085f,.012f,0);lumen[i]=p+new Vector3(.085f,.012f,0);
             }
+            float pulse=.5f+.5f*Mathf.Sin(Time.time*2.6f);
+            float surge=Mathf.Clamp01(fade*1.15f+pulse*.25f);
+            float edgeWidth=Mathf.Lerp(.042f,.064f,surge);
+            zeroEdge.widthMultiplier=edgeWidth;lumenEdge.widthMultiplier=edgeWidth;
+            Color zeroTint=Color.Lerp(Color.Lerp(StylizedArtDirection.ZeroEnergy,Color.gray,.25f),Color.Lerp(StylizedArtDirection.ZeroEnergy,Color.white,.32f),surge);
+            Color lumenTint=Color.Lerp(Color.Lerp(StylizedArtDirection.LumenEnergy,Color.gray,.25f),Color.Lerp(StylizedArtDirection.LumenEnergy,Color.white,.32f),surge);
+            zeroEdge.startColor=zeroEdge.endColor=zeroTint;
+            lumenEdge.startColor=lumenEdge.endColor=lumenTint;
             fault.SetPositions(center);zeroEdge.SetPositions(zero);lumenEdge.SetPositions(lumen);
         }
         private void OnControlChanged(float zeroControl,float lumenControl)=>targetX=ControlToX(lumenControl);

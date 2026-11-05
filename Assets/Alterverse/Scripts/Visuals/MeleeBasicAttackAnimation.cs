@@ -331,6 +331,7 @@ namespace Alterverse.Visuals
                 }
                 bones[i].Transform.rotation = Quaternion.Slerp(bones[i].GuardWorld, desired, weight);
             }
+            ApplyTorsoStrikeMomentum(age, heavy, punch);
             // Preserve the current locomotion foot targets, including strafing/backpedaling.
             CombatMotion.Solve(bones[10].Transform, bones[11].Transform, bones[12].Transform, footL, kneeL);
             CombatMotion.Solve(bones[13].Transform, bones[14].Transform, bones[15].Transform, footR, kneeR);
@@ -339,18 +340,38 @@ namespace Alterverse.Visuals
             else if (forwardSlash) ApplyForwardSlash(age);
             else if (punch) ApplyPunch(age);
         }
+        private void ApplyTorsoStrikeMomentum(float age, bool heavy, bool punch)
+        {
+            if (duration <= .001f) return;
+            float side = punch ? (clip != null && clip.name == "jab" ? -1f : 1f) : (mirror ? -1f : 1f);
+            float load = contact * .62f, follow = contact + (duration - contact) * .30f;
+            float twist = age < load ? Mathf.Lerp(0f, -.42f, CombatMotion.Ease(age / Mathf.Max(.001f, load))) :
+                age < follow ? Mathf.Lerp(-.42f, 1f, CombatMotion.Ease((age - load) / Mathf.Max(.001f, follow - load))) :
+                Mathf.Lerp(1f, 0f, CombatMotion.Ease((age - follow) / Mathf.Max(.001f, duration - follow)));
+            float yaw = -side * twist * (heavy ? 10.5f : punch ? 9f : 8f);
+            float pitch = twist * (heavy ? 5f : punch ? 4.2f : 3.6f);
+            bones[1].Transform.rotation = Quaternion.AngleAxis(yaw * .45f, transform.up) *
+                Quaternion.AngleAxis(pitch * .45f, transform.right) * bones[1].Transform.rotation;
+            bones[2].Transform.rotation = Quaternion.AngleAxis(yaw * .55f, transform.up) *
+                Quaternion.AngleAxis(pitch * .55f, transform.right) * bones[2].Transform.rotation;
+            bones[3].Transform.rotation = Quaternion.AngleAxis(-yaw * .65f, transform.up) *
+                Quaternion.AngleAxis(-pitch * .50f, transform.right) * bones[3].Transform.rotation;
+        }
         private void ApplyForwardSlash(float age)
         {
             int upper = mirror ? 4 : 7, hand = upper + 2, off = mirror ? 7 : 4;
             float side = mirror ? -1f : 1f, length = Reach(upper);
             Vector3 shoulder = bones[upper].Transform.position;
-            Vector3 draw = shoulder + transform.TransformDirection(new Vector3(side * .80f, -.12f, -.32f)) * length;
+            Vector3 draw = shoulder + transform.TransformDirection(new Vector3(side * .82f, -.10f, -.34f)) * length;
             Vector3 hit = shoulder + transform.TransformDirection(new Vector3(-side * .04f, -.12f, .96f)) * length;
-            Vector3 through = shoulder + transform.TransformDirection(new Vector3(-side * .76f, -.12f, .58f)) * length;
+            Vector3 through = shoulder + transform.TransformDirection(new Vector3(-side * .78f, -.12f, .60f)) * length;
             // Raise into the side windup, then cut forward on one level through the contact
             // frame. SmoothSweep shares velocity at contact and returns to this frame's guard.
             SolveArm(upper, SmoothSweep(age, bones[hand].GuardPosition, draw, hit, through), .99f);
-            SolveArm(off, bones[off + 2].GuardPosition);
+            float offPulse = Mathf.Sin(Mathf.Clamp01(age / Mathf.Max(.001f, duration)) * Mathf.PI);
+            Vector3 offPoint = bones[off + 2].GuardPosition +
+                transform.TransformDirection(new Vector3(-side * .09f, .04f, -.13f)) * (Reach(off) * offPulse);
+            SolveArm(off, offPoint);
             bones[off + 2].Transform.rotation = bones[off + 2].GuardWorld;
             // Calibrate from the imported hand rather than assuming an FBX wrist axis.
             // Rotate the whole fitted grip with the cut; never replay the source uppercut.
@@ -362,13 +383,16 @@ namespace Alterverse.Visuals
             int upper = clip.name == "jab" ? 4 : 7, hand = upper + 2, off = upper == 4 ? 7 : 4;
             float side = upper == 4 ? -1f : 1f, length = Reach(upper);
             Vector3 shoulder = bones[upper].Transform.position;
-            Vector3 draw = shoulder + transform.TransformDirection(new Vector3(side * .28f, -.18f, -.18f)) * length;
-            Vector3 hit = shoulder + transform.TransformDirection(new Vector3(-side * .04f, -.10f, .96f)) * length;
-            Vector3 through = shoulder + transform.TransformDirection(new Vector3(-side * .10f, -.10f, .96f)) * length;
+            Vector3 draw = shoulder + transform.TransformDirection(new Vector3(side * .30f, -.16f, -.22f)) * length;
+            Vector3 hit = shoulder + transform.TransformDirection(new Vector3(-side * .04f, -.09f, .96f)) * length;
+            Vector3 through = shoulder + transform.TransformDirection(new Vector3(-side * .12f, -.09f, .98f)) * length;
             // Chamber beside the chest, then extend the fist almost to its natural reach.
             // Solve rotations only: neither arm length nor the gameplay hit volume changes.
             SolveArm(upper, SmoothSweep(age, bones[hand].GuardPosition, draw, hit, through), .99f);
-            SolveArm(off, bones[off + 2].GuardPosition);
+            float offPulse = Mathf.Sin(Mathf.Clamp01(age / Mathf.Max(.001f, duration)) * Mathf.PI);
+            Vector3 offPoint = bones[off + 2].GuardPosition +
+                transform.TransformDirection(new Vector3(side * .07f, .08f, -.14f)) * (Reach(off) * offPulse);
+            SolveArm(off, offPoint);
             bones[off + 2].Transform.rotation = bones[off + 2].GuardWorld;
             OrientStrikeWrist(hand, age, transform.forward, transform.forward, transform.forward);
         }
@@ -396,12 +420,12 @@ namespace Alterverse.Visuals
         }
         private Vector3 SmoothSweep(float age, Vector3 guard, Vector3 draw, Vector3 hit, Vector3 through)
         {
-            float load = contact*.58f, follow = contact+(duration-contact)*.34f;
-            if (age < load) return Vector3.Lerp(guard, draw, CombatMotion.Ease(age/load));
-            // Cubic Hermite with a shared contact velocity: no stop or kink at the damage frame.
-            Vector3 velocity = (through-draw) / Mathf.Max(.001f, follow-load);
-            if (age < contact) return Hermite(draw, hit, Vector3.zero, velocity*(contact-load), (age-load)/(contact-load));
-            if (age < follow) return Hermite(hit, through, velocity*(follow-contact), Vector3.zero, (age-contact)/(follow-contact));
+            float load = contact*.62f, follow = contact+(duration-contact)*.30f;
+            if (age < load) return Vector3.Lerp(guard, draw, CombatMotion.Ease(age/Mathf.Max(.001f,load)));
+            // Cubic Hermite with boosted shared contact velocity: explosive snap through impact without a stop or kink.
+            Vector3 velocity = (through-draw) * 1.24f / Mathf.Max(.001f, follow-load);
+            if (age < contact) return Hermite(draw, hit, Vector3.zero, velocity*(contact-load), (age-load)/Mathf.Max(.001f,contact-load));
+            if (age < follow) return Hermite(hit, through, velocity*(follow-contact), Vector3.zero, (age-contact)/Mathf.Max(.001f,follow-contact));
             return Vector3.Lerp(through, guard, CombatMotion.Ease((age-follow)/Mathf.Max(.001f,duration-follow)));
         }
         private static Vector3 Hermite(Vector3 a, Vector3 b, Vector3 va, Vector3 vb, float t)
@@ -415,6 +439,9 @@ namespace Alterverse.Visuals
             float shift = age < contact ? -.018f * CombatMotion.Ease(age/contact) :
                 age < contact+.055f ? Mathf.Lerp(-.018f,-.055f,CombatMotion.Ease((age-contact)/.055f)) :
                 Mathf.Lerp(-.055f,0,CombatMotion.Ease((age-contact-.055f)/Mathf.Max(.01f,duration-contact-.055f)));
+            float recoilDeg = -shift * 38f;
+            bones[2].Transform.rotation = Quaternion.AngleAxis(-recoilDeg, transform.right) *
+                Quaternion.AngleAxis(recoilDeg * .40f, transform.up) * bones[2].Transform.rotation;
             SolveArm(7, bones[9].Transform.position + transform.forward*shift);
         }
     }

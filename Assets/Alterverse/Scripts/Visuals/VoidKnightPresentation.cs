@@ -9,7 +9,7 @@ namespace Alterverse.Visuals
     public sealed class VoidKnightPresentation:MonoBehaviour
     {
         private Transform model;private Health health;private string action="Idle";private float started=-100,duration,contact,authoredContact;private int serial;
-        private Transform upperL,elbowL,handL,upperR,elbowR,handR;
+        private Transform spine,chest,head,upperL,elbowL,handL,upperR,elbowR,handR;
         private readonly Dictionary<string,AnimationClip> clips=new();private readonly List<Transform> preserved=new();private Vector3[] positions,scales;private Quaternion[] rotations;
         private static readonly HashSet<string> Upper=new(){"Spine","Chest","Head","UpperArmL","ForearmL","HandL","UpperArmR","ForearmR","HandR","WeaponGripL","WeaponGripR"};
         public void Initialize(Transform imported)
@@ -22,6 +22,7 @@ namespace Alterverse.Visuals
                 if(!Upper.Contains(part.name))preserved.Add(part);
                 switch(part.name)
                 {
+                    case "Spine":spine=part;break;case "Chest":chest=part;break;case "Head":head=part;break;
                     case "UpperArmL":upperL=part;break;case "ForearmL":elbowL=part;break;case "HandL":handL=part;break;
                     case "UpperArmR":upperR=part;break;case "ForearmR":elbowR=part;break;case "HandR":handR=part;break;
                 }
@@ -50,12 +51,18 @@ namespace Alterverse.Visuals
         private void ExtendBasicSwing(float age)
         {
             if(upperL==null||elbowL==null||handL==null||upperR==null||elbowR==null||handR==null)return;
-            float weight=age<contact?CombatMotion.Ease(age/Mathf.Max(.001f,contact)):
+            float load=contact*.55f;
+            float weight=age<load?CombatMotion.Ease(age/Mathf.Max(.001f,load))*.36f:
+                age<contact?Mathf.Lerp(.36f,1f,CombatMotion.Ease((age-load)/Mathf.Max(.001f,contact-load))):
                 1f-CombatMotion.Ease((age-contact)/Mathf.Max(.001f,duration-contact));
+            float dir=serial%2==0?-1f:1f;
+            if(spine!=null)spine.rotation=Quaternion.AngleAxis(dir*weight*3.2f,transform.up)*Quaternion.AngleAxis(weight*2.2f,transform.right)*spine.rotation;
+            if(chest!=null)chest.rotation=Quaternion.AngleAxis(dir*weight*4.5f,transform.up)*Quaternion.AngleAxis(weight*3.0f,transform.right)*chest.rotation;
+            if(head!=null)head.rotation=Quaternion.AngleAxis(-dir*weight*4.8f,transform.up)*Quaternion.AngleAxis(-weight*2.8f,transform.right)*head.rotation;
             Vector3 right=handR.position,left=handL.position;
             // Enlarge the imported swing in its own planar direction. Both hands move
             // together so the original two-hand sword grip and wrist frames stay fitted.
-            Vector3 shift=Vector3.ProjectOnPlane(right-upperR.position,transform.up)*(.35f*weight);
+            Vector3 shift=Vector3.ProjectOnPlane(right-upperR.position,transform.up)*(.40f*weight);
             float reachR=(Vector3.Distance(upperR.position,elbowR.position)+Vector3.Distance(elbowR.position,right))*.99f;
             float reachL=(Vector3.Distance(upperL.position,elbowL.position)+Vector3.Distance(elbowL.position,left))*.99f;
             // Limit the shared displacement to what BOTH real arm chains can reach.
