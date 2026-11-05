@@ -52,7 +52,7 @@ namespace Alterverse.UI
 
             if(player==null)
             {
-                GameObject playerObject=GameObject.Find("AV_Player");
+                GameObject playerObject=Alterverse.Characters.LocalHeroContext.Find();
                 if(playerObject!=null)player=playerObject.transform;
             }
             if(player==null)return;
@@ -171,7 +171,7 @@ namespace Alterverse.UI
             if(zone.LumenInside>0)lumen+=$" x{zone.LumenInside}";
             DrawLabel(new Rect(panel.x+12f,panel.y+3f,sideWidth,22f),zero,leftStyle);
             DrawLabel(new Rect(panel.center.x-centerWidth*.5f,panel.y+3f,centerWidth,22f),
-                "HOT ZONE",centerStyle);
+                Alterverse.Profile.GameLanguage.Text(zone.ZeroInside>0&&zone.LumenInside>0?"CONTESTED":(player!=null&&(player.position-zone.transform.position).sqrMagnitude<=HotZoneDirector.Radius*HotZoneDirector.Radius?"CAPTURING":"HOT ZONE")),centerStyle);
             DrawLabel(new Rect(panel.xMax-sideWidth-12f,panel.y+3f,sideWidth,22f),lumen,rightStyle);
 
             Rect bar=new(panel.x+12f,panel.y+27f,panel.width-24f,3f);

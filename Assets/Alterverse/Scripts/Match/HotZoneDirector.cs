@@ -234,8 +234,11 @@ namespace Alterverse.Match
             return new Vector2(Mathf.Max(0,zeroHeroes)*dt,Mathf.Max(0,lumenHeroes)*dt);
         }
 
+        private readonly Dictionary<Health, float> zoneParticipation = new();
+
         private void ScanHeroes()
         {
+            if (activeElapsed < 0.25f) zoneParticipation.Clear();
             zeroInside=0;lumenInside=0;
             float radiusSqr=Radius*Radius;
             for(int i=0;i<Health.Active.Count;i++)
@@ -245,6 +248,7 @@ namespace Alterverse.Match
                 TeamMember member=h.GetComponent<TeamMember>();if(member==null)continue;
                 Vector3 d=h.transform.position-transform.position;d.y=0;
                 if(d.sqrMagnitude>radiusSqr)continue;
+                zoneParticipation[h]=(zoneParticipation.TryGetValue(h,out float prev)?prev:0f)+0.10f;
                 if(member.Team==0)zeroInside++;else if(member.Team==1)lumenInside++;
             }
         }
@@ -276,21 +280,33 @@ namespace Alterverse.Match
         private void RecordWinningParticipants(int winner)
         {
             if (winner < 0)
+            {
+                zoneParticipation.Clear();
                 return;
-
+            }
+            front ??= FindAnyObjectByType<DimensionsFront>();
+            front?.RegisterObjectiveCaptured(winner);
             float radiusSquared = Radius * Radius;
+            var credited = new HashSet<Health>();
+            foreach (var kvp in zoneParticipation)
+            {
+                Health hero = kvp.Key;
+                if (hero == null || kvp.Value < 2.5f || hero.GetComponent<HeroIdentity>() == null) continue;
+                TeamMember member = hero.GetComponent<TeamMember>();
+                if (member != null && member.Team == winner && credited.Add(hero))
+                    MatchTelemetry.Instance?.RecordHotZoneCapture(hero);
+            }
+            zoneParticipation.Clear();
             IReadOnlyList<Health> heroes = Health.Active;
             for (int i = 0; i < heroes.Count; i++)
             {
                 Health hero = heroes[i];
                 if (hero == null || hero.IsDead || !hero.isActiveAndEnabled ||
-                    hero.GetComponent<HeroIdentity>() == null)
+                    hero.GetComponent<HeroIdentity>() == null || credited.Contains(hero))
                     continue;
-
                 TeamMember member = hero.GetComponent<TeamMember>();
                 if (member == null || member.Team != winner)
                     continue;
-
                 Vector3 offset = hero.transform.position - transform.position;
                 offset.y = 0f;
                 if (offset.sqrMagnitude <= radiusSquared)

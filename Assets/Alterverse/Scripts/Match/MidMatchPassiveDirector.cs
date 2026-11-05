@@ -201,10 +201,10 @@ namespace Alterverse.Match
 
                 int remainingSec = Mathf.CeilToInt(Mathf.Max(0f, AutoPickWindowSeconds - (Time.unscaledTime - unlockedAtUnscaledTime)));
                 theme.FitLabel(new Rect(container.x + 20f, container.y + 10f, panelWidth - 110f, 30f),
-                    "MID-MATCH AUGMENT READY", headerStyle);
+                    GameLanguage.Text("MID-MATCH AUGMENT READY"), headerStyle);
                 theme.FitLabel(new Rect(container.xMax - 80f, container.y + 10f, 60f, 30f), remainingSec + " s", headerStyle);
                 theme.Label(new Rect(container.x + 20f, container.y + 43f, panelWidth - 40f, 25f),
-                    "CHOOSE ONE BONUS", instructionStyle);
+                    GameLanguage.Text("CHOOSE ONE BONUS"), instructionStyle);
 
                 HeroIdentity identity = localHero.GetComponent<HeroIdentity>();
                 MidMatchPerkType recommended = RecommendForRole(identity != null ? identity.Role : HeroRole.Bruiser);
@@ -234,9 +234,9 @@ namespace Alterverse.Match
             if (theme.Action(rect, string.Empty, selected: recommended)) onSelect?.Invoke();
             FrontEndTheme.Fill(new Rect(rect.x + 4f, rect.y + 4f, rect.width - 8f, 4f), accentColor);
             theme.Label(new Rect(rect.x + 8f, rect.y + 13f, rect.width - 16f, 38f), "+15%", valueStyle);
-            theme.Label(new Rect(rect.x + 8f, rect.y + 54f, rect.width - 16f, 50f), label, cardLabelStyle);
+            theme.Label(new Rect(rect.x + 8f, rect.y + 54f, rect.width - 16f, 50f), GameLanguage.Text(label), cardLabelStyle);
             if (recommended)
-                theme.Label(new Rect(rect.x + 8f, rect.yMax - 25f, rect.width - 16f, 20f), "RECOMMENDED", recommendStyle);
+                theme.Label(new Rect(rect.x + 8f, rect.yMax - 25f, rect.width - 16f, 20f), GameLanguage.Text("RECOMMENDED"), recommendStyle);
         }
     }
 }

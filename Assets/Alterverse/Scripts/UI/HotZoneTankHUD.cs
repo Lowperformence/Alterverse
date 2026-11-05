@@ -25,7 +25,7 @@ namespace Alterverse.UI
             if((playerTeam==null||!playerTeam.isActiveAndEnabled)&&Time.unscaledTime>=nextPlayerResolve)
             {
                 nextPlayerResolve=Time.unscaledTime+.5f;
-                GameObject player=GameObject.Find("AV_Player");
+                GameObject player=Alterverse.Characters.LocalHeroContext.Find();
                 if(player!=null)playerTeam=player.GetComponent<TeamMember>();
             }
 

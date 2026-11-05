@@ -137,6 +137,7 @@ namespace Alterverse.Visuals
             {
                 if (Time.unscaledTime < nextScan) return;
                 nextScan = Time.unscaledTime + .5f;
+                if (!Alterverse.UI.MainMenuController.IsVisible && Alterverse.Combat.Health.Active.Count > 0) { var active = Alterverse.Combat.Health.Active; for (int i = 0; i < active.Count; i++) { var h = active[i]; if (h == null) continue; var hero = h.GetComponent<HeroIdentity>(); if (hero != null && hero.Hero == HeroId.Kaelon && hero.GetComponent<AurenForearmSlimmer>() == null) hero.gameObject.AddComponent<AurenForearmSlimmer>(); } return; }
                 foreach (HeroIdentity hero in FindObjectsByType<HeroIdentity>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 {
                     if (hero == null || hero.Hero != HeroId.Kaelon) continue;

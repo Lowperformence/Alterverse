@@ -10,7 +10,7 @@ private static readonly Color ShieldColor=new(.30f,.68f,1f,1f);
 private Texture2D pixel;private Camera cam;private GUIStyle style;private TeamMember player;private HeroIdentity[] heroes=System.Array.Empty<HeroIdentity>();private float nextRefresh;
 private void Awake(){pixel=new Texture2D(1,1);pixel.SetPixel(0,0,Color.white);pixel.Apply();cam=Camera.main;RefreshTargets();}
 private void Update(){if(cam==null)cam=Camera.main;if(Time.unscaledTime>=nextRefresh)RefreshTargets();}
-private void RefreshTargets(){nextRefresh=Time.unscaledTime+1f;if(player==null){GameObject p=GameObject.Find("AV_Player");if(p!=null)player=p.GetComponent<TeamMember>();}heroes=FindObjectsByType<HeroIdentity>(FindObjectsInactive.Exclude);}
+private void RefreshTargets(){nextRefresh=Time.unscaledTime+.5f;if(player==null){GameObject p=LocalHeroContext.Find();if(p!=null)player=p.GetComponent<TeamMember>();}}
 private void OnGUI()
 {
 if(cam==null||pixel==null||Time.timeScale<=0f||player==null)return;
