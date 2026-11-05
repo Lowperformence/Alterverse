@@ -11,6 +11,7 @@ namespace Alterverse.Characters
         public const float ModelScale = .70f, CollisionRadius = .28f, CollisionHeight = 1.4f;
         public const float TailSwayDegrees = 30f, TailSwaySeconds = 8f;
         public const float PassiveSpeed = 1.12f, PassiveSeconds = 1.2f, PassiveCooldown = 4f;
+        public const float PassiveShieldRechargeMultiplier = 2f;
         public const float ClawDamage = 40f, ClawRange = 2.2f, ClawCooldown = 6f;
         public const float DustDamage = 14f, DustRange = 4.5f, DustRadius = 2f, DustCooldown = 12f, DustWindup = .3f;
         public const float DustSlow = .8f, DustSlowSeconds = 2f;
@@ -24,5 +25,3 @@ namespace Alterverse.Characters
         public const float ScratchTickSeconds = ScratchHoldSeconds / ScratchTicks;
     }
 }
-
-

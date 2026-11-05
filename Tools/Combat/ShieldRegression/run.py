@@ -64,21 +64,24 @@ class ShieldRegression {
     Alterverse.Characters.HeroId.Veyr=>70,Alterverse.Characters.HeroId.Kaelon=>70,
     Alterverse.Characters.HeroId.VoidKnight=>60,Alterverse.Characters.HeroId.Nyra=>30,_=>50};
    float expected=id==Alterverse.Characters.HeroId.Bolt7?40:previous+30;
+   float delay=id==Alterverse.Characters.HeroId.Timmy?5.625f:11.25f;
    var x=Hero(id);
    Near(x.HeroBaseShieldMax,expected,"hero capacity "+id);Near(x.Shield,expected,"spawn shield "+id);
    x.TakeDamage(10);Near(x.HeroBaseShield,expected-10,"damage absorption "+id);
-   Near(x.HeroBaseShieldRechargeRemaining,11.25f,"shorter delay "+id);
-   Refresh(x,11.249f);Near(x.HeroBaseShield,expected-10,"no premature recharge "+id);
-   Refresh(x,11.25f);Near(x.HeroBaseShield,expected,"recharge boundary "+id);
+   Near(x.HeroBaseShieldRechargeRemaining,delay,"hero-specific recharge delay "+id);
+   Refresh(x,delay-.001f);Near(x.HeroBaseShield,expected-10,"no premature recharge "+id);
+   Refresh(x,delay);Near(x.HeroBaseShield,expected,"recharge boundary "+id);
    // A later hit at the exact deadline must restore first, without relying on Update.
-   UnityEngine.Time.time=20;x.TakeDamage(10);UnityEngine.Time.time=31.25f;x.TakeDamage(5);
+   UnityEngine.Time.time=20;x.TakeDamage(10);UnityEngine.Time.time=20+delay;x.TakeDamage(5);
    Near(x.HeroBaseShield,expected-5,"due shield restored before new hit "+id);
    x.TakeDamage(2000);Refresh(x,100);Near(x.Shield,0,"dead shield stays empty "+id);
    x.RestoreFull();Near(x.HeroBaseShield,expected,"respawn capacity "+id);
    // Bots share the same authoritative shield configuration as player heroes.
    x.gameObject.AddComponent<Alterverse.AI.MobaBotBrain>();x.gameObject.AddComponent<Alterverse.Combat.TeamMember>().Team=1;
    x.Configure(200);Near(x.HeroBaseShieldMax,expected,"bot capacity "+id);
-   x.TakeDamage(10);Refresh(x,111.25f);Near(x.HeroBaseShield,expected,"bot recharge "+id);
+   x.TakeDamage(10);Near(x.HeroBaseShieldRechargeRemaining,delay,"bot delay "+id);
+   Refresh(x,100+delay-.001f);Near(x.HeroBaseShield,expected-10,"no premature bot recharge "+id);
+   Refresh(x,100+delay);Near(x.HeroBaseShield,expected,"bot recharge "+id);
    Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=false;
    x.ApplyNetworkSnapshot(200,expected+80,false);Near(x.Shield,expected+80,"replica accepts new capacity plus ability shield "+id);
    x.ApplyNetworkSnapshot(200,10000,false);Near(x.Shield,expected+80,"replica clamps excess shield "+id);
@@ -92,17 +95,34 @@ class ShieldRegression {
   Refresh(ione,2.25f);Near(ione.TemporaryShield,0,"Phase Fold expires on its duration boundary");Near(ione.HeroBaseShield,80,"expiry does not consume the permanent shield");
   UnityEngine.Time.time=0;
   var h=Hero(Alterverse.Characters.HeroId.Timmy);h.TakeDamage(25);Near(h.Shield,55,"Timmy absorbs damage into his 80 HP base shield");Near(h.Current,200,"shield protects health");
-  UnityEngine.Time.time=5;h.TakeDamage(10);Near(h.HeroBaseShieldRechargeRemaining,11.25f,"another hit restarts recharge delay");
-  Refresh(h,16.249f);Near(h.Shield,45,"no premature recharge");Refresh(h,16.25f);Near(h.Shield,80,"full recharge after 11.25 damage-free seconds");
+  UnityEngine.Time.time=5;h.TakeDamage(10);Near(h.HeroBaseShieldRechargeRemaining,5.625f,"another hit restarts Timmy's shorter delay");
+  Refresh(h,10.624f);Near(h.Shield,45,"no premature recharge");Refresh(h,10.625f);Near(h.Shield,80,"full recharge after 5.625 damage-free seconds");
   h.TakeDamage(100);Near(h.Shield,0,"base shield depletes");Near(h.Current,180,"only excess damage reaches health");
-  UnityEngine.Time.time=20;h.TakeDamage(1);Refresh(h,31.249f);Near(h.Shield,0,"unshielded damage also restarts recharge");
-  Refresh(h,31.25f);Near(h.Shield,80,"depleted shield recharges to exactly 80");
+  UnityEngine.Time.time=14;h.TakeDamage(1);Refresh(h,19.624f);Near(h.Shield,0,"unshielded damage also restarts recharge");
+  Refresh(h,19.625f);Near(h.Shield,80,"depleted shield recharges to exactly 80");
   h.AddShield(10,5,false);h.TakeDamage(5);Near(h.HeroBaseShield,80,"temporary shield is consumed before Timmy base shield");Near(h.TemporaryShield,5,"remaining temporary shield is independent");
   h.TakeDamage(2000);Check(h.IsDead,"lethal damage kills");Refresh(h,100);Near(h.Shield,0,"dead hero cannot recharge");h.RestoreFull();Near(h.Current,200,"respawn restores health");Near(h.Shield,80,"respawn restores Timmy base shield");
-  h.TakeDamage(20);Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=false;Refresh(h,111.25f);Near(h.Shield,60,"client cannot authoritatively regenerate shield");
-  Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=true;Refresh(h,111.25f);Near(h.Shield,80,"host applies due recharge");
+  h.TakeDamage(20);Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=false;Refresh(h,105.625f);Near(h.Shield,60,"client cannot authoritatively regenerate shield");
+  Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=true;Refresh(h,105.625f);Near(h.Shield,80,"host applies due recharge");
+  UnityEngine.Time.time=0;
+  var donor=Hero(Alterverse.Characters.HeroId.Timmy);var recipient=Hero(Alterverse.Characters.HeroId.Nyra);recipient.TakeDamage(20);
+  Near(donor.TransferShieldTo(recipient,10,3),10,"shield theft transfers actual shield");
+  Near(donor.HeroBaseShieldRechargeRemaining,5.625f,"shield theft starts Timmy passive delay");
+  Refresh(donor,5.624f);Near(donor.HeroBaseShield,70,"shield theft cannot recharge early");
+  Refresh(donor,5.625f);Near(donor.HeroBaseShield,80,"shield theft uses Timmy recharge boundary");
+  UnityEngine.Time.time=10;Near(donor.RemoveAllShields(recipient.gameObject),80,"nullfield removes Timmy base shield");
+  Near(donor.HeroBaseShieldRechargeRemaining,5.625f,"shield removal starts Timmy passive delay");
+  Refresh(donor,15.624f);Near(donor.Shield,0,"removed shield cannot recharge early");
+  Refresh(donor,15.625f);Near(donor.HeroBaseShield,80,"removed shield recharges at Timmy boundary");
+  UnityEngine.Time.time=0;
+  var temporary=Hero(Alterverse.Characters.HeroId.Timmy);temporary.TakeDamage(10);temporary.AddShield(20,20,false);
+  UnityEngine.Time.time=3;temporary.TakeDamage(5);
+  Near(temporary.HeroBaseShieldRechargeRemaining,5.625f,"temporary shield hit restarts damaged base pool delay");
+  Refresh(temporary,8.624f);Near(temporary.HeroBaseShield,70,"temporary shield cannot advance base recharge");
+  Refresh(temporary,8.625f);Near(temporary.HeroBaseShield,80,"base recharge deadline after temporary shield hit");
+  Near(temporary.TemporaryShield,15,"Timmy passive does not replenish or expire ability shields");
   var neutral=new UnityEngine.GameObject().AddComponent<Alterverse.Combat.Health>();neutral.Configure(200);Near(neutral.HeroBaseShieldMax,0,"non-hero does not acquire a base shield");
-  System.Console.WriteLine("PASS "+checks+" production Health shield assertions: all existing heroes/bots +30 shield and BOLT-7 40 shield, 11.25s delay, Phase Fold 50 shield, absorption, deadline/reset, snapshots, death/respawn and authority. Unity/network transport not tested.");
+  System.Console.WriteLine("PASS "+checks+" production Health shield assertions: Timmy player/bot 2x recharge (5.625s), other heroes 11.25s, shield theft/removal, temporary pools, absorption, deadline/reset, snapshots, death/respawn and authority. Unity/network transport not tested.");
  }
 }
 '''
@@ -123,5 +143,3 @@ with tempfile.TemporaryDirectory(prefix='df-shield-regression-') as d:
   mono=a.mono_root/'usr/bin/mono-sgen';binary=d/'Shield.exe'
   subprocess.run([str(mono),str(a.roslyn),'-nologo','-noconfig','-langversion:9','-r:'+str(a.mono_root/'usr/lib/mono/4.5/System.dll'),'-r:'+str(a.mono_root/'usr/lib/mono/4.5/System.Core.dll'),'-out:'+str(binary),*map(str,sources)],env=env,check=True)
   subprocess.run([str(mono),str(binary)],env=env,check=True)
-
-

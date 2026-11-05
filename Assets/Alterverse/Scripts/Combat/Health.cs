@@ -19,6 +19,11 @@ namespace Alterverse.Combat
             _ => 80f
         };
         private const float HeroBaseShieldRechargeDelay = 11.25f;
+        // Timmy's passive halves the damage-free wait; the base shield still refills in one step.
+        private float HeroBaseShieldRechargeSeconds =>
+            GetComponent<Alterverse.Characters.HeroIdentity>()?.Hero == Alterverse.Characters.HeroId.Timmy
+                ? HeroBaseShieldRechargeDelay / Alterverse.Characters.TimmyBalance.PassiveShieldRechargeMultiplier
+                : HeroBaseShieldRechargeDelay;
         private const float AurenPassiveTickSeconds = 1f;
 
         private static readonly System.Collections.Generic.List<Health> active = new(128);
@@ -135,7 +140,7 @@ namespace Alterverse.Combat
             shield = TransientShield - temporaryTaken;
             heroBaseShield -= transferred - temporaryTaken;
             if (heroBaseShieldEnabled && heroBaseShield < HeroBaseShieldCapacity)
-                heroBaseShieldRechargeAt = Time.time + HeroBaseShieldRechargeDelay;
+                heroBaseShieldRechargeAt = Time.time + HeroBaseShieldRechargeSeconds;
 
             float baseReceived = Mathf.Min(baseRoom, transferred);
             recipient.heroBaseShield += baseReceived;
@@ -161,7 +166,7 @@ namespace Alterverse.Combat
                 IsFriendlySource(source)||(DamageGate!=null&&!DamageGate()))return 0;
             RefreshHeroBaseShield();float removed=Shield;
             shield=shieldUntil=0;heroBaseShield=0;
-            if(removed>0&&heroBaseShieldEnabled)heroBaseShieldRechargeAt=Time.time+HeroBaseShieldRechargeDelay;
+            if(removed>0&&heroBaseShieldEnabled)heroBaseShieldRechargeAt=Time.time+HeroBaseShieldRechargeSeconds;
             if(removed>0){Changed?.Invoke(Current,maxHealth);Damaged?.Invoke(0,removed,source);}
             return removed;
         }
@@ -311,7 +316,7 @@ namespace Alterverse.Combat
 
             // Any valid incoming hit restarts the recharge delay while the hero shield is damaged.
             if (heroBaseShieldEnabled && heroBaseShield < HeroBaseShieldCapacity)
-                heroBaseShieldRechargeAt = Time.time + HeroBaseShieldRechargeDelay;
+                heroBaseShieldRechargeAt = Time.time + HeroBaseShieldRechargeSeconds;
 
             // Temporary ability shields are consumed first so an expiring buff is not wasted.
             float transientAbsorbed = Mathf.Min(TransientShield, amount);
@@ -324,7 +329,7 @@ namespace Alterverse.Combat
 
             // A hit that actually reduced the hero shield starts/restarts the recharge delay.
             if (heroBaseShieldEnabled && (heroAbsorbed > 0f || heroBaseShield < HeroBaseShieldCapacity))
-                heroBaseShieldRechargeAt = Time.time + HeroBaseShieldRechargeDelay;
+                heroBaseShieldRechargeAt = Time.time + HeroBaseShieldRechargeSeconds;
 
             float absorbed = transientAbsorbed + heroAbsorbed;
             float applied = Mathf.Min(amount, Current);

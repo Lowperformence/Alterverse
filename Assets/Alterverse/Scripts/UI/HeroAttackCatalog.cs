@@ -83,7 +83,7 @@ namespace Alterverse.UI
         {
             HeroId.VoidKnight=>"Two-handed greatsword. Three confirmed basic hits prime a 30-point shield for 2s on the next damaging skill. Longer melee reach, slower swings and less health than a tank.",
             HeroId.Veyr=>"Fast melee pressure for finishing isolated targets.",
-            HeroId.Timmy=>$"Short-range claw strike. Light Paws grants {(TimmyBalance.PassiveSpeed-1f)*100:0}% speed for {TimmyBalance.PassiveSeconds:0.#}s after a damaging skill hit, at most once every {TimmyBalance.PassiveCooldown:0.#}s.",
+            HeroId.Timmy=>$"Short-range claw strike. Light Paws: base shield recharges {TimmyBalance.PassiveShieldRechargeMultiplier:0}x as fast. Damaging skill hits also grant {(TimmyBalance.PassiveSpeed-1f)*100:0}% speed for {TimmyBalance.PassiveSeconds:0.#}s, at most once every {TimmyBalance.PassiveCooldown:0.#}s.",
             HeroId.Kaelon=>$"Frontline melee. Extra passive: +{HeroAbilityKit.AurenPassiveRegenPerSecond:0} HP every second while alive (max HP cap).",
             HeroId.Nyra=>"Rapid long-range rifle fire.",
             HeroId.Elyra=>"Ranged dimensional basic attack.",
@@ -177,5 +177,3 @@ namespace Alterverse.UI
         };
     }
 }
-
-
