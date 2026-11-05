@@ -82,7 +82,12 @@ namespace UnityEngine
         public static int RoundToInt(float value)=>(int)Math.Round(value);
     }
     public enum SystemLanguage { English,German,French,Spanish,Portuguese,Russian,ChineseSimplified,ChineseTraditional,Japanese,Unknown }
-    public static class Application { public static SystemLanguage systemLanguage=SystemLanguage.English; }
+    public static class Application
+    {
+        public static SystemLanguage systemLanguage=SystemLanguage.English;
+        public static event Action lowMemory;
+        public static event Action<bool> focusChanged;
+    }
     public static class PlayerPrefs
     {
         public static readonly Dictionary<string,string> Values = new Dictionary<string,string>();

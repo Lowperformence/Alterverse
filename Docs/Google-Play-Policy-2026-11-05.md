@@ -69,4 +69,6 @@ Ein nicht veröffentlichter Entwurf liegt in `Docs/Legal-Review-Draft-2026-11-05
 - 110 Prüfungen der echten C#-Release-/R8-/Berechtigungshelfer mit Unity-Editor-Ersatztypen bestanden. Einschließlich beider Manifestmodule, beider Berechtigungsformen, Erhalt von Internet/Mikrofon, Wiederholbarkeit und Fehlerfällen.
 - 10 Prüfungen des tatsächlichen Android-Schriftcache-Codes mit Unity-Ersatztypen bestanden: Wiederverwendung, Fokusverlust, Speicherwarnung, Wiederaufbau, wiederholte Initialisierung.
 - 5 Python-Tests des finalen Bundle-Prüfers bestanden, einschließlich Berechtigungen in zusätzlichen Modulen und ungültigen Eingaben. Bundletool-Aufrufe sind in diesen Tests simuliert; kein echtes AAB lag vor.
+- Zusätzlich 1.196 vorhandene Sprach-/Menü-/Banner-Prüfungen über Android Release, Development, Editor und Server bestanden; die Test-Ersatztypen wurden um die zwei verwendeten Unity-Ereignisse ergänzt.
+- GitHub Actions: Android-R8-/Policy-Workflow einschließlich echter R8-Prüfung bestanden.
 - `git diff --check` bestanden. Dies ersetzt keine Unity-Kompilierung, Gradle-Manifest-Zusammenführung, Geräteprüfung oder Android-Vitals-Messung.
