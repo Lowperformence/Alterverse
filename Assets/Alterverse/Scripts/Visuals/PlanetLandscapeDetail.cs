@@ -94,7 +94,7 @@ namespace Alterverse.Visuals
                 case ArenaVariant.DiamondCore:
                     stone=new(.055f,.095f,.13f);edge=new(.43f,.66f,.75f);accent=new(.58f,.84f,.93f);organic=new(.18f,.27f,.34f);polish=.88f;glow=.18f;break;
                 case ArenaVariant.GJ504b:
-                    stone=new(.29f,.065f,.18f);edge=new(.58f,.19f,.36f);accent=new(.76f,.36f,.49f);organic=new(.17f,.045f,.12f);glow=0;break;
+                    stone=new(.31f,.075f,.20f);edge=new(.58f,.20f,.38f);accent=new(.88f,.26f,.54f);organic=new(.19f,.048f,.13f);polish=.28f;glow=.26f;break;
                 case ArenaVariant.Wasp76b:
                     stone=new(.21f,.23f,.25f);edge=new(.56f,.30f,.14f);accent=new(.95f,.42f,.07f);organic=new(.28f,.19f,.13f);metal=.62f;polish=.34f;glow=.42f;break;
                 case ArenaVariant.Trappist1e:
