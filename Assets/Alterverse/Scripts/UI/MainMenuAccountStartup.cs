@@ -92,11 +92,9 @@ namespace Alterverse.UI
             var service = AccountServerBootstrap.Instance;
             var commerce = PaidShardCommerce.Instance;
             bool verified = service?.GooglePlayAccountReady == true;
-            string commerceStatus = commerce?.Status ?? string.Empty;
-            bool commerceLoading = verified && (commerce == null ||
-                commerceStatus.IndexOf("Synchronizing", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
-                commerceStatus.IndexOf("Connecting", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
-                commerceStatus.IndexOf("Loading", System.StringComparison.OrdinalIgnoreCase) >= 0);
+            // Status text can still describe the previous operation while a wallet request is pending.
+            // Only the actual operation state decides whether a retry is available.
+            bool commerceLoading = verified && (commerce == null || commerce.Synchronizing);
             bool syncing = service == null || !service.StartupAttemptFinished || service.Busy || commerceLoading;
 
             string headline = syncing

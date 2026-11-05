@@ -59,6 +59,22 @@ static class Regression
    "verified Google startup connects exactly one backend account");
   Check(!AccountProfilePrefs.Attached&&!menu.PrepareForTest()&&Alterverse.Characters.PlayerHeroSelection.Reads==0,
    "native sign-in success cannot expose local progress while the cloud save is loading");
+  var backend=PaidShardCommerce.Instance;
+  backend.Synchronizing=true;backend.Ready=false;backend.Status="Account server not configured.";
+  Alterverse.UI.FrontEndTheme.Actions.Clear();menu.DrawStartupForTest();
+  Check(Alterverse.UI.FrontEndTheme.Actions.Count==1&&
+   Alterverse.UI.FrontEndTheme.Actions[0].Text=="SIGNING IN  •  PLEASE WAIT…"&&
+   !Alterverse.UI.FrontEndTheme.Actions[0].Enabled,
+   "verified Google login with pending cloud HTTP shows a disabled wait action despite stale status text");
+  backend.Synchronizing=false;backend.Status="Account connection interrupted. Saved operations will retry.";
+  Alterverse.UI.FrontEndTheme.Actions.Clear();menu.DrawStartupForTest();
+  Check(Alterverse.UI.FrontEndTheme.Actions.Count==1&&Alterverse.UI.FrontEndTheme.Actions[0].Text=="TRY AGAIN"&&
+   Alterverse.UI.FrontEndTheme.Actions[0].Enabled,"completed failed cloud sync offers retry");
+  backend.Synchronizing=true;
+  Alterverse.UI.FrontEndTheme.Actions.Clear();menu.DrawStartupForTest();
+  Check(Alterverse.UI.FrontEndTheme.Actions[0].Text=="SIGNING IN  •  PLEASE WAIT…"&&
+   !Alterverse.UI.FrontEndTheme.Actions[0].Enabled,"a retry in flight hides TRY AGAIN even with stale error text");
+  backend.Synchronizing=false;backend.Ready=true;
   Attach(auth.PlayerId,1);
   AccountProfilePrefs.SetInt("DF_TestHero",2);AccountProfilePrefs.SetInt("DF_TestArena",3);
   AccountProfilePrefs.SetFloat("DF_MasterVolume",.25f);

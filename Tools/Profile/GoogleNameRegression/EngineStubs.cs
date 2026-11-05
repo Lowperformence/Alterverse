@@ -109,7 +109,7 @@ namespace Alterverse.Shop
  public class GooglePlayShardStore {public static GooglePlayShardStore Instance;public bool Busy,PendingRecovery;public void Reconnect(){}}
  public class PaidShardCommerce
  {
-  public static PaidShardCommerce Instance;public static bool Spending;public bool Ready=true,HasPaidHistory,SaveOnFlush;public int FlushCalls;public string AccountHash,Status="Loading cloud profile...";
+  public static PaidShardCommerce Instance;public static bool Spending;public bool Ready=true,HasPaidHistory,SaveOnFlush,Synchronizing;public int FlushCalls;public string AccountHash,Status="Loading cloud profile...";
   public static event Action EntitlementsChanged;public static void Raise()=>EntitlementsChanged?.Invoke();
   public static int Connections;public static Action<string> OnConnect;
   public static void Connect(string endpoint,Func<string> token,string account){Connections++;OnConnect?.Invoke(account);Instance=new(){AccountHash=account};}

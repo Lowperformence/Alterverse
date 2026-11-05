@@ -15,3 +15,13 @@ Die Prüfung verteilt **veröffentlichte Google-Play-Versionen**, keine GitHub-C
 Abschließend zwei signierte Versionen im internen Play-Test nutzen: ältere Version über Play installieren, höhere Version veröffentlichen und nach Verfügbarkeit beim selben Testkonto den Appstart/Update-Dialog prüfen. Erfolg, Abbruch und Wiederaufnahme auf einem Android-Gerät kontrollieren.
 
 Offizielle API: https://developer.android.com/reference/com/google/android/play/core/appupdate/AppUpdateManager
+
+## Startkorrekturen vom 5. November 2026
+
+Das Google-Kontofenster prüft jetzt `PaidShardCommerce.Synchronizing`, statt aus englischen Statustexten auf laufende Anfragen zu schließen. Ein bereits verifiziertes Google-Konto zeigt während des ersten Cloud-Ladens und während einer Wiederholung weiterhin den deaktivierten Wartezustand. Erst eine beendete fehlgeschlagene Synchronisierung bietet „TRY AGAIN“ an. Die Wallet-Abfrage setzt ihren Ladetext beim tatsächlichen Anfragebeginn.
+
+Der Updater behält einen gestarteten nativen Ablauf als aktiv, prüft laufende Updates im Vordergrund im Zwei-Sekunden-Abstand und berücksichtigt sowohl Fokus- als auch Pause/Rückkehr-Ereignisse. Ein bereits heruntergeladenes Update wird im Vordergrund mit Play Cores `completeUpdate()` abgeschlossen; Google Play übernimmt Installation und Neustart der Hauptaktivität. Erfolgreich angeforderte Abschlüsse werden nicht mehrfach gesendet. Abgebrochene/fehlgeschlagene Abläufe geben die Wiederholungsmöglichkeit frei, ohne automatisch erneut den Zustimmungsdialog zu öffnen. Eine erfolgreiche Prüfung ohne weiteres verfügbares Update liest die installierte Buildnummer neu, entfernt die alte Update-Sperre und prüft die Mindestversion des Kontoservers erneut.
+
+108 Prüfungen bestanden gegen kontrollierte SDK-/Java-/Unity-Grenzen: Google-Konto/Menü 54 Android + 3 Desktop, Updater/Menü 30 Android + 5 Editor + 1 Server, Account/Wallet 15. Gegenproben mit den ursprünglichen Produktionsdateien reproduzieren den voreiligen Retry-Button und den zu früh freigegebenen Update-Ablauf. Kein echter Play-Installationslauf und kein nativer Neustart wurden hier ausgeführt. Den vollständigen Ablauf mit zwei über Google Play installierten signierten Versionen auf dem betroffenen Android-Gerät prüfen. Nur der Android-Client muss neu gebaut werden; Konto- und Spielserver benötigen für diese Startkorrekturen kein Update.
+
+Google beschreibt die automatische Hauptaktivitäts-Rückkehr nach `completeUpdate()` hier: https://developer.android.com/guide/playcore/in-app-updates/kotlin-java#flexible-restart

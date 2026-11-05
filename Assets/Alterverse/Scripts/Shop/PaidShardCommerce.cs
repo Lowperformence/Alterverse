@@ -110,6 +110,7 @@ namespace Alterverse.Shop
                 if (!saved) { refreshing = false; yield break; }
             }
             Response response = null;
+            Status = "Synchronizing your saved cloud profile…";
             yield return Send("/wallet",new Request(),r => response = r);
             if (response?.wallet == null) { refreshing = false; yield break; }
             ApplyWallet(response.wallet);

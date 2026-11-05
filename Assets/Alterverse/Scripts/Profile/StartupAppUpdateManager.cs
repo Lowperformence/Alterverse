@@ -11,6 +11,10 @@ namespace Alterverse.Profile
         private const int ImmediateUpdateType = 1;
         private const int UpdateAvailabilityAvailable = 2;
         private const int UpdateAvailabilityInProgress = 3;
+        private const int UpdateAvailabilityNotAvailable = 1;
+        private const int InstallStatusDownloaded = 11;
+        private const int InstallStatusFailed = 5;
+        private const int InstallStatusCanceled = 6;
         private const int UpdateRequestCode = 9417;
 
         public static StartupAppUpdateManager Instance { get; private set; }
@@ -25,6 +29,9 @@ namespace Alterverse.Profile
         public string StatusMessage { get; private set; } = string.Empty;
 
         private float lastCheckTime = -999f;
+        private bool applicationFocused = true;
+        private bool updateCompletionPending;
+        private float nextUpdatePoll;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Ensure()
@@ -59,11 +66,29 @@ namespace Alterverse.Profile
 
         private void OnApplicationFocus(bool hasFocus)
         {
+            bool resumed = !applicationFocused;
+            applicationFocused = hasFocus;
             if (!hasFocus) return;
+            if (resumed && !updateCompletionPending) UpdateFlowActive = false;
             if (UpdateRequired || Time.unscaledTime - lastCheckTime >= 15f)
             {
-                _ = CheckAndTriggerMandatoryUpdateAsync(launchNativeFlow: true);
+                // Resume an existing flow, but do not reopen a cancelled consent dialog.
+                _ = CheckAndTriggerMandatoryUpdateAsync(launchNativeFlow: false);
             }
+        }
+
+        private void OnApplicationPause(bool paused)
+        {
+            OnApplicationFocus(!paused);
+        }
+
+        private void Update()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
+            // A downloaded update may become ready without another focus callback.
+            if (applicationFocused && UpdateRequired && !Checking && Time.unscaledTime >= nextUpdatePoll)
+                _ = CheckAndTriggerMandatoryUpdateAsync(launchNativeFlow: false);
+#endif
         }
 
         private void OnDestroy()
@@ -82,6 +107,7 @@ namespace Alterverse.Profile
             if (Checking) return;
             Checking = true;
             lastCheckTime = Time.unscaledTime;
+            nextUpdatePoll = Time.unscaledTime + 2f;
 
             try
             {
@@ -168,7 +194,39 @@ namespace Alterverse.Profile
                 using var info = task.Call<AndroidJavaObject>("getResult");
                 if (info == null) return false;
 
+                InstalledVersionCode = ReadInstalledVersionCode();
                 int availability = info.Call<int>("updateAvailability");
+                int installStatus = info.Call<int>("installStatus");
+                if (installStatus == InstallStatusFailed || installStatus == InstallStatusCanceled)
+                    UpdateFlowActive = updateCompletionPending = false;
+                if (installStatus == InstallStatusDownloaded)
+                {
+                    UpdateRequired = true;
+                    AvailableVersionCode = Mathf.Max(AvailableVersionCode, info.Call<int>("availableVersionCode"));
+                    StatusMessage = "Update heruntergeladen. Das Spiel wird automatisch aktualisiert und neu gestartet…";
+                    if (!applicationFocused) return true;
+                    if (updateCompletionPending) return true;
+                    UpdateFlowActive = true;
+                    using var completion = manager.Call<AndroidJavaObject>("completeUpdate");
+                    float completionDeadline = Time.realtimeSinceStartup + 12f;
+                    while (completion != null && !completion.Call<bool>("isComplete"))
+                    {
+                        if (Time.realtimeSinceStartup >= completionDeadline)
+                        {
+                            UpdateFlowActive = false;
+                            StatusMessage = "Update-Abschluss noch nicht bestätigt. Bitte erneut versuchen.";
+                            return true;
+                        }
+                        await Task.Delay(80);
+                    }
+                    updateCompletionPending = completion != null && completion.Call<bool>("isSuccessful");
+                    UpdateFlowActive = updateCompletionPending;
+                    if (!updateCompletionPending)
+                        StatusMessage = "Update konnte nicht abgeschlossen werden. Bitte erneut versuchen.";
+                    // Google Play completes installation and relaunches the main activity.
+                    return true;
+                }
+
                 if (availability == UpdateAvailabilityAvailable || availability == UpdateAvailabilityInProgress)
                 {
                     UpdateRequired = true;
@@ -179,7 +237,8 @@ namespace Alterverse.Profile
                     bool immediateAllowed = false;
                     try { immediateAllowed = info.Call<bool>("isUpdateTypeAllowed", ImmediateUpdateType); } catch { immediateAllowed = false; }
 
-                    if (launchNativeFlow && (immediateAllowed || availability == UpdateAvailabilityInProgress))
+                    bool resumeFlow = availability == UpdateAvailabilityInProgress && !UpdateFlowActive;
+                    if ((launchNativeFlow || resumeFlow) && (immediateAllowed || availability == UpdateAvailabilityInProgress))
                     {
                         UpdateFlowActive = true;
                         if (await StartImmediateFlowOnUiThread(manager, info, activity)) return true;
@@ -188,10 +247,17 @@ namespace Alterverse.Profile
 
                     if (fallbackToStorePage) { NativeStoreReview.OpenStore(); return true; }
                 }
+                else if (availability == UpdateAvailabilityNotAvailable)
+                {
+                    // A successful post-install query must release the previous process's update gate.
+                    UpdateRequired = UpdateFlowActive = updateCompletionPending = false;
+                    AvailableVersionCode = 0;
+                    RequiredVersionLabel = StatusMessage = string.Empty;
+                    EvaluateServerMinimumVersion(); // A real backend minimum must remain enforced.
+                }
                 return false;
             }
-            catch { return false; }
-            finally { UpdateFlowActive = false; }
+            catch { UpdateFlowActive = false; return false; }
         }
 
         private static async Task<bool> StartImmediateFlowOnUiThread(AndroidJavaObject manager, AndroidJavaObject info, AndroidJavaObject activity)

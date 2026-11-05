@@ -11,17 +11,18 @@ namespace UnityEngine {
  public static class Mathf{public static int Max(int a,int b)=>Math.Max(a,b);public static float Min(float a,float b)=>Math.Min(a,b);public static int Clamp(int n,int a,int b)=>Math.Clamp(n,a,b);}
  public struct Rect{public Rect(float x,float y,float w,float h){}}
  public delegate void AndroidJavaRunnable();
- public static class PlayFixture{public static int Installed=5,Available=10,Availability=0,InfoRequests,DialogRequests,UiRequests,WrongSignatures;public static bool Allowed=true,Successful=true,Complete=true,StartResult=true,Missing,OnUiThread;}
+ public static class PlayFixture{public static int Installed=5,Available=10,Availability=0,InstallStatus,InfoRequests,DialogRequests,UiRequests,WrongSignatures,CompletionRequests;public static bool Allowed=true,Successful=true,Complete=true,StartResult=true,Missing,OnUiThread,CompletionSuccessful=true,CompletionComplete=true;}
  public class AndroidJavaObject:IDisposable{
   readonly string kind;public AndroidJavaObject(string kind){this.kind=kind;}
   public void Dispose(){}
   public T Get<T>(string field){if(kind=="package-info"&&field=="versionCode")return (T)(object)PlayFixture.Installed;throw new Exception("Unexpected field");}
   public T Call<T>(string method,params object[] args){object value=method switch{
    "getPackageManager"=>new AndroidJavaObject("package-manager"),"getPackageName"=>"com.lowperformence.dimensionsfront","getPackageInfo"=>new AndroidJavaObject("package-info"),
-   "getAppUpdateInfo"=>Info(),"isComplete"=>PlayFixture.Complete,"isSuccessful"=>PlayFixture.Successful,"getResult"=>new AndroidJavaObject("info"),
-   "updateAvailability"=>PlayFixture.Availability,"availableVersionCode"=>PlayFixture.Available,"isUpdateTypeAllowed"=>PlayFixture.Allowed,
+   "getAppUpdateInfo"=>Info(),"isComplete"=>kind=="completion-task"?PlayFixture.CompletionComplete:PlayFixture.Complete,"isSuccessful"=>kind=="completion-task"?PlayFixture.CompletionSuccessful:PlayFixture.Successful,"getResult"=>new AndroidJavaObject("info"),
+   "updateAvailability"=>PlayFixture.Availability,"availableVersionCode"=>PlayFixture.Available,"isUpdateTypeAllowed"=>PlayFixture.Allowed,"installStatus"=>PlayFixture.InstallStatus,"completeUpdate"=>CompleteUpdate(),
    "build"=>new AndroidJavaObject("options"),"startUpdateFlowForResult"=>Start<T>(args),_=>throw new Exception("Unexpected Java call "+method)};return (T)value;}
   static AndroidJavaObject Info(){PlayFixture.InfoRequests++;return new("task");}
+  static AndroidJavaObject CompleteUpdate(){PlayFixture.CompletionRequests++;return new("completion-task");}
   static object Start<T>(object[] args){if(typeof(T)!=typeof(bool)||!PlayFixture.OnUiThread||args.Length!=4||args[1] is not AndroidJavaObject||args[2] is not AndroidJavaObject){PlayFixture.WrongSignatures++;throw new Exception("Wrong JNI signature or thread");}PlayFixture.DialogRequests++;return PlayFixture.StartResult;}
   public void Call(string method,params object[] args){if(method!="runOnUiThread")throw new Exception("Unexpected UI operation");PlayFixture.UiRequests++;PlayFixture.OnUiThread=true;try{((AndroidJavaRunnable)args[0])();}finally{PlayFixture.OnUiThread=false;}}
  }
@@ -37,5 +38,5 @@ namespace Alterverse.Profile{
  public static class AccountProfilePrefs{public static string Account="owner";public static int GetInt(string k)=>0;}
  public static class PlayerProfile{public static float MasterVolume=1,MusicVolume=1,SfxVolume=1;}
 }
-namespace Alterverse.Shop{public class PaidShardCommerce{public static PaidShardCommerce Instance=new();public bool Ready=true;public int MinAndroidVersionCode;public string MinClientVersion="",Status="Ready";public static event Action EntitlementsChanged;public static void Changed()=>EntitlementsChanged?.Invoke();public void Refresh(){}}}
+namespace Alterverse.Shop{public class PaidShardCommerce{public static PaidShardCommerce Instance=new();public bool Ready=true,Synchronizing;public int MinAndroidVersionCode;public string MinClientVersion="",Status="Ready";public static event Action EntitlementsChanged;public static void Changed()=>EntitlementsChanged?.Invoke();public void Refresh(){}}}
 namespace Alterverse.UI{public static class NativeStoreReview{public static int Calls;public static void OpenStore(){Calls++;}}}

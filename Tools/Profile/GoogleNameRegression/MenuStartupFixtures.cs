@@ -28,10 +28,11 @@ namespace Alterverse.UI
  public class FrontEndTheme
  {
   public object Heading,Body,Small;public static readonly List<string> Labels=new();
+  public static readonly List<(string Text,bool Enabled)> Actions=new();
   public void Panel(Rect rect){}
   public void FitLabel(Rect rect,string value,object style){Labels.Add(value);}
   public void Label(Rect rect,string value,object style,bool wrap=false){Labels.Add(value);}
-  public bool Action(Rect rect,string text,bool primary=false,bool enabled=true)=>false;
+  public bool Action(Rect rect,string text,bool primary=false,bool enabled=true){Actions.Add((text,enabled));return false;}
  }
  public sealed partial class MainMenuController
  {
