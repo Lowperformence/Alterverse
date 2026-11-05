@@ -61,7 +61,7 @@ namespace Alterverse.AI
         private bool hazardEscapeLatched;
         public bool IsAvoidingHazard { get; private set; }
         private float MoveSpeed => (profile != null ? profile.MoveSpeed : fallbackMoveSpeed) * (planetBuff != null ? planetBuff.MoveSpeedMultiplier : 1f) * locomotion.SpeedMultiplier;
-        private float CombatStop => profile != null ? Mathf.Max(1.15f, profile.AttackRange * Mathf.Lerp(.65f,.88f,brain!=null?brain.Difficulty.Positioning:.6f)) : 1.4f;
+        private float CombatStop => profile != null ? (profile.AttackRange <= 2.5f ? Mathf.Clamp(profile.AttackRange * .55f, .92f, 1.18f) : Mathf.Max(1.15f, profile.AttackRange * Mathf.Lerp(.65f,.88f,brain!=null?brain.Difficulty.Positioning:.6f))) : 1.4f;
 
         private void Awake()
         {
@@ -196,11 +196,11 @@ namespace Alterverse.AI
                         if(role==HeroId.Mira)formed=brain.Tactics.SupportPosition(brain,formed);
                         // Formation offsets cannot park an engaged hero outside basic range.
                         Vector3 offset=formed-sensor.ObservedTargetPosition;offset.y=0;
-                        formed=sensor.ObservedTargetPosition+Vector3.ClampMagnitude(offset,
-                            profile!=null?Mathf.Max(.1f,profile.AttackRange-.5f):CombatStop);
+                        float maxOffset=profile!=null?(profile.AttackRange<=2.5f?Mathf.Min(.35f,profile.AttackRange*.20f):Mathf.Max(.1f,profile.AttackRange-.5f)):CombatStop;
+                        formed=sensor.ObservedTargetPosition+Vector3.ClampMagnitude(offset,maxOffset);
                         formed.y=transform.position.y;
                         // Retreat/kiting still has priority when already inside the danger distance.
-                        if(!keepingDistance&&CanRepositionTo(formed)){destination=formed;stopDistance=.3f;}
+                        if(!keepingDistance&&CanRepositionTo(formed)){destination=formed;stopDistance=profile!=null&&profile.AttackRange<=2.5f?CombatStop:.3f;}
                     }
                     else if((brain.State==MobaBotBrain.BotState.Roam||target==null)&&
                         ShouldFollowTeamObjective(planetPriority,brain.Tactics.IsHotZoneCall))
@@ -650,15 +650,26 @@ namespace Alterverse.AI
         {
             Vector3 delta = destination - transform.position; delta.y = 0;
             Vector3 advance = Vector3.zero;
+            bool activeMeleeChase = chaseTarget != null && !chaseTarget.IsDead && !keepingDistance &&
+                (profile == null || profile.AttackRange <= 3.6f) && sensor != null && sensor.ObservedTargetVelocity.sqrMagnitude > .20f;
+            if (activeMeleeChase)
+            {
+                Vector3 lead = Vector3.ClampMagnitude(sensor.ObservedTargetVelocity * .14f, .55f);
+                lead.y = 0f;
+                delta = (destination + lead) - transform.position;
+                delta.y = 0f;
+            }
             float distance=delta.magnitude;
-            if(distance<=stopDistance)arrived=true;
-            else if(distance>stopDistance+.22f)arrived=false;
+            float effectiveStop = activeMeleeChase ? stopDistance * .72f : stopDistance;
+            float resumeMargin = activeMeleeChase ? .06f : .22f;
+            if(distance<=effectiveStop)arrived=true;
+            else if(distance>effectiveStop+resumeMargin)arrived=false;
             if (arrived) velocity = Vector3.zero;
             else
             {
                 if (Vector3.Dot(velocity, delta) < 0f) velocity = Vector3.zero;
                 velocity = Vector3.Lerp(velocity, delta.normalized * MoveSpeed, 1f-Mathf.Exp(-18f*Time.deltaTime));
-                advance = Vector3.ClampMagnitude(velocity * Time.deltaTime, Mathf.Max(0f, delta.magnitude - stopDistance));
+                advance = Vector3.ClampMagnitude(velocity * Time.deltaTime, Mathf.Max(0f, delta.magnitude - effectiveStop));
             }
             if(Time.time<detourUntil&&!arrived)
             {

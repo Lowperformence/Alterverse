@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
@@ -196,8 +196,10 @@ namespace Alterverse.Profile
                     ["MATCH PAUSED"] = "MATCH PAUSIERT",
                     ["CO-OP MATCH CONTINUES WHILE OPTIONS ARE OPEN"] = "KOOP-MATCH LÄUFT IM HINTERGRUND WEITER",
                     ["RESUME MATCH"] = "WEITERSPIELEN",
-                    ["LEAVE MATCH  •  MAIN MENU"] = "MATCH VERLASSEN  •  HAUPTMENÜ",
-                    ["LEAVE CO-OP  •  MAIN MENU"] = "KOOP VERLASSEN  •  HAUPTMENÜ",
+                    ["LEAVE MATCH  •  MAIN MENU"] = "MATCH VERLASSEN  -  HAUPTMENÜ",
+                    ["LEAVE CO-OP  •  MAIN MENU"] = "KOOP VERLASSEN  -  HAUPTMENÜ",
+                    ["LEAVE MATCH  -  MAIN MENU"] = "MATCH VERLASSEN  -  HAUPTMENÜ",
+                    ["LEAVE CO-OP  -  MAIN MENU"] = "KOOP VERLASSEN  -  HAUPTMENÜ",
                     ["LEAVE CURRENT MATCH?"] = "AKTUELLES MATCH VERLASSEN?",
                     ["CANCEL"] = "ABBRECHEN",
                     ["LEAVE MATCH"] = "VERLASSEN",

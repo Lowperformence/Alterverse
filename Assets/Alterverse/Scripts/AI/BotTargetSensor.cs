@@ -94,6 +94,12 @@ namespace Alterverse.AI
             if (Time.timeScale <= 0f) return;
             if(brain==null)brain=GetComponent<MobaBotBrain>();
             if (selfHealth != null && selfHealth.IsDead) { ClearTarget(); return; }
+            if (currentTarget != null && !currentTarget.IsDead && currentTarget.isActiveAndEnabled &&
+                Time.time - lastSeenTime <= .45f && InRadius(currentTarget))
+            {
+                ObserveMotion(currentTarget.transform.position);
+                lastKnownPosition = currentTarget.transform.position;
+            }
             if (Time.time < nextScanTime) return;
             float rhythm=brain!=null?brain.DecisionRhythm:1f;
             nextScanTime = Time.time + Mathf.Max(.12f, scanInterval*Difficulty.DecisionScale*rhythm);

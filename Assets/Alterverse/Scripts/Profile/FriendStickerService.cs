@@ -140,6 +140,8 @@ namespace Alterverse.Profile
         private static PersistentState state;
         private static string loadedAccount;
         private static readonly Dictionary<int, Texture2D> stickerIcons = new();
+        private static readonly HashSet<string> sessionRequested = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly HashSet<string> mutedPlayers = new(StringComparer.OrdinalIgnoreCase);
         private static string localStatus = "Connect your account to load friends and gifts.";
         private static bool showServerStatus;
         private static SocialService.Snapshot appliedFriends;
@@ -189,6 +191,7 @@ namespace Alterverse.Profile
             if (string.IsNullOrWhiteSpace(nameOrId)) return false;
             EnsureLoaded();
             string clean = nameOrId.Trim();
+            if (sessionRequested.Contains(clean)) return true;
             for (int i = 0; i < state.friends.Count; i++)
                 if (Matches(state.friends[i], clean)) return true;
             for (int i = 0; i < state.outgoingRequests.Count; i++)
@@ -212,6 +215,39 @@ namespace Alterverse.Profile
             bool isId = clean.Length == 20;
             if (isId) foreach (char c in clean) if (!Uri.IsHexDigit(c)) { isId = false; break; }
             return FriendAction("/social/friend/request", new SocialService.Request { playerId = isId ? clean.ToLowerInvariant() : null, query = isId ? null : clean });
+        }
+
+        public static void RequestFriendFromScoreboard(string nameOrId, HeroId hero = HeroId.Veyr, int level = 1)
+        {
+            if (string.IsNullOrWhiteSpace(nameOrId)) return;
+            string clean = nameOrId.Trim();
+            sessionRequested.Add(clean);
+            UiSoundRouter.Confirm();
+            SendFriendRequest(clean, hero, level);
+        }
+
+        public static bool IsPlayerMuted(string nameOrId)
+        {
+            return !string.IsNullOrWhiteSpace(nameOrId) && mutedPlayers.Contains(nameOrId.Trim());
+        }
+
+        public static bool ToggleMutePlayer(string nameOrId)
+        {
+            if (string.IsNullOrWhiteSpace(nameOrId)) return false;
+            string clean = nameOrId.Trim();
+            bool nowMuted;
+            if (mutedPlayers.Contains(clean))
+            {
+                mutedPlayers.Remove(clean);
+                nowMuted = false;
+            }
+            else
+            {
+                mutedPlayers.Add(clean);
+                nowMuted = true;
+            }
+            UiSoundRouter.Confirm();
+            return nowMuted;
         }
 
         public static bool AcceptFriendRequest(string playerId)

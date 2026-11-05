@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Alterverse.Combat;
 using Alterverse.Profile;
@@ -429,8 +429,22 @@ namespace Alterverse.UI
                     if (row.IsLocal)
                         FrontEndTheme.Fill(new Rect(3f, curY, w - 3f, 38f), new Color(teamTint.r * 0.22f, teamTint.g * 0.22f, teamTint.b * 0.22f, 0.32f));
 
-                    string playerLabel = (row.IsMvp ? "★ " : "") + row.Name + "  (" + row.Hero + ")";
-                    theme.FitLabel(new Rect(14, curY + 6, w - 236, 26), playerLabel, row.IsLocal ? label : small);
+                    string playerLabel = (row.IsMvp ? "* " : "") + row.Name + "  (" + row.Hero + ")";
+                    float socialReserve = row.IsLocal ? 0f : 104f;
+                    theme.FitLabel(new Rect(14, curY + 6, Mathf.Max(80f, w - 236 - socialReserve), 26), playerLabel, row.IsLocal ? label : small);
+                    if (!row.IsLocal && !string.IsNullOrWhiteSpace(row.Name))
+                    {
+                        bool connected = FriendStickerService.IsFriendOrRequested(row.Name);
+                        if (theme.Action(new Rect(w - 314, curY + 5, 44, 28), connected ? "OK" : "+FR", !connected, enabled: !connected))
+                        {
+                            FriendStickerService.RequestFriendFromScoreboard(row.Name, Alterverse.Characters.HeroId.Veyr, Mathf.Max(1, PlayerExperience.Level));
+                        }
+                        bool muted = FriendStickerService.IsPlayerMuted(row.Name);
+                        if (theme.Action(new Rect(w - 266, curY + 5, 50, 28), muted ? "MUTED" : "MUTE", false, selected: muted))
+                        {
+                            FriendStickerService.ToggleMutePlayer(row.Name);
+                        }
+                    }
                     theme.Label(new Rect(w - 210, curY + 6, 118, 26), $"{row.Kills} / {row.Deaths} / {row.Assists}", label);
                     theme.Label(new Rect(w - 86, curY + 6, 74, 26), row.Score.ToString("N0"), small, true);
                     curY += 42f;

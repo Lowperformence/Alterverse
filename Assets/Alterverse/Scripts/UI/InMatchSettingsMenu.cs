@@ -276,7 +276,7 @@ namespace Alterverse.UI
             FrontEndTheme.Fill(new Rect(0, 0, layout.Width, layout.Height), new Color(.008f, .012f, .02f, .86f));
 
             float width = Mathf.Min(780f, layout.Width - 24f);
-            float height = Mathf.Min(640f, layout.Height - 16f);
+            float height = Mathf.Min(showVoicePlayers ? 620f : 536f, layout.Height - 16f);
             Rect panel = new Rect((layout.Width - width) * .5f, (layout.Height - height) * .5f, width, height);
             theme.Panel(panel);
             FrontEndTheme.Fill(new Rect(panel.x, panel.y, panel.width, 2), FrontEndTheme.Accent);
@@ -324,9 +324,7 @@ namespace Alterverse.UI
                 if (theme.Action(new Rect(panel.x + 184 + (gfxBtnW + 6f) * 3f, gfxY, gfxBtnW, 34), "HIGH", selected: !isAuto && currentQ == Alterverse.Performance.MobileQuality.Performance))
                     Alterverse.Performance.MobilePerformanceProfile.Current = Alterverse.Performance.MobileQuality.Performance;
 
-                // In-Match Squad & Opponent Friend Requests
-                float socialY = gfxY + 42f;
-                DrawMatchFriendBar(new Rect(panel.x + 24, socialY, panel.width - 48, 86));
+
             }
 
             if (!confirmLeave)
@@ -335,8 +333,8 @@ namespace Alterverse.UI
                     CloseOverlay();
 
                 string destination = CoopAuthority.Active
-                    ? "LEAVE CO-OP  •  MAIN MENU"
-                    : "LEAVE MATCH  •  MAIN MENU";
+                    ? "LEAVE CO-OP  -  MAIN MENU"
+                    : "LEAVE MATCH  -  MAIN MENU";
                 if (theme.Action(new Rect(panel.x + 24, panel.yMax - 42, panel.width - 48, 32), destination))
                     confirmLeave = true;
             }

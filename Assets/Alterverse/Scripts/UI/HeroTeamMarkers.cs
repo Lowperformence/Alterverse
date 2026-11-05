@@ -10,13 +10,13 @@ private static readonly Color ShieldColor=new(.30f,.68f,1f,1f);
 private Texture2D pixel;private Camera cam;private GUIStyle style;private TeamMember player;private HeroIdentity[] heroes=System.Array.Empty<HeroIdentity>();private float nextRefresh;
 private void Awake(){pixel=new Texture2D(1,1);pixel.SetPixel(0,0,Color.white);pixel.Apply();cam=Camera.main;RefreshTargets();}
 private void Update(){if(cam==null)cam=Camera.main;if(Time.unscaledTime>=nextRefresh)RefreshTargets();}
-private void RefreshTargets(){nextRefresh=Time.unscaledTime+.5f;if(player==null){GameObject p=LocalHeroContext.Find();if(p!=null)player=p.GetComponent<TeamMember>();}}
+private void RefreshTargets(){nextRefresh=Time.unscaledTime+.5f;if(player==null||!player.gameObject.activeInHierarchy){GameObject p=LocalHeroContext.Find();if(p!=null)player=p.GetComponent<TeamMember>();}heroes=FindObjectsByType<HeroIdentity>(FindObjectsInactive.Exclude);}
 private void OnGUI()
 {
 if(cam==null||pixel==null||Time.timeScale<=0f||player==null)return;
 foreach(HeroIdentity hero in heroes)
 {
-if(hero==null||hero.gameObject.name=="AV_Player")continue;
+if(hero==null)continue;
 Health hp=hero.GetComponent<Health>();TeamMember tm=hero.GetComponent<TeamMember>();
 if(hp==null||hp.IsDead||tm==null)continue;
 if(CombatVisibility.HiddenFrom(player.gameObject,hp))continue;

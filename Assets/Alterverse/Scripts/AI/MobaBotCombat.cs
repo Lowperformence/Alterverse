@@ -52,7 +52,7 @@ namespace Alterverse.AI
             Vector3 delta=sensor.ObservedTargetPosition-transform.position;delta.y=0;
             if(delta.sqrMagnitude>.01f)locomotion.FaceAction(delta,.1f);
             if(Time.time<targetReadyAt||Time.time<nextAttackTime||Time.time<nextSightCheck)return;
-            nextSightCheck=Time.time+.12f;
+            nextSightCheck=Time.time+.035f;
             if(!sensor.CanObserve(target)||HeroCombatRules.BasicDistance(transform.position,target)>range)return;
             nextAttackTime=Time.time+Cooldown;
             HeroCombatRules.BasicHit(gameObject,target,AttackDamage);

@@ -15,7 +15,7 @@ private bool respawnBoardReady;
 private string zeroFrontLabel,lumenFrontLabel,respawnCountdownLabel;
 private int respawnCountdownSecond=-1;
 
-public bool ResultCommitted => matchEnded && rewardGranted;
+public bool ResultCommitted => matchEnded && rewardGranted;private bool manualBoardOpen;
 private bool resultSnapshotReady,resultSnapshotWarning;
 private int battlePassXpBefore;
 private BotDifficulty resultDifficulty;
@@ -137,7 +137,7 @@ private static float PerformanceScore(int kills,int deaths,int assists,float dam
 private Entry Mvp(){Entry best=null;float bestScore=float.MinValue;foreach(Entry e in entries.Values){float score=Performance(e);if(best==null||score>bestScore){best=e;bestScore=score;}}return best;}
 private float HudScale=>Mathf.Max(.1f,Mathf.Min(Screen.safeArea.height/720f,Screen.safeArea.width/960f));
 private float HudWidth=>Screen.safeArea.width/HudScale;private float HudHeight=>Screen.safeArea.height/HudScale;
-private void OnGUI(){if(MainMenuController.IsVisible)return;Matrix4x4 matrix=GUI.matrix;Color color=GUI.color;bool enabled=GUI.enabled;try{Rect safe=Screen.safeArea;GUI.matrix=Matrix4x4.TRS(new Vector3(safe.x,Screen.height-safe.yMax,0),Quaternion.identity,Vector3.one*(matchEnded?MatchResultLayout.Scale(safe):HudScale));DrawHud();}finally{GUI.matrix=matrix;GUI.color=color;GUI.enabled=enabled;}}
+private void OnGUI(){if(MainMenuController.IsVisible)return;Matrix4x4 matrix=GUI.matrix;Color color=GUI.color;bool enabled=GUI.enabled;try{Rect safe=Screen.safeArea;GUI.matrix=Matrix4x4.TRS(new Vector3(safe.x,Screen.height-safe.yMax,0),Quaternion.identity,Vector3.one*(matchEnded?MatchResultLayout.Scale(safe):HudScale));DrawHud();DrawScoreboardOverlayControls();}finally{GUI.matrix=matrix;GUI.color=color;GUI.enabled=enabled;}}
 // IMGUI calls DrawHud multiple times per frame. Build the changing scoreboard view
 // at four Hz in Update, keeping discovery, list allocation and sorting out of painting.
 private void UpdateRespawnBoard()
@@ -317,22 +317,84 @@ private void DrawTeam(List<Entry> team,float x,float y,float width,string title)
         Rect r=new Rect(x,rowY,width,38);boardTheme.Panel(r);
         if(e.BoardOwn)boardTheme.Frame(r,true);
         FrontEndTheme.Fill(new Rect(x+1,rowY+9,2,20),tint);
-        bool isBot = e.Health != null && (e.Health.GetComponent<MobaBotRespawn>() != null || e.Health.GetComponent<Alterverse.AI.MobaBotMover>() != null); bool hideFriendBtn = e.BoardOwn || (isBot && CoopAuthority.ActivePlan is not OnlineMatchPlan); float addBtnWidth = hideFriendBtn ? 0f : 36f;
-        boardTheme.FitLabel(new Rect(x+10,rowY,nameWidth-14-addBtnWidth,38),e.BoardName,boardTheme.Small);
-        if(!hideFriendBtn)
-        {
-            bool connected=FriendStickerService.IsFriendOrRequested(e.Name);
-            if(boardTheme.Action(new Rect(x+nameWidth-38,rowY+5,34,28),connected?"✓":"+FR",!connected,enabled:!connected))
-            {
-                HeroIdentity id=e.Health!=null?e.Health.GetComponent<HeroIdentity>():null;
-                FriendStickerService.SendFriendRequest(e.Name,id!=null?id.Hero:HeroId.Veyr,Mathf.Max(1,PlayerExperience.Level));
-            }
-        }
+        float socialWidth=e.BoardOwn?0f:86f;
+        boardTheme.FitLabel(new Rect(x+10,rowY,Mathf.Max(36f,nameWidth-14-socialWidth),38),e.BoardName,boardTheme.Small);
         for(int column=0;column<4;column++)
         {
             string value=column==0?e.BoardKills:column==1?e.BoardDeaths:column==2?e.BoardAssists:e.BoardScore;
             boardTheme.Label(new Rect(x+nameWidth+column*32,rowY,column==3?48:28,38),value,scoreValue);
         }
+    }
+}
+private void DrawScoreboardOverlayControls()
+{
+    if(matchEnded||InMatchSettingsMenu.IsOpen)return;
+    boardTheme??=new FrontEndTheme();
+    scoreValue??=new GUIStyle(boardTheme.Small){alignment=TextAnchor.MiddleRight,wordWrap=false,fontSize=15};
+    bool authoredRespawn=playerRespawn!=null&&playerRespawn.IsRespawning;
+    bool replicatedRespawn=coopRespawn!=null&&coopRespawn.IsRespawning;
+    bool respawning=authoredRespawn||replicatedRespawn;
+    if(respawning)manualBoardOpen=false;
+    else
+    {
+        Rect scoreBtn=new Rect(HudWidth-136f,16f,68f,46f);
+        if(boardTheme.Action(scoreBtn,manualBoardOpen?"CLOSE":"SCORE",selected:manualBoardOpen))
+            manualBoardOpen=!manualBoardOpen;
+    }
+    if(!respawning&&!manualBoardOpen)return;
+    float width=Mathf.Min(820,HudWidth*.88f),x=(HudWidth-width)*.5f,y=Mathf.Max(90,HudHeight*.15f);
+    if(!respawning)
+    {
+        if(!respawnBoardReady||Time.unscaledTime>=nextRespawnBoardRefresh)RefreshRespawnBoard();
+        float boardHeight=198+Mathf.Max(respawnZero.Count,respawnLumen.Count)*42;
+        boardTheme.Panel(new Rect(x,y,width,boardHeight));
+        boardTheme.Label(new Rect(x+22,y+12,width-44,34),"TEAM SCOREBOARD",boardTheme.Heading);
+        if(front!=null)
+        {
+            float controlWidth=(width-52)*.5f;
+            boardTheme.StatusBadge(new Rect(x+22,y+52,controlWidth,26),zeroFrontLabel,FrontEndTheme.Zero);
+            boardTheme.StatusBadge(new Rect(x+30+controlWidth,y+52,controlWidth,26),lumenFrontLabel,FrontEndTheme.Positive);
+        }
+        DrawTeam(respawnZero,x+22,y+90,width*.5f-32,"ZERO");
+        DrawTeam(respawnLumen,x+width*.5f+10,y+90,width*.5f-32,"LUMEN");
+        Rect closeAction=new Rect(x+width*.25f,y+boardHeight-62,width*.5f,46);
+        if(boardTheme.Action(closeAction,"CLOSE SCOREBOARD",true))manualBoardOpen=false;
+    }
+    DrawTeamSocialButtons(respawnZero,x+22,y+90,width*.5f-32);
+    DrawTeamSocialButtons(respawnLumen,x+width*.5f+10,y+90,width*.5f-32);
+}
+private void DrawTeamSocialButtons(List<Entry> team,float x,float y,float width)
+{
+    float nameWidth=width-152;
+    for(int i=0;i<team.Count;i++)
+    {
+        Entry e=team[i];
+        if(e==null||e.BoardOwn||string.IsNullOrWhiteSpace(e.Name))continue;
+        float rowY=y+34+i*42;
+        bool connected=FriendStickerService.IsFriendOrRequested(e.Name);
+        if(boardTheme.Action(new Rect(x+nameWidth-84,rowY+5,36,28),connected?"OK":"+FR",!connected,enabled:!connected))
+        {
+            HeroIdentity id=e.Health!=null?e.Health.GetComponent<HeroIdentity>():null;
+            FriendStickerService.RequestFriendFromScoreboard(e.Name,id!=null?id.Hero:HeroId.Veyr,Mathf.Max(1,PlayerExperience.Level));
+        }
+        bool muted=FriendStickerService.IsPlayerMuted(e.Name);
+        if(boardTheme.Action(new Rect(x+nameWidth-46,rowY+5,44,28),muted?"MUTED":"MUTE",false,selected:muted))
+        {
+            bool nextMuted=FriendStickerService.ToggleMutePlayer(e.Name);
+            SyncVoiceMuteByName(e.Name,nextMuted);
+        }
+    }
+}
+private static void SyncVoiceMuteByName(string playerName,bool muted)
+{
+    var voice=PartyVoiceService.Instance;
+    if(voice==null||string.IsNullOrWhiteSpace(playerName))return;
+    var list=new List<PartyVoiceService.VoicePlayer>(8);
+    voice.CopyVoicePlayers(list);
+    for(int i=0;i<list.Count;i++)
+    {
+        if(string.Equals(list[i].DisplayName,playerName.Trim(),System.StringComparison.OrdinalIgnoreCase))
+            voice.SetPlayerMuted(list[i].PlayerId,muted);
     }
 }
 private void OnDestroy(){foreach(var pair in entries)if(pair.Key!=null)pair.Key.DiedWithSource-=OnHeroDied;if(front!=null)front.MatchEnded-=OnMatchEnded;entries.Clear();supportCredit.Clear();if(Instance==this)Instance=null;}
