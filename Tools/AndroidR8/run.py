@@ -22,7 +22,8 @@ with tempfile.TemporaryDirectory(prefix='df-r8-regression-') as tmp:
     response = tmp / 'compile.rsp'
     response.write_text('\n'.join(['-nologo', '-define:UNITY_EDITOR,UNITY_ANDROID', '-target:exe', '-out:' + str(output),
         *['-r:' + str(path) for path in runtime.glob('*.dll')], str(here / 'Regression.cs'),
-        str(editor / 'AndroidReleaseBuild.cs'), str(editor / 'AndroidR8Optimization.cs')]))
+        str(editor / 'AndroidReleaseBuild.cs'), str(editor / 'AndroidR8Optimization.cs'),
+        str(editor / 'AndroidPermissionPolicy.cs')]))
     subprocess.run([str(a.dotnet_root / 'dotnet'), str(sdk / 'Roslyn/bincore/csc.dll'), '@' + str(response)], check=True)
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions': {'tfm': 'net8.0', 'framework': {'name': 'Microsoft.NETCore.App', 'version': runtime.name}}}))
     optional_rules = tmp / 'standard-google-ads-rules.pro'

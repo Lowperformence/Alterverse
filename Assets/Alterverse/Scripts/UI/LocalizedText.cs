@@ -67,9 +67,28 @@ namespace Alterverse.UI
         static void Reset()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
-            foreach (var texture in cache.Values) UnityEngine.Object.Destroy(texture);
-            cache.Clear(); order.Clear(); cachedBytes = 0; renderer?.Dispose(); renderer = null; unavailable = false;
+            // Unsubscribe first for Enter Play Mode/domain reload configurations.
+            Application.lowMemory -= ReleaseCachedTextures;
+            Application.focusChanged -= OnFocusChanged;
+            ReleaseCachedTextures();
+            unavailable = false;
+            Application.lowMemory += ReleaseCachedTextures;
+            Application.focusChanged += OnFocusChanged;
 #endif
         }
+#if UNITY_ANDROID && !UNITY_EDITOR && !UNITY_SERVER
+        static void OnFocusChanged(bool focused)
+        {
+            if (!focused) ReleaseCachedTextures();
+        }
+
+        static void ReleaseCachedTextures()
+        {
+            // Recreated lazily on the next draw. Never unload live match assets or
+            // change saved graphics preferences in response to memory pressure.
+            foreach (var texture in cache.Values) UnityEngine.Object.Destroy(texture);
+            cache.Clear(); order.Clear(); cachedBytes = 0; renderer?.Dispose(); renderer = null;
+        }
+#endif
     }
 }

@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Xml.Linq;
 using Alterverse.EditorChecks;
 using UnityEditor;
 using UnityEditor.Build;
@@ -99,8 +101,32 @@ class Regression {
    File.WriteAllText(app,"release { minifyEnabled true }");Reject(()=>post.OnPostGenerateGradleAndroidProject(library),"missing optimized default cannot silently pass");
    File.Delete(app);Reject(()=>post.OnPostGenerateGradleAndroidProject(library),"missing launcher fails clearly");
    EditorUserBuildSettings.development=true;post.OnPostGenerateGradleAndroidProject(library);Check(true,"development Gradle processing is skipped");
-   Console.WriteLine(checks+" real build-helper/R8 behavior checks passed with editor substitutes.");
+   CheckPermissionPolicy(temporary);
+   Console.WriteLine(checks+" real build-helper/R8/permission behavior checks passed with editor substitutes.");
   }finally{Directory.Delete(temporary,true);}
+ }
+ static void CheckPermissionPolicy(string temporary){
+  string root=Path.Combine(temporary,"permissions"),library=Path.Combine(root,"unityLibrary"),launcher=Path.Combine(root,"launcher");
+  foreach(string module in new[]{library,launcher}){
+   string file=Path.Combine(module,"src/main/AndroidManifest.xml");Directory.CreateDirectory(Path.GetDirectoryName(file));
+   File.WriteAllText(file,"<manifest xmlns:android='http://schemas.android.com/apk/res/android' xmlns:tools='http://schemas.android.com/tools'><uses-permission android:name='android.permission.INTERNET'/><uses-permission android:name='android.permission.RECORD_AUDIO'/><uses-permission android:name='android.permission.READ_CONTACTS' tools:node='replace'/><uses-permission-sdk-23 android:name='android.permission.READ_CONTACTS'/><application android:label='Keep me'/></manifest>");
+  }
+  var policy=new AndroidPermissionPolicy();policy.OnPostGenerateGradleAndroidProject(library);
+  XNamespace android="http://schemas.android.com/apk/res/android",tools="http://schemas.android.com/tools";
+  foreach(string module in new[]{library,launcher}){
+   string file=Path.Combine(module,"src/main/AndroidManifest.xml");var manifest=XDocument.Load(file).Root;
+   foreach(string name in AndroidPermissionPolicy.UnusedPermissions)foreach(string tag in new[]{"uses-permission","uses-permission-sdk-23"}){
+    var entries=manifest.Elements(tag).Where(e=>(string)e.Attribute(android+"name")==name).ToArray();
+    Check(entries.Length==1&&(string)entries[0].Attribute(tools+"node")=="remove","unused permission removed in both declaration forms and modules");
+   }
+   foreach(string name in new[]{"android.permission.INTERNET","android.permission.RECORD_AUDIO"})
+    Check(manifest.Elements("uses-permission").Any(e=>(string)e.Attribute(android+"name")==name&&e.Attribute(tools+"node")==null),"core Internet and optional microphone retained");
+   Check((string)manifest.Element("application").Attribute(android+"label")=="Keep me","application settings preserved");
+   string before=File.ReadAllText(file);AndroidPermissionPolicy.PatchManifest(file);Check(File.ReadAllText(file)==before,"permission patch is idempotent");
+  }
+  Reject(()=>AndroidPermissionPolicy.PatchManifest(Path.Combine(root,"missing.xml")),"missing manifest blocks release processing");
+  string bad=Path.Combine(root,"invalid.xml");File.WriteAllText(bad,"<application/>");
+  Reject(()=>AndroidPermissionPolicy.PatchManifest(bad),"non-manifest XML rejected");
  }
  static string OptionalGoogleAdsCases(AndroidR8GradlePostprocessor post,string library,string main,string app,string lib,string old){
   const string standard="implementation 'com.google.android.gms:play-services-ads:25.4.0'\n";

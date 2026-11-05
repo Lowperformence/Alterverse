@@ -1,10 +1,10 @@
-name: Android R8 regression
+name: Android R8 and policy regression
 on:
   push:
     branches: ['codex/epic-toon-replacement-20261024', 'dev/vertical-slice']
-    paths: ['Assets/Alterverse/Editor/AndroidR8Optimization.cs', 'Assets/Alterverse/Editor/AndroidReleaseBuild.cs', 'Assets/Plugins/Android/proguard-user.txt', 'Assets/Plugins/Android/GooglePlayGamesManifest.androidlib/AndroidManifest.xml', 'Assets/GoogleMobileAds/**', 'Packages/manifest.json', 'Tools/AndroidR8/**', '.github/workflows/android-r8-regression.yml']
+    paths: ['Assets/Alterverse/Editor/AndroidR8Optimization.cs', 'Assets/Alterverse/Editor/AndroidPermissionPolicy.cs', 'Assets/Alterverse/Scripts/UI/LocalizedText.cs', 'Tools/AndroidPolicy/**', 'Assets/Alterverse/Editor/AndroidReleaseBuild.cs', 'Assets/Plugins/Android/proguard-user.txt', 'Assets/Plugins/Android/GooglePlayGamesManifest.androidlib/AndroidManifest.xml', 'Assets/GoogleMobileAds/**', 'Packages/manifest.json', 'Tools/AndroidR8/**', '.github/workflows/android-r8-regression.yml']
   pull_request:
-    paths: ['Assets/Alterverse/Editor/AndroidR8Optimization.cs', 'Assets/Alterverse/Editor/AndroidReleaseBuild.cs', 'Assets/Plugins/Android/proguard-user.txt', 'Assets/Plugins/Android/GooglePlayGamesManifest.androidlib/AndroidManifest.xml', 'Assets/GoogleMobileAds/**', 'Packages/manifest.json', 'Tools/AndroidR8/**', '.github/workflows/android-r8-regression.yml']
+    paths: ['Assets/Alterverse/Editor/AndroidR8Optimization.cs', 'Assets/Alterverse/Editor/AndroidPermissionPolicy.cs', 'Assets/Alterverse/Scripts/UI/LocalizedText.cs', 'Tools/AndroidPolicy/**', 'Assets/Alterverse/Editor/AndroidReleaseBuild.cs', 'Assets/Plugins/Android/proguard-user.txt', 'Assets/Plugins/Android/GooglePlayGamesManifest.androidlib/AndroidManifest.xml', 'Assets/GoogleMobileAds/**', 'Packages/manifest.json', 'Tools/AndroidR8/**', '.github/workflows/android-r8-regression.yml']
 jobs:
   regression:
     runs-on: ubuntu-latest
@@ -25,3 +25,6 @@ jobs:
           curl --fail --silent --show-error --location --output "$RUNNER_TEMP/r8-9.5.28.jar" https://dl.google.com/dl/android/maven2/com/android/tools/r8/9.5.28/r8-9.5.28.jar
           printf '%s  %s\n' '38a9ffaaebbd17d1514e3ecbff5a85b989bb13c551b9e224c7409514eea84ff5' "$RUNNER_TEMP/r8-9.5.28.jar" | sha256sum --check -
       - run: python Tools/AndroidR8/run.py --dotnet-root "$DOTNET_ROOT" --r8-jar "$RUNNER_TEMP/r8-9.5.28.jar"
+
+      - run: python -m unittest discover -s Tools/AndroidPolicy -v
+      - run: python Tools/AndroidPolicy/run_memory.py --dotnet-root "$DOTNET_ROOT"
