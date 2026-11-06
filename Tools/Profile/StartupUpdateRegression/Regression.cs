@@ -25,7 +25,7 @@ public static class StartupUpdateTests{
   Check(manager.UpdateFlowActive,"A started native update remains active after dialog launch returns");
   PlayFixture.Availability=3;Time.unscaledTime=2;Invoke(manager,"Update");
   Check(PlayFixture.InfoRequests==2&&PlayFixture.DialogRequests==1,"Background progress polling never opens a duplicate update dialog");
-  Invoke(manager,"OnApplicationPause",true);PlayFixture.InstallStatus=11;Invoke(manager,"OnApplicationPause",false);
+  Invoke(manager,"OnApplicationPause",true);PlayFixture.Availability=2;PlayFixture.InstallStatus=11;Invoke(manager,"OnApplicationPause",false);
   Check(PlayFixture.CompletionRequests==1&&manager.UpdateFlowActive&&NativeStoreReview.Calls==0,"Returning to a downloaded update completes installation/relaunch automatically without a store visit");
   Time.unscaledTime=4;Invoke(manager,"Update");
   Check(PlayFixture.CompletionRequests==1,"A pending native install/relaunch is requested only once");
@@ -46,9 +46,14 @@ public static class StartupUpdateTests{
   manager=Fresh();PlayFixture.Availability=2;manager.CheckAndTriggerMandatoryUpdateAsync(true).GetAwaiter().GetResult();
   PlayFixture.InstallStatus=5;Time.unscaledTime=2;Invoke(manager,"Update");
   Check(!manager.UpdateFlowActive&&manager.UpdateRequired,"Native install failure releases retry while retaining mandatory update");
-  manager=Fresh();PlayFixture.Availability=3;PlayFixture.InstallStatus=11;PlayFixture.CompletionSuccessful=false;
+  manager=Fresh();PlayFixture.Availability=2;PlayFixture.InstallStatus=11;PlayFixture.CompletionSuccessful=false;
   manager.CheckAndTriggerMandatoryUpdateAsync(true).GetAwaiter().GetResult();
   Check(manager.UpdateRequired&&!manager.Checking&&!manager.UpdateFlowActive&&manager.StatusMessage.Contains("erneut"),"Failed completion releases spinner and offers an update retry");
+  manager=Fresh();PlayFixture.Availability=3;PlayFixture.InstallStatus=11;
+  manager.CheckAndTriggerMandatoryUpdateAsync(true).GetAwaiter().GetResult();
+  Check(PlayFixture.CompletionRequests==0&&PlayFixture.DialogRequests==1&&manager.UpdateFlowActive,"downloaded immediate update stays in Play's immediate flow and never calls flexible completion");
+  Time.unscaledTime=2;Invoke(manager,"Update");
+  Check(PlayFixture.CompletionRequests==0&&PlayFixture.DialogRequests==1,"polling immediate installation does not interrupt or relaunch it repeatedly");
   manager=Fresh();PlayFixture.InstallStatus=11;PlayFixture.CompletionComplete=false;Time.ClockStep=13;
   manager.CheckAndTriggerMandatoryUpdateAsync(true).GetAwaiter().GetResult();
   Check(manager.UpdateRequired&&!manager.Checking&&!manager.UpdateFlowActive,"Completion timeout retains update gate without an endless spinner");

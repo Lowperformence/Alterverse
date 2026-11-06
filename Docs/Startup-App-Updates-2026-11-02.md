@@ -25,3 +25,9 @@ Der Updater behält einen gestarteten nativen Ablauf als aktiv, prüft laufende 
 108 Prüfungen bestanden gegen kontrollierte SDK-/Java-/Unity-Grenzen: Google-Konto/Menü 54 Android + 3 Desktop, Updater/Menü 30 Android + 5 Editor + 1 Server, Account/Wallet 15. Gegenproben mit den ursprünglichen Produktionsdateien reproduzieren den voreiligen Retry-Button und den zu früh freigegebenen Update-Ablauf. Kein echter Play-Installationslauf und kein nativer Neustart wurden hier ausgeführt. Den vollständigen Ablauf mit zwei über Google Play installierten signierten Versionen auf dem betroffenen Android-Gerät prüfen. Nur der Android-Client muss neu gebaut werden; Konto- und Spielserver benötigen für diese Startkorrekturen kein Update.
 
 Google beschreibt die automatische Hauptaktivitäts-Rückkehr nach `completeUpdate()` hier: https://developer.android.com/guide/playcore/in-app-updates/kotlin-java#flexible-restart
+
+## Korrektur vom 6. November 2026
+
+Bei einem bereits laufenden unmittelbaren Update (`DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS`) wird `completeUpdate()` nicht mehr aufgerufen: Es ist für heruntergeladene flexible Updates bestimmt. Stattdessen bleibt das unmittelbare Update in Googles Installations- und Neustartablauf. Ein unterbrochener Ablauf wird beim Wiedereintritt weiterhin fortgesetzt. Der Abschluss heruntergeladener flexibler Updates bleibt erhalten. Android/Editor/Server-Fixtures bestehen mit 32/5/1 Prüfungen, einschließlich beider Update-Arten und wiederholter Statusabfragen.
+
+Die konkrete Ursache, warum ein bestimmtes Android-Gerät nach seinem Update nicht selbst öffnet, ist dadurch noch nicht nachgewiesen. Test mit zwei nacheinander veröffentlichten, signierten Play-Versionen und Geräte-Logcat bleibt erforderlich; bei einem Ausweichweg zur externen Store-Seite ist kein automatischer Neustart durch die App zugesichert. Google zum unmittelbaren Ablauf: https://developer.android.com/guide/playcore/in-app-updates

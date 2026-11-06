@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Alterverse.Combat;
 using Alterverse.Profile;
+using Alterverse.Multiplayer;
 using UnityEngine;
 
 namespace Alterverse.UI
@@ -36,6 +37,7 @@ namespace Alterverse.UI
         {
             public int Team;
             public string Name;
+            public string PlayerId;
             public string Hero;
             public int Kills;
             public int Deaths;
@@ -439,10 +441,13 @@ namespace Alterverse.UI
                         {
                             FriendStickerService.RequestFriendFromScoreboard(row.Name, Alterverse.Characters.HeroId.Veyr, Mathf.Max(1, PlayerExperience.Level));
                         }
-                        bool muted = FriendStickerService.IsPlayerMuted(row.Name);
-                        if (theme.Action(new Rect(w - 266, curY + 5, 50, 28), muted ? "MUTED" : "MUTE", false, selected: muted))
+                        var voice = PartyVoiceService.Instance;
+                        PartyVoiceService.VoicePlayer participant = default;
+                        bool available = voice != null && voice.TryGetVoicePlayer(row.PlayerId, out participant);
+                        if (theme.Action(new Rect(w - 266, curY + 5, 50, 28), participant.Muted ? "MUTED" : "MUTE", false,
+                            selected: available && participant.Muted, enabled: available && !participant.Pending))
                         {
-                            FriendStickerService.ToggleMutePlayer(row.Name);
+                            voice.SetPlayerMuted(row.PlayerId, !participant.Muted);
                         }
                     }
                     theme.Label(new Rect(w - 210, curY + 6, 118, 26), $"{row.Kills} / {row.Deaths} / {row.Assists}", label);

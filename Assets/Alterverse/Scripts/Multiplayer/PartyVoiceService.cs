@@ -28,6 +28,7 @@ namespace Alterverse.Multiplayer
         // Session-only preferences are keyed by identity, never a duplicate/changeable display name.
         private readonly Dictionary<string,bool> playerMutes=new(StringComparer.Ordinal);
         private readonly Dictionary<string,float> muteRequestTimes=new(StringComparer.Ordinal);
+        private readonly List<VoicePlayer> lookupPlayers=new();
         private string muteOwner="";
         private bool participantEventsBound;
         public string Status{get;private set;}="VOICE OFF";
@@ -131,6 +132,17 @@ namespace Alterverse.Multiplayer
                     participant.IsMuted,pending));
             }
 #endif
+        }
+
+        public bool TryGetVoicePlayer(string playerId,out VoicePlayer player)
+        {
+            player=default;
+            if(string.IsNullOrEmpty(playerId))return false;
+            CopyVoicePlayers(lookupPlayers);
+            for(int i=0;i<lookupPlayers.Count;i++)
+                if(string.Equals(lookupPlayers[i].PlayerId,playerId,StringComparison.Ordinal))
+                {player=lookupPlayers[i];return true;}
+            return false;
         }
 
         public bool SetPlayerMuted(string playerId,bool muted)

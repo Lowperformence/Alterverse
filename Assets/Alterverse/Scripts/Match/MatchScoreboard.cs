@@ -263,11 +263,13 @@ private void RefreshResultPresentation()
     {
         if (re.Member == null) continue;
         HeroIdentity rHero = re.Health != null ? re.Health.GetComponent<HeroIdentity>() : null;
+        CoopHeroSlot rSlot = re.Health != null ? re.Health.GetComponent<CoopHeroSlot>() : null;
         float rScore = Performance(re);
         rosterList.Add(new MatchResultScreenData.RosterRow
         {
             Team = re.Member.Team,
             Name = re.Name,
+            PlayerId = rSlot != null && rSlot.IsHuman ? rSlot.PlayerId : null,
             Hero = rHero != null ? rHero.DisplayName : "HERO",
             Kills = re.Kills,
             Deaths = re.Deaths,
@@ -377,24 +379,16 @@ private void DrawTeamSocialButtons(List<Entry> team,float x,float y,float width)
             HeroIdentity id=e.Health!=null?e.Health.GetComponent<HeroIdentity>():null;
             FriendStickerService.RequestFriendFromScoreboard(e.Name,id!=null?id.Hero:HeroId.Veyr,Mathf.Max(1,PlayerExperience.Level));
         }
-        bool muted=FriendStickerService.IsPlayerMuted(e.Name);
-        if(boardTheme.Action(new Rect(x+nameWidth-46,rowY+5,44,28),muted?"MUTED":"MUTE",false,selected:muted))
+        CoopHeroSlot slot=e.Health!=null?e.Health.GetComponent<CoopHeroSlot>():null;
+        var voice=PartyVoiceService.Instance;
+        PartyVoiceService.VoicePlayer voicePlayer=default;
+        bool available=slot!=null&&slot.IsHuman&&!slot.IsLocalHuman&&voice!=null&&
+            voice.TryGetVoicePlayer(slot.PlayerId,out voicePlayer);
+        if(boardTheme.Action(new Rect(x+nameWidth-46,rowY+5,44,28),voicePlayer.Muted?"MUTED":"MUTE",false,
+            selected:available&&voicePlayer.Muted,enabled:available&&!voicePlayer.Pending))
         {
-            bool nextMuted=FriendStickerService.ToggleMutePlayer(e.Name);
-            SyncVoiceMuteByName(e.Name,nextMuted);
+            voice.SetPlayerMuted(slot.PlayerId,!voicePlayer.Muted);
         }
-    }
-}
-private static void SyncVoiceMuteByName(string playerName,bool muted)
-{
-    var voice=PartyVoiceService.Instance;
-    if(voice==null||string.IsNullOrWhiteSpace(playerName))return;
-    var list=new List<PartyVoiceService.VoicePlayer>(8);
-    voice.CopyVoicePlayers(list);
-    for(int i=0;i<list.Count;i++)
-    {
-        if(string.Equals(list[i].DisplayName,playerName.Trim(),System.StringComparison.OrdinalIgnoreCase))
-            voice.SetPlayerMuted(list[i].PlayerId,muted);
     }
 }
 private void OnDestroy(){foreach(var pair in entries)if(pair.Key!=null)pair.Key.DiedWithSource-=OnHeroDied;if(front!=null)front.MatchEnded-=OnMatchEnded;entries.Clear();supportCredit.Clear();if(Instance==this)Instance=null;}

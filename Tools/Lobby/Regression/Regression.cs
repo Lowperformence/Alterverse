@@ -102,10 +102,13 @@ static class Regression
         var other=new Unity.Services.Vivox.VivoxParticipant{PlayerId="remote-b",DisplayName="Same Name",ChannelName=channel};
         var duplicate=new Unity.Services.Vivox.VivoxParticipant{PlayerId="remote-a",DisplayName="Same Name",ChannelName="second-channel"};
         sdk.Add(self);sdk.Add(remote);sdk.Add(other);sdk.Add(duplicate);voice.CopyVoicePlayers(players);
+        Check(voice.TryGetVoicePlayer("remote-a",out var found)&&found.PlayerId=="remote-a", "scoreboard lookup resolves the unique voice identity");
+        Check(!voice.TryGetVoicePlayer("local-player",out _)&&!voice.TryGetVoicePlayer("unknown",out _), "scoreboard lookup rejects own and unknown identities");
         Check(players.Count==2,"voice player list excludes self and unrelated channel entries");
         Check(!voice.SetPlayerMuted(null,true)&&!voice.SetPlayerMuted("local-player",true)&&!voice.SetPlayerMuted("unknown",true),"invalid, self and unknown mute targets rejected");
         int inputUnmutes=sdk.Unmutes;bool inputMuted=sdk.Muted;
         Check(voice.SetPlayerMuted("remote-a",true)&&remote.IsMuted&&duplicate.IsMuted&&!other.IsMuted&&!self.IsMuted,"mute selects identity across channels without muting a same-name player");
+        Check(voice.TryGetVoicePlayer("remote-a",out found)&&found.Muted&&voice.TryGetVoicePlayer("remote-b",out var otherFound)&&!otherFound.Muted,"same-name scoreboard entries show independent confirmed mute states");
         Check(sdk.Unmutes==inputUnmutes&&sdk.Muted==inputMuted&&voice.MicrophoneOn,"remote mute never changes microphone state");
         voice.CopyVoicePlayers(players);Check(players[0].Muted&&!players[0].Pending,"UI reads confirmed native mute state");
         var rejoined=new Unity.Services.Vivox.VivoxParticipant{PlayerId="remote-a",DisplayName="Renamed",ChannelName=channel};

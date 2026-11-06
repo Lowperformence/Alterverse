@@ -199,7 +199,9 @@ namespace Alterverse.Profile
                 int installStatus = info.Call<int>("installStatus");
                 if (installStatus == InstallStatusFailed || installStatus == InstallStatusCanceled)
                     UpdateFlowActive = updateCompletionPending = false;
-                if (installStatus == InstallStatusDownloaded)
+                // completeUpdate is for a downloaded flexible update. An immediate update
+                // must stay in Play's immediate flow so Play can install and relaunch it.
+                if (installStatus == InstallStatusDownloaded && availability != UpdateAvailabilityInProgress)
                 {
                     UpdateRequired = true;
                     AvailableVersionCode = Mathf.Max(AvailableVersionCode, info.Call<int>("availableVersionCode"));
