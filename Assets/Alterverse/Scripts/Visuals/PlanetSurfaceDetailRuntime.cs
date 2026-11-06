@@ -167,6 +167,31 @@ namespace Alterverse.Visuals
                 bowlColor=new Color(.13f,.19f,.23f,1f);
                 rimColor=new Color(.50f,.70f,.77f,1f);
             }
+            else if(ArenaVariantRuntime.Current==ArenaVariant.Pyraxis)
+            {
+                bowlColor=new Color(.025f,.018f,.016f,1f);
+                rimColor=new Color(.18f,.085f,.050f,1f);
+            }
+            else if(ArenaVariantRuntime.IsNeptune)
+            {
+                bowlColor=new Color(.012f,.042f,.085f,1f);
+                rimColor=new Color(.060f,.20f,.28f,1f);
+            }
+            else if(ArenaVariantRuntime.IsDark00)
+            {
+                bowlColor=new Color(.010f,.012f,.015f,1f);
+                rimColor=new Color(.065f,.075f,.090f,1f);
+            }
+            else if(ArenaVariantRuntime.IsWasp76b)
+            {
+                bowlColor=new Color(.085f,.075f,.072f,1f);
+                rimColor=new Color(.38f,.22f,.13f,1f);
+            }
+            else if(ArenaVariantRuntime.IsTrappist1e)
+            {
+                bowlColor=new Color(.045f,.11f,.13f,1f);
+                rimColor=new Color(.34f,.48f,.54f,1f);
+            }
             else
             {
                 bowlColor=new Color(.042f,.047f,.055f,1f);

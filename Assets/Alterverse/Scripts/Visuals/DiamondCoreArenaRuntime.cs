@@ -159,19 +159,45 @@ namespace Alterverse.Visuals
 
         private void BuildCrystalPlateaus()
         {
-            // Paired faceted terraces frame the central crystalline court.
+            // Paired faceted terraces frame the outer rim and midfield flanks across all four quadrants.
             for(int side=-1;side<=1;side+=2)for(int i=0;i<5;i++)
             {
                 if(clearance.Blocks(FrontierPlanetLayout.ObstacleSceneryBounds(side<0?i:i+5)))continue;
-                float x=side*(8f+i*6.4f),z=side*(29f+(i%2)*2.3f);
-                GameObject shelf=Crystal("DF_PSRJ1719_CrystalTerrace",new Vector3(x,-.8f,z),
-                    new Vector3(3.6f,1.4f,2.8f),blackCrystal);
-                shelf.transform.localRotation=Quaternion.Euler(0,i*27f,side*7f);
+                foreach(int zSign in new[]{-1,1})
+                {
+                    float x=side*(8f+i*6.4f),z=zSign*(29f+(i%2)*2.3f);
+                    GameObject shelf=Crystal("DF_PSRJ1719_CrystalTerrace",new Vector3(x,-.8f,z),
+                        new Vector3(3.6f,1.4f,2.8f),blackCrystal);
+                    shelf.transform.localRotation=Quaternion.Euler(0,i*27f+zSign*19f,side*7f);
+                    for(int j=0;j<3;j++)
+                    {
+                        GameObject prism=Crystal("DF_PSRJ1719_TerracePrism",new Vector3(x+(j-1)*1.25f,.75f,z),
+                            new Vector3(.40f,1.6f+(j%2)*.65f,.40f),clearCrystal);
+                        prism.transform.localRotation=Quaternion.Euler(6f,i*33f+j*19f,side*(j-1)*9f);
+                    }
+                }
+            }
+
+            // Midfield crystalline geode terraces framing the side lanes and Hot Zone corners.
+            Vector2[] midfieldTerraces={
+                new(-24.5f,18.5f),new(24.5f,-18.5f),new(-24.5f,-18.5f),new(24.5f,18.5f),
+                new(-15.5f,20.5f),new(15.5f,-20.5f),new(-15.5f,-20.5f),new(15.5f,20.5f),
+                new(-13.8f,14.0f),new(13.8f,-14.0f),new(-13.8f,-14.0f),new(13.8f,14.0f),
+                new(-21.2f,12.8f),new(21.2f,-12.8f),new(0f,22.0f),new(0f,-22.0f)
+            };
+            Color[] gemColors={new(.28f,.88f,1f,1f),new(.76f,.30f,1f,1f),new(.24f,1f,.68f,1f),new(.88f,.96f,1f,1f)};
+            for(int m=0;m<midfieldTerraces.Length;m++)
+            {
+                Vector2 p=midfieldTerraces[m];
+                GameObject baseShelf=Crystal("DF_PSRJ1719_CrystalTerrace",new Vector3(p.x,-.65f,p.y),
+                    new Vector3(2.4f,1.05f,1.95f),blackCrystal);
+                baseShelf.transform.localRotation=Quaternion.Euler(0,m*37f,5f);
                 for(int j=0;j<3;j++)
                 {
-                    GameObject prism=Crystal("DF_PSRJ1719_TerracePrism",new Vector3(x+(j-1)*1.25f,.75f,z),
-                        new Vector3(.40f,1.6f+(j%2)*.65f,.40f),clearCrystal);
-                    prism.transform.localRotation=Quaternion.Euler(6f,i*33f+j*19f,side*(j-1)*9f);
+                    Material gemMat=j==1?clearCrystal:Gem(gemColors[(m+j)%gemColors.Length],.38f);
+                    GameObject prism=Crystal("DF_PSRJ1719_TerracePrism",new Vector3(p.x+(j-1)*.82f,.62f,p.y+(j%2==0?.24f:-.24f)),
+                        new Vector3(.34f,1.25f+(j%2)*.52f,.34f),gemMat);
+                    prism.transform.localRotation=Quaternion.Euler(8f,m*43f+j*29f,(j-1)*11f);
                 }
             }
         }
@@ -195,16 +221,17 @@ namespace Alterverse.Visuals
 
         private void BuildShatteredCanyon()
         {
+            foreach(int side in new[]{-1,1})
             for(int i=0;i<11;i++)
             {
                 float z=-30f+i*6f;
                 float h=2.2f+(i%4)*1.05f;
-                GameObject dark=Crystal("DF_BlackCrystalCanyon",new Vector3(-44.6f,h*.58f,z),new Vector3(1.05f,h,1.25f),blackCrystal);
-                dark.transform.rotation=Quaternion.Euler(i%2==0?11f:-8f,i*31f,i%2==0?-14f:9f);
+                GameObject dark=Crystal("DF_BlackCrystalCanyon",new Vector3(side*44.6f,h*.58f,z),new Vector3(1.05f,h,1.25f),blackCrystal);
+                dark.transform.rotation=Quaternion.Euler(i%2==0?11f:-8f,i*31f,side*(i%2==0?14f:-9f));
                 if((i&1)==0)
                 {
-                    GameObject accent=Crystal("DF_BlackCanyonPrism",new Vector3(-42.9f,1.15f,z+1.35f),new Vector3(.34f,2.15f,.34f),Gem(i%4==0?new Color(.55f,.24f,1f):new Color(.12f,.84f,1f),.48f));
-                    accent.transform.rotation=Quaternion.Euler(8f,i*51f,-11f);
+                    GameObject accent=Crystal("DF_BlackCanyonPrism",new Vector3(side*42.9f,1.15f,z+side*1.35f),new Vector3(.34f,2.15f,.34f),Gem(i%4==0?new Color(.55f,.24f,1f):new Color(.12f,.84f,1f),.48f));
+                    accent.transform.rotation=Quaternion.Euler(8f,i*51f,side*11f);
                 }
             }
         }

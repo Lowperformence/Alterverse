@@ -90,11 +90,15 @@ namespace Alterverse.Visuals
             var baseTalus=new List<CombineInstance>();
             var geodes=new List<CombineInstance>();
 
-            // 1. Eight authored canyon mesa landmarks (symmetric per team) with stepped strata, buttresses, talus skirts, and quartz clusters.
-            Vector2[] anchors={new(35,30),new(18,31),new(39,15),new(8,33)};
+            // 1. Symmetric canyon mesa landmarks across all four quadrants and midfield flanks.
+            Vector2[] anchors={
+                new(35,30),new(18,31),new(39,15),new(8,33),
+                new(-35,30),new(-18,31),new(-39,15),new(-8,33),
+                new(25,19),new(-25,19),new(15,21),new(-15,21)
+            };
             for(int side=-1;side<=1;side+=2)for(int site=0;site<anchors.Length;site++)
             {
-                if(clearance.Blocks(FrontierPlanetLayout.ObstacleSceneryBounds(side<0?site:site+anchors.Length)))continue;
+                if(site<4&&clearance.Blocks(FrontierPlanetLayout.ObstacleSceneryBounds(side<0?site:site+4)))continue;
                 Vector2 a=anchors[site]*side;
                 float groundY=FrontierPlanetLayout.Surface(a.x,a.y).y;
                 float mainHeight=site==2?2.55f:1.65f+site*.28f;
@@ -162,10 +166,13 @@ namespace Alterverse.Visuals
                     a.x-side*1.55f,a.y-side*.75f,site*37+side*11,1.08f);
             }
 
-            // 2. Organic canyon rock outcroppings along the side shelves (replaces the old uniform grid).
+            // 2. Organic canyon rock outcroppings across all four quadrants and midfield shoulders.
             Vector2[] shelfClusters={
                 new(14f,24f),new(22f,26f),new(29f,23f),new(36f,22f),
-                new(16f,33f),new(26f,32f),new(33f,18f),new(28f,15f),new(38f,8f)
+                new(16f,33f),new(26f,32f),new(33f,18f),new(28f,15f),new(38f,8f),
+                new(-14f,24f),new(-22f,26f),new(-29f,23f),new(-36f,22f),
+                new(-16f,33f),new(-26f,32f),new(-33f,18f),new(-28f,15f),new(-38f,8f),
+                new(20f,13.5f),new(-20f,13.5f),new(13.8f,14.5f),new(-13.8f,14.5f),new(0f,21.5f)
             };
             for(int side=-1;side<=1;side+=2)
             for(int c=0;c<shelfClusters.Length;c++)

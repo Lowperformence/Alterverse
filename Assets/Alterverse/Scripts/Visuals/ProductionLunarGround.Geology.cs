@@ -8,8 +8,15 @@ namespace Alterverse.Visuals
     {
         void BuildReferenceSilhouettes()
         {
-            // Large silhouette groups stay at the broken perimeter, never in the combat corridors.
-            Vector2[] sites={new(-32,29),new(30,-30),new(-12,31),new(14,-32),new(-38,-24),new(37,24)};
+            // Large silhouette groups stay at the broken perimeter and midfield flanks, never in the combat corridors.
+            Vector2[] sites=ArenaVariantRuntime.IsEarth
+                ?new Vector2[]{new(-32,29),new(30,-30),new(-12,31),new(14,-32),new(-38,-24),new(37,24)}
+                :new Vector2[]{
+                    new(-32,29),new(30,-30),new(-12,31),new(14,-32),new(-38,-24),new(37,24),
+                    new(32,29),new(-30,-30),new(12,31),new(-14,-32),new(-38,24),new(37,-24),
+                    new(-23,17.5f),new(23,-17.5f),new(-23,-17.5f),new(23,17.5f),
+                    new(-14.5f,19.5f),new(14.5f,-19.5f),new(-14.5f,-19.5f),new(14.5f,19.5f)
+                };
             Material fractureFace=Mat(Color.Lerp(rimMat.color,Color.white,.16f),.02f,.14f);
             surfaceMaterials.Apply(fractureFace);
             for(int site=0;site<sites.Length;site++)

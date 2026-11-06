@@ -17,6 +17,7 @@ namespace Alterverse.Visuals
         Material[] palette;
         ArenaVariant variant;
         Vector3 center;
+        Vector3 subOffset;
         Quaternion orientation;
         Transform scenery;
 
@@ -114,6 +115,40 @@ namespace Alterverse.Visuals
 
         void BuildPocket(int seed)
         {
+            subOffset=Vector3.zero;
+            BuildSinglePocket(seed);
+            if(variant==ArenaVariant.Earth)return;
+
+            // Fill the gaps along the outer strip (|z| in 29..33.5, |x| < 34) including the
+            // previously bare eastern/western outer rim segments beyond site 3.
+            if(variant==ArenaVariant.Toi715b)
+            {
+                subOffset=seed==3?new Vector3(13.5f,0f,-1.2f):new Vector3(6.2f,0f,-1.3f);
+                BuildCompactIvoryCompanion(seed+5);
+                subOffset=Vector3.zero;
+                return;
+            }
+
+            Vector3 companionA=seed switch
+            {
+                0=>new Vector3(6.4f,0f,-1.4f),
+                1=>new Vector3(6.4f,0f,-1.5f),
+                2=>new Vector3(6.4f,0f,-1.4f),
+                _=>new Vector3(11.5f,0f,-1.4f)
+            };
+            subOffset=companionA;
+            BuildSinglePocket((seed+1)%4);
+
+            if(seed==3)
+            {
+                subOffset=new Vector3(21.5f,0f,-1.1f);
+                BuildSinglePocket((seed+2)%4);
+            }
+            subOffset=Vector3.zero;
+        }
+
+        void BuildSinglePocket(int seed)
+        {
             BuildGroundTransition(seed);
             switch(variant)
             {
@@ -141,6 +176,21 @@ namespace Alterverse.Visuals
                 int material=(variant==ArenaVariant.Earth||variant==ArenaVariant.Toi715b)?0:i%2;
                 Add(rock,material,new Vector3(Mathf.Cos(a)*r,.025f,Mathf.Sin(a)*r*.68f),
                     new Vector3(size,.09f,size*1.3f),Quaternion.Euler(0,i*47,8));
+            }
+        }
+
+        void BuildCompactIvoryCompanion(int seed)
+        {
+            Add(rock,0,new Vector3(-.35f,.05f,.15f),new Vector3(.95f,.16f,.62f),Quaternion.Euler(0,seed*23f,0));
+            for(int plant=0;plant<2;plant++)
+            {
+                Vector3 p=new((plant==0?-.55f:.55f),.025f,(plant==0?-.22f:.22f));
+                float height=.62f+plant*.18f;
+                Add(column,1,p,new Vector3(.18f,height,.18f),Quaternion.Euler(0,plant*53+seed*17,6));
+                for(int frond=0;frond<3;frond++)
+                    Add(leaf,2,p+Vector3.up*height*.73f,new Vector3(.54f,.68f,.48f),
+                        Quaternion.Euler(-26,plant*53+frond*120,16));
+                Add(canopy,3,p+new Vector3(0,0,-.24f),new Vector3(.32f,.28f,.28f),Quaternion.Euler(0,plant*37,0));
             }
         }
 
@@ -442,6 +492,7 @@ namespace Alterverse.Visuals
 
         void Add(Mesh mesh,int material,Vector3 offset,Vector3 scale,Quaternion rotation)
         {
+            offset+=subOffset;
             Vector3 world=center+orientation*new Vector3(offset.x,0,offset.z);
             Vector3 position=orientation*offset;
             position.y+=LunarSurfaceField.Surface(world.x,world.z).y;

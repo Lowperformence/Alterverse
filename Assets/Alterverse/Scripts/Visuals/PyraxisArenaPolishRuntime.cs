@@ -72,7 +72,7 @@ namespace Alterverse.Visuals
 
             // Three locations are mirrored across X. Each team therefore receives the same number,
             // footprint and distance profile of lava pools.
-            Vector3[] halfPools={new(28f,0,19f),new(24f,0,-23f),new(37f,0,-2f)};
+            Vector3[] halfPools={new(28f,0,19f),new(24f,0,-23f),new(37f,0,-2f),new(16.5f,0,20.5f),new(16.5f,0,-20.5f)};
             for(int i=0;i<halfPools.Length;i++)
             {
                 Vector3 source=halfPools[i];
