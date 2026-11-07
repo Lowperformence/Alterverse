@@ -1,4 +1,5 @@
 using System;
+using Alterverse.Match;
 
 namespace Alterverse.Profile
 {
@@ -8,6 +9,7 @@ namespace Alterverse.Profile
         private const string StreakKey = "DF_LoginStreakIndex_v1";
         public const int CycleDays = 7;
         public static int RewardForDay(int day) => day == 1 ? 1 : day == 2 ? 3 : day == 3 ? 6 : day >= 4 && day <= CycleDays ? day + 8 : 0;
+        public static int ShardRewardForDay(int day) => WingMatchRewardBonus.DailyShardReward(RewardForDay(day));
         public static int CurrentDay
         {
             get
@@ -40,7 +42,7 @@ namespace Alterverse.Profile
             int priorStreak = AccountProfilePrefs.GetInt(StreakKey, 0);
             int next = NextDay(today, DailyCalendar.Stamp(date.AddDays(-1)), previous, priorStreak);
             if (next == 0) return 0;
-            int reward = RewardForDay(next);
+            int reward = ShardRewardForDay(next);
             ProfileTransaction.Commit(
                 new ProfileTransaction.Write("DF_Shards", ProfileTransaction.Add(PlayerWallet.EarnedBalance, reward)),
                 new ProfileTransaction.Write(DayKey, today),

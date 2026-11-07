@@ -3,6 +3,8 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Alterverse.Profile;
 using Alterverse.Shop;
+using Alterverse.Characters;
+using Alterverse.Match;
 using GoogleMobileAds.Api;
 using GoogleMobileAds.Ump.Api;
 using UnityEngine;
@@ -148,6 +150,62 @@ static class Regression
             "Editor/desktop/server builds must not run mobile SDK or grant pretend rewards");
         Console.WriteLine("PASS: Non-mobile/editor/server reward path disabled.");
 #endif
+        CheckDailyWingRewards();
+    }
+
+    static void CheckDailyWingRewards()
+    {
+        UniversalCosmeticSelection.Slots.Clear();
+        UniversalCosmeticSelection.Owned.Clear();
+        PlayerHeroSelection.Selected = HeroId.Veyr;
+        Check(DailyQuestProgress.ShardReward(0) == 20 && LoginStreakProgress.ShardRewardForDay(2) == 3,
+            "Without wings daily quest and login amounts must remain unchanged");
+        Check(DailyQuestProgress.ShardReward(-1) == 0 && LoginStreakProgress.ShardRewardForDay(8) == 0,
+            "Invalid rewards do not grant shards");
+
+        var cosmetics = new[] { UniversalHeroCosmetic.Voidfall, UniversalHeroCosmetic.PlagueWings,
+            UniversalHeroCosmetic.BetaSupporterWings, UniversalHeroCosmetic.AngelWings,
+            UniversalHeroCosmetic.RgbRiftWings, UniversalHeroCosmetic.DeluxeWings };
+        int[] expected = { 21, 22, 24, 26, 28, 30 };
+        for (int i = 0; i < cosmetics.Length; i++)
+        {
+            UniversalCosmeticSelection.Owned.Add(cosmetics[i]);
+            UniversalCosmeticSelection.Slots[HeroId.Veyr] = cosmetics[i];
+            Check(DailyQuestProgress.ShardReward(0) == expected[i], "Each wing uses its existing percentage and rounding");
+        }
+        Check(WingMatchRewardBonus.DailyShardReward(int.MaxValue) == int.MaxValue, "Daily amount cannot overflow");
+        Check(LoginStreakProgress.ShardRewardForDay(1) == 1, "Half-shard bonuses follow existing round-to-even behavior");
+
+        UniversalCosmeticSelection.Slots[HeroId.Veyr] = UniversalHeroCosmetic.Voidfall;
+        UniversalCosmeticSelection.Slots[HeroId.Rook] = UniversalHeroCosmetic.DeluxeWings;
+        WingMatchRewardBonus.BeginMatch(HeroId.Veyr);
+        PlayerHeroSelection.Selected = HeroId.Rook;
+        Check(DailyQuestProgress.ShardReward(0) == 30, "Daily preview uses the selected hero rather than the last match snapshot");
+
+        AccountProfilePrefs.Attach("wing-daily-quest", 1, Profile(0));
+        ProfileTransaction.Commit(DailyQuestProgress.MatchWrites(50, 0, 0));
+        Check(DailyQuestProgress.Claim(0) && PlayerWallet.EarnedBalance == 30,
+            "Completed daily quest credits the boosted preview amount");
+        Check(!DailyQuestProgress.Claim(0) && PlayerWallet.EarnedBalance == 30,
+            "The boosted daily quest cannot pay twice");
+        RewardedShardPayout.Enqueue(RewardedShardPayout.NewReceipt());
+        Check(RewardedShardPayout.Collect() == 5 && PlayerWallet.EarnedBalance == 35,
+            "Video payouts remain unboosted even when a wing is equipped");
+
+        AccountProfilePrefs.Attach("wing-login", 1, Profile(0));
+        AccountProfilePrefs.SetInt("DF_LoginStreakDay_v1", DailyCalendar.Yesterday);
+        AccountProfilePrefs.SetInt("DF_LoginStreakIndex_v1", 1);
+        Check(LoginStreakProgress.ShardRewardForDay(2) == 5 && LoginStreakProgress.ClaimForToday() == 5 &&
+              PlayerWallet.EarnedBalance == 5, "Login claim pays the same boosted amount as its preview");
+        Check(LoginStreakProgress.ClaimForToday() == 0 && PlayerWallet.EarnedBalance == 5,
+            "The boosted login reward cannot pay twice");
+
+        UniversalCosmeticSelection.Owned.Remove(UniversalHeroCosmetic.DeluxeWings);
+        Check(DailyQuestProgress.ShardReward(0) == 20, "An unowned wing cannot grant a daily bonus");
+        UniversalCosmeticSelection.Slots.Clear();
+        UniversalCosmeticSelection.Owned.Clear();
+        PlayerHeroSelection.Selected = HeroId.Veyr;
+        Console.WriteLine("PASS: equipped wing daily login/quest rewards, rounding, claim-once, hero selection and unchanged ad payouts.");
     }
 
     static void CheckDailyAdQuest()

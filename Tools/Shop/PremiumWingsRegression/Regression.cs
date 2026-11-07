@@ -1,5 +1,7 @@
 using System;
 using System.Globalization;
+using System.Collections.Generic;
+using Alterverse.Characters;
 using Alterverse.Match;
 using Alterverse.Shop;
 class Regression
@@ -10,6 +12,20 @@ class Regression
     {
         // Runs actual production editor checks with in-memory profile data, including old cosmetics.
         Alterverse.UI.CosmeticCollectionChecks.Run();
+        CosmeticProfile.TestData=new Dictionary<string,int>
+        {
+            {UniversalSkin.OwnedKey,1}, {DeluxeWings.OwnedKey,1}
+        };
+        PlayerHeroSelection.Select(HeroId.Veyr);
+        Check(UniversalCosmeticSelection.EquipFor(HeroId.Veyr,UniversalHeroCosmetic.Voidfall),"Equip Voidfall for first hero");
+        Check(UniversalCosmeticSelection.EquipFor(HeroId.Rook,UniversalHeroCosmetic.DeluxeWings),"Equip Deluxe for second hero");
+        WingMatchRewardBonus.BeginMatch(HeroId.Veyr);
+        Check(WingMatchRewardBonus.DailyShardReward(20)==21,"Daily rewards use the selected hero's actual wing");
+        PlayerHeroSelection.Select(HeroId.Rook);
+        Check(WingMatchRewardBonus.DailyShardReward(20)==30,"Daily rewards follow the selected hero, not the match snapshot");
+        CosmeticProfile.TestData.Remove(DeluxeWings.OwnedKey);
+        Check(WingMatchRewardBonus.DailyShardReward(20)==20,"A missing entitlement does not boost daily rewards");
+        CosmeticProfile.TestData=null;
         foreach(string culture in new[]{"en-US","de-DE"})
         {
             CultureInfo.CurrentCulture=CultureInfo.GetCultureInfo(culture);

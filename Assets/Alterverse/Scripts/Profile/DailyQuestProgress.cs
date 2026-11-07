@@ -52,6 +52,9 @@ namespace Alterverse.Profile
             index >= 0 && index < PlayerChallengeContent.Daily.Length &&
             Current && (Alterverse.Profile.AccountProfilePrefs.GetInt(ClaimedKey, 0) & (1 << index)) != 0;
 
+        public static int ShardReward(int index) => index >= 0 && index < PlayerChallengeContent.Daily.Length
+            ? WingMatchRewardBonus.DailyShardReward(PlayerChallengeContent.Daily[index].Shards) : 0;
+
         public static ProfileTransaction.Write[] MatchWrites(int kills, int hotZoneCaptures, int soldierKills, bool won = false, ArenaVariant arena = ArenaVariant.Moon)
             => ProgressWrites(Today, kills, hotZoneCaptures, soldierKills, 0, won, arena);
 
@@ -121,7 +124,7 @@ namespace Alterverse.Profile
 
             ProfileTransaction.Commit(
                 new ProfileTransaction.Write("DF_Shards",
-                    ProfileTransaction.Add(PlayerWallet.EarnedBalance, PlayerChallengeContent.Daily[index].Shards)),
+                    ProfileTransaction.Add(PlayerWallet.EarnedBalance, ShardReward(index))),
                 new ProfileTransaction.Write(ClaimedKey,
                     Alterverse.Profile.AccountProfilePrefs.GetInt(ClaimedKey, 0) | (1 << index)));
             return true;

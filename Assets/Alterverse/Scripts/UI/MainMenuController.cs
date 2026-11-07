@@ -1136,7 +1136,7 @@ namespace Alterverse.UI
         }
         private void DrawQuests()
         {
-            Heading("Daily missions","Claim your daily login reward and completed missions here. Resets at 00:00 Europe/Berlin.");
+            Heading("Daily missions","Reward previews use your selected hero's wings. Resets at 00:00 Europe/Berlin.");
             float width=Mathf.Min(960,ContentWidth);
             float x=Left+(ContentWidth-width)*.5f;
             theme.Panel(new Rect(x,208,width,100));
@@ -1153,7 +1153,7 @@ namespace Alterverse.UI
                 Rect cell=new Rect(x+18+(day-1)*cellW,246,cellW-6,52);
                 bool current=currentDay==day;
                 FrontEndTheme.Fill(cell,current?FrontEndTheme.Raised:FrontEndTheme.Surface);
-                theme.Center(new Rect(cell.x,cell.y,cell.width,22),$"DAY {day}  •  {LoginStreakProgress.RewardForDay(day)} SHARDS");
+                theme.Center(new Rect(cell.x,cell.y,cell.width,22),$"DAY {day}  •  {LoginStreakProgress.ShardRewardForDay(day)} SHARDS");
                 if(current&&!received)
                 {
                     if(theme.Action(new Rect(cell.x+4,cell.y+24,cell.width-8,26),"CLAIM",true,enabled:canClaim))
@@ -1170,7 +1170,7 @@ namespace Alterverse.UI
                 theme.Label(new Rect(x+18,y+8,width-252,40),quest.Description,theme.Heading);
                 int progress=DailyQuestProgress.Progress(i),target=DailyQuestProgress.Target(i);
                 theme.Progress(new Rect(x+18,y+56,width-252,5),target>0?progress/(float)target:0);
-                theme.Label(new Rect(x+width-213,y+8,190,22),$"{progress} / {target}  •  {quest.Shards} SHARDS",theme.Small,true);
+                theme.Label(new Rect(x+width-213,y+8,190,22),$"{progress} / {target}  •  {DailyQuestProgress.ShardReward(i)} SHARDS",theme.Small,true);
                 bool claimed=DailyQuestProgress.Claimed(i);
                 if(theme.Action(new Rect(x+width-205,y+26,180,36),claimed?"CLAIMED":"CLAIM",true,enabled:!claimed&&target>0&&progress>=target))
                     DailyQuestProgress.Claim(i);

@@ -138,7 +138,7 @@ namespace Alterverse.CameraSystem {public class MobaCamera:UnityEngine.MonoBehav
 namespace Alterverse.Match {
 public enum ArenaVariant {Moon,Mars,GreenPlanet,Noxara,Kryon,Earth,Pyraxis,Neptune,Dark00,DiamondCore,GJ504b}
 public static class ArenaVariantRuntime {public static ArenaVariant Selected;public static void BeginCoopMatch(ArenaVariant a){}public static void BeginMatch(){}public static void EnsureValidSelection(){}public static void Select(ArenaVariant a){Selected=a;}}
-public static class WingMatchRewardBonus {public static void BeginMatch(Alterverse.Characters.HeroId h){}}
+public static class WingMatchRewardBonus {public static void BeginMatch(Alterverse.Characters.HeroId h){}public static int DailyShardReward(int amount)=>amount;}
 public class DimensionsFrontHUD:UnityEngine.MonoBehaviour {}
 public class DimensionsFrontCombatBridge:UnityEngine.MonoBehaviour {}
 public class HotZoneDirector:UnityEngine.MonoBehaviour {}

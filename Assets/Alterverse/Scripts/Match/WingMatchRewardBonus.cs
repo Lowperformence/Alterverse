@@ -5,8 +5,8 @@ using UnityEngine;
 namespace Alterverse.Match
 {
     /// <summary>
-    /// Central, non-stacking post-match progression bonus for the player's equipped universal cosmetic.
-    /// The selection is snapshotted once when a match starts so changing loadout cannot alter a live match reward.
+    /// Central, non-stacking progression bonus for the player's equipped universal cosmetic.
+    /// Match rewards use a match-start snapshot; daily rewards use the selected hero at claim time.
     /// </summary>
     public static class WingMatchRewardBonus
     {
@@ -43,6 +43,13 @@ namespace Alterverse.Match
             return (int)System.Math.Round(baseAmount*(double)percent/100d,System.MidpointRounding.ToEven);
         }
 
+        public static int DailyShardReward(int baseAmount)
+        {
+            if(baseAmount<=0)return 0;
+            UniversalHeroCosmetic cosmetic=UniversalCosmeticSelection.EquippedFor(PlayerHeroSelection.Selected);
+            return (int)System.Math.Min(int.MaxValue,(long)baseAmount+CalculateBonus(baseAmount,cosmetic));
+        }
+
         public static string DisplayName(UniversalHeroCosmetic cosmetic)=>cosmetic switch
         {
             UniversalHeroCosmetic.Voidfall=>"VOIDFALL",
@@ -59,7 +66,7 @@ namespace Alterverse.Match
         public static string ShopBonus(UniversalHeroCosmetic cosmetic)
         {
             float percent=Percent(cosmetic);
-            return percent<=0?"NO MATCH REWARD BONUS":$"+{PercentLabel(percent)}% MATCH XP  /  +{PercentLabel(percent)}% MATCH SHARDS";
+            return percent<=0?"NO MATCH REWARD BONUS":$"+{PercentLabel(percent)}% MATCH XP  /  +{PercentLabel(percent)}% MATCH & DAILY SHARDS";
         }
     }
 }

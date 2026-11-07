@@ -34,7 +34,8 @@ public static class UniversalCosmeticSelection
 public static class AngelWings { public const string Name="ANGEL WINGS"; }
 public static class RgbRiftWings { public const string Name="RGB RIFT WINGS"; }
 ''')
-stubs+='\nnamespace Alterverse.Characters { public enum HeroId { Traveler } }\n'
+stubs+='\nnamespace Alterverse.Characters { public enum HeroId { Traveler } public static class PlayerHeroSelection { public static HeroId Selected=>HeroId.Traveler; } }\n'
+stubs+='\nnamespace Alterverse.Profile { public static class ReviewPromptProgress { public const string PendingMatchKey="DF_ReviewPromptPending"; public static bool ShouldQueue(int count)=>false; } }\n'
 stubs=stubs.replace('CalculateMatchXp(bool won,int kills,int assists,int objectives)=>10','CalculateMatchXp(bool won,int kills,int assists,int objectives)=>400')
 stubs=stubs.replace('Roll(bool won,int kills,int assists,int objectives)=>1','Roll(bool won,int kills,int assists,int objectives)=>400')
 program='''
@@ -57,7 +58,7 @@ class ReceiptRegression
             int bonus=WingMatchRewardBonus.CalculateBonus(400,id);
             var first=Alterverse.Match.MatchRewardService.GrantMatchReward(true,0,0,0,"receipt");
             Assert(first.BonusPercent==percent&&first.BonusCosmetic==id,"Service wrapper retains full percentage and enum ID");
-            Assert(first.Xp==400+bonus&&first.Shards==400+bonus,"Both rewards receive exact percentage");
+            Assert(first.Xp==400+bonus&&first.Shards==(400+bonus)/2,"Match XP and halved shards retain their wing percentage");
             UniversalCosmeticSelection.Selected=UniversalHeroCosmetic.Original;
             WingMatchRewardBonus.BeginMatch(HeroId.Traveler);
             var retry=Alterverse.Match.MatchRewardService.GrantMatchReward(true,0,0,0,"receipt");

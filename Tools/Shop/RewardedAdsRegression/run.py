@@ -30,7 +30,8 @@ src = root / 'Assets/Alterverse/Scripts'
 files = [src / name for name in (
     'Shop/RewardedShardAds.cs', 'Shop/RewardedShardPayout.cs', 'Shop/PaidShardCommerce.cs',
     'Profile/AccountProfilePrefs.cs', 'Profile/PlayerWallet.cs', 'Profile/ProfileTransaction.cs',
-    'Profile/DailyCalendar.cs', 'Profile/DailyQuestProgress.cs', 'Content/PlayerChallengeContent.cs')]
+    'Profile/DailyCalendar.cs', 'Profile/DailyQuestProgress.cs', 'Profile/LoginStreakProgress.cs',
+    'Match/WingMatchRewardBonus.cs', 'Content/PlayerChallengeContent.cs')]
 sdk = sorted((a.dotnet_root / 'sdk').iterdir())[-1]
 refs = sorted((a.dotnet_root / 'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'))[-1]
 version = sorted((a.dotnet_root / 'shared/Microsoft.NETCore.App').iterdir())[-1].name
@@ -45,7 +46,7 @@ for defines in ('UNITY_ANDROID', 'UNITY_ANDROID,DEVELOPMENT_BUILD', 'UNITY_ANDRO
         rsp.write_text('\n'.join([
             '-nologo', '-langversion:9', '-nowarn:0649,0067', '-define:' + defines, '-out:' + str(dll),
             *['-r:' + str(x) for x in refs.glob('*.dll')],
-            str(here.parent / 'AccountRegression/EngineStubs.cs'), str(here / 'AdSdkStubs.cs'),
+            str(here.parent / 'AccountRegression/EngineStubs.cs'), str(here / 'AdSdkStubs.cs'), str(here / 'DailyWingFixtures.cs'),
             str(here / 'Regression.cs'), str(arena_file), *map(str, files)]))
         subprocess.run([str(a.dotnet_root / 'dotnet'), str(sdk / 'Roslyn/bincore/csc.dll'), '@' + str(rsp)], check=True)
         dll.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions': {
