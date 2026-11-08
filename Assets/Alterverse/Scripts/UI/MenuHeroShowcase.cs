@@ -62,6 +62,17 @@ namespace Alterverse.UI
         public void InvalidateLoadout()=>loadoutDirty=true;
         private void OnEnable(){Alterverse.Profile.ProfileTransaction.Committed+=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged+=InvalidateLoadout;loadoutDirty=true;}
         private Transform orbitLeft, orbitRight, wingLeft, wingRight;
+        private Light keyLight, fillLight, rimLight;
+        private float userYawOffset;
+        private int lastUserDragFrame = -1;
+        public float UserYawOffset => userYawOffset;
+        public float SwitchPulse => hasSelection ? Mathf.Exp(-Mathf.Max(0f, Time.unscaledTime - selectedAt) * 2.8f) : 0f;
+        public void AddUserYaw(float deltaDegrees)
+        {
+            userYawOffset = Mathf.Clamp(userYawOffset + deltaDegrees, -165f, 165f);
+            lastUserDragFrame = Time.frameCount;
+        }
+        public void ResetUserYaw() => userYawOffset = 0f;
         public Texture Image => needsFit ? null : texture;
         public Texture BackgroundImage => originWorld != null && originWorld.sprite != null ? originWorld.sprite.texture : null;
 
@@ -287,18 +298,34 @@ namespace Alterverse.UI
             data.volumeLayerMask = 0;
             cameraObject.transform.localPosition = new Vector3(0,1.10f,5);
             cameraObject.transform.LookAt(stage.transform.position + Vector3.up*.08f);
-            AddLight("Key",new Vector3(-2,3,3),new Color(.91f,.95f,1),3.5f);
-            AddLight("Fill",new Vector3(2,1,2),new Color(.51f,.72f,.78f),1.8f);
-            AddLight("Rim",new Vector3(1.8f,2.7f,-2.5f),new Color(.33f,.82f,1f),2.2f);
+            keyLight = AddLight("Key",new Vector3(-2,3,3),new Color(.91f,.95f,1),3.5f);
+            fillLight = AddLight("Fill",new Vector3(2,1,2),new Color(.51f,.72f,.78f),1.8f);
+            rimLight = AddLight("Rim",new Vector3(1.8f,2.7f,-2.5f),new Color(.33f,.82f,1f),2.2f);
         }
-        private void AddLight(string label, Vector3 position, Color color, float intensity)
+        private Light AddLight(string label, Vector3 position, Color color, float intensity)
         {
             var go = new GameObject("DF_Portrait"+label); go.transform.SetParent(stage.transform,false);
             go.transform.localPosition = position;
             var light = go.AddComponent<Light>(); light.type = LightType.Point;
             light.color = color; light.intensity = intensity; light.range = 8;
             light.shadows = LightShadows.None; light.cullingMask = 1 << PreviewLayer;
+            return light;
         }
+        private static Color StageRimAccent(HeroId hero) => hero switch
+        {
+            HeroId.Veyr => new Color(1f, .24f, .82f),
+            HeroId.Kaelon => new Color(1f, .70f, .24f),
+            HeroId.Nyra => new Color(.30f, .95f, 1f),
+            HeroId.Elyra => new Color(.84f, .36f, 1f),
+            HeroId.Mira => new Color(.35f, 1f, .62f),
+            HeroId.Rook => new Color(1f, .40f, .12f),
+            HeroId.Traveler => new Color(.44f, .60f, 1f),
+            HeroId.Nerok => new Color(.18f, .88f, 1f),
+            HeroId.Timmy => new Color(1f, .58f, .74f),
+            HeroId.VoidKnight => new Color(1f, .18f, .32f),
+            HeroId.Bolt7 => new Color(1f, .92f, .36f),
+            _ => new Color(.33f, .82f, 1f)
+        };
         private void UpdateRenderTarget()
         {
             int width=PreviewWidth,height=PreviewHeight,samples=4;
@@ -331,13 +358,31 @@ namespace Alterverse.UI
             UpdateRenderTarget();
             UpdateOriginWorld(selected);
             float t = Time.unscaledTime - selectedAt;
+            if (Time.frameCount - lastUserDragFrame > 2 && Mathf.Abs(userYawOffset) > .01f)
+            {
+                userYawOffset *= Mathf.Clamp01(1f - Time.deltaTime * 2.5f);
+                if (Mathf.Abs(userYawOffset) < .05f) userYawOffset = 0f;
+            }
+            float surge = t > .001f ? Mathf.Exp(-t * 3.0f) : 0f;
+            Color rimAccent = StageRimAccent(selected);
+            if (rimLight != null)
+            {
+                rimLight.color = Color.Lerp(rimAccent, Color.white, surge * .45f);
+                rimLight.intensity = 2.35f + Mathf.Sin(t * 2.1f) * .26f + surge * 1.65f;
+            }
+            if (fillLight != null)
+            {
+                fillLight.color = Color.Lerp(new Color(.42f, .64f, .76f), rimAccent, .38f + surge * .25f);
+                fillLight.intensity = 1.82f + surge * .65f;
+            }
+            if (keyLight != null) keyLight.intensity = 3.5f + surge * .75f;
             float facing=selected==HeroId.Nyra?-24: selected==HeroId.Kaelon?-24:-16;
-            actor.transform.localRotation = Quaternion.Euler(0,facing+Mathf.Sin(t*.55f)*4,0);
+            actor.transform.localRotation = Quaternion.Euler(0,facing+Mathf.Sin(t*.55f)*4+surge*14f+userYawOffset,0);
             actor.transform.localPosition = Vector3.zero;
-            if(orbitLeft!=null) orbitLeft.localPosition=new Vector3(-.58f,.28f+Mathf.Sin(t*1.4f)*.06f,.03f);
-            if(orbitRight!=null) orbitRight.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*.06f,.03f);
-            if(wingLeft!=null) wingLeft.localRotation=Quaternion.Euler(0,-18,-18-Mathf.Sin(t*2)*3);
-            if(wingRight!=null) wingRight.localRotation=Quaternion.Euler(0,18,18+Mathf.Sin(t*2)*3);
+            if(orbitLeft!=null) orbitLeft.localPosition=new Vector3(-.58f,.28f+Mathf.Sin(t*1.4f)*(.06f+surge*.03f),.03f);
+            if(orbitRight!=null) orbitRight.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*(.06f+surge*.03f),.03f);
+            if(wingLeft!=null) wingLeft.localRotation=Quaternion.Euler(0,-18,-18-Mathf.Sin(t*2)*(3f+surge*4f));
+            if(wingRight!=null) wingRight.localRotation=Quaternion.Euler(0,18,18+Mathf.Sin(t*2)*(3f+surge*4f));
             if(grounding!=null&&grounding.PlaceFeet(stage.transform,MenuHeroPedestal.SurfaceY))
             {
                 pedestal?.SetRadius(grounding.Radius);

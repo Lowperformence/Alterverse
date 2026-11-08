@@ -17,6 +17,7 @@ namespace Alterverse.UI
         readonly List<Vector3> contactVertices=new(8);
         float radius=.88f;
         bool disposed;
+
         public Bounds Bounds=>new(root.transform.position-Vector3.up*Height*.5f,new Vector3(radius*2,Height,radius*2));
 
         public MenuHeroPedestal(Transform stage,int layer)
@@ -26,10 +27,11 @@ namespace Alterverse.UI
             materials=new[]{
                 RuntimeShaderLibrary.Create(new Color(.032f,.046f,.065f),false,.52f,.36f),
                 RuntimeShaderLibrary.Create(new Color(.12f,.155f,.19f),false,.32f,.30f),
-                RuntimeShaderLibrary.Create(new Color(.12f,.67f,.85f),true)};
+                RuntimeShaderLibrary.Create(new Color(.14f,.74f,.94f),true)};
             foreach(Material material in materials)if(material!=null&&material.HasProperty("_ShowcaseLighting"))material.SetFloat("_ShowcaseLighting",1f);
             deck=BuildDeck();root.AddComponent<MeshFilter>().sharedMesh=deck;
             Configure(root.AddComponent<MeshRenderer>(),materials);
+
             contactMaterial=RuntimeShaderLibrary.CreateGroundTelegraph(new Color(.004f,.008f,.014f),.30f,0f,.25f);
             if(contactMaterial!=null)
             {
@@ -65,12 +67,14 @@ namespace Alterverse.UI
             AddContact(feet.RightCenter,feet.RightSize,actor);
             contacts.SetVertices(contactVertices);contacts.RecalculateBounds();
         }
+
         void AddContact(Vector3 center,Vector2 size,Transform actor)
         {
             Vector3 right=actor.right*Mathf.Clamp(size.x*.55f,.07f,.24f);
             Vector3 forward=actor.forward*Mathf.Clamp(size.y*.55f,.10f,.32f);
             Add(center-right-forward);Add(center-right+forward);Add(center+right+forward);Add(center+right-forward);
         }
+
         void Add(Vector3 point)
         {
             Vector3 local=root.transform.InverseTransformPoint(point);local.y=.0015f;contactVertices.Add(local);
@@ -97,12 +101,21 @@ namespace Alterverse.UI
                     Quad(Point(a,r0,y0),Point(b,r0,y0),Point(b,r1,y1),Point(a,r1,y1),material);
                 }
             }
+
             Band(.89f,-Height,1f,-.145f,0);
             Band(1f,-.145f,1f,-.035f,0);
             Band(1f,-.035f,.94f,0,0);
             Band(.94f,0,.90f,0,0);
             Band(.923f,.001f,.909f,.001f,2,true);
             Band(1.001f,-.100f,1.001f,-.087f,2,true);
+            // Inner holographic rune ring & mid-deck energy conduit on emissive submesh 2.
+            for(int i=0;i<24;i++)
+            {
+                if(i%4==0)continue;
+                float a=i*Mathf.PI*2/24f,b=(i+1)*Mathf.PI*2/24f;
+                Quad(Point(a,.565f,.0012f),Point(b,.565f,.0012f),Point(b,.542f,.0012f),Point(a,.542f,.0012f),2);
+                Quad(Point(a,.755f,.0011f),Point(b,.755f,.0011f),Point(b,.738f,.0011f),Point(a,.738f,.0011f),2);
+            }
             // Separate deck cap keeps the top normal flat across the bevel.
             for(int i=0;i<segments;i++)
             {
@@ -118,7 +131,12 @@ namespace Alterverse.UI
                 Vector3 edge=new(-Mathf.Sin(angle)*.0025f,0,Mathf.Cos(angle)*.0025f);
                 Vector3 a=Point(angle,.66f,.001f),b=Point(angle,.87f,.001f);
                 Quad(a-edge,b-edge,b+edge,a+edge,0);
+                // Emissive radial holo-nodes at deck perimeter.
+                Vector3 nodeEdge=new(-Mathf.Sin(angle)*.009f,0,Mathf.Cos(angle)*.009f);
+                Vector3 na=Point(angle,.875f,.0014f),nb=Point(angle,.902f,.0014f);
+                Quad(na-nodeEdge,nb-nodeEdge,nb+nodeEdge,na+nodeEdge,2);
             }
+
             var mesh=new Mesh{name="DF_MenuPedestal_BeveledDeck"};mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.subMeshCount=3;
             for(int i=0;i<3;i++)mesh.SetTriangles(triangles[i],i);
             mesh.RecalculateNormals();mesh.RecalculateBounds();return mesh;

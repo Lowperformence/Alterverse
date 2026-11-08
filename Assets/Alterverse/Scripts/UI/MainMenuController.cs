@@ -47,6 +47,8 @@ namespace Alterverse.UI
         private string coopInviteCode = "";
         private FrontEndTheme theme;
         private GUIStyle homeLogo,homeSubtitle;
+        private bool draggingHeroStage;
+        private float lastHeroDragX;
         private MenuCosmicBackdrop backdrop;
         private MenuUniverseBackground cosmicBackground;
         private MenuHeroShowcase showcase;
@@ -217,6 +219,12 @@ namespace Alterverse.UI
                 float y = Screen.height-safe.yMax+(safe.height-MenuHeight*scale)*.5f;
                 GUI.matrix = Matrix4x4.TRS(new Vector3(safe.x,y,0),Quaternion.identity,Vector3.one*scale);
                 theme ??= new FrontEndTheme();
+                Color activeHeroAccent = Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero);
+                Vector2 pointerPos = Event.current != null ? Event.current.mousePosition : new Vector2(menuWidth * .5f, MenuHeight * .5f);
+                Vector2 pointerNorm = new Vector2(
+                    Mathf.Clamp((pointerPos.x / Mathf.Max(1f, menuWidth)) * 2f - 1f + (showcase != null ? showcase.UserYawOffset / 90f : 0f), -1f, 1f),
+                    Mathf.Clamp((pointerPos.y / MenuHeight) * 2f - 1f, -1f, 1f));
+                DimensionUiMotif.DrawCosmicParallaxOverlay(new Rect(0, 0, menuWidth, MenuHeight), Texture2D.whiteTexture, activeHeroAccent, Time.unscaledTime, pointerNorm);
                 if (!PrepareAccountPresentation()) { DrawAccountStartup(); return; }
                 if (ReviewPromptVisible) { DrawReviewPrompt(); return; }
                 if (launching) { DrawLaunch(); return; }
@@ -297,25 +305,58 @@ namespace Alterverse.UI
             return item.Price>0?$"LOCKED  •  {item.Price} SHARDS IN STORE":"FREE  •  TAP ARENA TO SELECT";
         }
 
+        private void HandleHeroStageDrag(Rect stageRect)
+        {
+            Event ev = Event.current;
+            if (ev == null) return;
+            if (ev.type == EventType.MouseDown && stageRect.Contains(ev.mousePosition))
+            {
+                draggingHeroStage = true;
+                lastHeroDragX = ev.mousePosition.x;
+                ev.Use();
+            }
+            else if (draggingHeroStage && ev.type == EventType.MouseDrag)
+            {
+                float dx = ev.mousePosition.x - lastHeroDragX;
+                lastHeroDragX = ev.mousePosition.x;
+                showcase?.AddUserYaw(-dx * .85f);
+                ev.Use();
+            }
+            else if (draggingHeroStage && (ev.type == EventType.MouseUp || ev.type == EventType.Ignore))
+            {
+                draggingHeroStage = false;
+            }
+        }
+
         private void DrawPortrait(Rect rect)
         {
             Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero);
             showcase?.DrawPreview(rect);
-            DimensionUiMotif.DrawCornerCuts(rect,Texture2D.whiteTexture,accent);
-            FrontEndTheme.Fill(new Rect(rect.x+rect.width*.24f,rect.yMax-10,rect.width*.52f,2),new Color(accent.r,accent.g,accent.b,.50f));
+            float pulse=showcase!=null?showcase.SwitchPulse:0f;
+            DimensionUiMotif.DrawDimensionalRiftStage(rect,Texture2D.whiteTexture,accent,Time.unscaledTime,pulse,showcase!=null?showcase.UserYawOffset:0f);
+            DimensionUiMotif.DrawCornerCuts(rect,Texture2D.whiteTexture,Color.Lerp(accent,Color.white,pulse*.45f));
+            FrontEndTheme.Fill(new Rect(rect.x+rect.width*.18f,rect.yMax-10,rect.width*.64f,2),new Color(accent.r,accent.g,accent.b,.62f+pulse*.28f));
+            HandleHeroStageDrag(rect);
         }
+
         private void DrawHome()
         {
             float navWidth=252f;
             float heroX=Left+ContentWidth*.62f;
+            Rect heroStageRect=HomeHeroPreviewRect(heroX);
+            Color heroAccent=Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero);
+            DimensionUiMotif.DrawDimensionalRiftStage(heroStageRect,Texture2D.whiteTexture,heroAccent,Time.unscaledTime,
+                showcase!=null?showcase.SwitchPulse:0f,showcase!=null?showcase.UserYawOffset:0f);
             // Render the actual selected loadout over the environment, without an opaque card.
             if(showcase?.Image!=null)
-                GUI.DrawTexture(HomeHeroPreviewRect(heroX),showcase.Image,ScaleMode.ScaleToFit,true);
+                GUI.DrawTexture(heroStageRect,showcase.Image,ScaleMode.ScaleToFit,true);
+            HandleHeroStageDrag(heroStageRect);
 
             homeLogo??=new GUIStyle(theme.Title){fontSize=64,fontStyle=FontStyle.Normal};
             theme.FitLabel(new Rect(Left,58,ContentWidth*.67f,80),"DIMENSIONS",homeLogo);
             if(homeSubtitle==null){homeSubtitle=new GUIStyle(theme.Heading);homeSubtitle.normal.textColor=FrontEndTheme.Accent;}
             theme.Label(new Rect(Left+4,131,530,36),"F  R  O  N  T",homeSubtitle);
+            DimensionUiMotif.DrawHeaderLine(new Rect(Left+4,168,268,2),Texture2D.whiteTexture,heroAccent,FrontEndTheme.Accent,Time.unscaledTime);
             theme.Label(new Rect(Left+4,174,600,26),"BEYOND BORDERS. HIGHER HORIZONS.",theme.Small,true);
 
             Rect profile=new Rect(Right-280,24,280,70);
@@ -332,17 +373,20 @@ namespace Alterverse.UI
             for(int row=0;row<homeNavigation.Length;row++)
             {
                 int i=homeNavigation[row];
-                if(theme.Navigation(new Rect(Left+10,246+row*56,navWidth-10,48),GameLanguage.Text(NavigationLabels[i]),NavigationIcon(NavigationPages[i]),primary:row==0))
+                Rect navRect=new Rect(Left+10,246+row*56,navWidth-10,48);
+                if(theme.Navigation(navRect,GameLanguage.Text(NavigationLabels[i]),NavigationIcon(NavigationPages[i]),primary:row==0))
                     SetPage(NavigationPages[i]);
+                if(row==0)
+                    DimensionUiMotif.DrawButtonShimmer(navRect,Texture2D.whiteTexture,FrontEndTheme.Accent,Time.unscaledTime,navRect.Contains(Event.current.mousePosition));
             }
             float textX=Left+navWidth+38;
             float textWidth=Mathf.Max(230,heroX-textX+30);
-            theme.FitLabel(new Rect(textX,267,textWidth,28),"CHOOSE. DEPLOY. CONQUER.",homeSubtitle);
-            theme.Label(new Rect(textX,309,textWidth,94),"TWO REALITIES.\nONE FRONT.",theme.Title);
-            theme.Label(new Rect(textX,416,textWidth-12,76),"Choose your hero. Fight alongside your team. Claim the Hotzone and break the enemy core.",theme.Body,true);
-            FrontEndTheme.Fill(new Rect(textX,510,56,2),FrontEndTheme.Accent);
-            theme.FitLabel(new Rect(HomeHeroCaptionX,HomeHeroCaptionY,HomeHeroCaptionWidth,35),HeroName,theme.Heading);
-            theme.FitLabel(new Rect(HomeHeroCaptionX,HomeHeroCaptionY+38,HomeHeroCaptionWidth,22),Roles[selectedHero],theme.Small,true);
+            theme.FitLabel(new Rect(textX,250,textWidth,28),"CHOOSE. DEPLOY. CONQUER.",homeSubtitle);
+            theme.Label(new Rect(textX,286,textWidth,90),"TWO REALITIES.\nONE FRONT.",theme.Title);
+            theme.Label(new Rect(textX,382,textWidth-12,62),"Choose your hero. Fight alongside your team. Claim the Hotzone and break the enemy core.",theme.Body,true);
+            DrawHomeArenaPreviewStrip(new Rect(textX,452,Mathf.Max(220f,textWidth-14f),68f));
+
+            DrawHomeHeroSpotlightCaption(heroAccent);
 
             float footerWidth=ContentWidth*.66f;
             if (HomeAdvertisingActive) footerWidth=Mathf.Min(footerWidth,HomeBannerMenuRect.x-Left-16f);
@@ -356,16 +400,149 @@ namespace Alterverse.UI
             DrawHomeNews();
             DrawHomeAdvertising();
         }
+
+        private void DrawHomeArenaPreviewStrip(Rect rect)
+        {
+            ArenaVariant selectedArena=ArenaVariantRuntime.Selected;
+            bool shuffle=ArenaVariantRuntime.ShuffleEnabled;
+            ArenaShopItem arenaItem=ArenaShopCatalog.For(selectedArena);
+            Color planetAccent=shuffle?FrontEndTheme.Accent:new Color(arenaItem.Accent.r,arenaItem.Accent.g,arenaItem.Accent.b,1f);
+            bool hovered=rect.Contains(Event.current.mousePosition);
+            theme.HudPanel(rect,hovered?.62f:.46f);
+            FrontEndTheme.Fill(new Rect(rect.x,rect.y+8f,3f,rect.height-16f),planetAccent);
+            DimensionUiMotif.DrawCornerCuts(rect,Texture2D.whiteTexture,planetAccent);
+            theme.FitLabel(new Rect(rect.x+12f,rect.y+6f,rect.width-92f,18f),
+                shuffle?"NEXT DROP  •  ARENA SHUFFLE ACTIVE":"NEXT DROP  •  ACTIVE BATTLEFIELD",theme.Small,true);
+            string planetTitle=shuffle?"RANDOM OWNED PLANET":arenaItem.Name.ToUpperInvariant();
+            theme.FitLabel(new Rect(rect.x+12f,rect.y+24f,rect.width-92f,26f),planetTitle,theme.Heading);
+            FrontEndTheme.Fill(new Rect(rect.x+12f,rect.yMax-10f,Mathf.Min(120f,rect.width-104f),2f),
+                new Color(planetAccent.r,planetAccent.g,planetAccent.b,.85f));
+
+            float btnW=32f,btnH=32f,btnY=rect.y+(rect.height-btnH)*.5f;
+            Rect prevRect=new Rect(rect.xMax-74f,btnY,btnW,btnH);
+            Rect nextRect=new Rect(rect.xMax-38f,btnY,btnW,btnH);
+            if(theme.Action(prevRect,"<"))CycleHomeArena(-1);
+            if(theme.Action(nextRect,">"))CycleHomeArena(1);
+            Rect mainClick=new Rect(rect.x,rect.y,rect.width-78f,rect.height);
+            if(GUI.Button(mainClick,GUIContent.none,GUIStyle.none))
+            {
+                Alterverse.Audio.UiSoundRouter.Confirm();
+                SetPage(Page.Play);
+            }
+        }
+
+        private void CycleHomeArena(int step)
+        {
+            int count=ArenaShopCatalog.Items.Length;
+            if(count<=0)return;
+            if(playArenaBrowseIndex<0||playArenaBrowseIndex>=count)
+                playArenaBrowseIndex=ArenaShopCatalog.IndexOf(ArenaVariantRuntime.Selected);
+            for(int attempt=0;attempt<count;attempt++)
+            {
+                playArenaBrowseIndex=(playArenaBrowseIndex+step+count)%count;
+                ArenaShopItem candidate=ArenaShopCatalog.Items[playArenaBrowseIndex];
+                if(ArenaUnlockInventory.Owned(candidate.Variant))
+                {
+                    ArenaVariantRuntime.SetShuffleEnabled(false);
+                    ArenaVariantRuntime.Select(candidate.Variant);
+                    break;
+                }
+            }
+        }
+
+        private void DrawHomeHeroSpotlightCaption(Color heroAccent)
+        {
+            float cx=HomeHeroCaptionX,cy=HomeHeroCaptionY,cw=HomeHeroCaptionWidth;
+            FrontEndTheme.Fill(new Rect(cx,cy-6f,Mathf.Min(72f,cw*.45f),2f),heroAccent);
+            float arrowW=28f,arrowH=28f;
+            bool showArrows=cw>=170f;
+            float labelW=showArrows?cw-66f:cw;
+            theme.FitLabel(new Rect(cx,cy,labelW,35f),HeroName,theme.Heading);
+            theme.FitLabel(new Rect(cx,cy+36f,cw,20f),Roles[selectedHero]+"  •  DRAG TO ROTATE",theme.Small,true);
+            if(showArrows)
+            {
+                if(theme.Action(new Rect(cx+cw-60f,cy+3f,arrowW,arrowH),"<"))
+                    ChangeHero((selectedHero-1+HeroIdentity.HeroCount)%HeroIdentity.HeroCount);
+                if(theme.Action(new Rect(cx+cw-28f,cy+3f,arrowW,arrowH),">"))
+                    ChangeHero((selectedHero+1)%HeroIdentity.HeroCount);
+            }
+        }
+
+        private static void HomeQuestSummary(out float fraction,out string badgeText,out bool claimReady)
+        {
+            int total=PlayerChallengeContent.Daily.Length;
+            int completed=0;
+            claimReady=LoginStreakProgress.CanClaimToday && !LoginStreakProgress.ReceivedToday;
+            float progressSum=0f;
+            for(int i=0;i<total;i++)
+            {
+                int p=DailyQuestProgress.Progress(i),t=Mathf.Max(1,DailyQuestProgress.Target(i));
+                float f=Mathf.Clamp01(p/(float)t);
+                progressSum+=f;
+                if(p>=t)
+                {
+                    completed++;
+                    if(!DailyQuestProgress.Claimed(i))claimReady=true;
+                }
+            }
+            fraction=total>0?Mathf.Clamp01(progressSum/total):0f;
+            badgeText=claimReady?"CLAIM READY":$"{completed}/{total} DONE";
+        }
+
         private void DrawHomeCard(Rect rect,string eyebrow,string title,Page target)
         {
-            theme.Panel(rect);
-            backdrop.DrawCard(new Rect(rect.x+1,rect.y+1,rect.width-2,rect.height-2),target==Page.Play?0:target==Page.BattlePass?1:2);
-            FrontEndTheme.Fill(new Rect(rect.x+1,rect.yMax-51,rect.width-2,50),new Color(.018f,.028f,.043f,.94f));
-            theme.Frame(rect,rect.Contains(Event.current.mousePosition));
-            FrontEndTheme.Fill(new Rect(rect.x+14,rect.yMax-53,26,2),FrontEndTheme.Accent);
-            theme.FitLabel(new Rect(rect.x+14,rect.yMax-48,rect.width-28,20),eyebrow,theme.Small,true);
-            theme.FitLabel(new Rect(rect.x+14,rect.yMax-28,rect.width-28,24),title,theme.Heading);
-            if(GUI.Button(rect,GUIContent.none,GUIStyle.none))
+            bool hovered=rect.Contains(Event.current.mousePosition);
+            Rect drawRect=hovered?new Rect(rect.x,rect.y-2f,rect.width,rect.height):rect;
+            theme.Panel(drawRect);
+            backdrop.DrawCard(new Rect(drawRect.x+1,drawRect.y+1,drawRect.width-2,drawRect.height-2),target==Page.Play?0:target==Page.BattlePass?1:2);
+            FrontEndTheme.Fill(new Rect(drawRect.x+1,drawRect.yMax-54,drawRect.width-2,53),new Color(.018f,.028f,.043f,.95f));
+            theme.Frame(drawRect,hovered);
+
+            Color cardAccent=FrontEndTheme.Accent;
+            string badgeText=null;
+            Color badgeColor=FrontEndTheme.Accent;
+            float cardProgress=-1f;
+
+            if(target==Page.Play)
+            {
+                ArenaShopItem arenaItem=ArenaShopCatalog.For(ArenaVariantRuntime.Selected);
+                cardAccent=ArenaVariantRuntime.ShuffleEnabled?FrontEndTheme.Positive:new Color(arenaItem.Accent.r,arenaItem.Accent.g,arenaItem.Accent.b,1f);
+                badgeText="4v4 LIVE";
+                badgeColor=FrontEndTheme.Positive;
+                cardProgress=1f;
+                DimensionUiMotif.DrawButtonShimmer(drawRect,Texture2D.whiteTexture,cardAccent,Time.unscaledTime,hovered);
+            }
+            else if(target==Page.BattlePass)
+            {
+                int claimable=BattlePassProgress.AvailableClaimCount();
+                cardAccent=new Color(1f,.76f,.38f,1f);
+                badgeText=claimable>0?$"CLAIM ×{claimable}":$"LVL {BattlePassProgress.Level}/{BattlePassProgress.MaxLevel}";
+                badgeColor=claimable>0?FrontEndTheme.Positive:cardAccent;
+                cardProgress=BattlePassProgress.LevelProgress;
+                if(hovered||claimable>0)DimensionUiMotif.DrawCornerCuts(drawRect,Texture2D.whiteTexture,badgeColor);
+            }
+            else if(target==Page.Quests)
+            {
+                HomeQuestSummary(out cardProgress,out badgeText,out bool ready);
+                cardAccent=ready?FrontEndTheme.Positive:new Color(.38f,.86f,1f,1f);
+                badgeColor=cardAccent;
+                if(hovered||ready)DimensionUiMotif.DrawCornerCuts(drawRect,Texture2D.whiteTexture,badgeColor);
+            }
+
+            if(!string.IsNullOrEmpty(badgeText)&&drawRect.width>=140f)
+            {
+                float bw=Mathf.Min(108f,drawRect.width-20f);
+                Rect badgeRect=new Rect(drawRect.xMax-bw-8f,drawRect.y+8f,bw,22f);
+                FrontEndTheme.Fill(badgeRect,new Color(.015f,.024f,.038f,.88f));
+                theme.StatusBadge(badgeRect,badgeText,badgeColor);
+            }
+
+            FrontEndTheme.Fill(new Rect(drawRect.x+14,drawRect.yMax-53,hovered?48:28,2),cardAccent);
+            theme.FitLabel(new Rect(drawRect.x+14,drawRect.yMax-49,drawRect.width-28,19),eyebrow,theme.Small,true);
+            theme.FitLabel(new Rect(drawRect.x+14,drawRect.yMax-30,drawRect.width-28,23),title,theme.Heading);
+            if(cardProgress>=0f)
+                theme.Progress(new Rect(drawRect.x+14,drawRect.yMax-5,drawRect.width-28,3),cardProgress);
+            if(GUI.Button(drawRect,GUIContent.none,GUIStyle.none))
             {
                 Alterverse.Audio.UiSoundRouter.Confirm();
                 SetPage(target);
@@ -461,13 +638,20 @@ namespace Alterverse.UI
                 (EdgegapOnlineFlow.Instance == null || !EdgegapOnlineFlow.Instance.Busy) &&
                 (OnlinePartyService.Instance == null || !OnlinePartyService.Instance.Busy) &&
                 (CoopLobbyService.Instance == null || !CoopLobbyService.Instance.Busy);
-            if (theme.Action(new Rect(Left,620,matchButtonWidth,58),"Play Online",true,
+            Rect onlineBtnRect = new Rect(Left,620,matchButtonWidth,58);
+            Rect rankedBtnRect = new Rect(Left+matchButtonWidth+matchButtonGap,620,matchButtonWidth,58);
+            Rect offlineBtnRect = new Rect(Left+2*(matchButtonWidth+matchButtonGap),620,matchButtonWidth,58);
+            if (theme.Action(onlineBtnRect,"Play Online",true,
                 enabled:matchButtonsEnabled,locked:heroReleaseLocked)) _ = BeginOnlineMatchmakingAsync();
-            if (theme.Action(new Rect(Left+matchButtonWidth+matchButtonGap,620,matchButtonWidth,58),"Ranked",true,
+            if (matchButtonsEnabled && !heroReleaseLocked)
+                DimensionUiMotif.DrawButtonShimmer(onlineBtnRect,Texture2D.whiteTexture,FrontEndTheme.Positive,Time.unscaledTime,onlineBtnRect.Contains(Event.current.mousePosition));
+            if (theme.Action(rankedBtnRect,"Ranked",true,
                 enabled:matchButtonsEnabled && HeroUnlockInventory.Owned((HeroId)selectedHero),locked:heroReleaseLocked || !RankedAvailability.Enabled))
             { PlayerHeroSelection.Select((HeroId)selectedHero); RankedPanel.Show(); }
-            if (theme.Action(new Rect(Left+2*(matchButtonWidth+matchButtonGap),620,matchButtonWidth,58),"Play Offline",primary:true,
+            if (theme.Action(offlineBtnRect,"Play Offline",primary:true,
                 enabled:matchButtonsEnabled,locked:heroReleaseLocked)) OpenOfflineLobby();
+            if (matchButtonsEnabled && !heroReleaseLocked)
+                DimensionUiMotif.DrawButtonShimmer(offlineBtnRect,Texture2D.whiteTexture,FrontEndTheme.Accent,Time.unscaledTime+1.2f,offlineBtnRect.Contains(Event.current.mousePosition));
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:GameInviteShare.Status.Length>0?GameInviteShare.Status:
                 !AccountServerBootstrap.CloudProfileReady?"WAIT FOR CLOUD SYNC  /  PROFILE > GOOGLE ACCOUNT":
                 arenaShuffle?"ARENA SHUFFLE  /  RANDOM OWNED MAP":
