@@ -272,10 +272,22 @@ namespace Alterverse.UI
             for(int i=0;i<NavigationLabels.Length;i++)
                 if(theme.Navigation(new Rect(rail,162+i*48,202,42),GameLanguage.Text(NavigationLabels[i]),NavigationIcon(NavigationPages[i]),
                     primary:i==0,selected:page==NavigationPages[i]))SetPage(NavigationPages[i]);
-            theme.FitLabel(new Rect(Left,25,ContentWidth-300,30),"COMMAND DECK  /  "+page.ToString().ToUpperInvariant(),theme.Heading);
-            theme.Label(new Rect(Left,57,ContentWidth-300,22),$"LEVEL {PlayerExperience.Level}",theme.Small,true);
+            theme.FitLabel(new Rect(Left,25,ContentWidth-448,30),"COMMAND DECK  /  "+page.ToString().ToUpperInvariant(),theme.Heading);
+            theme.Label(new Rect(Left,57,ContentWidth-448,22),$"LEVEL {PlayerExperience.Level}",theme.Small,true);
+            DrawDiscordButton(new Rect(Right-432f,29f,140f,38f));
             DrawShardWallet(new Rect(Right-280,20,280,56));
             FrontEndTheme.Fill(new Rect(Left,85,ContentWidth,1),new Color(.75f,.65f,.47f,.50f));
+        }
+        private const string DiscordChannelUrl = "https://discord.com/channels/1562160339942907947/1562167745225691148";
+        private void DrawDiscordButton(Rect rect)
+        {
+            bool hovered=rect.Contains(Event.current.mousePosition);
+            if(theme.Navigation(rect,"DISCORD",11))
+                Application.OpenURL(DiscordChannelUrl);
+            Color blurple=new Color(.35f,.40f,.95f,hovered?.95f:.72f);
+            FrontEndTheme.Fill(new Rect(rect.x+1f,rect.y+8f,2f,rect.height-16f),blurple);
+            if(hovered)
+                DimensionUiMotif.DrawCornerCuts(rect,Texture2D.whiteTexture,blurple);
         }
         private void DrawShardWallet(Rect rect)
         {
@@ -371,6 +383,7 @@ namespace Alterverse.UI
             theme.Progress(new Rect(profile.x+68,profile.y+60,194,3),PlayerExperience.LevelProgress);
             if(GUI.Button(profile,GUIContent.none,GUIStyle.none))SetPage(Page.Profile);
             DrawShardWallet(new Rect(profile.x-292,profile.y,280,profile.height));
+            DrawDiscordButton(new Rect(profile.xMax-148f,profile.yMax+8f,148f,38f));
 
             FrontEndTheme.Fill(new Rect(Left,246,1,276),new Color(.66f,.75f,.84f,.45f));
             int[] homeNavigation=HomeNavigation;

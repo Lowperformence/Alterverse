@@ -7,7 +7,7 @@ namespace Alterverse.UI
     internal static class FrontEndNavigation
     {
         private const int Resolution = 96;
-        private static readonly Texture2D[] icons = new Texture2D[11];
+        private static readonly Texture2D[] icons = new Texture2D[12];
         // Each section keeps its colour when selected; the button frame indicates selection.
         private static readonly Color32[] palette =
         {
@@ -21,7 +21,8 @@ namespace Alterverse.UI
             new(255,143,168,255), // Ranking: rose
             new(174,196,218,255), // Settings: silver blue
             new(255,224,137,255), // Battle Pass: gold
-            new(255,152,109,255)  // Clans: coral
+            new(255,152,109,255), // Clans: coral
+            new(88,101,242,255)   // Discord: blurple
         };
 
         public static void DrawIcon(Rect rect, int index, Color color)
@@ -120,6 +121,13 @@ namespace Alterverse.UI
                     art.Polygon(shade,shade,50,29,66,35,63,54,57,64,50,70,43,64,37,54,34,35);
                     art.Line(40,42,59,59,4,light);
                     art.Line(60,42,41,59,4,light);
+                    break;
+                case 11: // Discord: stylized controller/mascot badge with glowing visor eyes.
+                    art.Polygon(light,accent,30,27,42,24,45,30,55,30,58,24,70,27,79,43,76,66,64,73,58,66,42,66,36,73,24,66,21,43);
+                    art.Disc(39,49,6.2f,ink);
+                    art.Disc(61,49,6.2f,ink);
+                    art.Disc(41,47,1.8f,light);
+                    art.Disc(63,47,1.8f,light);
                     break;
             }
 
