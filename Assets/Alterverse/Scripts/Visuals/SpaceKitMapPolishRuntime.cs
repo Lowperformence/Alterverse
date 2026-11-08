@@ -932,7 +932,7 @@ namespace Alterverse.Visuals
             MeshRenderer renderer = go.AddComponent<MeshRenderer>();
             renderer.sharedMaterial = material;
             bool allowShadows = castShadow &&
-                Alterverse.Performance.MobilePerformanceProfile.Current == Alterverse.Performance.MobileQuality.High;
+                Alterverse.Performance.MobilePerformanceProfile.Current == Alterverse.Performance.MobileQuality.Performance;
             renderer.shadowCastingMode = allowShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
             renderer.receiveShadows = false;
             renderer.lightProbeUsage = LightProbeUsage.Off;
