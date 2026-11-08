@@ -4,6 +4,130 @@ namespace Alterverse.UI
 {
     public static class DimensionUiMotif
     {
+        private static Texture2D orbitalRingTex;
+        private static Texture2D softGlowTex;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetMotifTextures()
+        {
+            if (orbitalRingTex != null) Object.Destroy(orbitalRingTex);
+            if (softGlowTex != null) Object.Destroy(softGlowTex);
+            orbitalRingTex = null;
+            softGlowTex = null;
+        }
+
+        private static void EnsureMotifTextures()
+        {
+            if (softGlowTex == null)
+            {
+                const int size = 128;
+                softGlowTex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+                {
+                    name = "DF_MotifSoftGlow",
+                    hideFlags = HideFlags.HideAndDontSave,
+                    wrapMode = TextureWrapMode.Clamp,
+                    filterMode = FilterMode.Bilinear
+                };
+                var pixels = new Color32[size * size];
+                float half = (size - 1) * .5f;
+                for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = (x - half) / half;
+                    float dy = (y - half) / half;
+                    float d2 = dx * dx + dy * dy;
+                    if (d2 >= 1f) continue;
+                    float d = Mathf.Sqrt(d2);
+                    float falloff = Mathf.Pow(1f - d, 2.4f);
+                    float core = Mathf.Exp(-d2 * 9.5f) * .45f;
+                    float a = Mathf.Clamp01(falloff + core);
+                    pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(a * 255f));
+                }
+                softGlowTex.SetPixels32(pixels);
+                softGlowTex.Apply(false, true);
+            }
+
+            if (orbitalRingTex == null)
+            {
+                const int size = 256;
+                orbitalRingTex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+                {
+                    name = "DF_MotifOrbitalRing",
+                    hideFlags = HideFlags.HideAndDontSave,
+                    wrapMode = TextureWrapMode.Clamp,
+                    filterMode = FilterMode.Bilinear
+                };
+                var pixels = new Color32[size * size];
+                float half = (size - 1) * .5f;
+                for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = (x - half) / half;
+                    float dy = (y - half) / half;
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (r >= .98f) continue;
+
+                    float angle = Mathf.Atan2(dy, dx);
+                    if (angle < 0f) angle += Mathf.PI * 2f;
+
+                    float alpha = 0f;
+
+                    // 1. Outer precision ring (r = 0.88) with cardinal arc highlights
+                    float outerDist = Mathf.Abs(r - .88f);
+                    float outerRing = Mathf.Clamp01(1f - outerDist / .013f);
+                    float cardinalArc = Mathf.Abs(Mathf.Cos(angle * 2f)) > .35f ? 1f : .28f;
+                    alpha += outerRing * outerRing * cardinalArc * .78f;
+
+                    // 2. Outer degree ticks (72 ticks between r = 0.81 and r = 0.855)
+                    if (r >= .81f && r <= .855f)
+                    {
+                        float tickWave = Mathf.Cos(angle * 72f);
+                        if (tickWave > .82f)
+                        {
+                            float tickStrength = (tickWave - .82f) / .18f;
+                            float radialFade = 1f - Mathf.Abs(r - .832f) / .023f;
+                            alpha += tickStrength * Mathf.Clamp01(radialFade) * .48f;
+                        }
+                    }
+
+                    // 3. Mid segmented astrolabe ring (r = 0.68)
+                    float midDist = Mathf.Abs(r - .68f);
+                    float midRing = Mathf.Clamp01(1f - midDist / .011f);
+                    float midGap = Mathf.Sin(angle * 6f) > -.45f ? 1f : .12f;
+                    alpha += midRing * midRing * midGap * .65f;
+
+                    // 4. 6 glowing orbital nodes on the mid ring
+                    for (int n = 0; n < 6; n++)
+                    {
+                        float na = n * (Mathf.PI / 3f);
+                        float nx = Mathf.Cos(na) * .68f;
+                        float ny = Mathf.Sin(na) * .68f;
+                        float nd = Mathf.Sqrt((dx - nx) * (dx - nx) + (dy - ny) * (dy - ny));
+                        if (nd < .042f)
+                        {
+                            float nodeGlow = Mathf.Pow(1f - nd / .042f, 2f);
+                            alpha += nodeGlow * .85f;
+                        }
+                    }
+
+                    // 5. Inner delicate resonance ring (r = 0.46)
+                    float innerDist = Mathf.Abs(r - .46f);
+                    float innerRing = Mathf.Clamp01(1f - innerDist / .009f);
+                    float innerMask = Mathf.Cos(angle * 4f) > -.2f ? .52f : .15f;
+                    alpha += innerRing * innerMask;
+
+                    // 6. Subtle radial halo falloff near the outer ring
+                    float halo = Mathf.Exp(-Mathf.Pow((r - .78f) / .14f, 2f)) * .10f;
+                    alpha = Mathf.Clamp01(alpha + halo);
+
+                    if (alpha > .004f)
+                        pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f));
+                }
+                orbitalRingTex.SetPixels32(pixels);
+                orbitalRingTex.Apply(false, true);
+            }
+        }
+
         public static void DrawSplitPanel(Rect r,Texture2D pixel,Color zero,Color lumen,float time)
         {
             if(pixel==null||r.width<=0||r.height<=0)return;
@@ -84,136 +208,118 @@ namespace Alterverse.UI
             GUI.color=old;
         }
 
-        /// <summary>Subtle multi-layered cosmic parallax dust and dimensional horizon bands reactive to pointer/hero rotation.</summary>
+        /// <summary>Subtle multi-layered cosmic parallax dust and soft nebula horizon glow reactive to pointer/hero rotation.</summary>
         public static void DrawCosmicParallaxOverlay(Rect viewport,Texture2D pixel,Color heroAccent,float time,Vector2 pointerNormalized)
         {
             if(pixel==null||viewport.width<=0f||viewport.height<=0f)return;
+            EnsureMotifTextures();
             Color old=GUI.color;
-            Color cyan=new Color(.24f,.86f,1f,1f);
-            Color gold=new Color(1f,.76f,.38f,1f);
+            Color cyan=new Color(.28f,.88f,1f,1f);
+            Color gold=new Color(1f,.78f,.42f,1f);
 
-            // Subtle upper & lower atmospheric horizon glow bands shifting with parallax.
             float px=Mathf.Clamp(pointerNormalized.x,-1f,1f);
             float py=Mathf.Clamp(pointerNormalized.y,-1f,1f);
-            float horizonY=viewport.y+viewport.height*(.68f+py*.012f);
-            GUI.color=new Color(heroAccent.r,heroAccent.g,heroAccent.b,.045f+Mathf.Sin(time*.8f)*.015f);
-            GUI.DrawTexture(new Rect(viewport.x,horizonY-18f,viewport.width,36f),pixel);
-            GUI.color=new Color(cyan.r,cyan.g,cyan.b,.08f);
-            GUI.DrawTexture(new Rect(viewport.x+viewport.width*(.08f-px*.015f),horizonY,viewport.width*.84f,1f),pixel);
 
-            // Multi-depth drifting starlight & dimensional embers (deterministic, zero allocation).
-            const int moteCount=26;
+            // Soft atmospheric nebula bloom in the background (uses smooth radial texture, never blocky bars).
+            float bloomX=viewport.x+viewport.width*(.64f-px*.025f);
+            float bloomY=viewport.y+viewport.height*(.42f-py*.020f);
+            GUI.color=new Color(heroAccent.r,heroAccent.g,heroAccent.b,.08f+Mathf.Sin(time*.7f)*.02f);
+            GUI.DrawTexture(new Rect(bloomX-340f,bloomY-260f,680f,520f),softGlowTex);
+
+            // Soft-glow drifting cosmic bokeh motes across 3 depth planes.
+            const int moteCount=22;
             for(int i=0;i<moteCount;i++)
             {
                 float depth=(i%3+1)*.33f;
                 float seedX=((i*73+19)%97)/97f;
                 float seedY=((i*41+53)%89)/89f;
-                float driftX=Mathf.Sin(time*(.18f+depth*.15f)+i*1.3f)*14f*depth - px*22f*depth;
-                float driftY=((seedY*viewport.height - time*(5f+depth*9f) - py*14f*depth)%viewport.height + viewport.height)%viewport.height;
+                float driftX=Mathf.Sin(time*(.16f+depth*.12f)+i*1.3f)*16f*depth - px*24f*depth;
+                float driftY=((seedY*viewport.height - time*(4f+depth*7f) - py*14f*depth)%viewport.height + viewport.height)%viewport.height;
                 float x=viewport.x + ((seedX*viewport.width + driftX)%viewport.width + viewport.width)%viewport.width;
                 float y=viewport.y + driftY;
-                float twinkle=.35f+.65f*Mathf.Sin(time*(1.5f+(i%5)*.45f)+i*2.1f);
+                float twinkle=.35f+.65f*Mathf.Sin(time*(1.3f+(i%5)*.4f)+i*2.1f);
                 if(twinkle<=.15f)continue;
                 Color c=i%3==0?heroAccent:i%3==1?cyan:gold;
-                float size=i%4==0?3f:2f;
-                GUI.color=new Color(c.r,c.g,c.b,twinkle*(.16f+depth*.18f));
-                GUI.DrawTexture(new Rect(x,y,size,size),pixel);
-                if(i%6==0)
-                {
-                    GUI.color=new Color(c.r,c.g,c.b,twinkle*.08f);
-                    GUI.DrawTexture(new Rect(x-3f,y+size*.5f-.5f,size+6f,1f),pixel);
-                }
+                float size=(i%4==0?16f:10f)*(.65f+depth*.55f);
+                GUI.color=new Color(c.r,c.g,c.b,twinkle*(.18f+depth*.16f));
+                GUI.DrawTexture(new Rect(x-size*.5f,y-size*.5f,size,size),softGlowTex);
             }
             GUI.color=old;
         }
 
-        /// <summary>Draws a pulsing dimensional rift behind the 3D hero and projected holographic pedestal rings underneath.</summary>
-        public static void DrawDimensionalRiftStage(Rect heroRect,Texture2D pixel,Color heroAccent,float time,float switchPulse,float yawOffset)
+        /// <summary>
+        /// High-resolution holographic orbital astrolabe, radial backlight bloom, and perspective pedestal light-well.
+        /// Must ALWAYS be drawn BEHIND the 3D hero texture so the hero stays 100% crisp and unobstructed in the foreground.
+        /// </summary>
+        public static void DrawDimensionalRiftStage(Rect stageRect,Texture2D pixel,Color heroAccent,float time,float switchPulse,float yawOffset)
         {
-            if(pixel==null||heroRect.width<=0f||heroRect.height<=0f)return;
+            if(stageRect.width<=0f||stageRect.height<=0f)return;
+            EnsureMotifTextures();
             Color old=GUI.color;
-            Color coreWhite= Color.Lerp(heroAccent,Color.white,.68f);
-            Color secondary=new Color(.22f,.88f,1f,1f);
-            float cx=heroRect.center.x;
-            float riftTop=heroRect.y+heroRect.height*.07f;
-            float riftBottom=heroRect.yMax-heroRect.height*.12f;
-            float riftHeight=Mathf.Max(40f,riftBottom-riftTop);
-            float breathe=1f+Mathf.Sin(time*2.1f)*.08f+switchPulse*.32f;
+            Color brightAccent=Color.Lerp(heroAccent,Color.white,.55f);
+            Color cyan=new Color(.32f,.90f,1f,1f);
 
-            // 1. Soft atmospheric aura columns behind the hero silhouette.
-            float auraW=heroRect.width*(.44f*breathe);
-            GUI.color=new Color(heroAccent.r,heroAccent.g,heroAccent.b,.055f+switchPulse*.09f);
-            GUI.DrawTexture(new Rect(cx-auraW*.5f,riftTop+16f,auraW,riftHeight-24f),pixel);
-            GUI.color=new Color(heroAccent.r,heroAccent.g,heroAccent.b,.085f+switchPulse*.12f);
-            GUI.DrawTexture(new Rect(cx-auraW*.26f,riftTop+28f,auraW*.52f,riftHeight-48f),pixel);
+            float cx=stageRect.center.x;
+            float upperCy=stageRect.y+stageRect.height*.43f;
+            float minDim=Mathf.Min(stageRect.width,stageRect.height);
+            float breathe=1f+Mathf.Sin(time*1.8f)*.035f+switchPulse*.12f;
 
-            // 2. Stepped dimensional rift spine & fracture filaments behind the hero.
-            const int segments=18;
-            float segH=riftHeight/segments;
-            for(int i=0;i<segments;i++)
+            // 1. Smooth radial backlight aura behind the hero silhouette.
+            float backlightSize=minDim*(.92f*breathe);
+            GUI.color=new Color(heroAccent.r,heroAccent.g,heroAccent.b,.24f+switchPulse*.22f);
+            GUI.DrawTexture(new Rect(cx-backlightSize*.5f,upperCy-backlightSize*.5f,backlightSize,backlightSize),softGlowTex);
+
+            float coreGlowSize=minDim*(.54f*breathe);
+            GUI.color=new Color(brightAccent.r,brightAccent.g,brightAccent.b,.20f+switchPulse*.25f);
+            GUI.DrawTexture(new Rect(cx-coreGlowSize*.5f,upperCy-coreGlowSize*.5f,coreGlowSize,coreGlowSize),softGlowTex);
+
+            // 2. Dual counter-rotating anti-aliased Holographic Orbital Rings behind the hero's shoulders/upper torso.
+            float ringSize=minDim*(.78f+switchPulse*.06f);
+            Rect ringRect=new Rect(cx-ringSize*.5f,upperCy-ringSize*.5f,ringSize,ringSize);
+            Vector2 pivot=new Vector2(cx,upperCy);
+
+            Matrix4x4 prevMatrix=GUI.matrix;
+            float angleA=(time*9f + yawOffset*.45f)%360f;
+            GUIUtility.RotateAroundPivot(angleA,pivot);
+            GUI.color=new Color(brightAccent.r,brightAccent.g,brightAccent.b,.34f+switchPulse*.28f);
+            GUI.DrawTexture(ringRect,orbitalRingTex);
+            GUI.matrix=prevMatrix;
+
+            float innerRingSize=ringSize*.76f;
+            Rect innerRingRect=new Rect(cx-innerRingSize*.5f,upperCy-innerRingSize*.5f,innerRingSize,innerRingSize);
+            float angleB=(-time*6.5f - yawOffset*.30f + 30f)%360f;
+            GUIUtility.RotateAroundPivot(angleB,pivot);
+            GUI.color=new Color(cyan.r,cyan.g,cyan.b,.22f+switchPulse*.18f);
+            GUI.DrawTexture(innerRingRect,orbitalRingTex);
+            GUI.matrix=prevMatrix;
+
+            // 3. Perspective-projected elliptical holographic light-well under the 3D pedestal.
+            float deckY=stageRect.yMax-stageRect.height*.115f;
+            float wellW=stageRect.width*(.76f+switchPulse*.08f);
+            float wellH=Mathf.Max(22f,stageRect.height*.13f);
+            GUI.color=new Color(heroAccent.r,heroAccent.g,heroAccent.b,.32f+switchPulse*.24f);
+            GUI.DrawTexture(new Rect(cx-wellW*.5f,deckY-wellH*.5f,wellW,wellH),softGlowTex);
+
+            // Anamorphic horizontal light flare across the pedestal rim.
+            float flareW=stageRect.width*(.64f+switchPulse*.12f);
+            GUI.color=new Color(brightAccent.r,brightAccent.g,brightAccent.b,.38f+switchPulse*.30f);
+            GUI.DrawTexture(new Rect(cx-flareW*.5f,deckY-5f,flareW,10f),softGlowTex);
+
+            // 4. Soft-glow floating energy bokeh rising gently behind the hero.
+            const int sparkCount=8;
+            for(int i=0;i<sparkCount;i++)
             {
-                float norm=i/(float)(segments-1);
-                float envelope=Mathf.Sin(norm*Mathf.PI);
-                float jag=Mathf.Sin(norm*9.5f+time*2.6f)*10f*envelope + Mathf.Cos(norm*17f-time*1.8f)*4f*envelope;
-                float w=Mathf.Max(2f,(6f+switchPulse*10f)*envelope);
-                float y=riftTop+i*segH;
-                GUI.color=new Color(heroAccent.r,heroAccent.g,heroAccent.b,(.22f+switchPulse*.30f)*envelope);
-                GUI.DrawTexture(new Rect(cx+jag-w*1.6f,y,w*3.2f,segH+1f),pixel);
-                GUI.color=new Color(coreWhite.r,coreWhite.g,coreWhite.b,(.48f+switchPulse*.38f)*envelope);
-                GUI.DrawTexture(new Rect(cx+jag-w*.5f,y,w,segH+1f),pixel);
-
-                if(i%3==1)
-                {
-                    float branchW=(18f+16f*envelope)*breathe;
-                    float dir=i%2==0?1f:-1f;
-                    GUI.color=new Color(secondary.r,secondary.g,secondary.b,.24f*envelope);
-                    GUI.DrawTexture(new Rect(cx+jag+(dir>0?2f:-branchW-2f),y+segH*.5f,branchW,1.5f),pixel);
-                }
+                float progress=((time*(.22f+(i%3)*.08f)+i*.14f)%1f);
+                float lane=((i*37%9)-4f)/4f;
+                float sx=cx + lane*(minDim*.34f) + Mathf.Sin(time*1.6f+i*1.9f)*6f;
+                float sy=deckY - progress*(stageRect.height*.68f);
+                float alpha=Mathf.Sin(progress*Mathf.PI)*(.42f+switchPulse*.28f);
+                float sSize=(10f+(i%3)*5f)*(1f-progress*.35f);
+                Color sc=i%2==0?brightAccent:cyan;
+                GUI.color=new Color(sc.r,sc.g,sc.b,alpha);
+                GUI.DrawTexture(new Rect(sx-sSize*.5f,sy-sSize*.5f,sSize,sSize),softGlowTex);
             }
 
-            // 3. Switch-surge shockwave frame when selecting a new hero.
-            if(switchPulse>.02f)
-            {
-                float expand=(1f-switchPulse)*38f;
-                Rect wave=new Rect(heroRect.x+24f-expand,heroRect.y+28f-expand*.6f,heroRect.width-48f+expand*2f,heroRect.height-56f+expand*1.2f);
-                Color waveColor=new Color(coreWhite.r,coreWhite.g,coreWhite.b,switchPulse*.36f);
-                DrawCornerCuts(wave,pixel,waveColor);
-            }
-
-            // 4. Projected 2.5D Holographic Pedestal Rings & Rotating Energy Nodes at deck level.
-            float deckY=heroRect.yMax-heroRect.height*.105f;
-            float outerW=heroRect.width*(.72f+switchPulse*.06f);
-            float innerW=outerW*.68f;
-            GUI.color=new Color(heroAccent.r,heroAccent.g,heroAccent.b,.18f+switchPulse*.20f);
-            GUI.DrawTexture(new Rect(cx-outerW*.5f,deckY-2f,outerW,4f),pixel);
-            GUI.color=new Color(coreWhite.r,coreWhite.g,coreWhite.b,.42f+switchPulse*.32f);
-            GUI.DrawTexture(new Rect(cx-innerW*.5f,deckY-1f,innerW,2f),pixel);
-
-            float phase=time*1.35f + yawOffset*Mathf.Deg2Rad*1.5f;
-            const int ringNodes=10;
-            for(int i=0;i<ringNodes;i++)
-            {
-                float a=phase + i*(Mathf.PI*2f/ringNodes);
-                float nx=cx + Mathf.Cos(a)*(outerW*.48f);
-                float ny=deckY + Mathf.Sin(a)*11f;
-                float depthAlpha=.32f+.68f*(Mathf.Sin(a)*.5f+.5f);
-                Color nodeCol=i%2==0?coreWhite:secondary;
-                GUI.color=new Color(nodeCol.r,nodeCol.g,nodeCol.b,depthAlpha*(.42f+switchPulse*.30f));
-                GUI.DrawTexture(new Rect(nx-4f,ny-1.5f,8f,3f),pixel);
-            }
-
-            // 5. Rising pedestal energy motes around the hero.
-            for(int i=0;i<10;i++)
-            {
-                float progress=((time*(.32f+(i%3)*.11f)+i*.13f)%1f);
-                float spread=((i*37%10)-4.5f)/4.5f;
-                float mx=cx + spread*(outerW*.42f) + Mathf.Sin(time*2f+i)*5f;
-                float my=deckY - progress*(riftHeight*.78f);
-                float alpha=Mathf.Sin(progress*Mathf.PI)*(.45f+switchPulse*.30f);
-                Color mc=i%2==0?coreWhite:heroAccent;
-                GUI.color=new Color(mc.r,mc.g,mc.b,alpha);
-                GUI.DrawTexture(new Rect(mx-1.5f,my-4f,3f,8f),pixel);
-            }
             GUI.color=old;
         }
 
@@ -221,22 +327,19 @@ namespace Alterverse.UI
         public static void DrawButtonShimmer(Rect rect,Texture2D pixel,Color accent,float time,bool hovered=false)
         {
             if(pixel==null||rect.width<=0f||rect.height<=0f)return;
+            EnsureMotifTextures();
             Color old=GUI.color;
             float pulse=.5f+.5f*Mathf.Sin(time*3.2f);
             Color bracketColor=Color.Lerp(accent,Color.white,hovered?.55f:.25f*pulse);
             DrawCornerCuts(rect,pixel,bracketColor);
 
-            // Animated shimmer sweep every 2.8 seconds.
-            float cycle=(time%.28f<0f)?0f:(time%2.8f)/1.15f;
+            float cycle=(time%2.8f)/1.15f;
             if(cycle>=0f&&cycle<=1f)
             {
-                float sweepX=Mathf.Lerp(rect.x+6f,rect.xMax-22f,cycle);
+                float sweepX=Mathf.Lerp(rect.x+8f,rect.xMax-36f,cycle);
                 float edgeFade=Mathf.Sin(cycle*Mathf.PI);
-                GUI.color=new Color(1f,1f,1f,edgeFade*(hovered?.22f:.14f));
-                GUI.DrawTexture(new Rect(sweepX,rect.y+2f,14f,rect.height-4f),pixel);
-                GUI.color=new Color(accent.r,accent.g,accent.b,edgeFade*.28f);
-                GUI.DrawTexture(new Rect(sweepX-4f,rect.y+1f,22f,2f),pixel);
-                GUI.DrawTexture(new Rect(sweepX-4f,rect.yMax-3f,22f,2f),pixel);
+                GUI.color=new Color(1f,1f,1f,edgeFade*(hovered?.20f:.12f));
+                GUI.DrawTexture(new Rect(sweepX,rect.y+1f,28f,rect.height-2f),softGlowTex);
             }
             GUI.color=old;
         }

@@ -187,6 +187,32 @@ namespace Alterverse.UI
             actor.transform.localRotation=Quaternion.Euler(0,facing,0);
             needsFit = true;
         }
+        public void DrawPreviewWithBackdropEffect(Rect rect, System.Action<Rect> backdropEffect)
+        {
+            if(rect.width<=0f||rect.height<=0f)return;
+            GUI.BeginGroup(rect);
+            Rect local=new Rect(0f,0f,rect.width,rect.height);
+            Color oldColor=GUI.color;
+            GUI.color=hasSelection?HeroOriginBackdrop.BaseColorFor(selected):new Color(.010f,.014f,.024f,1f);
+            GUI.DrawTexture(local,Texture2D.whiteTexture,ScaleMode.StretchToFill,false);
+            GUI.color=new Color(1f,1f,1f,oldColor.a);
+            if(BackgroundImage!=null)
+            {
+                float bleed=Mathf.Max(2f,Mathf.Min(rect.width,rect.height)*.025f);
+                Rect backdropRect=new Rect(-bleed,-bleed,rect.width+bleed*2f,rect.height+bleed*2f);
+                GUI.DrawTexture(backdropRect,BackgroundImage,ScaleMode.ScaleAndCrop,false);
+            }
+            backdropEffect?.Invoke(local);
+            GUI.color=new Color(1f,1f,1f,oldColor.a);
+            if(Image!=null)
+            {
+                float heroBleed=Mathf.Min(rect.width,rect.height)*.015f;
+                Rect heroRect=new Rect(-heroBleed,-heroBleed,rect.width+heroBleed*2f,rect.height+heroBleed*2f);
+                GUI.DrawTexture(heroRect,Image,ScaleMode.ScaleToFit,true);
+            }
+            GUI.color=oldColor;
+            GUI.EndGroup();
+        }
         private void UpdateOriginWorld(HeroId hero)
         {
             if(originWorld==null)return;

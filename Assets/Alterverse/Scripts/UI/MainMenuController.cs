@@ -331,9 +331,13 @@ namespace Alterverse.UI
         private void DrawPortrait(Rect rect)
         {
             Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero);
-            showcase?.DrawPreview(rect);
             float pulse=showcase!=null?showcase.SwitchPulse:0f;
-            DimensionUiMotif.DrawDimensionalRiftStage(rect,Texture2D.whiteTexture,accent,Time.unscaledTime,pulse,showcase!=null?showcase.UserYawOffset:0f);
+            float yaw=showcase!=null?showcase.UserYawOffset:0f;
+            if(showcase!=null)
+            {
+                showcase.DrawPreviewWithBackdropEffect(rect,local=>
+                    DimensionUiMotif.DrawDimensionalRiftStage(local,Texture2D.whiteTexture,accent,Time.unscaledTime,pulse,yaw));
+            }
             DimensionUiMotif.DrawCornerCuts(rect,Texture2D.whiteTexture,Color.Lerp(accent,Color.white,pulse*.45f));
             FrontEndTheme.Fill(new Rect(rect.x+rect.width*.18f,rect.yMax-10,rect.width*.64f,2),new Color(accent.r,accent.g,accent.b,.62f+pulse*.28f));
             HandleHeroStageDrag(rect);
