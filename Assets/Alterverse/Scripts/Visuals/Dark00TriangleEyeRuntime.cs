@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Alterverse.Combat;
 using Alterverse.Match;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -30,16 +32,19 @@ namespace Alterverse.Visuals
             nextScan=Time.unscaledTime+.20f;
             if(!ArenaVariantRuntime.IsDark00)return;
 
-            GameObject world=GameObject.Find("DF_MatchWorld");
-            if(world==null)return;
-
-            Transform[] transforms=world.GetComponentsInChildren<Transform>(true);
-            for(int i=0;i<transforms.Length;i++)
+            IReadOnlyList<HotZoneTank> tanks=HotZoneTank.Active;
+            for(int t=0;t<tanks.Count;t++)
             {
-                Transform sourceEye=transforms[i];
-                if(sourceEye==null||sourceEye.name!=SourceEyeName||sourceEye.parent==null)continue;
-                if(sourceEye.parent.Find(TriangleEyeName)!=null)continue;
-                ReplaceRoundEye(sourceEye);
+                HotZoneTank tank=tanks[t];
+                if(tank==null)continue;
+                Transform[] transforms=tank.GetComponentsInChildren<Transform>(true);
+                for(int i=0;i<transforms.Length;i++)
+                {
+                    Transform sourceEye=transforms[i];
+                    if(sourceEye==null||sourceEye.name!=SourceEyeName||sourceEye.parent==null)continue;
+                    if(sourceEye.parent.Find(TriangleEyeName)!=null)continue;
+                    ReplaceRoundEye(sourceEye);
+                }
             }
         }
 

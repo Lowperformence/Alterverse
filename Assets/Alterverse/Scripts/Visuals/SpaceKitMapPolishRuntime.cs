@@ -171,6 +171,7 @@ namespace Alterverse.Visuals
                     BuildMoonSet();
                     break;
             }
+            StaticBatchingUtility.Combine(gameObject);
         }
 
         private void BuildPalette()
@@ -918,7 +919,7 @@ namespace Alterverse.Visuals
             if (Mathf.Abs(site.y) < 8.2f && Mathf.Abs(site.x) < 35.5f) return null;
             if (Mathf.Abs(site.x) < 12.2f && Mathf.Abs(site.y) < 12.2f) return null;
 
-            GameObject go = new(objectName);
+            GameObject go = new(objectName) { isStatic = true };
             go.transform.SetParent(transform, false);
             Vector3 world = LunarSurfaceField.Surface(site.x, site.y);
             world.y += verticalOffset;
@@ -930,10 +931,12 @@ namespace Alterverse.Visuals
             filter.sharedMesh = mesh;
             MeshRenderer renderer = go.AddComponent<MeshRenderer>();
             renderer.sharedMaterial = material;
-            renderer.shadowCastingMode = castShadow ? ShadowCastingMode.On : ShadowCastingMode.Off;
-            renderer.receiveShadows = true;
-            renderer.lightProbeUsage = LightProbeUsage.BlendProbes;
-            renderer.reflectionProbeUsage = ReflectionProbeUsage.BlendProbes;
+            bool allowShadows = castShadow &&
+                Alterverse.Performance.MobilePerformanceProfile.Current == Alterverse.Performance.MobileQuality.High;
+            renderer.shadowCastingMode = allowShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.lightProbeUsage = LightProbeUsage.Off;
+            renderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
             clearance.RemoveIfBlocked(go);
             return go;
         }
@@ -944,7 +947,7 @@ namespace Alterverse.Visuals
                             Shader.Find("Universal Render Pipeline/Lit") ??
                             Shader.Find("Universal Render Pipeline/Simple Lit") ??
                             Shader.Find("Standard");
-            Material material = new(shader) { name = materialName, hideFlags = HideFlags.DontSave };
+            Material material = new(shader) { name = materialName, hideFlags = HideFlags.DontSave, enableInstancing = true };
             if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
             if (material.HasProperty("_Color")) material.SetColor("_Color", color);
             if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", metallic);

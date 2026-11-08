@@ -20,7 +20,8 @@ namespace Alterverse.Visuals
         private Renderer pulsarRenderer;
         private Light pulsarLight;
         private EntityId appliedWorldId;
-        private float nextMonsterScan;
+        private GameObject cachedWorld;
+        private float nextMonsterScan,nextWorldSearch;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreate()
@@ -31,18 +32,24 @@ namespace Alterverse.Visuals
 
         private void Update()
         {
-            GameObject world=GameObject.Find("DF_MatchWorld");
-            if(world==null)
-            {
-                if(root!=null||materials.Count>0||meshes.Count>0)ClearRuntime();
-                appliedWorldId=default;
-                return;
-            }
             if(!ArenaVariantRuntime.IsDiamondCore)
             {
                 if(root!=null||materials.Count>0||meshes.Count>0)ClearRuntime();
-                appliedWorldId=default;return;
+                cachedWorld=null;appliedWorldId=default;return;
             }
+            if(cachedWorld==null)
+            {
+                if(Time.unscaledTime>0f&&Time.unscaledTime<nextWorldSearch)return;
+                nextWorldSearch=Time.unscaledTime+.20f;
+                cachedWorld=GameObject.Find("DF_MatchWorld");
+                if(cachedWorld==null)
+                {
+                    if(root!=null||materials.Count>0||meshes.Count>0)ClearRuntime();
+                    appliedWorldId=default;
+                    return;
+                }
+            }
+            GameObject world=cachedWorld;
 
             EntityId worldId=world.GetEntityId();
             if(appliedWorldId!=worldId)

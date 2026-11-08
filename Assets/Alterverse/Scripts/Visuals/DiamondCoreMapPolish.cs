@@ -17,7 +17,7 @@ namespace Alterverse.Visuals
         Transform builtWorld;
         Mesh crystalMesh;
         SceneryBuildingClearance clearance;
-        float nextBossScan;
+        float nextBossScan,nextWorldSearch;
 
         // Map crystals keep the supplied gemstone palette and transparent fluorescent look.
         static readonly Color[] CrystalPalette=
@@ -41,19 +41,26 @@ namespace Alterverse.Visuals
 
         void Update()
         {
-            bool active=ArenaVariantRuntime.IsDiamondCore;
-            GameObject world=GameObject.Find("DF_MatchWorld");
-
-            if(!active||world==null)
+            if(!ArenaVariantRuntime.IsDiamondCore)
             {
                 if(detailRoot!=null||ownedMaterials.Count>0)ClearMapVisuals();
-                builtWorld=null;
-                RemoveGuardianOverrides();
+                if(builtWorld!=null){builtWorld=null;RemoveGuardianOverrides();}
                 return;
             }
-
-            if(detailRoot==null||builtWorld!=world.transform)
+            if(builtWorld==null)
+            {
+                if(Time.unscaledTime>0f&&Time.unscaledTime<nextWorldSearch)return;
+                nextWorldSearch=Time.unscaledTime+.20f;
+                GameObject world=GameObject.Find("DF_MatchWorld");
+                if(world==null)
+                {
+                    if(detailRoot!=null||ownedMaterials.Count>0)ClearMapVisuals();
+                    return;
+                }
                 BuildMapVisuals(world.transform);
+            }
+            else if(detailRoot==null)
+                BuildMapVisuals(builtWorld);
 
             if(Time.unscaledTime>=nextBossScan)
             {
@@ -246,12 +253,13 @@ namespace Alterverse.Visuals
         Transform visualRoot;
         Mesh gemMesh;
         float phase;
-        float nextHideScan;
+        float nextHideScan,hideScanUntil;
 
         void Awake()
         {
             if(!ArenaVariantRuntime.IsDiamondCore){enabled=false;return;}
             phase=Mathf.Abs(gameObject.name.GetHashCode()%1000)*.00628f;
+            hideScanUntil=Time.unscaledTime+2.5f;
             DisableOriginalRenderers();
             BuildVisual();
         }
@@ -284,9 +292,9 @@ namespace Alterverse.Visuals
 
             // Some legacy planet-specific visual scripts can create/render parts after Awake.
             // Re-hide any such renderer so the guardian remains a pure diamond silhouette.
-            if(Time.unscaledTime>=nextHideScan)
+            if(Time.unscaledTime<=hideScanUntil&&Time.unscaledTime>=nextHideScan)
             {
-                nextHideScan=Time.unscaledTime+.20f;
+                nextHideScan=Time.unscaledTime+.25f;
                 DisableOriginalRenderers();
             }
 

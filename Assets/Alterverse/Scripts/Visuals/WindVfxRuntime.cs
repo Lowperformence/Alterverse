@@ -13,7 +13,7 @@ namespace Alterverse.Visuals
         GameObject root,failedWorld;
         ParticleSystem flow,debris;
         ArenaVariant builtFor;
-        float nextBudget,elapsed;
+        float nextBudget,nextWorldSearch,elapsed;
 
         public static bool UseLeaves(ArenaVariant map)=>map==ArenaVariant.Earth||map==ArenaVariant.GreenPlanet||map==ArenaVariant.Trappist1e||map==ArenaVariant.Toi715b;
         // The requested stylized flow remains present even on the airless maps; no atmospheric fog is added there.
@@ -33,7 +33,10 @@ namespace Alterverse.Visuals
             if(DedicatedServerNetworkRuntime.Requested){Clear();enabled=false;return;}
             if(root==null||builtFor!=ArenaVariantRuntime.Current)
             {
-                Clear();var world=GameObject.Find("DF_MatchWorld");
+                if(root!=null)Clear();
+                if(Time.unscaledTime>0f&&Time.unscaledTime<nextWorldSearch)return;
+                nextWorldSearch=Time.unscaledTime+.25f;
+                var world=GameObject.Find("DF_MatchWorld");
                 if(world==null||world==failedWorld)return;
                 try{Build(world);}
                 catch(System.Exception error){Clear();failedWorld=world;Debug.LogWarning("DIMENSIONS FRONT: optional authored wind unavailable: "+error.Message);return;}

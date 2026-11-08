@@ -52,6 +52,8 @@ namespace Alterverse.Visuals
 
         private void StyleGuards(Transform world)
         {
+            styledGuards.RemoveWhere(g=>g==null);
+            if(styledGuards.Count>=2)return;
             HealingGuardMech[] guards=world.GetComponentsInChildren<HealingGuardMech>(true);
             for(int i=0;i<guards.Length;i++)
             {
@@ -94,8 +96,8 @@ namespace Alterverse.Visuals
 
         private static void EnlargeOrbEyes(Transform world)
         {
-            HotZoneTank[] tanks=world.GetComponentsInChildren<HotZoneTank>(true);
-            for(int i=0;i<tanks.Length;i++)
+            IReadOnlyList<HotZoneTank> tanks=HotZoneTank.Active;
+            for(int i=0;i<tanks.Count;i++)
             {
                 HotZoneTank tank=tanks[i];
                 if(tank==null)continue;

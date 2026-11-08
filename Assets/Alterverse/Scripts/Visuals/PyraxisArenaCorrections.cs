@@ -264,6 +264,8 @@ namespace Alterverse.Visuals
 
         private void ConvertHealingGuards(Transform world)
         {
+            convertedGuards.RemoveWhere(g=>g==null);
+            if(convertedGuards.Count>=2)return;
             HealingGuardMech[] guards=world.GetComponentsInChildren<HealingGuardMech>(true);
             for(int i=0;i<guards.Length;i++)
             {

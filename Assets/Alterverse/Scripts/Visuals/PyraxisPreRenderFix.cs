@@ -17,6 +17,7 @@ namespace Alterverse.Visuals
         private static Material groundMaterial;
         private static Texture2D groundTexture;
         private static GameObject activeWorld;
+        private static float nextWorldSearch,nextLavaHide,lavaHideUntil;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Install()
@@ -31,12 +32,18 @@ namespace Alterverse.Visuals
 
             if(!ArenaVariantRuntime.IsPyraxis)
             {
-                ReleaseIfWorldChanged();
+                if(activeWorld!=null)Release();
                 return;
             }
 
-            GameObject world=GameObject.Find("DF_MatchWorld");
-            if(world==null)return;
+            GameObject world=activeWorld;
+            if(world==null)
+            {
+                if(Time.unscaledTime>0f&&Time.unscaledTime<nextWorldSearch)return;
+                nextWorldSearch=Time.unscaledTime+.15f;
+                world=GameObject.Find("DF_MatchWorld");
+                if(world==null)return;
+            }
 
             if(activeWorld!=world||groundRenderer==null)
             {
@@ -44,6 +51,8 @@ namespace Alterverse.Visuals
                 activeWorld=world;
                 groundRenderer=FindGroundRenderer(world.transform);
                 if(groundRenderer!=null)BuildGroundMaterial();
+                lavaHideUntil=Time.unscaledTime+3.0f;
+                nextLavaHide=0f;
             }
 
             // A later runtime correction can replace the material during Update. Re-assert the final
@@ -51,7 +60,11 @@ namespace Alterverse.Visuals
             if(groundRenderer!=null&&groundMaterial!=null&&groundRenderer.sharedMaterial!=groundMaterial)
                 groundRenderer.sharedMaterial=groundMaterial;
 
-            HideLegacyLavaAndSpawnLava(world.transform);
+            if(Time.unscaledTime<=lavaHideUntil&&Time.unscaledTime>=nextLavaHide)
+            {
+                nextLavaHide=Time.unscaledTime+.35f;
+                HideLegacyLavaAndSpawnLava(world.transform);
+            }
         }
 
         private static MeshRenderer FindGroundRenderer(Transform world)

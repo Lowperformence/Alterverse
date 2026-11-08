@@ -33,9 +33,18 @@ namespace Alterverse.UI
             if(compassArrow!=null)compassArrow.SetActive(false);
         }
 
+        private float nextZoneSearch,nextPlayerSearch;
+        private int cachedZeroTenths=-1,cachedLumenTenths=-1,cachedZeroInside=-1,cachedLumenInside=-1;
+        private string cachedZeroText,cachedLumenText;
+        private void ResolveZone()
+        {
+            if(zone!=null||Time.unscaledTime<nextZoneSearch)return;
+            nextZoneSearch=Time.unscaledTime+.5f;
+            zone=FindAnyObjectByType<HotZoneDirector>();
+        }
         private void Update()
         {
-            zone??=FindAnyObjectByType<HotZoneDirector>();
+            ResolveZone();
             UpdateCompass();
         }
 
@@ -50,8 +59,9 @@ namespace Alterverse.UI
                 return;
             }
 
-            if(player==null)
+            if(player==null&&Time.unscaledTime>=nextPlayerSearch)
             {
+                nextPlayerSearch=Time.unscaledTime+.5f;
                 GameObject playerObject=Alterverse.Characters.LocalHeroContext.Find();
                 if(playerObject!=null)player=playerObject.transform;
             }
@@ -125,7 +135,7 @@ namespace Alterverse.UI
         private void OnGUI()
         {
             if(Time.timeScale<=0f||MainMenuController.IsVisible||Event.current.type!=EventType.Repaint)return;
-            zone??=FindAnyObjectByType<HotZoneDirector>();
+            ResolveZone();
             bool showBanner=Time.time<bannerUntil;
             bool showProgress=zone!=null&&zone.IsActive;
             if(!showBanner&&!showProgress)return;
@@ -165,10 +175,20 @@ namespace Alterverse.UI
         {
             const float centerWidth=90f;
             float sideWidth=(panel.width-centerWidth)*.5f-16f;
-            string zero=$"ZERO {zone.ZeroControlSeconds:0.0}";
-            string lumen=$"LUMEN {zone.LumenControlSeconds:0.0}";
-            if(zone.ZeroInside>0)zero+=$" x{zone.ZeroInside}";
-            if(zone.LumenInside>0)lumen+=$" x{zone.LumenInside}";
+            int zTenths=Mathf.RoundToInt(zone.ZeroControlSeconds*10f);
+            int lTenths=Mathf.RoundToInt(zone.LumenControlSeconds*10f);
+            if(zTenths!=cachedZeroTenths||zone.ZeroInside!=cachedZeroInside||cachedZeroText==null)
+            {
+                cachedZeroTenths=zTenths;cachedZeroInside=zone.ZeroInside;
+                cachedZeroText=zone.ZeroInside>0?$"ZERO {zone.ZeroControlSeconds:0.0} x{zone.ZeroInside}":$"ZERO {zone.ZeroControlSeconds:0.0}";
+            }
+            if(lTenths!=cachedLumenTenths||zone.LumenInside!=cachedLumenInside||cachedLumenText==null)
+            {
+                cachedLumenTenths=lTenths;cachedLumenInside=zone.LumenInside;
+                cachedLumenText=zone.LumenInside>0?$"LUMEN {zone.LumenControlSeconds:0.0} x{zone.LumenInside}":$"LUMEN {zone.LumenControlSeconds:0.0}";
+            }
+            string zero=cachedZeroText;
+            string lumen=cachedLumenText;
             DrawLabel(new Rect(panel.x+12f,panel.y+3f,sideWidth,22f),zero,leftStyle);
             DrawLabel(new Rect(panel.center.x-centerWidth*.5f,panel.y+3f,centerWidth,22f),
                 Alterverse.Profile.GameLanguage.Text(zone.ZeroInside>0&&zone.LumenInside>0?"CONTESTED":(player!=null&&(player.position-zone.transform.position).sqrMagnitude<=HotZoneDirector.Radius*HotZoneDirector.Radius?"CAPTURING":"HOT ZONE")),centerStyle);

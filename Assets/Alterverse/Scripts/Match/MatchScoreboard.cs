@@ -20,7 +20,7 @@ private bool resultSnapshotReady,resultSnapshotWarning;
 private int battlePassXpBefore;
 private BotDifficulty resultDifficulty;
 private string rewardId=System.Guid.NewGuid().ToString("N");private float nextRewardAttempt;private bool saveWarningShown;
-private sealed class Entry{public Health Health;public TeamMember Member;public string Name;public int Kills,Deaths,Assists;public int Score=>Kills*100+Assists*75-Deaths*15;
+private sealed class Entry{public Health Health;public TeamMember Member;public HeroIdentity Identity;public CoopHeroSlot Slot;public string Name;public int Kills,Deaths,Assists;public int Score=>Kills*100+Assists*75-Deaths*15;
 public float BoardPerformance;public bool BoardOwn;
 public string BoardName,BoardKills,BoardDeaths,BoardAssists,BoardScore;
 }public static MatchScoreboard Instance{get;private set;}[SerializeField]private float refreshInterval=.5f,assistWindow=8f;private readonly Dictionary<Health,Entry> entries=new();private readonly Dictionary<Health,Dictionary<TeamMember,float>> damageCredit=new();private readonly Dictionary<TeamMember,Dictionary<TeamMember,float>> supportCredit=new();private float nextRefresh;private HeroRespawn playerRespawn;private CoopRespawnReplica coopRespawn;private DimensionsFront front;private bool matchEnded,rewardGranted,rewardPending;private int winningTeam,matchReward,matchXp,matchBaseReward,matchShardBonus,matchBaseXp,matchXpBonus,playerKills,playerDeaths,playerAssists,playerObjectives,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,battlePassLevelBefore=1;private float matchBonusPercent;private float playerDamageDealt,playerDamageTaken,playerHealing,playerFrontContribution;private UniversalHeroCosmetic matchBonusCosmetic=UniversalHeroCosmetic.Original;private BattleItemType matchItemDrop;
@@ -38,8 +38,12 @@ coopRespawn=null;return;
 bool samePlan=object.ReferenceEquals(localHeroPlan,CoopAuthority.ActivePlan);
 if(samePlan&&localHeroSlot!=null&&localHeroSlot.IsLocalHuman)
 {
+if(playerRespawn==null&&coopRespawn==null)
+{
 playerRespawn=localHeroSlot.GetComponent<HeroRespawn>();
-coopRespawn=localHeroSlot.GetComponent<CoopRespawnReplica>();return;
+coopRespawn=localHeroSlot.GetComponent<CoopRespawnReplica>();
+}
+return;
 }
 if(samePlan&&Time.unscaledTime<nextLocalRespawnSearch)return;
 localHeroPlan=CoopAuthority.ActivePlan;nextLocalRespawnSearch=Time.unscaledTime+.5f;
@@ -62,7 +66,7 @@ for(int i=0;i<active.Count;i++)
 {
 Health health=active[i];if(health==null||entries.ContainsKey(health))continue;
 TeamMember member=health.GetComponent<TeamMember>();if(!IsHero(member))continue;
-HeroIdentity identity=member.GetComponent<HeroIdentity>();CoopHeroSlot coop=member.GetComponent<CoopHeroSlot>();string n=coop!=null?CoopDisplayName(coop):(member.GetComponent<HeroRespawn>()!=null?PlayerProfile.PlayerName:(identity!=null?identity.DisplayName:DisplayName(member.gameObject.name)));entries.Add(health,new Entry{Health=health,Member=member,Name=n});health.DiedWithSource+=OnHeroDied;}}private void OnHeroDied(Health victim,GameObject source){if(victim==null||!entries.TryGetValue(victim,out Entry victimEntry))return;victimEntry.Deaths++;TeamMember killer=source!=null?source.GetComponentInParent<TeamMember>():null;if(IsHero(killer)&&victimEntry.Member!=null&&killer.Team!=victimEntry.Member.Team){Entry killerEntry=FindEntry(killer);if(killerEntry!=null)killerEntry.Kills++;HashSet<TeamMember> credited=null;if(damageCredit.TryGetValue(victim,out Dictionary<TeamMember,float> credits))foreach(var credit in credits)if(IsHero(credit.Key)&&credit.Key!=killer&&Time.time-credit.Value<=assistWindow&&credit.Key.Team==killer.Team){credited??=new HashSet<TeamMember>();if(credited.Add(credit.Key)){Entry assist=FindEntry(credit.Key);if(assist!=null){assist.Assists++;MatchTelemetry.Instance?.RecordAssist(assist.Health);}}}if(supportCredit.TryGetValue(killer,out Dictionary<TeamMember,float> supCredits))foreach(var sup in supCredits)if(IsHero(sup.Key)&&sup.Key!=killer&&Time.time-sup.Value<=assistWindow&&sup.Key.Team==killer.Team){credited??=new HashSet<TeamMember>();if(credited.Add(sup.Key)){Entry assist=FindEntry(sup.Key);if(assist!=null){assist.Assists++;MatchTelemetry.Instance?.RecordAssist(assist.Health);}}}}damageCredit.Remove(victim);}private Entry FindEntry(TeamMember member){foreach(Entry e in entries.Values)if(e.Member==member)return e;return null;}
+HeroIdentity identity=member.GetComponent<HeroIdentity>();CoopHeroSlot coop=member.GetComponent<CoopHeroSlot>();string n=coop!=null?CoopDisplayName(coop):(member.GetComponent<HeroRespawn>()!=null?PlayerProfile.PlayerName:(identity!=null?identity.DisplayName:DisplayName(member.gameObject.name)));entries.Add(health,new Entry{Health=health,Member=member,Identity=identity,Slot=coop,Name=n});health.DiedWithSource+=OnHeroDied;}}private void OnHeroDied(Health victim,GameObject source){if(victim==null||!entries.TryGetValue(victim,out Entry victimEntry))return;victimEntry.Deaths++;TeamMember killer=source!=null?source.GetComponentInParent<TeamMember>():null;if(IsHero(killer)&&victimEntry.Member!=null&&killer.Team!=victimEntry.Member.Team){Entry killerEntry=FindEntry(killer);if(killerEntry!=null)killerEntry.Kills++;HashSet<TeamMember> credited=null;if(damageCredit.TryGetValue(victim,out Dictionary<TeamMember,float> credits))foreach(var credit in credits)if(IsHero(credit.Key)&&credit.Key!=killer&&Time.time-credit.Value<=assistWindow&&credit.Key.Team==killer.Team){credited??=new HashSet<TeamMember>();if(credited.Add(credit.Key)){Entry assist=FindEntry(credit.Key);if(assist!=null){assist.Assists++;MatchTelemetry.Instance?.RecordAssist(assist.Health);}}}if(supportCredit.TryGetValue(killer,out Dictionary<TeamMember,float> supCredits))foreach(var sup in supCredits)if(IsHero(sup.Key)&&sup.Key!=killer&&Time.time-sup.Value<=assistWindow&&sup.Key.Team==killer.Team){credited??=new HashSet<TeamMember>();if(credited.Add(sup.Key)){Entry assist=FindEntry(sup.Key);if(assist!=null){assist.Assists++;MatchTelemetry.Instance?.RecordAssist(assist.Health);}}}}damageCredit.Remove(victim);}private Entry FindEntry(TeamMember member){foreach(Entry e in entries.Values)if(e.Member==member)return e;return null;}
 // Absolute server snapshots repair packet loss without replaying death or reward events.
 public void GetNetworkScore(Health health,out int kills,out int deaths,out int assists)
 {
@@ -118,12 +122,12 @@ playerObjectives=telemetry?.Objectives??0;playerQuestKills=telemetry?.Kills??pla
 int rewardAssists=playerAssists+Mathf.FloorToInt(playerHealing/220f);
 try{MatchRewardResult reward=MatchRewardService.GrantMatchReward(won,playerKills,rewardAssists,playerObjectives,rewardId,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,deaths:playerDeaths);matchReward=reward.Shards;matchXp=reward.Xp;matchBaseReward=reward.BaseShards;matchShardBonus=reward.ShardBonus;matchBaseXp=reward.BaseXp;matchXpBonus=reward.XpBonus;matchBonusCosmetic=reward.BonusCosmetic;matchBonusPercent=reward.BonusPercent;matchItemDrop=won?BattleItemInventory.RollVictoryDrop(rewardId):BattleItemType.None;rewardGranted=true;}catch(System.Exception){rewardPending=true;nextRewardAttempt=Time.unscaledTime+2;if(!saveWarningShown){saveWarningShown=true;Debug.LogWarning("DIMENSIONS FRONT: reward save pending; retrying the same receipt.");}}
 }
-private void ApplyNetworkResultsToEntries(){foreach(Entry e in entries.Values){CoopHeroSlot slot=e.Member!=null?e.Member.GetComponent<CoopHeroSlot>():null;if(slot==null||!CoopMatchResultSync.TryGetSlotResult(slot.Slot,out CoopMatchResultSync.SlotResult s))continue;e.Kills=s.Kills;e.Deaths=s.Deaths;e.Assists=s.Assists;}}
+private void ApplyNetworkResultsToEntries(){foreach(Entry e in entries.Values){CoopHeroSlot slot=e.Slot!=null?e.Slot:(e.Member!=null?e.Member.GetComponent<CoopHeroSlot>():null);if(slot==null||!CoopMatchResultSync.TryGetSlotResult(slot.Slot,out CoopMatchResultSync.SlotResult s))continue;e.Kills=s.Kills;e.Deaths=s.Deaths;e.Assists=s.Assists;}}
 private float Performance(Entry e)
 {
     if(CoopAuthority.Active&&!CoopAuthority.LocalHasServerAuthority)
     {
-        CoopHeroSlot slot=e.Health!=null?e.Health.GetComponent<CoopHeroSlot>():null;
+        CoopHeroSlot slot=e.Slot!=null?e.Slot:(e.Health!=null?e.Health.GetComponent<CoopHeroSlot>():null);
         if(slot!=null&&CoopMatchResultSync.TryGetSlotResult(slot.Slot,out CoopMatchResultSync.SlotResult result))
             return PerformanceScore(result.Kills,result.Deaths,result.Assists,result.DamageDealt,result.DamageTaken,result.Healing,result.FrontContribution);
         // Live clients receive authoritative K/D/A but no complete combat telemetry.
@@ -262,8 +266,8 @@ private void RefreshResultPresentation()
     foreach (Entry re in entries.Values)
     {
         if (re.Member == null) continue;
-        HeroIdentity rHero = re.Health != null ? re.Health.GetComponent<HeroIdentity>() : null;
-        CoopHeroSlot rSlot = re.Health != null ? re.Health.GetComponent<CoopHeroSlot>() : null;
+        HeroIdentity rHero = re.Identity != null ? re.Identity : (re.Health != null ? re.Health.GetComponent<HeroIdentity>() : null);
+        CoopHeroSlot rSlot = re.Slot != null ? re.Slot : (re.Health != null ? re.Health.GetComponent<CoopHeroSlot>() : null);
         float rScore = Performance(re);
         rosterList.Add(new MatchResultScreenData.RosterRow
         {
@@ -376,10 +380,10 @@ private void DrawTeamSocialButtons(List<Entry> team,float x,float y,float width)
         bool connected=FriendStickerService.IsFriendOrRequested(e.Name);
         if(boardTheme.Action(new Rect(x+nameWidth-84,rowY+5,36,28),connected?"OK":"+FR",!connected,enabled:!connected))
         {
-            HeroIdentity id=e.Health!=null?e.Health.GetComponent<HeroIdentity>():null;
+            HeroIdentity id=e.Identity!=null?e.Identity:(e.Health!=null?e.Health.GetComponent<HeroIdentity>():null);
             FriendStickerService.RequestFriendFromScoreboard(e.Name,id!=null?id.Hero:HeroId.Veyr,Mathf.Max(1,PlayerExperience.Level));
         }
-        CoopHeroSlot slot=e.Health!=null?e.Health.GetComponent<CoopHeroSlot>():null;
+        CoopHeroSlot slot=e.Slot!=null?e.Slot:(e.Health!=null?e.Health.GetComponent<CoopHeroSlot>():null);
         var voice=PartyVoiceService.Instance;
         PartyVoiceService.VoicePlayer voicePlayer=default;
         bool available=slot!=null&&slot.IsHuman&&!slot.IsLocalHuman&&voice!=null&&

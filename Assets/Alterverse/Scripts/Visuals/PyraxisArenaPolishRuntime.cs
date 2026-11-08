@@ -18,7 +18,7 @@ namespace Alterverse.Visuals
         readonly List<Material> ownedMaterials=new();
         Transform arenaRoot,projectileRoot;
         Transform activeWorld;
-        float nextScan;
+        float nextScan,nextWorldSearch,lavaCleanupUntil;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Install()
@@ -31,25 +31,38 @@ namespace Alterverse.Visuals
 
         void Update()
         {
-            GameObject worldObject=GameObject.Find("DF_MatchWorld");
-            bool active=worldObject!=null&&ArenaVariantRuntime.Current==ArenaVariant.Pyraxis;
-            if(!active)
+            if(ArenaVariantRuntime.Current!=ArenaVariant.Pyraxis)
             {
                 if(arenaRoot!=null)ClearArena();
                 return;
             }
-
-            Transform world=worldObject.transform;
-            if(arenaRoot==null||activeWorld!=world)
+            if(activeWorld==null)
             {
+                if(Time.unscaledTime>0f&&Time.unscaledTime<nextWorldSearch)return;
+                nextWorldSearch=Time.unscaledTime+.20f;
+                GameObject worldObject=GameObject.Find("DF_MatchWorld");
+                if(worldObject==null)
+                {
+                    if(arenaRoot!=null)ClearArena();
+                    return;
+                }
                 ClearArena();
-                activeWorld=world;
-                BuildArena(world);
+                activeWorld=worldObject.transform;
+                BuildArena(activeWorld);
+                lavaCleanupUntil=Time.unscaledTime+2.5f;
+                RemoveLegacyLavaStreams(activeWorld);
+            }
+            else if(arenaRoot==null)
+            {
+                BuildArena(activeWorld);
+                lavaCleanupUntil=Time.unscaledTime+2.5f;
+                RemoveLegacyLavaStreams(activeWorld);
             }
 
             if(Time.unscaledTime<nextScan)return;
             nextScan=Time.unscaledTime+.35f;
-            RemoveLegacyLavaStreams(world);
+            if(Time.unscaledTime<=lavaCleanupUntil)
+                RemoveLegacyLavaStreams(activeWorld);
             UpgradeScorpions();
         }
 

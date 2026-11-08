@@ -16,6 +16,7 @@ namespace Alterverse.UI
         private float lastScale = -1f;
         private Health visualTarget;
         private HeroVisualMotion targetMotion;
+        private bool targetIsObjective;
 
         private void Start()
         {
@@ -45,6 +46,8 @@ namespace Alterverse.UI
 
         private void OnGUI()
         {
+            if (Event.current != null && Event.current.type != EventType.Repaint)
+                return;
             Health target = targeting != null ? targeting.Current : null;
             if (target == null || playerHealth == null || playerHealth.IsDead || CombatVisibility.HiddenFrom(playerHealth.gameObject,target) || MainMenuController.IsVisible ||
                 cachedCamera == null)
@@ -52,7 +55,9 @@ namespace Alterverse.UI
 
             if(visualTarget!=target)
             {
-                visualTarget=target;targetMotion=target.GetComponent<HeroVisualMotion>();
+                visualTarget=target;
+                targetMotion=target.GetComponent<HeroVisualMotion>();
+                targetIsObjective=target.GetComponent<DimensionPlanet>()!=null;
             }
             Vector3 screen = cachedCamera.WorldToScreenPoint(HeroPresentationAnchor.Position(target.transform,targetMotion) + Vector3.up * 1.25f);
             float scale = Mathf.Clamp(Screen.height / 900f, .72f, 1.25f);
@@ -62,7 +67,7 @@ namespace Alterverse.UI
                 return;
 
             screen.y = Screen.height - screen.y;
-            bool objective = target.GetComponent<DimensionPlanet>() != null;
+            bool objective = targetIsObjective;
             float pulse = 1f + Mathf.Sin(Time.unscaledTime * 3.6f) * .018f;
             float radius = (objective ? 31f : 24f) * scale * pulse;
             Color tint = objective

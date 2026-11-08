@@ -187,6 +187,7 @@ namespace Alterverse.Visuals
         {
             if(Time.unscaledTime<nextScan)return;
             nextScan=Time.unscaledTime+.30f;
+            if(!Alterverse.Match.ArenaVariantRuntime.IsNeptune)return;
 
             NeptuneOctopusVisualOverride[] octopuses=Object.FindObjectsByType<NeptuneOctopusVisualOverride>(FindObjectsInactive.Exclude,FindObjectsSortMode.None);
             for(int i=0;i<octopuses.Length;i++)

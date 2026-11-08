@@ -43,8 +43,39 @@ namespace Alterverse.AI
                 Vector3.Dot(velocity.normalized,ObservedTargetVelocity.normalized)>.8f;
             ObservedTargetVelocity=velocity;
         }
+        private struct CachedUnit
+        {
+            public Health Health;
+            public HeroIdentity Hero;
+            public TeamMember Team;
+            public HeroCombatStatus Status;
+            public DimensionPlanet Planet;
+            public RealityCore Core;
+        }
+        private static readonly System.Collections.Generic.Dictionary<EntityId, CachedUnit> unitCache = new(64);
+        private static CachedUnit ResolveUnit(Health health)
+        {
+            if (health == null) return default;
+            EntityId id = health.GetEntityId();
+            if (unitCache.TryGetValue(id, out CachedUnit cached) && ReferenceEquals(cached.Health, health))
+                return cached;
+            if (unitCache.Count > 256) unitCache.Clear();
+            cached = new CachedUnit
+            {
+                Health = health,
+                Hero = health.GetComponent<HeroIdentity>(),
+                Team = health.GetComponent<TeamMember>(),
+                Status = health.GetComponent<HeroCombatStatus>(),
+                Planet = health.GetComponent<DimensionPlanet>(),
+                Core = health.GetComponent<RealityCore>()
+            };
+            if (cached.Hero != null || cached.Team != null || cached.Planet != null || cached.Core != null)
+                unitCache[id] = cached;
+            return cached;
+        }
         private MobaBotBrain brain;
         private HotZoneDirector hotZone;
+        private float nextHotZoneSearch;
         private readonly RaycastHit[] sightHits=new RaycastHit[32];
         private readonly BotTeamCoordinator.Observation[] observations=new BotTeamCoordinator.Observation[48];
         public int ObservationCount { get; private set; }
@@ -128,8 +159,9 @@ namespace Alterverse.AI
                 if(owner==selfHealth||owner==candidate)continue;
                 if(owner!=null)
                 {
-                    bool mobileUnit=owner.GetComponent<HeroIdentity>()!=null||
-                        owner.GetComponent<TeamMember>()!=null&&owner.GetComponent<RealityCore>()==null;
+                    CachedUnit ownerUnit=ResolveUnit(owner);
+                    bool mobileUnit=ownerUnit.Hero!=null||
+                        ownerUnit.Team!=null&&ownerUnit.Core==null;
                     if(mobileUnit)continue;
                 }
                 return false;
@@ -144,26 +176,32 @@ namespace Alterverse.AI
             if (candidate == null || candidate == selfHealth || candidate.IsDead ||
                 !candidate.isActiveAndEnabled || teamMember == null || CombatVisibility.HiddenFrom(gameObject,candidate)) return false;
 
-            HeroIdentity hero=candidate.GetComponent<HeroIdentity>();
-            DimensionPlanet planet = candidate.GetComponent<DimensionPlanet>();
-            hotZone??=FindAnyObjectByType<HotZoneDirector>();
+            CachedUnit unit = ResolveUnit(candidate);
+            HeroIdentity hero = unit.Hero;
+            DimensionPlanet planet = unit.Planet;
+            if (hotZone == null && Time.unscaledTime >= nextHotZoneSearch)
+            {
+                nextHotZoneSearch = Time.unscaledTime + .5f;
+                hotZone = FindAnyObjectByType<HotZoneDirector>();
+            }
             if(!HotZoneAllowsTarget(hotZone!=null&&hotZone.IsActive,hero!=null,planet!=null))return false;
 
             if (planet != null) return planet.Available;
 
             // Reality cores and defensive structures are not bot combat objectives.
             // Real heroes/mechs are represented by TeamMember and remain targetable outside Hot Zones.
-            if (candidate.GetComponent<RealityCore>() != null) return false;
+            if (unit.Core != null) return false;
 
-            TeamMember other = candidate.GetComponent<TeamMember>();
+            TeamMember other = unit.Team;
             return other != null && teamMember.IsEnemy(other);
         }
         private int TargetTier(Health candidate)
         {
             // Lower is better: hero PvP first, then live event objectives, then special combat units/mechs.
-            if(candidate.GetComponent<HeroIdentity>()!=null)return 0;
-            if(candidate.GetComponent<DimensionPlanet>()!=null)return 1;
-            if(candidate.GetComponent<TeamMember>()!=null)return 2;
+            CachedUnit unit = ResolveUnit(candidate);
+            if(unit.Hero!=null)return 0;
+            if(unit.Planet!=null)return 1;
+            if(unit.Team!=null)return 2;
             return 4;
         }
 
@@ -171,7 +209,8 @@ namespace Alterverse.AI
         {
             Vector3 delta = candidate.transform.position - transform.position;
             delta.y = 0;
-            HeroIdentity candidateHero=candidate.GetComponent<HeroIdentity>();
+            CachedUnit unit = ResolveUnit(candidate);
+            HeroIdentity candidateHero=unit.Hero;
             float objectiveAwareness=Difficulty.ObjectiveAwareness;
             float priority=1f;
 
@@ -186,7 +225,7 @@ namespace Alterverse.AI
                 // slightly closer full-health hero on Easy/Normal.
                 priority*=Mathf.Lerp(.30f,1f,candidate.Normalized);
 
-                HeroCombatStatus status=candidate.GetComponent<HeroCombatStatus>();
+                HeroCombatStatus status=unit.Status;
                 if(status!=null&&(status.Stunned||status.MoveMultiplier<.8f))priority*=.72f;
 
                 if(brain!=null&&brain.InsideOwnBase(transform.position)&&brain.IsLocalBaseThreat(candidate))
@@ -222,7 +261,7 @@ namespace Alterverse.AI
                         break;
                 }
             }
-            else if(candidate.GetComponent<DimensionPlanet>()!=null)
+            else if(unit.Planet!=null)
             {
                 priority=Mathf.Lerp(1.30f,.78f,objectiveAwareness);
             }
@@ -268,17 +307,18 @@ namespace Alterverse.AI
                     lastKnownPosition=candidate.transform.position;
                     lastSeenTime=Time.time;
                 }
-                HeroIdentity identity=candidate.GetComponent<HeroIdentity>();
+                CachedUnit unit=ResolveUnit(candidate);
+                HeroIdentity identity=unit.Hero;
                 if(identity!=null)
                 {
-                    var member=candidate.GetComponent<TeamMember>();
+                    var member=unit.Team;
                     if(member!=null&&member.Team==teamMember.Team){NearbyAllies++;allies+=candidate.transform.position;}
                     else if(member!=null)NearbyEnemies++;
                 }
                 if (!IsEnemy(candidate)) continue;
                 if(ObservationCount<observations.Length)
                 {
-                    var status=candidate.GetComponent<HeroCombatStatus>();
+                    var status=unit.Status;
                     observations[ObservationCount++]=new BotTeamCoordinator.Observation{
                         Target=candidate,Position=candidate.transform.position,Hp=candidate.Normalized,SeenAt=Time.time,
                         Hero=identity!=null,Role=identity!=null?identity.Hero:HeroId.Veyr,
@@ -306,8 +346,8 @@ namespace Alterverse.AI
 
             // Hold a visible hero for a short human-sized commitment window unless a clearly urgent
             // hero target appears (recent attacker, team focus, or strong execute opportunity).
-            if(currentTarget!=null&&retainedVisible&&currentTarget.GetComponent<HeroIdentity>()!=null&&
-                best!=null&&best!=currentTarget&&best.GetComponent<HeroIdentity>()!=null)
+            if(currentTarget!=null&&retainedVisible&&ResolveUnit(currentTarget).Hero!=null&&
+                best!=null&&best!=currentTarget&&ResolveUnit(best).Hero!=null)
             {
                 float commitment=Mathf.Lerp(1.30f,.80f,Difficulty.TeamDiscipline);
                 bool urgent=best==recentAttacker&&Time.time<recentAttackerUntil||

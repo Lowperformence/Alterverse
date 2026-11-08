@@ -20,8 +20,9 @@ namespace Alterverse.Visuals
         private const int RepairsPerFrame=48;
         private Renderer[] repairQueue;
         private int repairCursor;
-        private Transform worldRoot;
+        private Transform worldRoot,lastVerifiedWorld;
         private readonly List<Material> materials=new List<Material>(8);
+        private readonly Dictionary<EntityId,Material> verifiedRenderers=new Dictionary<EntityId,Material>(1024);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
@@ -69,23 +70,36 @@ namespace Alterverse.Visuals
             repairCursor=0;
             GameObject world=GameObject.Find("DF_MatchWorld");
             worldRoot=world!=null?world.transform:null;
+            if(worldRoot!=lastVerifiedWorld||verifiedRenderers.Count>4096)
+            {
+                lastVerifiedWorld=worldRoot;
+                verifiedRenderers.Clear();
+            }
         }
 
         private void RepairBatch(int budget)
         {
             if(repairQueue==null)return;
-            int end=repairCursor+Mathf.Min(budget,repairQueue.Length-repairCursor);
-            while(repairCursor<end)
+            int processed=0;
+            while(repairCursor<repairQueue.Length&&processed<budget)
             {
                 Renderer renderer=repairQueue[repairCursor++];
                 if(renderer==null||!renderer.gameObject.activeInHierarchy)continue;
+                EntityId id=renderer.GetEntityId();
+                Material shared=renderer.sharedMaterial;
+                if(shared!=null&&verifiedRenderers.TryGetValue(id,out Material prev)&&ReferenceEquals(prev,shared))
+                    continue;
+                processed++;
                 RepairRenderer(renderer);
                 SurfaceEdgeQuality.Apply(renderer,worldRoot);
+                Material after=renderer.sharedMaterial;
+                if(after!=null&&!NeedsRepair(after))
+                    verifiedRenderers[id]=after;
             }
             if(repairCursor==repairQueue.Length)
             {
                 repairQueue=null;worldRoot=null;
-                nextRepair=Time.unscaledTime+1f;
+                nextRepair=Time.unscaledTime+2f;
             }
         }
 
