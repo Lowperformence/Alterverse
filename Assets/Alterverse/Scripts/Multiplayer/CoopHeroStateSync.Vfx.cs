@@ -100,7 +100,7 @@ namespace Alterverse.Multiplayer
                 case HeroVfxCue.Area:HeroSkillVfx.Area(actor,point,radius,duration,flag,secondary,ability);break;
                 case HeroVfxCue.Dash:HeroSkillVfx.Dash(actor,origin,point,ability,duration);break;
                 case HeroVfxCue.TargetWarning:if(target!=null)HeroSkillVfx.TargetWarning(actor,target,duration);break;
-                case HeroVfxCue.Support:if(target!=null)HeroSkillVfx.Support(actor,target,flag,duration);break;
+                case HeroVfxCue.Support:if(target!=null)HeroSkillVfx.Support(actor,target,flag,duration,secondary);break;
                 case HeroVfxCue.SupportLink:if(target!=null)HeroSkillVfx.SupportLink(actor,target);break;
                 case HeroVfxCue.TimmyHold:if(target!=null)HeroSkillVfx.TimmyHold(actor,target,duration);break;
                 case HeroVfxCue.Debuff:if(target!=null)HeroSkillVfx.Debuff(actor,target,ability);break;

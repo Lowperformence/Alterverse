@@ -64,6 +64,7 @@ namespace Alterverse.Combat
         // Existing short-lived ability/buff shield.
         private float shield;
         private float shieldUntil;
+        private bool hasNetworkTemporaryShield, networkTemporaryShield;
 
         // Independent rechargeable base shield; capacity depends on the hero.
         private bool heroBaseShieldEnabled;
@@ -77,6 +78,11 @@ namespace Alterverse.Combat
         private float TransientShield => Time.time < shieldUntil ? shield : 0f;
         /// <summary>Ability shield only, excluding the permanent regenerating hero shield.</summary>
         public float TemporaryShield => TransientShield;
+        // Older hosts send only the total shield. In that case retain the old
+        // presentation fallback until a host provides the separate presence bit.
+        public bool HasTemporaryShieldForPresentation =>
+            !Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState && hasNetworkTemporaryShield
+                ? networkTemporaryShield : TemporaryShield > 0f;
 
         /// <summary>Total currently active shield, including temporary ability shields.</summary>
         public float Shield => TransientShield + heroBaseShield;
@@ -418,6 +424,7 @@ namespace Alterverse.Combat
 
             // Clients display the host's combined shield snapshot as one presentation value.
             heroBaseShieldEnabled = GetComponent<Alterverse.Characters.HeroIdentity>() != null;
+            hasNetworkTemporaryShield = false;
             heroBaseShield = 0f;
             heroBaseShieldRechargeAt = -1f;
             float snapshotShieldLimit = maxHealth * .4f + (heroBaseShieldEnabled ? HeroBaseShieldCapacity : 0f);
@@ -432,6 +439,14 @@ namespace Alterverse.Combat
             if (!IsDead && Current <= 0)
                 Current = Mathf.Min(1, maxHealth);
             Changed?.Invoke(Current, maxHealth);
+        }
+
+        // Presentation only: never change either shield pool on the authoritative host.
+        public void ApplyNetworkTemporaryShieldPresence(bool present)
+        {
+            if (Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState) return;
+            hasNetworkTemporaryShield = true;
+            networkTemporaryShield = present && !IsDead && Shield > 0f;
         }
 
         public void RestoreFull()

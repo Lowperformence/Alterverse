@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using Alterverse.Combat;
 using Alterverse.Characters;
@@ -79,7 +80,7 @@ static class Regression
   Check(client.Messages.Sent.Count==5,"Owner sends movement predictions through the production writer");
   CoopAuthority.LocalHasServerAuthority=true;NetworkManager.Singleton=serverManager;Time.unscaledTime=.05f;
   server.ReceiveOwner(7,client.Messages.Sent[0].Values);Position(serverActor.transform.position,P(.325f),"Server validates and accepts normal movement");
-  serverActor.GetComponent<Health>().Current=62;serverActor.GetComponent<Health>().Shield=18;
+  serverActor.GetComponent<Health>().Current=62;serverActor.GetComponent<Health>().Shield=18;serverActor.GetComponent<Health>().TemporaryShield=5;
   MatchScoreboard.Instance=serverBoard;server.Broadcast(serverManager);
   var snapshot=server.Messages.Sent[^1].Values;
   Check((int)snapshot[1]==1,"Snapshot count includes only actors with serializable health");
@@ -90,7 +91,16 @@ static class Regression
   client.ReceiveSnapshot(0,snapshot);
   Position(clientActor.transform.position,P(1.625f),"Full transport preserves four newer movement predictions in flight");
   Check(clientActor.GetComponent<Health>().Current==62&&clientActor.GetComponent<Health>().Shield==18,"Server health and shield loss reaches the client's real snapshot reader");
+  Check(clientActor.GetComponent<Health>().HasTemporaryShieldForPresentation,"Snapshot transports the ability shield presence independently of the base shield");
   Check(clientBoard.Read(clientActor.GetComponent<Health>())==(3,1,2),"Live K/D/A reaches the scoreboard before the match ends");
+  object[] legacy=snapshot.Take(snapshot.Length-1).ToArray();
+  client.ReceiveSnapshot(0,legacy);
+  Check(clientActor.GetComponent<Health>().Shield==18&&clientActor.GetComponent<Health>().HasTemporaryShieldForPresentation,"Old host packets retain the combined shield fallback");
+  object[] invalid=(object[])snapshot.Clone();invalid[^1]=0x44540000u;client.ReceiveSnapshot(0,invalid);
+  Check(clientActor.GetComponent<Health>().Shield==18&&clientActor.GetComponent<Health>().HasTemporaryShieldForPresentation,"Unknown extension does not corrupt the original snapshot");
+  object[] consumed=(object[])snapshot.Clone();consumed[10]=13f;consumed[^1]=0x44530000u;client.ReceiveSnapshot(0,consumed);
+  Check(clientActor.GetComponent<Health>().Shield==13&&!clientActor.GetComponent<Health>().HasTemporaryShieldForPresentation,"A consumed ability shield clears while the base shield remains");
+  client.ReceiveSnapshot(0,snapshot);
   client.ReceiveSnapshot(0,snapshot);Position(clientActor.transform.position,P(1.625f),"Duplicate server snapshot does not double-correct");
   var hp=clientActor.GetComponent<Health>();hp.Current=77;client.ReceiveSnapshot(99,snapshot);
   Check(hp.Current==77,"A non-server cannot publish hero health or scores");
@@ -121,6 +131,7 @@ static class Regression
   for(int i=1;i<8;i++)
   {
    var s=Actor(i);s.transform.position=new Vector3(i*2,0,i*.5f);server.Slot(s);
+   s.GetComponent<Health>().Shield=30;s.GetComponent<Health>().TemporaryShield=i%2==0?10:0;
    serverBoard.Seed(s.GetComponent<Health>(),i*2,i,i+1);
    var c=Actor(i);c.gameObject.AddComponent<Alterverse.Visuals.HeroVisualMotion>();c.gameObject.AddComponent<Alterverse.Visuals.Bolt7Visual>();client.Slot(c);clientActors[i]=c;clientBoard.Registered.Add(c.GetComponent<Health>());
   }
@@ -130,12 +141,13 @@ static class Regression
   int bytes=0;foreach(var field in server.Messages.Sent[^1].Values)
    bytes+=field is bool?1:field is double?8:field is int||field is uint||field is float?4:throw new Exception("Unknown snapshot field type");
   Check(bytes<1200,"Full roster snapshot stays below a conservative 1200-byte application payload budget");
-  int projectedTenBytes=20+(bytes-20)/8*10;
+  int projectedTenBytes=20+sizeof(uint)+(bytes-20-sizeof(uint))/8*10;
   Check(projectedTenBytes<1200,"Projected ten-hero record payload fits the same budget; this does not enable ten-player admission");
   Console.WriteLine($"Hero snapshot application bytes: eight={bytes}, projected ten={projectedTenBytes}; transport framing is additional.");
   CoopAuthority.LocalHasServerAuthority=false;MatchScoreboard.Instance=clientBoard;client.ReceiveSnapshot(0,server.Messages.Sent[^1].Values);
   for(int i=1;i<8;i++)
   {
+   Check(clientActors[i].GetComponent<Health>().HasTemporaryShieldForPresentation==(i%2==0),"Each roster slot receives its own temporary shield presence bit");
    Check(clientActors[i].GetComponent<Alterverse.Visuals.Bolt7Visual>().SampledAt==snapshotTime,"BOLT-7 receives source-timed snapshots through the actual transport");
    Check(clientActors[i].GetComponent<Alterverse.Visuals.HeroVisualMotion>().SampledAt==snapshotTime,"hero source timestamp reaches renderer through actual transport");
    Check(clientBoard.Read(clientActors[i].GetComponent<Health>())==(i*2,i,i+1),"Full-roster live score for slot "+i);

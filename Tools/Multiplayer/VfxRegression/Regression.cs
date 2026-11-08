@@ -154,8 +154,27 @@ static partial class VfxRegression
         Reset();actor=Hero(HeroId.Nyra,0);target=Hero(HeroId.Kaelon,1);
         using(HeroVfxEvents.Replay(.1f,Vector3.zero))HeroSkillVfx.Support(actor,target.GetComponent<Health>(),true,2);
         Step(.1f);Check(Visible().Length>0,"Shield presentation survives VFX arriving before health snapshot");
-        target.GetComponent<Health>().Shield=30;Step(.1f);target.GetComponent<Health>().Shield=0;Step(.01f);
+        target.GetComponent<Health>().Shield=target.GetComponent<Health>().TemporaryShield=30;Step(.1f);
+        target.GetComponent<Health>().Shield=target.GetComponent<Health>().TemporaryShield=0;Step(.01f);
         Check(Visible().Length==0,"A shield breaks immediately after its positive snapshot was observed");
+        Reset();actor=Hero(HeroId.Nyra,0);target=Hero(HeroId.Kaelon,1);
+        var shielded=target.GetComponent<Health>();shielded.Shield=130;shielded.TemporaryShield=50;
+        HeroSkillVfx.Support(actor,shielded,true,3);Step(.01f);
+        Check(ActiveShield(target)!=null,"Ability shield effect starts while temporary shield exists");
+        shielded.Shield=80;shielded.TemporaryShield=0;Step(.01f);
+        Check(ActiveShield(target)==null,"Ability shield effect ends even while the base shield remains");
+        Reset();manager=NetworkManager.Singleton;relay=new GameObject("relay").AddComponent<CoopHeroStateSync>();relay.Bind(manager.CustomMessagingManager);
+        actor=Hero(HeroId.Nyra,0);target=Hero(HeroId.Kaelon,1);shielded=target.GetComponent<Health>();shielded.Shield=80;
+        relay.Slot(actor.GetComponent<CoopHeroSlot>());relay.Slot(target.GetComponent<CoopHeroSlot>());
+        HeroSkillVfx.Support(actor,shielded,true,3,shieldUsesTotal:true);Step(.01f);
+        Check(ActiveShield(target)!=null,"Base-shield transfer still displays its own effect");
+        byte[] baseShieldPacket=manager.CustomMessagingManager.LastPacket;relay.Unbind();
+        Reset();manager=NetworkManager.Singleton;relay=new GameObject("relay").AddComponent<CoopHeroStateSync>();relay.Bind(manager.CustomMessagingManager);
+        actor=Hero(HeroId.Nyra,0);target=Hero(HeroId.Kaelon,1);shielded=target.GetComponent<Health>();shielded.Shield=80;
+        relay.Slot(actor.GetComponent<CoopHeroSlot>());relay.Slot(target.GetComponent<CoopHeroSlot>());
+        CoopAuthority.LocalHasServerAuthority=false;manager.IsServer=false;relay.Receive(0,baseShieldPacket);Step(.01f);
+        Check(ActiveShield(target)!=null,"Base-shield effect mode survives online event transport");
+        shielded.Shield=0;Step(.01f);Check(ActiveShield(target)==null,"Base-shield effect ends when the total shield is gone");relay.Unbind();
     }
     static void TenHeroVfxReserve()
     {
@@ -363,7 +382,7 @@ static partial class VfxRegression
             var motion=target.GetComponent<HeroVisualMotion>();motion.HasNetworkPresentation=true;
             target.transform.position=motion.PresentedPosition=new Vector3(0,0,4);
             var state=target.AddComponent<NetworkHealthReplica>();state.ApplyNetworkSnapshot(950,50,false);
-            var hp=target.GetComponent<Health>();hp.Shield=state.Shield;
+            var hp=target.GetComponent<Health>();hp.Shield=hp.TemporaryShield=state.Shield;
             HeroSkillVfx.Support(actor,hp,true,3);
             object shield=ActiveShield(target);Check(shield!=null,"Authoritative shield creates a live attached effect");
             var pool=GameObject.All.Select(g=>g.GetComponent<HeroVfxPool>()).First(x=>x!=null);
@@ -383,7 +402,7 @@ static partial class VfxRegression
                     buffer.Push(target.transform.position,Quaternion.identity,received,false);
                     state.ApplyNetworkSnapshot(950,50,false);
                 }
-                hp.Shield=state.Shield;
+                hp.Shield=hp.TemporaryShield=state.Shield;
                 Vector3 previous=SlotTransform(shield).position;
                 GameObject.Invoke(pool,"Update");
                 Check((SlotTransform(shield).position-previous).sqrMagnitude<.000001f,"Update does not draw from a stale presentation pose before hero LateUpdate");
@@ -396,7 +415,7 @@ static partial class VfxRegression
                 Check(Mathf.Abs(Alterverse.UI.CombatGlyphs.LastCenter.x-motion.PresentedPosition.x)<.00001f,"Reticle tracks the rendered hero instead of stepped snapshot position");
                 Check((target.transform.position-raw).sqrMagnitude==0,"Presentation never changes authoritative collision/target position");
             }
-            state.ApplyNetworkSnapshot(950,0,false);hp.Shield=state.Shield;GameObject.Invoke(pool,"Update");
+            state.ApplyNetworkSnapshot(950,0,false);hp.Shield=hp.TemporaryShield=state.Shield;GameObject.Invoke(pool,"Update");
             Check(ActiveShield(target)==null,"Confirmed shield break still removes the effect immediately");
             // Switching targets must invalidate the cached visual anchor.
             var other=Hero(HeroId.Elyra,3);other.transform.position=new Vector3(9,0,4);

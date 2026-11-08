@@ -48,7 +48,7 @@ namespace Alterverse.Visuals {
   public static void Impact(UnityEngine.GameObject a,Alterverse.Combat.Health h,int slot){}
   public static void Spell(UnityEngine.GameObject a,UnityEngine.Vector3 p,int slot){}
   public static void Debuff(UnityEngine.GameObject a,Alterverse.Combat.Health h,int slot){}
-  public static void Support(UnityEngine.GameObject a,Alterverse.Combat.Health h,bool shield,float seconds){}
+  public static void Support(UnityEngine.GameObject a,Alterverse.Combat.Health h,bool shield,float seconds,bool shieldUsesTotal=false){}
  }
 }
 """

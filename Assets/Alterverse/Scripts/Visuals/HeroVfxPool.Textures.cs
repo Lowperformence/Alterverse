@@ -40,12 +40,12 @@ namespace Alterverse.Visuals
         internal static void Sprite(HeroFxSprite sprite,Vector3 from,Vector3 to,Vector2 size,Color color,
             float duration,GameObject owner,HeroFxMotion motion=HeroFxMotion.Hold,
             Quaternion rotation=default,bool billboard=true,Transform follow=null,Transform endFollow=null,
-            float delay=0,float elapsed=0,float roll=0,Health shield=null)
+            float delay=0,float elapsed=0,float roll=0,Health shield=null,bool shieldUsesTotal=false)
         {
             if(sprite==HeroFxSprite.None)return;
             Emit(HeroFxShape.TexturedQuad,from,to,new Vector3(size.x,size.y,1f),color,duration,motion,
                 rotation,owner,follow:follow,shield:shield,delay:delay,endFollow:endFollow,decorative:true,
-                elapsed:elapsed,cancelOnOwnerDeath:owner!=null,sprite:sprite,billboard:billboard,roll:roll);
+                elapsed:elapsed,cancelOnOwnerDeath:owner!=null,sprite:sprite,billboard:billboard,roll:roll,shieldUsesTotal:shieldUsesTotal);
         }
 
         private static Mesh BuildSpriteQuad()

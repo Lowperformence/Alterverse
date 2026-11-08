@@ -74,7 +74,12 @@ namespace Unity.Netcode
  public struct FastBufferReader
  {
   readonly object[] values;int index;public FastBufferReader(object[] values){this.values=values;index=0;}
-  public bool TryBeginRead(int size)=>index<values.Length;
+  public bool TryBeginRead(int size)
+  {
+   int remaining=0;for(int i=index;i<values.Length;i++)
+    remaining+=values[i] is bool?1:values[i] is double?8:4;
+   return remaining>=size;
+  }
   public void ReadValueSafe<T>(out T value){value=(T)values[index++];}
  }
  public class CustomMessagingManager
@@ -110,8 +115,11 @@ namespace Alterverse.Combat
  public sealed class HotZoneTank:Component {public static readonly List<HotZoneTank> Active=new();public Health TankHealth;}
  public sealed class Health:Component
  {
-  public float Current=100,Shield,Max=100;public bool IsDead;public float Normalized=>Current/Max;public void Heal(float value){Current=Math.Min(Max,Current+value);}
-  public void ApplyNetworkSnapshot(float hp,float shield,bool dead){Current=hp;Shield=shield;IsDead=dead;}
+  public float Current=100,Shield,TemporaryShield,Max=100;public bool IsDead;private bool hasPresence,presence;
+  public float Normalized=>Current/Max;public bool HasTemporaryShieldForPresentation=>hasPresence?presence:TemporaryShield>0;
+  public void Heal(float value){Current=Math.Min(Max,Current+value);}
+  public void ApplyNetworkSnapshot(float hp,float shield,bool dead){Current=hp;Shield=TemporaryShield=shield;IsDead=dead;hasPresence=false;}
+  public void ApplyNetworkTemporaryShieldPresence(bool value){hasPresence=true;presence=value&&!IsDead&&Shield>0;}
  }
  public sealed class BasicAttack:Component {public float RemainingCooldown;public void ApplyNetworkCooldown(float value,uint acknowledged=0){RemainingCooldown=value;}}
 }

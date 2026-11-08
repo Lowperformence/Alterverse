@@ -931,20 +931,20 @@ namespace Alterverse.Visuals
             Fx(HeroFxShape.Hex,p,new Color(.55f,.90f,1f),.72f,.16f,HeroFxMotion.Contract,
                 face*Quaternion.Euler(65,0,0),follow:victim.transform);
         }
-        public static void Support(GameObject actor,Health target,bool shield,float duration)
+        public static void Support(GameObject actor,Health target,bool shield,float duration,bool shieldUsesTotal=false)
         {
-            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Support,actor,duration:duration,target:target!=null?target.gameObject:null,flag:shield);
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Support,actor,duration:duration,target:target!=null?target.gameObject:null,flag:shield,secondary:shieldUsesTotal);
             if(actor==null||target==null)return;
             if(!shield&&Hero(actor)==HeroId.Mira&&
                 ThalaHealingVfx.TryTarget(target.transform,HeroVfxEvents.ReplayElapsed))return;
-            PolishSupport(actor,target,shield);
+            PolishSupport(actor,target,shield,shieldUsesTotal);
             HeroId hero=Hero(actor);
             Color c=hero==HeroId.Mira?new Color(.22f,1f,.52f):Accent(actor);
             Color holy=hero==HeroId.Mira?Color.Lerp(c,Color.white,.38f):c;
             Vector3 p=target.transform.position+Vector3.down*.70f;
             if(shield)
             {
-                HeroVfxPool.Emit(HeroFxShape.Shield,p,p,new Vector3(.87f,1.1f,.87f),holy,duration,HeroFxMotion.Hold,owner:actor,follow:target.transform,shield:target);
+                HeroVfxPool.Emit(HeroFxShape.Shield,p,p,new Vector3(.87f,1.1f,.87f),holy,duration,HeroFxMotion.Hold,owner:actor,follow:target.transform,shield:target,shieldUsesTotal:shieldUsesTotal);
                 if(hero==HeroId.Mira)
                 {
                     Fx(HeroFxShape.Ring,p+Vector3.up*.07f,new Color(c.r,c.g,c.b,.55f),.88f,.32f,HeroFxMotion.Expand,actor:actor,follow:target.transform);

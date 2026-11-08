@@ -322,13 +322,14 @@ namespace Alterverse.Characters
             bool prism=identity.Hero==HeroId.Nyra&&slot==0;
             bool invert=identity.Hero==HeroId.Elyra&&slot==1;
             float shieldSeconds=invert?HeroAbilityKit.IoneInvertOvershieldSeconds:HeroAbilityKit.SivraPrismOvershieldSeconds;
+            float temporaryBefore=self.TemporaryShield;
             float absorbed=prism||invert
                 ? target.TransferShieldTo(self,invert?HeroAbilityKit.IoneInvertShieldAbsorb:HeroAbilityKit.SivraPrismShieldAbsorb,
                     shieldSeconds) : 0;
             if(absorbed>0)
             {
                 Alterverse.Multiplayer.CoopGameplayCommands.RecordAuthoritativeDamage(gameObject,absorbed);
-                HeroSkillVfx.Support(gameObject,self,true,shieldSeconds);
+                HeroSkillVfx.Support(gameObject,self,true,shieldSeconds,shieldUsesTotal:self.TemporaryShield<=temporaryBefore);
             }
             float before=target.Current+target.Shield;
             HeroCombatRules.Damage(gameObject, target, damage);

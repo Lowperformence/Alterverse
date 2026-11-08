@@ -93,8 +93,8 @@ def main():
         transient = re.search(r'private float TransientShield[^;]+;', health)[0]
         shield = re.search(r'public float Shield[^;]+;', health)[0]
         replica = directory / 'NetworkHealthReplica.cs'
-        replica.write_text('using System;using UnityEngine;namespace Alterverse.Combat {public sealed class NetworkHealthReplica:MonoBehaviour {' +
-                           'private float shield,shieldUntil,heroBaseShield;private bool heroBaseShieldEnabled;private float heroBaseShieldRechargeAt;' +
+        replica.write_text('using System;using UnityEngine;using Alterverse.Match;namespace Alterverse.Combat {public sealed class NetworkHealthReplica:MonoBehaviour {' +
+                           'private float shield,shieldUntil,heroBaseShield;private bool heroBaseShieldEnabled,hasNetworkTemporaryShield,networkTemporaryShield;private float heroBaseShieldRechargeAt;' +
                            'private float maxHealth=1000;public float Current=1000;public bool IsDead;public event Action<float,float> Changed;' +
                            capacity + transient + shield + add_shield + snapshot + '}}')
         output = directory / 'Regression.dll'

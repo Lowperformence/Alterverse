@@ -11,6 +11,9 @@ namespace Alterverse.Multiplayer
 {
     public sealed partial class CoopHeroStateSync
     {
+        // The low 16 bits mark slots with a temporary shield. Older peers ignore
+        // this optional four-byte suffix and still read the original snapshot.
+        private const uint ShieldPresenceMarker=0x44530000u;
         private readonly OwnerPoseHistory ownerPoseHistory=new();
         private readonly OwnerMovementBudget movementBudget=new();
         private readonly uint[] ownerAcknowledgements=new uint[MatchSession.MaxPlayers];
@@ -160,10 +163,12 @@ namespace Alterverse.Multiplayer
             writer.WriteValueSafe(count);
             writer.WriteValueSafe(manager.ServerTime.Time);
             writer.WriteValueSafe(Time.unscaledTime);
+            uint temporaryShieldSlots=0;
             for(int i=0;i<slots.Length;i++)
             {
                 CoopHeroSlot slot=slots[i];if(slot==null)continue;
                 Health health=slot.GetComponent<Health>();if(health==null)continue;
+                if(i<16&&health.TemporaryShield>0f)temporaryShieldSlots|=1u<<i;
                 Vector3 p=slot.transform.position;
                 writer.WriteValueSafe(i);
                 writer.WriteValueSafe(p.x);writer.WriteValueSafe(p.y);writer.WriteValueSafe(p.z);
@@ -199,6 +204,8 @@ namespace Alterverse.Multiplayer
                 writer.WriteValueSafe(slot.GetComponent<VoidKnightState>()?.CloakRemaining??0f);
             }
 
+            writer.WriteValueSafe(ShieldPresenceMarker|temporaryShieldSlots);
+
             for(int i=0;i<manager.ConnectedClientsIds.Count;i++)
             {
                 ulong clientId=manager.ConnectedClientsIds[i];
@@ -218,6 +225,7 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out float sampledAt);
             if(!MatchNetworkProtocol.Finite(sampledAt)||double.IsNaN(cloakSampledAt)||double.IsInfinity(cloakSampledAt))return;
             if (count < 0 || count > MatchSession.MaxPlayers) return;
+            uint receivedShieldSlots=0;
             for(int n=0;n<count;n++)
             {
                 reader.ReadValueSafe(out int rosterSlot);
@@ -249,6 +257,7 @@ namespace Alterverse.Multiplayer
                 if(rosterSlot<0||rosterSlot>=slots.Length)continue;
                 CoopHeroSlot actor=slots[rosterSlot];if(actor==null)continue;
                 Health health=actor.GetComponent<Health>();if(health==null)continue;
+                if(rosterSlot<16)receivedShieldSlots|=1u<<rosterSlot;
 
                 Vector3 hostPosition=new(x,y,z);
                 bool localOwner=actor.IsLocalHuman;
@@ -293,6 +302,17 @@ namespace Alterverse.Multiplayer
                     }
                 }
                 actor.GetComponent<CoopHeroReplicaPresentation>()?.Apply(dead);
+            }
+
+            // Old hosts end the packet after the existing hero records. In that case
+            // retain their combined shield snapshot rather than rejecting the packet.
+            if(!reader.TryBeginRead(sizeof(uint)))return;
+            reader.ReadValueSafe(out uint shieldExtension);
+            if((shieldExtension&0xffff0000u)!=ShieldPresenceMarker)return;
+            for(int i=0;i<slots.Length&&i<16;i++)
+            {
+                uint bit=1u<<i;if((receivedShieldSlots&bit)==0)continue;
+                slots[i]?.GetComponent<Health>()?.ApplyNetworkTemporaryShieldPresence((shieldExtension&bit)!=0);
             }
         }
     }

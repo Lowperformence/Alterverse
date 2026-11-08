@@ -97,12 +97,12 @@ namespace Alterverse.Visuals
                 actor,HeroFxMotion.Expand,Quaternion.Euler(90f,0f,0f),false);
         }
 
-        private static void PolishSupport(GameObject actor,Health target,bool shield)
+        private static void PolishSupport(GameObject actor,Health target,bool shield,bool shieldUsesTotal)
         {
             Color tint=Hero(actor)==HeroId.Mira?new Color(.25f,1f,.58f,.64f):AttackColour(actor,1);
             Vector3 p=target.transform.position+Vector3.up*.48f;
             HeroVfxPool.Sprite(shield?HeroFxSprite.ShieldGlyph:HeroFxSprite.SoftStar,p,p,
-                new Vector2(.72f,.72f),tint,.32f,actor,HeroFxMotion.Expand,follow:target.transform,shield:shield?target:null);
+                new Vector2(.72f,.72f),tint,.32f,actor,HeroFxMotion.Expand,follow:target.transform,shield:shield?target:null,shieldUsesTotal:shieldUsesTotal);
         }
 
         private static void PolishDash(GameObject actor,Vector3 from,Vector3 to)

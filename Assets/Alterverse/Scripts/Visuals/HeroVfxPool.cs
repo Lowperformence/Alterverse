@@ -23,7 +23,7 @@ namespace Alterverse.Visuals
             public int DeliveryId;public HeroFxMotion Motion;public Transform Follow,EndFollow;public bool Follows,TracksEnd;
             public Vector3 EndOffset;public Health EndHealth;
             public HeroVisualMotion FollowMotion,EndMotion;
-            public GameObject Owner;public Health OwnerHealth,Shield;public bool ShieldBound;public float ShieldGraceUntil;
+            public GameObject Owner;public Health OwnerHealth,Shield;public bool ShieldBound,ShieldUsesTotal;public float ShieldGraceUntil;
             public HeroFxSprite Sprite;public bool Billboard;public float Roll;
         }
         private static HeroVfxPool instance;
@@ -114,7 +114,7 @@ namespace Alterverse.Visuals
             HeroFxMotion motion=HeroFxMotion.Expand,Quaternion rotation=default,GameObject owner=null,
             bool warning=false,Transform follow=null,Health shield=null,float delay=0,Transform endFollow=null,bool decorative=false,
             float elapsed=0,bool cancelOnOwnerDeath=false,float maxRange=0,
-            HeroFxSprite sprite=HeroFxSprite.None,bool billboard=false,float roll=0)
+            HeroFxSprite sprite=HeroFxSprite.None,bool billboard=false,float roll=0,bool shieldUsesTotal=false)
         {
             // Warnings are never decorative; flourishes cannot consume the last core slots.
             if(warning)decorative=false;
@@ -123,11 +123,11 @@ namespace Alterverse.Visuals
             Warm();if(instance==null||instance.material==null)return;
             // An unavailable atlas only omits its extra layer; never show an opaque fallback quad.
             if(sprite!=HeroFxSprite.None&&(warning||instance.attackAtlas==null))return;
-            instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay,endFollow,decorative,elapsed,cancelOnOwnerDeath,maxRange,sprite,billboard,roll);
+            instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay,endFollow,decorative,elapsed,cancelOnOwnerDeath,maxRange,sprite,billboard,roll,shieldUsesTotal);
         }
         private void Show(HeroFxShape shape,Vector3 from,Vector3 to,Vector3 size,Color color,float duration,
             HeroFxMotion motion,Quaternion rotation,GameObject owner,bool warning,Transform follow,Health shield,float delay,Transform endFollow,bool decorative,
-            float elapsed,bool cancelOnOwnerDeath,float maxRange,HeroFxSprite sprite,bool billboard,float roll)
+            float elapsed,bool cancelOnOwnerDeath,float maxRange,HeroFxSprite sprite,bool billboard,float roll,bool shieldUsesTotal)
         {
             if(elapsed>=Mathf.Max(0,delay)+Mathf.Max(.04f,duration))return;
             int begin=warning?Capacity-WarningReserve:0;
@@ -155,8 +155,8 @@ namespace Alterverse.Visuals
             slot.DeliveryId=deliveryScope;slot.Active=true;slot.Warning=warning;slot.Decorative=decorative;slot.CancelOnOwnerDeath=cancelOnOwnerDeath||owner!=null&&owner.GetComponent<HeroIdentity>()?.Hero==HeroId.Nerok;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
             slot.Sprite=sprite;slot.Billboard=billboard;slot.Roll=roll;
             slot.Follow=follow;slot.Follows=follow!=null;slot.FollowMotion=follow!=null?follow.GetComponent<HeroVisualMotion>():null;slot.Offset=slot.Follows?from-follow.position:Vector3.zero;
-            slot.Shield=shield;slot.ShieldBound=shield!=null;
-            slot.ShieldGraceUntil=shield!=null&&shield.Shield<=0&&HeroVfxEvents.ReplayOrigin.HasValue?Time.time+.5f:0f;
+            slot.Shield=shield;slot.ShieldBound=shield!=null;slot.ShieldUsesTotal=shieldUsesTotal;
+            slot.ShieldGraceUntil=shield!=null&&!HasBoundShield(slot)&&HeroVfxEvents.ReplayOrigin.HasValue?Time.time+.5f:0f;
             slot.EndFollow=endFollow;slot.TracksEnd=endFollow!=null;
             slot.EndOffset=endFollow!=null?to-endFollow.position:Vector3.zero;
             slot.EndHealth=endFollow!=null?endFollow.GetComponent<Health>():null;
@@ -215,17 +215,18 @@ namespace Alterverse.Visuals
                     (!motion.HasValue||slot.Motion==motion.Value))instance.Hide(slot);
         }
         private void Hide(Slot s){s.Active=false;s.Renderer.enabled=false;s.Follow=null;s.Owner=null;s.OwnerHealth=null;s.Shield=null;s.EndFollow=null;s.EndHealth=null;s.FollowMotion=s.EndMotion=null;s.TracksEnd=false;}
+        private static bool HasBoundShield(Slot s)=>s.ShieldUsesTotal?s.Shield.Shield>0f:s.Shield.HasTemporaryShieldForPresentation;
         private void Update()
         {
             if(Time.timeScale<=0)return;
             for(int i=0;i<slots.Length;i++)
             {
                 Slot s=slots[i];if(s==null||!s.Active)continue;
-                if(s.ShieldBound&&s.Shield!=null&&s.Shield.Shield>0)s.ShieldGraceUntil=0;
+                if(s.ShieldBound&&s.Shield!=null&&HasBoundShield(s))s.ShieldGraceUntil=0;
                 if(s.CancelOnOwnerDeath&&(s.Owner==null||!s.Owner.activeInHierarchy||s.OwnerHealth!=null&&s.OwnerHealth.IsDead)||
                     s.Warning&&(s.Owner==null||!s.Owner.activeInHierarchy||s.OwnerHealth!=null&&s.OwnerHealth.IsDead)||
                     s.TracksEnd&&(s.EndFollow==null||!s.EndFollow.gameObject.activeInHierarchy||s.EndHealth!=null&&s.EndHealth.IsDead)||
-                    s.Follows&&s.Follow==null||s.ShieldBound&&(s.Shield==null||s.Shield.IsDead||s.Shield.Shield<=0&&Time.time>=s.ShieldGraceUntil))
+                    s.Follows&&s.Follow==null||s.ShieldBound&&(s.Shield==null||s.Shield.IsDead||!HasBoundShield(s)&&Time.time>=s.ShieldGraceUntil))
                 {Hide(s);continue;}
                 float age=Time.time-s.Start;if(age<0)continue;
                 if(age>=s.Duration){Hide(s);continue;}

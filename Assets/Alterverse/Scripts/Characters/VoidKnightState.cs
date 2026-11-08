@@ -54,7 +54,7 @@ namespace Alterverse.Characters
             if(!Authoritative||!Guarding||source==null)return amount;
             Vector3 direction=AimGeometry.Flat(source.transform.position-transform.position);
             if(direction.sqrMagnitude<.00001f||Vector3.Dot(guardDirection.normalized,direction.normalized)<Mathf.Cos(VoidKnightBalance.GuardHalfAngle*Mathf.Deg2Rad))return amount;
-            if(!counter){counter=true;HeroCombatAudio.Impact(gameObject,1,transform.position);HeroSkillVfx.Support(gameObject,health,true,.15f);}
+            if(!counter){counter=true;HeroCombatAudio.Impact(gameObject,1,transform.position);HeroSkillVfx.Support(gameObject,health,true,.15f,shieldUsesTotal:true);}
             return amount*VoidKnightBalance.GuardMultiplier;
         }
         public void RecordBasicHit(){if(Authoritative)hits=Mathf.Min(VoidKnightBalance.PassiveHits,hits+1);}

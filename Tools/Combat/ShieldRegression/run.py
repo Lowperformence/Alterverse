@@ -122,6 +122,19 @@ class ShieldRegression {
   Refresh(temporary,8.625f);Near(temporary.HeroBaseShield,80,"base recharge deadline after temporary shield hit");
   Near(temporary.TemporaryShield,15,"Timmy passive does not replenish or expire ability shields");
   var neutral=new UnityEngine.GameObject().AddComponent<Alterverse.Combat.Health>();neutral.Configure(200);Near(neutral.HeroBaseShieldMax,0,"non-hero does not acquire a base shield");
+  var replica=Hero(Alterverse.Characters.HeroId.Elyra);
+  Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=false;
+  replica.ApplyNetworkSnapshot(200,130,false);replica.ApplyNetworkTemporaryShieldPresence(true);
+  Near(replica.Shield,130,"presence keeps the host's total shield");Check(replica.HasTemporaryShieldForPresentation,"replica displays a confirmed ability shield");
+  replica.ApplyNetworkSnapshot(200,80,false);replica.ApplyNetworkTemporaryShieldPresence(false);
+  Near(replica.Shield,80,"base shield remains after the ability shield is gone");Check(!replica.HasTemporaryShieldForPresentation,"consumed ability shield clears independently");
+  Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=true;replica.ApplyNetworkTemporaryShieldPresence(true);
+  Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=false;
+  Check(!replica.HasTemporaryShieldForPresentation,"host cannot alter client presentation flag");Near(replica.Shield,80,"presence cannot change the shield total");
+  replica.ApplyNetworkSnapshot(200,80,false);Check(replica.HasTemporaryShieldForPresentation,"older server snapshot retains combined-shield fallback");
+  replica.ApplyNetworkSnapshot(0,80,true);replica.ApplyNetworkTemporaryShieldPresence(true);
+  Check(!replica.HasTemporaryShieldForPresentation,"dead hero cannot display a confirmed temporary shield");
+  Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=true;
   System.Console.WriteLine("PASS "+checks+" production Health shield assertions: Timmy player/bot 2x recharge (5.625s), other heroes 11.25s, shield theft/removal, temporary pools, absorption, deadline/reset, snapshots, death/respawn and authority. Unity/network transport not tested.");
  }
 }

@@ -38,6 +38,14 @@ namespace Alterverse.Multiplayer
 
 namespace Alterverse.Characters {public class TrenchSoldier:UnityEngine.MonoBehaviour {}}
 
+namespace Alterverse.Match
+{
+    public class MatchTelemetry
+    {public static MatchTelemetry Instance;public void RecordHealing(Health healer,float amount){}}
+    public class MatchScoreboard
+    {public static MatchScoreboard Instance;public void RecordSupport(Component target,GameObject source){}}
+}
+
 namespace Alterverse.UI
 {
     public static class MainMenuController {public static bool IsVisible;}
