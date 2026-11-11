@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Alterverse.Characters;
 using Alterverse.Visuals;
 using UnityEngine;
 
@@ -6,21 +7,19 @@ namespace Alterverse.Combat
 {
     public sealed class CentralHealingPickup : MonoBehaviour
     {
-        [SerializeField] private float radius = 1.45f;
-        [SerializeField] private float healPercent = .30f;
-        [SerializeField] private float respawnSeconds = 28f;
+        public static event System.Action<bool, float> NetworkAvailabilityChanged;
 
+        [SerializeField] private float radius = 1.5f, healPercent = .286f, respawnSeconds = 22f / 1.3f;
         private Transform visual, plus;
-        private Material greenMat, stoneMat;
-        private readonly List<Mesh> ownedMeshes = new();
         private float readyAt;
         private bool available = true;
+        private Material greenMat, stoneMat;
+        private readonly List<Mesh> ownedMeshes = new();
 
-        public event System.Action<bool, float> NetworkAvailabilityChanged;
-        public bool IsAvailable => available;
-        public float RemainingCooldown => available ? 0f : Mathf.Max(0f, readyAt - Time.time);
-
-        private void Start() => BuildVisual();
+        private void Start()
+        {
+            BuildVisual();
+        }
 
         private void OnDestroy()
         {
@@ -50,7 +49,6 @@ namespace Alterverse.Combat
                 }
                 return;
             }
-
             var active = Health.Active;
             float rSqr = radius * radius;
             Vector3 pos = transform.position;
