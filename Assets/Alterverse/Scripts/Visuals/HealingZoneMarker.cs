@@ -20,6 +20,15 @@ namespace Alterverse.Visuals
             Build();
         }
 
+        private void OnDestroy()
+        {
+            if (energy != null) Destroy(energy);
+            if (metal != null) Destroy(metal);
+            if (trim != null) Destroy(trim);
+            if (auraMat != null) Destroy(auraMat);
+            if (moteMat != null) Destroy(moteMat);
+        }
+
         private void Build()
         {
             root = new GameObject("DF_SpawnHealStationProduction").transform;

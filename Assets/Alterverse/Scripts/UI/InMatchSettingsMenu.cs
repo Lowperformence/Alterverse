@@ -19,6 +19,18 @@ namespace Alterverse.UI
         private FrontEndTheme theme;
         private PrototypeHUD combatHud;
         private bool combatHudWasEnabled;
+        private DimensionsFront cachedFront;
+        private float nextFrontScan;
+
+        private DimensionsFront ResolveFront()
+        {
+            if (cachedFront == null && Time.unscaledTime >= nextFrontScan)
+            {
+                nextFrontScan = Time.unscaledTime + .25f;
+                cachedFront = FindAnyObjectByType<DimensionsFront>();
+            }
+            return cachedFront;
+        }
         private bool ownsPause;
         private bool confirmLeave;
         private bool leaving;
@@ -47,7 +59,7 @@ namespace Alterverse.UI
         private void Update()
         {
             if (!IsOpen) return;
-            DimensionsFront front = FindAnyObjectByType<DimensionsFront>();
+            DimensionsFront front = ResolveFront();
             if (front == null || front.HasEnded || MainMenuController.IsVisible)
                 CloseOverlay();
         }
@@ -137,7 +149,7 @@ namespace Alterverse.UI
         {
             if (MainMenuController.IsVisible || leaving) return;
 
-            DimensionsFront front = FindAnyObjectByType<DimensionsFront>();
+            DimensionsFront front = ResolveFront();
             if (front == null || front.HasEnded) return;
             if (!IsOpen && Time.timeScale <= 0f) return;
 

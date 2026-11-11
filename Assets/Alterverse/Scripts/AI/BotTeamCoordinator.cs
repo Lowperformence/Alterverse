@@ -351,7 +351,7 @@ namespace Alterverse.AI
             {
                 var e=seen[i];
                 if(role==HeroId.Veyr&&EnemiesNear(e.Position,6f)==1)bias*=.55f;
-                if(role==HeroId.Kaelon||role==HeroId.Rook)
+                if(role==HeroId.Kaelon||role==HeroId.Rook||role==HeroId.VoidKnight||role==HeroId.Nerok)
                     for(int a=0;a<allyCount;a++)if(IsBackline(allies[a].Role)&&FlatSqr(allies[a].Position-e.Position)<12f){bias*=.45f;break;}
                 break;
             }
@@ -375,6 +375,9 @@ namespace Alterverse.AI
                 HeroId.Mira=>-2.35f,
                 HeroId.Rook=>-1.45f,
                 HeroId.Traveler=>1.35f,
+                HeroId.Nerok=>1.85f,
+                HeroId.VoidKnight=>-.85f,
+                HeroId.Bolt7=>-1.95f,
                 _=>0f
             };
             float slotSide=slot%5 switch{0=>-.34f,1=>.28f,2=>-.12f,3=>.42f,_=>-.24f};
@@ -388,11 +391,14 @@ namespace Alterverse.AI
                     HeroId.Kaelon=>1.50f,
                     HeroId.Rook=>1.80f,
                     HeroId.Veyr=>1.45f,
+                    HeroId.Nerok=>1.65f,
+                    HeroId.VoidKnight=>1.70f,
                     HeroId.Mira=>5.35f,
                     HeroId.Nyra=>5.75f,
+                    HeroId.Bolt7=>5.65f,
                     HeroId.Elyra=>5.20f,
                     HeroId.Traveler=>4.75f,
-                    _=>5.25f
+                    _=>1.65f
                 };
                 range=Mathf.Max(.9f,range+slotDepth);
 
@@ -404,7 +410,7 @@ namespace Alterverse.AI
                 {
                     for(int i=0;i<allyCount;i++)
                     {
-                        if(allies[i].Role!=HeroId.Kaelon&&allies[i].Role!=HeroId.Rook)continue;
+                        if(allies[i].Role!=HeroId.Kaelon&&allies[i].Role!=HeroId.Rook&&allies[i].Role!=HeroId.VoidKnight&&allies[i].Role!=HeroId.Nerok)continue;
                         if(FlatSqr(allies[i].Position-objective)>12f*12f)continue;
                         // Never walk ahead of the nearby frontline to acquire range.
                         float ahead=Vector3.Dot(point-(allies[i].Position-forward*1.9f),forward);
@@ -451,7 +457,7 @@ namespace Alterverse.AI
             best.y=position.y;return best;
         }
 
-        public static bool IsBackline(HeroId role)=>role==HeroId.Nyra||role==HeroId.Elyra||role==HeroId.Mira||role==HeroId.Traveler;
+        public static bool IsBackline(HeroId role)=>role==HeroId.Nyra||role==HeroId.Elyra||role==HeroId.Mira||role==HeroId.Traveler||role==HeroId.Bolt7;
         private static float RolePower(HeroId role)
         {
             // Both teams are evaluated from the current hero catalog. Fixed role

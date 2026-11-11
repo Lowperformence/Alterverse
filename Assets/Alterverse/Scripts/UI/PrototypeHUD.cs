@@ -71,6 +71,9 @@ namespace Alterverse.UI
             if(h==HeroId.Mira)return slot==0?CombatGlyph.Seed:slot==1?CombatGlyph.Heal:slot==2?CombatGlyph.Shelter:CombatGlyph.Wildsurge;
             if(h==HeroId.Rook)return slot==0?CombatGlyph.Swing:slot==1?CombatGlyph.Armor:slot==2?CombatGlyph.Slam:CombatGlyph.Overdrive;
             if(h==HeroId.Traveler)return slot==0?CombatGlyph.ChronoBeam:slot==1?CombatGlyph.TimeStep:slot==2?CombatGlyph.ChronoField:CombatGlyph.Paradox;
+            if(h==HeroId.Nerok)return slot==0?CombatGlyph.Swing:slot==1?CombatGlyph.Dash:slot==2?CombatGlyph.Slam:CombatGlyph.Execute;
+            if(h==HeroId.VoidKnight)return slot==0?CombatGlyph.NullCut:slot==1?CombatGlyph.Rift:slot==2?CombatGlyph.Shield:CombatGlyph.Execute;
+            if(h==HeroId.Bolt7)return slot==0?CombatGlyph.PrismShot:slot==1?CombatGlyph.Dash:slot==2?CombatGlyph.Gravity:CombatGlyph.Volley;
             return CombatGlyph.ChronoBeam;
         }
         private void OnEnable()=>EnhancedTouchSupport.Enable();

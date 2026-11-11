@@ -10,6 +10,7 @@ namespace Alterverse.Match
     public sealed class PostMatchAutoLoop : MonoBehaviour
     {
         DimensionsFront trackedFront;
+        float nextFrontScan;
         float restartAt = -1;
         bool restarting;
         FrontEndTheme theme;
@@ -33,8 +34,12 @@ namespace Alterverse.Match
             if (CoopAuthority.Active && !NetworkRoundLoop.OnlineReturnsToLobby) return;
             // Dedicated servers have no local reward receipt or party to return to.
             if (CoopAuthority.Active && CoopRosterBuilder.FindLocalHumanSlot(CoopAuthority.ActivePlan) < 0) return;
-            var current = FindAnyObjectByType<DimensionsFront>();
-            if (current != trackedFront) { trackedFront = current; restartAt = -1; }
+            if (trackedFront == null && Time.unscaledTime >= nextFrontScan)
+            {
+                nextFrontScan = Time.unscaledTime + .25f;
+                var current = FindAnyObjectByType<DimensionsFront>();
+                if (current != trackedFront) { trackedFront = current; restartAt = -1; }
+            }
             if (trackedFront == null || !trackedFront.HasEnded || MatchScoreboard.Instance == null || !MatchScoreboard.Instance.ResultCommitted) return;
             if (restartAt < 0) restartAt = Time.unscaledTime + 12;
             if (Time.unscaledTime >= restartAt)
@@ -59,7 +64,7 @@ namespace Alterverse.Match
         void OnGUI()
         {
             if (MainMenuController.IsVisible || MatchExit.Leaving) return;
-            var front = FindAnyObjectByType<DimensionsFront>();
+            var front = trackedFront;
             if (front == null || !front.HasEnded) return;
             string text;
             if (CoopAuthority.Active)
