@@ -40,19 +40,24 @@ namespace Alterverse.Visuals
             core=CreateWingMaterial(surface,rgb?"DF_MechanicalAnthracite":"DF_AngelGold",
                 rgb?new Color(.045f,.052f,.064f):new Color(.92f,.56f,.12f));
             if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",rgb?.85f:.88f);
-            if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.72f);
+            if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.76f);
+            EnableWingEmission(core,rgb?new Color(.12f,.18f,.32f)*1.25f:new Color(1f,.68f,.18f)*1.55f);
+
             facet=CreateWingMaterial(surface,rgb?"DF_MechanicalGunmetal":"DF_AngelIvory",
                 rgb?new Color(.17f,.19f,.22f):new Color(1f,.93f,.72f));
-            if(facet.HasProperty("_Metallic"))facet.SetFloat("_Metallic",.42f);
-            if(facet.HasProperty("_Smoothness"))facet.SetFloat("_Smoothness",.64f);
-            energyColor=rgb?Color.white:new Color(1f,.73f,.23f);
+            if(facet.HasProperty("_Metallic"))facet.SetFloat("_Metallic",.46f);
+            if(facet.HasProperty("_Smoothness"))facet.SetFloat("_Smoothness",.72f);
+            EnableWingEmission(facet,rgb?new Color(.28f,.42f,.68f)*1.75f:new Color(1f,.92f,.66f)*2.15f);
+
+            energyColor=rgb?Color.white:new Color(1f,.76f,.28f);
             edge=CreateWingMaterial(energy,rgb?"DF_RiftSpectrumEnergy":"DF_AngelWarmLight",energyColor);
-            if(rgb){edge.SetFloat("_Intensity",2f);}
+            if(rgb){edge.SetFloat("_Intensity",2.95f);}
             else
             {
-                if(edge.HasProperty("_BaseColor"))edge.SetColor("_BaseColor",energyColor*1.4f);
-                if(edge.HasProperty("_Color"))edge.SetColor("_Color",energyColor*1.4f);
-                if(edge.HasProperty("_EmissionColor"))edge.SetColor("_EmissionColor",energyColor*1.4f);
+                edge.EnableKeyword("_EMISSION");
+                if(edge.HasProperty("_BaseColor"))edge.SetColor("_BaseColor",energyColor*2.65f);
+                if(edge.HasProperty("_Color"))edge.SetColor("_Color",energyColor*2.65f);
+                if(edge.HasProperty("_EmissionColor"))edge.SetColor("_EmissionColor",energyColor*2.65f);
             }
 
             mesh=PremiumMesh(design.wing,rgb?"DF_MechanicalRgbBlades":"DF_AngelGoldenFeathers");

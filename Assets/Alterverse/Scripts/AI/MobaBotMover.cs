@@ -49,6 +49,8 @@ namespace Alterverse.AI
         private HotZoneDirector hotZone;
         private DimensionPlanet[] planets = System.Array.Empty<DimensionPlanet>();
         private Vector3 velocity;
+        private Vector3 smoothedSeparation;
+        private float moveActiveSince = -1f;
         private Health chaseTarget;
         private HeroIdentity chaseTargetHero;
         private float chaseStarted;
@@ -75,7 +77,7 @@ namespace Alterverse.AI
             foreach (char c in gameObject.name) hash = unchecked(hash * 31u + c);
             rotationSlot = (int)(hash % 5u);
         }
-        private void OnEnable() { if (!ActiveBots.Contains(this)) ActiveBots.Add(this); }
+        private void OnEnable() { if (!ActiveBots.Contains(this)) ActiveBots.Add(this); moveActiveSince = -1f; smoothedSeparation = Vector3.zero; }
         private void OnDisable() { ActiveBots.Remove(this); if(ActiveBots.Count==0){nextSharedWorldScan=0;sharedHotZone=null;} ResetMotion(); }
 
         private void Update()
@@ -83,8 +85,9 @@ namespace Alterverse.AI
             if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay){velocity=Vector3.zero;return;}
             IsAvoidingHazard = false;
             if (Time.timeScale <= 0f || health == null || health.IsDead || brain == null || lanePlan == null)
-            { velocity = Vector3.zero; return; }
-            if (!locomotion.CanMove || locomotion.OwnsMovementFrame) { velocity=Vector3.zero; return; }
+            { velocity = Vector3.zero; smoothedSeparation = Vector3.zero; moveActiveSince = -1f; return; }
+            if (!locomotion.CanMove || locomotion.OwnsMovementFrame) { velocity=Vector3.zero; smoothedSeparation = Vector3.zero; return; }
+            if (moveActiveSince < 0f) moveActiveSince = Time.time;
             ScanWorld();
             Vector3 destination = lanePlan.GetDestination(brain.State);
             float stopDistance = roamStopDistance;
@@ -664,11 +667,18 @@ namespace Alterverse.AI
             float resumeMargin = activeMeleeChase ? .06f : .22f;
             if(distance<=effectiveStop)arrived=true;
             else if(distance>effectiveStop+resumeMargin)arrived=false;
+            float stagger = (rotationSlot % 5) * .045f;
+            float launchElapsed = moveActiveSince >= 0f ? Mathf.Max(0f, Time.time - moveActiveSince - stagger) : 1f;
+            float launchT = Mathf.Clamp01(launchElapsed / .62f);
+            float launchRamp = launchT * launchT * (3f - 2f * launchT);
+            float effectiveMoveSpeed = MoveSpeed * Mathf.Lerp(.18f, 1f, launchRamp);
+
             if (arrived) velocity = Vector3.zero;
             else
             {
-                if (Vector3.Dot(velocity, delta) < 0f) velocity = Vector3.zero;
-                velocity = Vector3.Lerp(velocity, delta.normalized * MoveSpeed, 1f-Mathf.Exp(-18f*Time.deltaTime));
+                if (Vector3.Dot(velocity, delta) < -.25f) velocity *= .35f;
+                float accelRate = Mathf.Lerp(8.5f, 15.5f, launchRamp);
+                velocity = Vector3.Lerp(velocity, delta.normalized * effectiveMoveSpeed, 1f - Mathf.Exp(-accelRate * Time.deltaTime));
                 advance = Vector3.ClampMagnitude(velocity * Time.deltaTime, Mathf.Max(0f, delta.magnitude - effectiveStop));
             }
             if(Time.time<detourUntil&&!arrived)
@@ -677,15 +687,16 @@ namespace Alterverse.AI
                 recoveryDelta.y=0;
                 if(hasRecoveryWaypoint&&recoveryDelta.sqrMagnitude<.25f*.25f)
                 {detourUntil=0;hasRecoveryWaypoint=false;}
-                else advance=recoveryDelta.normalized*Mathf.Min(MoveSpeed*Time.deltaTime,
+                else advance=recoveryDelta.normalized*Mathf.Min(effectiveMoveSpeed*Time.deltaTime,
                     hasRecoveryWaypoint?recoveryDelta.magnitude:float.MaxValue);
             }
-            Vector3 separation=SeparationVelocity();
+            // Smooth separation & fade it in over the opening rollout so tightly clustered spawn bots
+            // glide out into their lanes instead of violently shoving sideways on the first frame.
+            Vector3 rawSeparation = SeparationVelocity() * (launchRamp * launchRamp);
+            smoothedSeparation = Vector3.Lerp(smoothedSeparation, rawSeparation, 1f - Mathf.Exp(-10f * Time.deltaTime));
+            Vector3 separation = smoothedSeparation;
             if(arrived)
             {
-                // Once the tactical destination is reached, crowd separation must not push the bot
-                // back across the stop boundary. That produced a repeatable settle -> separate ->
-                // re-approach loop that looked like slow forward micro-stutter.
                 if(separation.sqrMagnitude<.04f||delta.sqrMagnitude<.0001f)separation=Vector3.zero;
                 else
                 {
@@ -694,12 +705,18 @@ namespace Alterverse.AI
                     if(separation.sqrMagnitude<.04f)separation=Vector3.zero;
                 }
             }
-            Vector3 step = Vector3.ClampMagnitude(advance + separation * Time.deltaTime, MoveSpeed * Time.deltaTime);
+            Vector3 step = Vector3.ClampMagnitude(advance + separation * Time.deltaTime, effectiveMoveSpeed * Time.deltaTime);
             Vector3 next = GuardAgainstDefenses(transform.position + step);
             next=GameplayCollision.ClampToRoundedArena(next,ArenaHalfWidth,ArenaHalfHeight);
             Vector3 requested=next-transform.position;
             Vector3 movement=locomotion.Move(requested,ArenaHalfWidth,ArenaHalfHeight);
-            if(!arrived&&movement.sqrMagnitude>.00001f)locomotion.FaceMovement(movement);
+            if(!arrived&&movement.sqrMagnitude>.00001f)
+            {
+                Vector3 faceDir = launchRamp < .85f && delta.sqrMagnitude > .25f
+                    ? Vector3.Lerp(delta.normalized, movement.normalized, launchRamp * .55f)
+                    : movement;
+                locomotion.FaceMovement(faceDir);
+            }
 
             // Severe partial stalls count as blocked too, but do not run stuck recovery while
             // a bot is already settling just outside its tactical stop distance. Close-range combat

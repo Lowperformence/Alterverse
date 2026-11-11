@@ -126,7 +126,12 @@ namespace Alterverse.Characters
             bool actionActive=Time.time<actionUntil&&actionFacing.sqrMagnitude>.0001f;
             Vector3 facing=IsDashing?dashDirection:actionActive?actionFacing:moveFacing.sqrMagnitude>.0001f?moveFacing:Vector3.zero;
             if(facing.sqrMagnitude>.0001f)
-                transform.rotation=Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(facing),1080f*Time.deltaTime);
+            {
+                Quaternion targetRotation=Quaternion.LookRotation(facing);
+                float maxTurnSpeed=IsDashing||actionActive?1080f:640f;
+                Quaternion stepped=Quaternion.RotateTowards(transform.rotation,targetRotation,maxTurnSpeed*Time.deltaTime);
+                transform.rotation=IsDashing?stepped:Quaternion.Slerp(transform.rotation,stepped,1f-Mathf.Exp(-18f*Time.deltaTime));
+            }
             moveFacing=Vector3.zero;
         }
         public bool BeginDash(Vector3 end, float duration = .16f)

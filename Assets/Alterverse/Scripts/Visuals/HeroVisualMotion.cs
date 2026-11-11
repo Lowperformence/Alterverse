@@ -281,7 +281,7 @@ namespace Alterverse.Visuals
             if(RemoteReplica&&!presentationBuffer.Ready){presented=transform.position;presentedRotation=transform.rotation;}
             PresentedPosition=presented;PresentedRotation=presentedRotation;
             Vector3 delta=presented-lastPosition;delta.y=0;lastPosition=presented;
-            if(Time.timeScale<=0){UpdateCloth(Time.unscaledDeltaTime,Time.unscaledTime,Vector3.zero);previousWorldVelocity=Vector3.zero;return;}
+            if(Time.timeScale<=0){UpdateCloth(Time.unscaledDeltaTime,Time.unscaledTime,Vector3.zero);previousWorldVelocity=Vector3.zero;displayedSpeed=0f;strideWeight=0f;moving=false;return;}
             float dt=Mathf.Max(Time.deltaTime,.0001f);
             if(health!=null&&health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=windupUntil=dashUntil=empowerUntil=0;root.localScale=rootScale;displayedScale=rootScale;displayedSpeed=0;SetEnergy(0);return;}
             // Recall/respawn is a relocation, not a sprint across the arena.
@@ -312,11 +312,11 @@ namespace Alterverse.Visuals
             Vector3 localAcceleration=Quaternion.Inverse(PresentedRotation)*((worldVelocity-previousWorldVelocity)/dt);
             localAcceleration=Vector3.ClampMagnitude(localAcceleration,45f);
             previousWorldVelocity=worldVelocity;
-            // Ease the visible gait in and out while keeping collision and input immediate.
-            displayedSpeed=Mathf.Lerp(displayedSpeed,PlanarSpeed,1-Mathf.Exp(-(PlanarSpeed>displayedSpeed?18f:13f)*dt));
+            // Ease the visible gait in and out smoothly so start-of-match acceleration blends from idle into run without a frame-1 pop.
+            displayedSpeed=Mathf.Lerp(displayedSpeed,PlanarSpeed,1-Mathf.Exp(-(PlanarSpeed>displayedSpeed?11.5f:13f)*dt));
             // Let the legs settle promptly when physical travel stops at a wall or on
             // release, rather than retaining a high raised-foot pose as speed fades.
-            float response=1-Mathf.Exp(-(PlanarSpeed<.10f?24f:15f)*dt);
+            float response=1-Mathf.Exp(-(PlanarSpeed<.10f?22f:11f)*dt);
             // Tiny steering corrections should not restart the walk cycle. The gameplay root
             // can still settle by a few centimetres without making the hero visually shuffle.
             if(moving){if(displayedSpeed<.10f)moving=false;}

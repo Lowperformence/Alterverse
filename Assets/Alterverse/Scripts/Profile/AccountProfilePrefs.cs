@@ -118,8 +118,17 @@ namespace Alterverse.Profile
                 source = new List<Entry>(merged.Values).ToArray(); Dirty = local.Length > 0;
                 PlayerPrefs.SetString(ImportKey, account);
             }
+            int cachedXp = 0;
+            if (cache?.profile != null)
+                foreach (Entry e in cache.profile)
+                    if (e != null && e.key == "DF_AccountXP" && e.kind == 0) cachedXp = Math.Max(cachedXp, e.number);
             values.Clear();
             foreach (Entry e in source) if (e != null && ProfileKey(e.key)) values[e.key] = Clone(e);
+            if (cachedXp > 0 && (!values.TryGetValue("DF_AccountXP", out Entry remoteXp) || cachedXp > remoteXp.number))
+            {
+                values["DF_AccountXP"] = new Entry { key = "DF_AccountXP", kind = 0, number = cachedXp };
+                Dirty = true;
+            }
             if (serverName != null) values["DF_PlayerName"] = serverName;
             else values.Remove("DF_PlayerName"); // Never keep invalid legacy identity text.
             Persist();
@@ -164,11 +173,18 @@ namespace Alterverse.Profile
         }
         public static void ResolveConflict(long revision, Entry[] remote)
         {
+            int localXp = values.TryGetValue("DF_AccountXP", out Entry curXp) ? curXp.number : 0;
             PlayerPrefs.SetString("DF_AccountProfileConflict_" + Account,
                 JsonUtility.ToJson(new State { revision = Revision, dirty = Dirty, profile = Capture() }));
             values.Clear();
             foreach (Entry e in remote ?? Array.Empty<Entry>()) if (ProfileKey(e.key)) values[e.key] = Clone(e);
-            Revision = revision; Dirty = false; HadConflict = true; Persist();
+            bool keptHigherXp = false;
+            if (localXp > 0 && (!values.TryGetValue("DF_AccountXP", out Entry remXp) || localXp > remXp.number))
+            {
+                values["DF_AccountXP"] = new Entry { key = "DF_AccountXP", kind = 0, number = localXp };
+                keptHigherXp = true;
+            }
+            Revision = revision; Dirty = keptHigherXp; HadConflict = true; Persist();
         }
         static void Persist()
         {

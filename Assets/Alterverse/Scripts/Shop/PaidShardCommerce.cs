@@ -131,6 +131,7 @@ namespace Alterverse.Shop
             while (saving || socialSpending || fulfilling) yield return null;
             if (!AccountProfilePrefs.Dirty) { done?.Invoke(true); yield break; }
             saving = true;
+            NormalizeLegacyDailyQuestWonMapsMask();
             var submitted = AccountProfilePrefs.Capture();
             Response response = null;
             yield return Send("/profile/save",new Request { expectedProfileRevision = AccountProfilePrefs.Revision, profile = submitted },r => response = r);
@@ -293,6 +294,28 @@ namespace Alterverse.Shop
         {
             try { return token?.Invoke(); }
             catch (Exception) { ready = false; Status = "Sign in to reconnect your account."; return null; }
+        }
+        static void NormalizeLegacyDailyQuestWonMapsMask()
+        {
+            const string key = "DF_DailyQuestWonMaps_v1";
+            const int legacyServerMaxMask = (1 << 11) - 1;
+            int mask = AccountProfilePrefs.GetInt(key, 0);
+            if (mask <= legacyServerMaxMask && mask >= 0) return;
+            int highBits = mask & ~legacyServerMaxMask;
+            int folded = mask & legacyServerMaxMask;
+            while (highBits != 0)
+            {
+                highBits &= highBits - 1;
+                for (int bit = 0; bit < 11; bit++)
+                {
+                    if ((folded & (1 << bit)) == 0)
+                    {
+                        folded |= 1 << bit;
+                        break;
+                    }
+                }
+            }
+            AccountProfilePrefs.SetInt(key, folded);
         }
         void ApplyWallet(Snapshot value)
         {

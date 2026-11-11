@@ -2,12 +2,12 @@ Shader "DimensionsFront/WeaponEnergyOverlay"
 {
  Properties
  {
-  [HDR] _GlowColor("Fluorescent rune color and finish opacity",Color)=(.3,.5,1,.24)
+  [HDR] _GlowColor("Fluorescent rune color and finish opacity",Color)=(.3,.5,1,.30)
   _MetalColor("Brushed alloy",Color)=(.18,.20,.24,1)
   _Metallic("Metallic",Range(0,1))=.88
-  _Smoothness("Polish",Range(0,1))=.72
-  _RimOpacity("Edge opacity",Range(0,1))=.55
-  _PatternStrength("Rune strength",Range(0,1))=0
+  _Smoothness("Polish",Range(0,1))=.76
+  _RimOpacity("Edge opacity",Range(0,1))=.76
+  _PatternStrength("Rune strength",Range(0,1))=1
   _PatternStyle("Hero rune style",Float)=0
   _PatternOffset("Colorway rune offset",Float)=0
  }
@@ -79,43 +79,62 @@ Shader "DimensionsFront/WeaponEnergyOverlay"
    }
    float2 RuneMarks(float2 p)
    {
-    float2 q=frac(p*2.4+float2(_PatternOffset,_PatternOffset*.37))-.5;
-    float d=RuneSegment(q,float2(0,-.34),float2(0,.34));
+    // Rotate slightly by colorway offset so Variant 0 and Variant 1 have distinct rune flow.
+    float ang=.22+frac(_PatternOffset*.73)*.42;
+    float s=sin(ang),c=cos(ang);
+    float2 rp=float2(c*p.x-s*p.y,s*p.x+c*p.y);
+    float2 cont=rp*3.45+float2(_PatternOffset*1.31,_PatternOffset*.67);
+    // Compute derivative width from continuous coordinates BEFORE frac() to prevent seam dropouts.
+    float2 fw=max(fwidth(cont),.0025);
+    float aa=clamp(max(fw.x,fw.y)*.45,.003,.024);
+    float2 cell=floor(cont);
+    float2 q=frac(cont)-.5;
+    if(fmod(abs(cell.x+cell.y+round(_PatternOffset*2.0)),2.0)>.5)
+     q.x=-q.x;
+    float d=RuneSegment(q,float2(0,-.38),float2(0,.38));
     if(_PatternStyle<.5)
     {
-     // Circuit chevrons: rifle and chronolux.
-     d=min(d,RuneSegment(q,float2(-.27,.10),float2(0,.32)));
-     d=min(d,RuneSegment(q,float2(0,.32),float2(.27,.10)));
-     d=min(d,RuneSegment(q,float2(-.27,-.20),float2(0,.02)));
-     d=min(d,RuneSegment(q,float2(0,.02),float2(.27,-.20)));
+     // Circuit chevrons & dual rail sigils: rifle, chronolux, mech weapons.
+     d=min(d,RuneSegment(q,float2(-.34,.08),float2(0,.36)));
+     d=min(d,RuneSegment(q,float2(0,.36),float2(.34,.08)));
+     d=min(d,RuneSegment(q,float2(-.34,-.20),float2(0,.06)));
+     d=min(d,RuneSegment(q,float2(0,.06),float2(.34,-.20)));
+     d=min(d,RuneSegment(q,float2(-.36,-.34),float2(.36,-.34)));
     }
     else if(_PatternStyle<1.5)
     {
-     // Arcane diamond with a central staff and side wards.
-     d=min(d,abs(abs(q.x)+abs(q.y)-.29)*.7071);
-     d=min(d,RuneSegment(q,float2(-.34,-.16),float2(-.34,.16)));
-     d=min(d,RuneSegment(q,float2(.34,-.16),float2(.34,.16)));
+     // Arcane sunburst diamond with inner ring & side wards.
+     d=min(d,abs(abs(q.x)+abs(q.y)-.32)*.7071);
+     d=min(d,abs(length(q)-.18));
+     d=min(d,RuneSegment(q,float2(-.36,-.22),float2(-.36,.22)));
+     d=min(d,RuneSegment(q,float2(.36,-.22),float2(.36,.22)));
     }
     else if(_PatternStyle<2.5)
     {
-     // Broad angular forge mark for hammer and gauntlets.
-     d=min(d,RuneSegment(q,float2(-.27,.28),float2(.27,.28)));
-     d=min(d,RuneSegment(q,float2(-.27,.28),float2(-.15,.06)));
-     d=min(d,RuneSegment(q,float2(.27,.28),float2(.15,.06)));
-     d=min(d,RuneSegment(q,float2(-.24,-.08),float2(0,-.30)));
-     d=min(d,RuneSegment(q,float2(0,-.30),float2(.24,-.08)));
+     // Forge hex-crown & conduit mark for hammer and gauntlets.
+     d=min(d,RuneSegment(q,float2(-.34,.30),float2(.34,.30)));
+     d=min(d,RuneSegment(q,float2(-.34,.30),float2(-.16,.04)));
+     d=min(d,RuneSegment(q,float2(.34,.30),float2(.16,.04)));
+     d=min(d,RuneSegment(q,float2(-.30,-.06),float2(0,-.36)));
+     d=min(d,RuneSegment(q,float2(0,-.36),float2(.30,-.06)));
+     d=min(d,RuneSegment(q,float2(-.26,0),float2(.26,0)));
     }
     else
     {
-     // Split rift sigil for blades, anchor and greatsword.
-     d=min(d,RuneSegment(q,float2(-.27,.27),float2(.22,-.05)));
-     d=min(d,RuneSegment(q,float2(.22,-.05),float2(-.12,-.31)));
-     d=min(d,RuneSegment(q,float2(-.27,.27),float2(-.27,.02)));
-     d=min(d,RuneSegment(q,float2(.25,.27),float2(.05,.13)));
+     // Split rift sigil & starlight cross for blades, anchor and greatsword.
+     d=min(d,RuneSegment(q,float2(-.34,.32),float2(.28,-.06)));
+     d=min(d,RuneSegment(q,float2(.28,-.06),float2(-.18,-.36)));
+     d=min(d,RuneSegment(q,float2(-.34,.32),float2(-.34,-.04)));
+     d=min(d,RuneSegment(q,float2(.32,.32),float2(-.32,-.32)));
+     d=min(d,abs(length(q)-.24));
     }
-    // Pixel derivatives filter both the luminous core and the recessed border.
-    float aa=max(fwidth(d),.002);
-    return 1-smoothstep(float2(.027,.060),float2(.027,.060)+aa,d);
+    // Continuous energy veins & micro-glyph lattice so thin weapon parts always show crisp runes.
+    float vein=abs(sin((cont.x+cont.y*.72)*3.14159265))*.18;
+    float2 mq=frac(cont*2.0+.25)-.5;
+    float micro=abs(abs(mq.x)+abs(mq.y)-.26)*.42;
+    float dCore=min(d,min(vein+.014,micro+.016));
+    float2 mark=1-smoothstep(float2(.042,.088),float2(.042,.088)+aa,dCore);
+    return mark;
    }
    float BrushGrain(float2 p)
    {
@@ -127,7 +146,7 @@ Shader "DimensionsFront/WeaponEnergyOverlay"
    {
     half3 n=normalize(i.normal);
     half3 view=SafeNormalize(GetWorldSpaceViewDir(i.world));
-    half rim=pow(1-saturate(dot(n,view)),2.8h);
+    half rim=pow(1-saturate(dot(n,view)),2.35h);
     float2 marks=RuneMarks(i.pattern.yz)*i.projection.x
                 +RuneMarks(i.pattern.zx)*i.projection.y
                 +RuneMarks(i.pattern.xy)*i.projection.z;
@@ -136,17 +155,17 @@ Shader "DimensionsFront/WeaponEnergyOverlay"
                +BrushGrain(i.pattern.zx)*i.projection.y
                +BrushGrain(i.pattern.xy)*i.projection.z;
     half3 alloy=_MetalColor.rgb*(.95h+grain*.05h);
-    alloy*=1-marks.y*.55h;
-    half polish=saturate(_Smoothness+grain*.055h-marks.y*.18h);
+    alloy*=1-marks.y*.50h;
+    half polish=saturate(_Smoothness+grain*.055h-marks.y*.15h);
     half3 metal=DFSurfaceLighting(i.world,n,alloy,_Metallic,polish,1,half3(0,0,0),i.position);
-    // Emission stays independent of scene light; the metal keeps real shading.
-    half3 color=metal+_GlowColor.rgb*(marks.x*2.4h+rim*.40h);
-    half alpha=saturate(lerp(_GlowColor.a,_RimOpacity,rim)+marks.x*.76h);
+    half pulse=.92h+.14h*sin(_Time.y*2.8h+(i.pattern.x+i.pattern.y+i.pattern.z)*2.6h);
+    half3 hotCore=lerp(_GlowColor.rgb,half3(1,1,1),marks.x*.38h);
+    // Boosted HDR emission for both the rune network and the energized fresnel rim.
+    half3 color=metal+hotCore*((marks.x*4.25h+marks.y*1.25h+rim*1.15h)*pulse);
+    half alpha=saturate(lerp(_GlowColor.a,_RimOpacity,rim)+marks.x*.88h+marks.y*.34h);
     return half4(color,alpha);
    }
    ENDHLSL
   }
  }
 }
-
-

@@ -224,15 +224,15 @@ namespace Alterverse.Visuals
                 else { Destroy(layer);continue; }
                 var material=new Material(shader) { name="DF_PremiumColorway_"+hero+"_"+variant };
                 Color glow=item.Glow;
-                // Leave the authored texture visible between the brighter inset runes.
-                glow.a=.24f;
+                // Leave the authored texture visible between the brighter inset runes while boosting aura presence.
+                glow.a=.31f;
                 material.SetColor("_GlowColor",glow);
-                material.SetColor("_MetalColor",new Color(.16f+glow.r*.12f,.18f+glow.g*.12f,.21f+glow.b*.12f));
-                material.SetFloat("_Metallic",.88f);
-                material.SetFloat("_Smoothness",.72f);
-                material.SetFloat("_RimOpacity",.55f);
-                material.SetFloat("_PatternStyle",PatternStyle(hero));
-                material.SetFloat("_PatternOffset",variant*.37f);
+                material.SetColor("_MetalColor",new Color(.16f+glow.r*.18f,.18f+glow.g*.18f,.21f+glow.b*.18f));
+                material.SetFloat("_Metallic",.90f);
+                material.SetFloat("_Smoothness",.78f);
+                material.SetFloat("_RimOpacity",.78f);
+                material.SetFloat("_PatternStyle",(PatternStyle(hero)+variant)%4);
+                material.SetFloat("_PatternOffset",variant*.53f+((int)hero)*.19f);
                 material.SetFloat("_PatternStrength",1f);
                 var slots=new Material[submeshes];
                 Material inscription=null;
@@ -280,9 +280,48 @@ namespace Alterverse.Visuals
             if(!source.isReadable)return mesh;
             Vector3[] vertices=source.vertices;
             Bounds bounds=mesh.bounds;
-            float scale=Mathf.Max(.001f,Mathf.Max(bounds.size.x,Mathf.Max(bounds.size.y,bounds.size.z)));
+            Bounds leftBounds=default,rightBounds=default;
+            bool hasLeft=false,hasRight=false;
+            if(weaponBones!=null)
+            {
+                for(int s=0;s<mesh.subMeshCount;s++)
+                {
+                    int[] tris=mesh.GetTriangles(s);
+                    for(int t=0;t<tris.Length;t++)
+                    {
+                        Vector3 v=vertices[tris[t]];
+                        if(v.x<bounds.center.x)
+                        {
+                            if(!hasLeft){leftBounds=new Bounds(v,Vector3.zero);hasLeft=true;}
+                            else leftBounds.Encapsulate(v);
+                        }
+                        else
+                        {
+                            if(!hasRight){rightBounds=new Bounds(v,Vector3.zero);hasRight=true;}
+                            else rightBounds.Encapsulate(v);
+                        }
+                    }
+                }
+            }
             var coordinates=new List<Vector3>(vertices.Length);
-            foreach(Vector3 vertex in vertices)coordinates.Add((vertex-bounds.center)/scale);
+            for(int i=0;i<vertices.Length;i++)
+            {
+                Vector3 vertex=vertices[i];
+                Bounds activeBounds=bounds;
+                if(weaponBones!=null)
+                {
+                    if(vertex.x<bounds.center.x&&hasLeft)activeBounds=leftBounds;
+                    else if(hasRight)activeBounds=rightBounds;
+                }
+                Vector3 size=activeBounds.size;
+                float maxSpan=Mathf.Max(.001f,Mathf.Max(size.x,Mathf.Max(size.y,size.z)));
+                float minAxis=maxSpan*.32f;
+                float sx=Mathf.Max(minAxis,size.x);
+                float sy=Mathf.Max(minAxis,size.y);
+                float sz=Mathf.Max(minAxis,size.z);
+                Vector3 delta=vertex-activeBounds.center;
+                coordinates.Add(new Vector3(delta.x/sx,delta.y/sy,delta.z/sz));
+            }
             mesh.SetUVs(2,coordinates);
             // Rest normals keep projection stable when the weapon turns or bends.
             Vector3[] normals=source.normals;

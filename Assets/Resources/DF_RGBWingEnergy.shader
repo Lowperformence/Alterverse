@@ -4,7 +4,7 @@ Shader "Alterverse/RGBWingEnergy"
     {
         [MainColor] _BaseColor("Tint",Color)=(1,1,1,1)
         _HueShift("Hue cycle",Range(0,1))=0
-        _Intensity("Glow",Range(0,4))=1
+        _Intensity("Glow",Range(0,6))=2.4
     }
     SubShader
     {
@@ -47,7 +47,8 @@ Shader "Alterverse/RGBWingEnergy"
                 half hue=frac(abs(q.z+(q.w-q.y)/(6*d+0.0001h))+_HueShift);
                 half saturation=d/(q.x+0.0001h);
                 half3 rgb=q.x*lerp(half3(1,1,1),saturate(abs(frac(hue+half3(0,2.0h/3.0h,1.0h/3.0h))*6-3)-1),saturation);
-                return half4(MixFog(rgb*_BaseColor.rgb*_Intensity,input.fog),1);
+                half3 hot=lerp(rgb,half3(1,1,1),0.22h)*(_BaseColor.rgb*(_Intensity*1.35h));
+                return half4(MixFog(hot,input.fog),1);
             }
             ENDHLSL
         }

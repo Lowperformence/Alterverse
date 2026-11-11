@@ -15,11 +15,12 @@ namespace Alterverse.Visuals
         {
             if(mesh!=null)return;preview=isPreview;betaSupporter=false;plague=false;
             Shader coreShader=WingCoreShader(),edgeShader=WingEnergyShader();if(coreShader==null||edgeShader==null)return;
-            core=CreateWingMaterial(coreShader,"DF_VoidObsidian",new Color(.035f,.018f,.065f));
-            edge=CreateWingMaterial(edgeShader,"DF_VoidFractureEnergy",new Color(.43f,.08f,.75f));
-            if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.6f);
-            energyColor=new Color(.52f,.08f,1f);
-            edge.EnableKeyword("_EMISSION");edge.SetColor("_EmissionColor",energyColor*1.5f);
+            core=CreateWingMaterial(coreShader,"DF_VoidObsidian",new Color(.055f,.028f,.105f));
+            edge=CreateWingMaterial(edgeShader,"DF_VoidFractureEnergy",new Color(.56f,.16f,.94f));
+            if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.68f);
+            energyColor=new Color(.68f,.22f,1f);
+            EnableWingEmission(core,new Color(.24f,.07f,.52f)*1.35f);
+            EnableWingEmission(edge,energyColor*3.25f);
             var v=new System.Collections.Generic.List<Vector3>();var t=new System.Collections.Generic.List<int>();
             for(int blade=0;blade<3;blade++)
             {
@@ -35,7 +36,7 @@ namespace Alterverse.Visuals
                 wing.transform.localPosition=new Vector3(side==0?-.12f:.12f,.22f,-.27f);
                 wing.transform.localScale=new Vector3(side==0?-1:1,1,1)*WingSize;
                 wing.AddComponent<MeshFilter>().sharedMesh=mesh;var r=wing.AddComponent<MeshRenderer>();r.sharedMaterial=core;r.shadowCastingMode=ShadowCastingMode.Off;
-                AddEnergyEdges(wing.transform,v,3,.026f,"VoidEnergyEdge");
+                AddEnergyEdges(wing.transform,v,3,.036f,"VoidEnergyEdge");
             }
             lastPosition=transform.position;
         }
@@ -44,12 +45,13 @@ namespace Alterverse.Visuals
         {
             if(mesh!=null)return;preview=isPreview;betaSupporter=true;plague=false;
             Shader coreShader=WingCoreShader(),edgeShader=WingEnergyShader();if(coreShader==null||edgeShader==null)return;
-            core=CreateWingMaterial(coreShader,"DF_BetaSupporterWingCore",new Color(.055f,.008f,.012f));
-            edge=CreateWingMaterial(edgeShader,"DF_BetaSupporterWingEnergy",new Color(.72f,.015f,.02f));
-            if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",.26f);
-            if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.54f);
-            energyColor=new Color(1f,.018f,.025f);
-            edge.EnableKeyword("_EMISSION");edge.SetColor("_EmissionColor",energyColor*2.05f);
+            core=CreateWingMaterial(coreShader,"DF_BetaSupporterWingCore",new Color(.085f,.012f,.018f));
+            edge=CreateWingMaterial(edgeShader,"DF_BetaSupporterWingEnergy",new Color(.92f,.04f,.05f));
+            if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",.32f);
+            if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.64f);
+            energyColor=new Color(1f,.08f,.06f);
+            EnableWingEmission(core,new Color(.48f,.03f,.04f)*1.45f);
+            EnableWingEmission(edge,energyColor*3.55f);
 
             var v=new System.Collections.Generic.List<Vector3>();var t=new System.Collections.Generic.List<int>();
             for(int blade=0;blade<4;blade++)
@@ -78,7 +80,7 @@ namespace Alterverse.Visuals
                 wing.transform.localPosition=new Vector3(side==0?-.16f:.16f,height,-.34f);
                 wing.transform.localScale=new Vector3((side==0?-1:1)*scale,scale,scale);
                 wing.AddComponent<MeshFilter>().sharedMesh=mesh;var r=wing.AddComponent<MeshRenderer>();r.sharedMaterial=core;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
-                AddEnergyEdges(wing.transform,v,4,.034f,"BetaSupporterEnergyEdge");
+                AddEnergyEdges(wing.transform,v,4,.044f,"BetaSupporterEnergyEdge");
             }
             lastPosition=transform.position;
         }
@@ -90,12 +92,13 @@ namespace Alterverse.Visuals
 
             // Intentionally simpler and less prestigious than the Beta Supporter wings:
             // moss-green diseased plates with restrained toxic seams, tied to Green Planet.
-            core=CreateWingMaterial(coreShader,"DF_PlagueWingCore",new Color(.13f,.24f,.065f));
-            edge=CreateWingMaterial(edgeShader,"DF_PlagueWingToxin",new Color(.34f,.72f,.10f));
-            if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",.04f);
-            if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.22f);
-            energyColor=new Color(.43f,.90f,.09f);
-            edge.EnableKeyword("_EMISSION");edge.SetColor("_EmissionColor",energyColor*1.28f);
+            core=CreateWingMaterial(coreShader,"DF_PlagueWingCore",new Color(.15f,.28f,.075f));
+            edge=CreateWingMaterial(edgeShader,"DF_PlagueWingToxin",new Color(.44f,.88f,.14f));
+            if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",.08f);
+            if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.34f);
+            energyColor=new Color(.48f,1f,.14f);
+            EnableWingEmission(core,new Color(.18f,.44f,.08f)*1.30f);
+            EnableWingEmission(edge,energyColor*3.15f);
 
             // Three torn pest leaves only: smaller, narrower and visibly less heroic than Beta Wings.
             // Their irregular shoulders read as rotten organic plates rather than premium energy blades.
@@ -126,7 +129,7 @@ namespace Alterverse.Visuals
                 wing.transform.localScale=new Vector3((side==0?-1:1)*scale,scale,scale);
                 wing.AddComponent<MeshFilter>().sharedMesh=mesh;
                 var r=wing.AddComponent<MeshRenderer>();r.sharedMaterial=core;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
-                AddEnergyEdges(wing.transform,v,3,.022f,"PlagueToxinVein");
+                AddEnergyEdges(wing.transform,v,3,.032f,"PlagueToxinVein");
 
                 // One restrained toxin node per wing keeps the diseased identity without making it flashy.
                 var toxicNode=GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -155,7 +158,9 @@ namespace Alterverse.Visuals
                 if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",.86f);
             }
             energyColor=Color.white;
-            edge.EnableKeyword("_EMISSION");edge.SetColor("_EmissionColor",energyColor*1.25f);
+            EnableWingEmission(core,new Color(.52f,.62f,.74f)*1.35f);
+            EnableWingEmission(facet,new Color(.88f,.95f,1f)*1.95f);
+            edge.EnableKeyword("_EMISSION");edge.SetColor("_EmissionColor",energyColor*2.85f);
             var vertices=new System.Collections.Generic.List<Vector3>();
             var triangles=new[]{new System.Collections.Generic.List<int>(),new System.Collections.Generic.List<int>(),new System.Collections.Generic.List<int>()};
             // Layered, closed crystal feathers: raised silver ridges, dark recesses and
@@ -248,6 +253,13 @@ namespace Alterverse.Visuals
             return material;
         }
 
+        private static void EnableWingEmission(Material material,Color emission)
+        {
+            if(material==null)return;
+            material.EnableKeyword("_EMISSION");
+            if(material.HasProperty("_EmissionColor"))material.SetColor("_EmissionColor",emission);
+        }
+
         private static float HeroScale(HeroId hero,float standard,float marksman,float support,float mage,float tank,float bruiser)
         {
             return hero switch
@@ -308,14 +320,16 @@ namespace Alterverse.Visuals
             {
                 float hue=Mathf.Repeat(time/6f,1f);
                 edge.SetFloat("_HueShift",hue);
-                edge.SetFloat("_Intensity",1.8f+Mathf.Sin(time*1.4f)*.15f+pulse*.5f);
+                edge.SetFloat("_Intensity",2.85f+Mathf.Sin(time*1.8f)*.28f+pulse*.75f);
             }
             else if(edge!=null)
             {
-                float baseIntensity=plague?1.12f:betaSupporter?1.72f:1.15f;
-                float wave=plague?Mathf.Sin(time*1.15f)*.10f:betaSupporter?Mathf.Sin(time*1.6f)*.16f:Mathf.Sin(time*2)*.12f;
-                float pulseBoost=plague?.42f:betaSupporter?.75f:.6f;
-                edge.SetColor("_EmissionColor",energyColor*(baseIntensity+wave+pulse*pulseBoost));
+                float baseIntensity=deluxe?2.75f:angel?2.85f:plague?2.65f:betaSupporter?3.25f:2.85f;
+                float wave=plague?Mathf.Sin(time*1.45f)*.22f:betaSupporter?Mathf.Sin(time*1.8f)*.28f:Mathf.Sin(time*2.1f)*.24f;
+                float pulseBoost=plague?.75f:betaSupporter?1.15f:.95f;
+                Color dynamicEmission=energyColor*(baseIntensity+wave+pulse*pulseBoost);
+                edge.SetColor("_EmissionColor",dynamicEmission);
+                if(angel&&edge.HasProperty("_BaseColor"))edge.SetColor("_BaseColor",dynamicEmission);
             }
         }
         void OnDestroy(){if(mountMesh!=null)Destroy(mountMesh);if(mesh!=null)Destroy(mesh);if(core!=null)Destroy(core);if(edge!=null)Destroy(edge);if(facet!=null)Destroy(facet);}

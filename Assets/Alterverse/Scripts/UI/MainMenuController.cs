@@ -194,7 +194,7 @@ namespace Alterverse.UI
             FlushAudio(); languagePicker.Close(); collection?.Invalidate();showcase?.InvalidateLoadout(); page = next; pageChangedAt = Time.unscaledTime;
             profileMessage = ""; shopMessage = ""; GUI.FocusControl(null);
             confirmRoute=confirmPlayer=confirmLabel=null;
-            if(next==Page.Leaderboard)GooglePlayLevelLeaderboard.AuthenticateAndSync();
+            if(next==Page.Leaderboard)requestedRankingTab=-1;
             if(next==Page.Clans || next==Page.Friends)SocialService.Instance?.Load("/social/state");
         }
         private void OnGUI()
@@ -1403,45 +1403,9 @@ namespace Alterverse.UI
         }
         private void DrawLeaderboard()
         {
-            if(DrawRankingTabs())return;
-            Heading("Most Wins", "Worldwide lifetime win rankings powered by Google Play Games.");
-
-            float leftWidth = ContentWidth * .58f;
-            theme.Panel(new Rect(Left, 244, leftWidth, 406));
-            theme.Label(new Rect(Left + 28, 260, leftWidth - 56, 24), "MOST WINS", theme.Small, true);
-            int wins = Alterverse.Profile.MatchRewardService.MatchesWon;
-            theme.Label(new Rect(Left + 28, 292, leftWidth - 56, 44), $"WINS {wins:N0}", theme.Title);
-            theme.Label(new Rect(Left + 28, 344, leftWidth - 56, 40),
-                "Lifetime match victories place you on the global leaderboard.", theme.Body, true);
-
-            theme.Label(new Rect(Left + 28, 410, leftWidth - 56, 22), "GOOGLE PLAY GAMES ACCOUNT", theme.Small, true);
-            theme.FitLabel(new Rect(Left + 28, 440, leftWidth - 56, 32), PlayerProfile.PlayerName, theme.Heading);
-            theme.Label(new Rect(Left + 28, 484, leftWidth - 56, 54), GooglePlayLevelLeaderboard.Status, theme.Small, true);
-
-            bool configured = GooglePlayLevelLeaderboard.IsConfigured;
-            string syncLabel = GooglePlayLevelLeaderboard.IsAuthenticated ? "SYNC WINS" : "CONNECT & SYNC";
-            if (theme.Action(new Rect(Left + 28, 558, (leftWidth - 68) * .5f, 58), syncLabel, true, enabled: configured && !GooglePlayLevelLeaderboard.IsBusy))
-                GooglePlayLevelLeaderboard.AuthenticateAndSync(true);
-            if (theme.Action(new Rect(Left + 40 + (leftWidth - 68) * .5f, 558, (leftWidth - 68) * .5f, 58),
-                "OPEN MOST WINS", true, enabled: configured && !GooglePlayLevelLeaderboard.IsBusy))
-                GooglePlayLevelLeaderboard.ShowLeaderboard();
-
-            float x = Left + leftWidth + 32, w = ContentWidth - leftWidth - 32;
-            theme.Label(new Rect(x, 230, w, 36), "How ranking works", theme.Heading);
-            theme.Label(new Rect(x, 282, w, 112),
-                "Your lifetime match wins are submitted to Google Play. A higher win total ranks above lower totals.",
-                theme.Body, true);
-            Stat(x, 420, w, "YOUR WINS", wins.ToString("N0"));
-            Stat(x, 476, w, "LAST SYNCED",
-                GooglePlayLevelLeaderboard.LastSubmittedScore >= 0
-                    ? GooglePlayLevelLeaderboard.LastSubmittedScore.ToString("N0")
-                    : "—");
-            Stat(x, 532, w, "SCOPE", "ALL-TIME / GLOBAL");
-            theme.Label(new Rect(x, 604, w, 56),
-                configured ? "Google Play stores the global Most Wins leaderboard."
-                    : "SETUP REQUIRED  /  Import the game App ID and leaderboard resources from Google Play Console.",
-                theme.Small, true);
+            DrawRankingTabs();
         }
+
 
         private void DrawSettings()
         {

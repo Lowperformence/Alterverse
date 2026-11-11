@@ -7,7 +7,7 @@ namespace Alterverse.UI
 {
     public sealed partial class MainMenuController
     {
-        int rankingTab,clanTab,memberOffset;
+        int rankingTab=1,clanTab,memberOffset;
         int requestedRankingTab=-1;
         string rankingAccount;
         long rankingProfileRevision=-1;
@@ -96,17 +96,18 @@ namespace Alterverse.UI
 
         bool DrawRankingTabs()
         {
-            if(rankingTab>0)Heading(rankingTab==1?"Player Levels":"Clan Levels",rankingTab==1?"All players ranked by level, then total experience.":"Clans ranked by the sum of every member's player level.");
-            string[] tabs={"MOST WINS","PLAYER LEVELS","CLAN LEVELS"};
+            if(rankingTab<1||rankingTab>2)rankingTab=1;
+            Heading(rankingTab==1?"Player Levels":"Clan Levels",rankingTab==1?"All players ranked by level, then total experience.":"Clans ranked by the sum of every member's player level.");
+            string[] tabs={"PLAYER LEVELS","CLAN LEVELS"};
             for(int i=0;i<tabs.Length;i++)
             {
-                if(theme.Action(new Rect(Left+i*210,202,198,36),tabs[i],selected:rankingTab==i))
+                int tabValue=i+1;
+                if(theme.Action(new Rect(Left+i*220,202,208,38),tabs[i],selected:rankingTab==tabValue))
                 {
-                    rankingTab=i;
+                    rankingTab=tabValue;
                     requestedRankingTab=-1;
                 }
             }
-            if(rankingTab==0)return false;
             if(!SocialReady()){SocialFooter();return true;}
             var service=SocialService.Instance;
             // A tab click during another request used to be silently dropped.
