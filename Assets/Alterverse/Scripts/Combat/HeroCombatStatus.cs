@@ -106,6 +106,13 @@ namespace Alterverse.Combat
 
         public static float Speed(GameObject actor) => FindStatus(actor)?.MoveMultiplier ?? 1f;
 
+        public static void ApplySpeedBoost(GameObject actor, float factor, float duration)
+        {
+            if (actor == null) return;
+            var status = FindStatus(actor) ?? actor.GetComponent<HeroCombatStatus>() ?? actor.AddComponent<HeroCombatStatus>();
+            statusByActor[actor] = status;
+            status.BoostSpeed(factor, duration);
+        }
         public static void Apply(Health target, float slow, float duration, float stun = 0f)
         {
             if (target == null || target.IsDead || (target.GetComponent<Alterverse.Characters.HeroIdentity>() == null && target.GetComponent<LaneMinion>() == null)) return;

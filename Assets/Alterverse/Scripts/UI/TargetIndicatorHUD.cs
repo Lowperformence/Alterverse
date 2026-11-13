@@ -68,11 +68,14 @@ namespace Alterverse.UI
 
             screen.y = Screen.height - screen.y;
             bool objective = targetIsObjective;
-            float pulse = 1f + Mathf.Sin(Time.unscaledTime * 3.6f) * .018f;
+            bool executeReady = !objective && target.Normalized <= .18f;
+            float pulse = 1f + Mathf.Sin(Time.unscaledTime * (executeReady ? 8.5f : 3.6f)) * (executeReady ? .045f : .018f);
             float radius = (objective ? 31f : 24f) * scale * pulse;
             Color tint = objective
                 ? new Color(StylizedArtDirection.WarmAccent.r, StylizedArtDirection.WarmAccent.g, StylizedArtDirection.WarmAccent.b, .88f)
-                : new Color(1f, .50f, .56f, .88f);
+                : executeReady
+                    ? new Color(1f, .78f, .22f, .95f)
+                    : new Color(1f, .50f, .56f, .88f);
             float opacity = Mathf.Clamp01(AimingSettings.Current.previewOpacity);
             tint.a *= opacity;
 
@@ -90,11 +93,11 @@ namespace Alterverse.UI
             CombatGlyphs.Line(new Vector2(center.x, center.y - radius - tick), new Vector2(center.x, center.y - radius - gap), width, tint);
             CombatGlyphs.Line(new Vector2(center.x, center.y + radius + gap), new Vector2(center.x, center.y + radius + tick), width, tint);
 
-            // Ordinary soft targets need only the reticle. Keep text for special dimension objectives.
-            if (!objective) return;
+            // Ordinary soft targets need only the reticle. Keep text for special dimension objectives or finisher targets.
+            if (!objective && !executeReady) return;
             EnsureStyle(scale);
             GUI.Label(new Rect(screen.x - 88f * scale, screen.y - radius - 24f * scale,
-                176f * scale, 19f * scale), "DIMENSION OBJECTIVE", label);
+                176f * scale, 19f * scale), objective ? "DIMENSION OBJECTIVE" : "⚡ FINISHER", label);
         }
 
         private void EnsureStyle(float scale)

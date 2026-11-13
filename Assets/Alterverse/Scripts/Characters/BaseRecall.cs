@@ -76,7 +76,7 @@ namespace Alterverse.Characters
             CharacterController controller=GetComponent<CharacterController>();
             if(controller!=null)controller.enabled=false;
             transform.position=spawnPoint;
-            GetComponent<HeroLocomotion>()?.ResetMotion();GetComponent<HeroMotor>()?.ClearInput();
+            GetComponent<HeroLocomotion>()?.ResetMotion();GetComponent<HeroMotor>()?.ClearInput();HeroCombatStatus.ApplySpeedBoost(gameObject,1.24f,3.2f);
             if(controller!=null)controller.enabled=true;
             recallRoutine=null;Progress=0f;
         }

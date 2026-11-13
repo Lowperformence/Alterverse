@@ -34,9 +34,24 @@ namespace Alterverse.Characters
 
         private void Update()
         {
-            if (Time.timeScale <= 0 || Keyboard.current == null) return;
+            if (Time.timeScale <= 0) return;
             Alterverse.Multiplayer.CoopHeroSlot coopSlot = GetComponent<Alterverse.Multiplayer.CoopHeroSlot>();
             if (coopSlot != null && !coopSlot.IsLocalHuman) return;
+            if (bufferedSlot >= 0)
+            {
+                if (Time.unscaledTime > bufferExpiresAt || GetComponent<Health>().IsDead)
+                {
+                    bufferedSlot = -1;
+                }
+                else if (execution != null && execution.Remaining(bufferedSlot) <= 0f && HeroCombatStatus.CanAct(gameObject))
+                {
+                    int slotToCast = bufferedSlot;
+                    AimPose poseToCast = bufferedPose;
+                    bufferedSlot = -1;
+                    CastAimed(slotToCast, poseToCast);
+                }
+            }
+            if (Keyboard.current == null) return;
             if (Keyboard.current.qKey.wasPressedThisFrame) CastQ();
             if (Keyboard.current.eKey.wasPressedThisFrame) CastW();
             if (Keyboard.current.rKey.wasPressedThisFrame) CastE();
@@ -115,9 +130,19 @@ namespace Alterverse.Characters
 
         public bool CastAimed(int slot, AimPose pose)
         {
-            if (!isActiveAndEnabled || Time.timeScale <= 0f || slot < 0 || slot > 3 || execution == null || execution.Remaining(slot) > 0 ||
-                !HeroCombatStatus.CanAct(gameObject) || GetComponent<Health>().IsDead ||
-                !AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
+            if (!isActiveAndEnabled || Time.timeScale <= 0f || slot < 0 || slot > 3 || execution == null ||
+                GetComponent<Health>().IsDead || !AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
+            if (execution.Remaining(slot) > 0f || !HeroCombatStatus.CanAct(gameObject))
+            {
+                if (execution.Remaining(slot) <= 0.22f)
+                {
+                    bufferedSlot = slot;
+                    bufferedPose = pose;
+                    bufferExpiresAt = Time.unscaledTime + 0.22f;
+                }
+                return false;
+            }
+            bufferedSlot = -1;
             pose = new AimPose(pose.Direction, AimGeometry.ClampPoint(transform.position, pose.Point, AimFor(slot).castRange), pose.Target, pose.HasAimPoint, pose.AllowDashTargetCapture);
             if (Alterverse.Multiplayer.CoopGameplayCommands.ShouldRouteClientCommand(gameObject))
             {

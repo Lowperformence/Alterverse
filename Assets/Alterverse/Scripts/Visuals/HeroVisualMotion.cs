@@ -39,7 +39,7 @@ namespace Alterverse.Visuals
         private bool wasDead,moving;
         private int abilitySlot=-1,attackSerial;
         private float windupUntil,windupDuration,empowerUntil,dashUntil,attackStarted;
-        private float previousHeading,smoothedTurnRate;
+        private float previousHeading,smoothedTurnRate,smoothedBank;
         private Transform muzzle,weaponR,weaponL,orb,gauntletR,gauntletL;
         private Vector3 rootScale,weaponPositionR,weaponPositionL,orbRest;
         private Quaternion weaponRestR,weaponRestL;
@@ -245,7 +245,7 @@ namespace Alterverse.Visuals
         private void ResetPresentationAfterRelocation()
         {
             wasDead=moving=false;
-            phase=strideWeight=lean=displayedSpeed=PlanarSpeed=smoothedTurnRate=0f;
+            phase=strideWeight=lean=displayedSpeed=PlanarSpeed=smoothedTurnRate=smoothedBank=0f;
             RunBlend=0f;PresentedVelocity=Vector3.zero;
             grounded?.ResetContacts();
             previousWorldVelocity=Vector3.zero;
@@ -433,13 +433,17 @@ namespace Alterverse.Visuals
             float energy=Mathf.Max(kick,Mathf.Max(preparation*.65f,Time.time<empowerUntil?.85f:0));
             SetEnergy(energy);
             bool phaseDash=(Dashing||Time.time<dashUntil)&&(hero==HeroId.Veyr||hero==HeroId.Elyra);
+            float hitPunch=(hitUntil>Time.time&&hitAge<.13f)?Mathf.Sin((hitAge/.13f)*Mathf.PI)*.042f:0f;
+            Vector3 punchMultiplier=new Vector3(1f+hitPunch,1f-hitPunch*.8f,1f+hitPunch);
             // Compress the render rig only; collider and movement are untouched.
-            Vector3 targetScale=Vector3.Scale(rootScale,phaseDash?new Vector3(.55f,.94f,.88f):Vector3.one);
-            displayedScale=Vector3.Lerp(displayedScale,targetScale,1-Mathf.Exp(-18f*dt));
+            Vector3 targetScale=Vector3.Scale(rootScale,phaseDash?new Vector3(.55f,.94f,.88f):punchMultiplier);
+            displayedScale=Vector3.Lerp(displayedScale,targetScale,1-Mathf.Exp(-22f*dt));
             root.localScale=displayedScale;
             float idleShift=Mathf.Sin(t*.8f+phase*.12f)*(1-strideWeight);
+            float targetBank=hero==HeroId.Nyra?0f:Mathf.Clamp(-turnRate*.016f*strideWeight,-6f,6f);
+            smoothedBank=Mathf.Lerp(smoothedBank,targetBank,1-Mathf.Exp(-14f*dt));
             float sway=hero==HeroId.Nyra?0f:
-                Mathf.Sin(phase)*strideWeight*Mathf.Lerp(1.6f,3.2f,runBlend)*(heavy?.8f:1)+idleShift*.45f;
+                Mathf.Sin(phase)*strideWeight*Mathf.Lerp(1.6f,3.2f,runBlend)*(heavy?.8f:1)+idleShift*.45f+smoothedBank;
             // Rotating the entire visual root also rotates the rifle after its hand IK.
             // Shots and gait move Sivra's body joints, but leave the barrel aligned to her heading.
             bool solvedBasic=abilitySlot<0&&GetComponent<MeleeBasicAttackAnimation>()?.OwnsPose==true;

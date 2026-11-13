@@ -22,6 +22,8 @@ namespace Alterverse.UI
             public int LastCurHp;
             public int LastMaxHp;
             public int LastShield;
+            public float TrailNormalized;
+            public float TrailHoldUntil;
             public string HpLabel;
             public string ShieldLabel;
         }
@@ -80,6 +82,8 @@ namespace Alterverse.UI
                     LastCurHp = -1,
                     LastMaxHp = -1,
                     LastShield = -1,
+                    TrailNormalized = hp.Normalized,
+                    TrailHoldUntil = 0f,
                     HpLabel = string.Empty,
                     ShieldLabel = string.Empty
                 };
@@ -121,8 +125,34 @@ namespace Alterverse.UI
 
                 float inset = 2f * scale;
                 float innerWidth = Mathf.Max(0f, frame.width - inset * 2f);
-                GUI.color = team;
-                GUI.DrawTexture(new Rect(frame.x + inset, frame.y + inset, innerWidth * Mathf.Clamp01(m.Health.Normalized), Mathf.Max(1f, frame.height - inset * 2f)), pixel);
+                float innerHeight = Mathf.Max(1f, frame.height - inset * 2f);
+                float norm = Mathf.Clamp01(m.Health.Normalized);
+                if (norm < m.TrailNormalized - 0.005f)
+                {
+                    if (Time.unscaledTime >= m.TrailHoldUntil)
+                        m.TrailNormalized = Mathf.MoveTowards(m.TrailNormalized, norm, Time.unscaledDeltaTime * 0.95f);
+                }
+                else
+                {
+                    m.TrailNormalized = norm;
+                    m.TrailHoldUntil = Time.unscaledTime + 0.16f;
+                }
+                if (m.TrailNormalized > norm + 0.004f)
+                {
+                    GUI.color = new Color(1f, 0.86f, 0.38f, 0.92f);
+                    GUI.DrawTexture(new Rect(frame.x + inset, frame.y + inset, innerWidth * Mathf.Clamp01(m.TrailNormalized), innerHeight), pixel);
+                }
+                bool lowHpExecute = enemy && norm <= 0.18f;
+                if (lowHpExecute)
+                {
+                    float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 12f);
+                    GUI.color = Color.Lerp(team, new Color(1f, 0.78f, 0.22f, 1f), pulse * 0.65f);
+                }
+                else
+                {
+                    GUI.color = team;
+                }
+                GUI.DrawTexture(new Rect(frame.x + inset, frame.y + inset, innerWidth * norm, innerHeight), pixel);
 
                 int curHp = Mathf.RoundToInt(m.Health.Current);
                 int maxHp = Mathf.RoundToInt(m.Health.Max);

@@ -62,6 +62,32 @@ namespace Alterverse.AI
 #endif
         private BotTeamCoordinator(int assignedTeam){team=assignedTeam;}
         public static BotTeamCoordinator ForTeam(int team)=>teams[Mathf.Clamp(team,0,1)];
+        public static void NotifyPlayerPing(int team, int pingKind, Vector3 worldPos, Health focusTarget = null)
+        {
+            var coord = ForTeam(team);
+            if (pingKind == 0) // Attack / Focus
+            {
+                if (focusTarget != null && !focusTarget.IsDead)
+                {
+                    coord.focus = focusTarget;
+                    coord.focusStarted = Time.time;
+                    coord.focusUntil = Time.time + 4.5f;
+                    coord.focusPosition = focusTarget.transform.position;
+                }
+                coord.Commit(Intent.Teamfight, worldPos, true);
+                coord.holdUntil = Time.time + 4.0f;
+            }
+            else if (pingKind == 1) // Rally / Objective
+            {
+                coord.Commit(Intent.ContestObjective, worldPos, true);
+                coord.holdUntil = Time.time + 4.5f;
+            }
+            else // Defend / Caution
+            {
+                coord.Commit(Intent.Defend, worldPos, true);
+                coord.holdUntil = Time.time + 4.5f;
+            }
+        }
         public static void Register(MobaBotBrain bot){if(!members.Contains(bot))members.Add(bot);}
         public static void Unregister(MobaBotBrain bot)
         {

@@ -24,13 +24,17 @@ namespace Alterverse.UI
     {
         private struct FloatingNumber
         {
+            public Health Target;
+            public float AccumulatedValue;
             public Vector3 WorldPos;
             public string Text;
             public Color Color;
             public float SpawnTime;
+            public float PopTime;
             public float Duration;
             public int FontSize;
             public float DriftX;
+            public bool IsRapidStackable;
         }
 
         private struct KillFeedRow
@@ -70,6 +74,11 @@ namespace Alterverse.UI
         private bool placingTurret;
         private int placementToggleFrame = -1;
         private float nextPreviewPulse;
+        private float nextPingAllowedAt;
+        private Vector3 activePingWorldPos;
+        private Color activePingColor = Color.white;
+        private string activePingLabel;
+        private float activePingUntil;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
@@ -133,6 +142,7 @@ namespace Alterverse.UI
             }
 
             HandleTurretPlacementInput();
+            HandleTacticalPingInput();
 
             // Expire old floating numbers and feed rows
             float now = Time.unscaledTime;
@@ -375,29 +385,59 @@ namespace Alterverse.UI
             else
                 c = new Color(0.96f, 0.98f, 1f, 1f);
 
+            bool rapidSmallHit = !bigHit && total <= 14f && victim.gameObject != local;
+            Vector3 anchorPos = victim.transform.position + Vector3.up * (isHeroVictim ? 1.75f : 1.25f);
+            if (rapidSmallHit)
+            {
+                float now = Time.unscaledTime;
+                for (int i = numbers.Count - 1; i >= 0; i--)
+                {
+                    FloatingNumber existing = numbers[i];
+                    if (existing.IsRapidStackable && existing.Target == victim && now - existing.PopTime <= 0.26f)
+                    {
+                        existing.AccumulatedValue += total;
+                        int stackedInt = Mathf.Max(1, Mathf.RoundToInt(existing.AccumulatedValue));
+                        existing.Text = stackedInt.ToString();
+                        existing.WorldPos = anchorPos;
+                        existing.PopTime = now;
+                        existing.SpawnTime = Mathf.Max(existing.SpawnTime, now - 0.12f);
+                        existing.FontSize = stackedInt >= 25 ? 18 : 16;
+                        numbers[i] = existing;
+                        return;
+                    }
+                }
+            }
             string text = (bigHit && victim.gameObject != local ? "✦ " : "") + Mathf.Max(1, Mathf.RoundToInt(total));
             SpawnFloating(
-                victim.transform.position + Vector3.up * (isHeroVictim ? 1.75f : 1.25f),
+                anchorPos,
                 text,
                 c,
-                bigHit ? 19 : 15,
-                bigHit ? 0.95f : 0.75f);
+                bigHit ? 20 : 15,
+                bigHit ? 0.95f : 0.75f,
+                victim,
+                total,
+                rapidSmallHit);
         }
 
-        private void SpawnFloating(Vector3 worldPos, string text, Color color, int size, float duration)
+        private void SpawnFloating(Vector3 worldPos, string text, Color color, int size, float duration, Health target = null, float rawValue = 0f, bool rapidStackable = false)
         {
             if (numbers.Count >= MaxFloating)
                 numbers.RemoveAt(0);
             float drift = ((numbers.Count % 5) - 2) * 0.22f;
+            float now = Time.unscaledTime;
             numbers.Add(new FloatingNumber
             {
+                Target = target,
+                AccumulatedValue = rawValue,
                 WorldPos = worldPos + new Vector3(drift, 0f, 0f),
                 Text = text,
                 Color = color,
-                SpawnTime = Time.unscaledTime,
+                SpawnTime = now,
+                PopTime = now,
                 Duration = duration,
                 FontSize = size,
-                DriftX = drift * 18f
+                DriftX = drift * 18f,
+                IsRapidStackable = rapidStackable
             });
         }
 
@@ -571,12 +611,15 @@ namespace Alterverse.UI
             if (Time.timeScale <= 0f || MainMenuController.IsVisible || Event.current.type != EventType.Repaint)
                 return;
             int streakProgress = GetLocalStreakProgress();
-            if (numbers.Count == 0 && feed.Count == 0 && Time.unscaledTime >= activeBannerUntil && localTurretCharges <= 0 && streakProgress <= 0)
-                return;
-
             EnsureStyles();
             Color oldColor = GUI.color;
             Matrix4x4 oldMatrix = GUI.matrix;
+
+            // 0. World-space Active Tactical Ping & Turret Range Preview
+            if (cam != null)
+            {
+                DrawWorldPingAndTurretPreview();
+            }
 
             // 1. World-space Floating Damage & Heal Numbers
             if (cam != null && numbers.Count > 0 && PlayerPreferences.DamageNumbers)
@@ -586,7 +629,8 @@ namespace Alterverse.UI
                 {
                     FloatingNumber fn = numbers[i];
                     float t = Mathf.Clamp01((now - fn.SpawnTime) / Mathf.Max(0.1f, fn.Duration));
-                    Vector3 world = fn.WorldPos + Vector3.up * (t * 0.85f);
+                    float lift = 1f - Mathf.Pow(1f - t, 2.2f);
+                    Vector3 world = fn.WorldPos + Vector3.up * (lift * 0.92f);
                     Vector3 screen = cam.WorldToScreenPoint(world);
                     if (screen.z <= 0f) continue;
 
@@ -595,7 +639,9 @@ namespace Alterverse.UI
                     if (sx < -60f || sx > Screen.width + 60f || sy < -40f || sy > Screen.height + 40f) continue;
 
                     float alpha = t < 0.7f ? 1f : Mathf.Clamp01(1f - (t - 0.7f) / 0.3f);
-                    int fSize = Mathf.RoundToInt(fn.FontSize * Mathf.Clamp(Screen.height / 720f, 0.85f, 1.35f));
+                    float popElapsed = now - fn.PopTime;
+                    float popScale = popElapsed < 0.12f ? Mathf.Lerp(1.32f, 1f, popElapsed / 0.12f) : 1f;
+                    int fSize = Mathf.RoundToInt(fn.FontSize * popScale * Mathf.Clamp(Screen.height / 720f, 0.85f, 1.35f));
                     numStyle.fontSize = fSize;
                     shadowStyle.fontSize = fSize;
 
@@ -646,6 +692,7 @@ namespace Alterverse.UI
                     }
 
                     DrawTurretHudControl(layout, streakProgress);
+                    DrawTacticalPingHud(layout);
                 }
                 finally
                 {
@@ -694,6 +741,176 @@ namespace Alterverse.UI
                 FrontEndTheme.Fill(new Rect(pill.x, pill.yMax - 2f, pill.width * (streakProgress / (float)KillsPerTurret), 2f), barColor);
                 turretBtnSubStyle.normal.textColor = new Color(0.88f, 0.94f, 1f, 0.90f);
                 GUI.Label(pill, GameLanguage.Text($"GESCHÜTZ-STREAK: {streakProgress} / {KillsPerTurret} KILLS"), turretBtnSubStyle);
+            }
+        }
+
+        private static Rect GetPingButtonRect(CombatHudLayout layout, int index)
+        {
+            float w = 104f;
+            float h = 26f;
+            float x = layout.Width - w - 14f;
+            float y = 186f + index * 31f;
+            return new Rect(x, y, w, h);
+        }
+
+        private void HandleTacticalPingInput()
+        {
+            if (InMatchSettingsMenu.IsOpen || (front != null && front.HasEnded) || Time.unscaledTime < nextPingAllowedAt)
+                return;
+
+            GameObject localHero = LocalHeroContext.Find();
+            if (localHero == null) return;
+
+            Keyboard kb = Keyboard.current;
+            if (kb != null)
+            {
+                if (kb.digit1Key.wasPressedThisFrame) { TriggerTacticalPing(0, localHero); return; }
+                if (kb.digit2Key.wasPressedThisFrame) { TriggerTacticalPing(1, localHero); return; }
+                if (kb.digit3Key.wasPressedThisFrame) { TriggerTacticalPing(2, localHero); return; }
+            }
+
+            if (placingTurret) return;
+
+            CombatHudLayout layout = new CombatHudLayout(Screen.safeArea);
+            if (layout.Safe.width <= 0f || layout.Safe.height <= 0f) return;
+
+            var touches = ETouch.activeTouches;
+            for (int i = 0; i < touches.Count; i++)
+            {
+                var touch = touches[i];
+                if (touch.phase != UnityEngine.InputSystem.TouchPhase.Began) continue;
+                Vector2 pt = layout.Point(touch.screenPosition);
+                for (int p = 0; p < 3; p++)
+                {
+                    if (GetPingButtonRect(layout, p).Contains(pt))
+                    {
+                        TriggerTacticalPing(p, localHero);
+                        return;
+                    }
+                }
+            }
+
+            if (touches.Count == 0 && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                Vector2 pt = layout.Point(Mouse.current.position.ReadValue());
+                for (int p = 0; p < 3; p++)
+                {
+                    if (GetPingButtonRect(layout, p).Contains(pt))
+                    {
+                        TriggerTacticalPing(p, localHero);
+                        return;
+                    }
+                }
+            }
+        }
+
+        private void TriggerTacticalPing(int kind, GameObject localHero)
+        {
+            nextPingAllowedAt = Time.unscaledTime + 1.1f;
+            TeamMember tm = localHero.GetComponent<TeamMember>();
+            int team = tm != null ? tm.Team : 0;
+            SoftTargeting targeting = localHero.GetComponent<SoftTargeting>();
+            Health focus = targeting != null ? targeting.Current : null;
+
+            Vector3 pingPos;
+            if (kind == 0) // Attack
+            {
+                pingPos = focus != null ? focus.transform.position : localHero.transform.position + localHero.transform.forward * 5.5f;
+                activePingColor = new Color(1f, 0.36f, 0.32f, 0.96f);
+                activePingLabel = GameLanguage.Text("⚔ ANGRIFF!");
+            }
+            else if (kind == 1) // Rally / Objective
+            {
+                DimensionPlanet planet = FindAnyObjectByType<DimensionPlanet>();
+                pingPos = (planet != null && planet.Available) ? planet.transform.position : Vector3.zero;
+                activePingColor = new Color(1f, 0.82f, 0.24f, 0.96f);
+                activePingLabel = GameLanguage.Text("🪐 SAMMELN BEIM ZIEL!");
+            }
+            else // Defend
+            {
+                float homeX = team == 0 ? -ArenaLayout.HealingX * 0.65f : ArenaLayout.HealingX * 0.65f;
+                pingPos = new Vector3(homeX, 0f, 0f);
+                activePingColor = new Color(0.24f, 0.86f, 1f, 0.96f);
+                activePingLabel = GameLanguage.Text("🛡 VERTEIDIGEN!");
+            }
+            pingPos.y = LunarSurfaceField.WorldSurface(pingPos.x, pingPos.z).y;
+            activePingWorldPos = pingPos;
+            activePingUntil = Time.unscaledTime + 3.2f;
+
+            UiSoundRouter.Confirm();
+            PrototypeVfx.Ring(pingPos, activePingColor, 1.85f, 0.45f);
+            if (CoopAuthority.CanSimulateHostGameplay)
+                Alterverse.AI.BotTeamCoordinator.NotifyPlayerPing(team, kind, pingPos, focus);
+        }
+
+        private void DrawTacticalPingHud(CombatHudLayout layout)
+        {
+            if (InMatchSettingsMenu.IsOpen || (front != null && front.HasEnded)) return;
+            string[] labels = { "⚔ ANGRIFF [1]", "🪐 SAMMELN [2]", "🛡 SCHUTZ [3]" };
+            Color[] colors = {
+                new Color(1f, 0.42f, 0.38f, 0.92f),
+                new Color(1f, 0.82f, 0.28f, 0.92f),
+                new Color(0.28f, 0.86f, 1f, 0.92f)
+            };
+            for (int i = 0; i < 3; i++)
+            {
+                Rect r = GetPingButtonRect(layout, i);
+                theme.HudPanel(r, 0.74f);
+                FrontEndTheme.Fill(new Rect(r.x, r.y, 3f, r.height), colors[i]);
+                turretBtnSubStyle.normal.textColor = Color.Lerp(colors[i], Color.white, 0.42f);
+                GUI.Label(new Rect(r.x + 6f, r.y + 3f, r.width - 8f, r.height - 6f), labels[i], turretBtnSubStyle);
+            }
+        }
+
+        private void DrawWorldPingAndTurretPreview()
+        {
+            float scale = Mathf.Clamp(Screen.height / 900f, 0.75f, 1.25f);
+            float now = Time.unscaledTime;
+
+            // Active Tactical Ping Marker in world space
+            if (now < activePingUntil && !string.IsNullOrEmpty(activePingLabel))
+            {
+                Vector3 sp = cam.WorldToScreenPoint(activePingWorldPos + Vector3.up * 0.35f);
+                if (sp.z > 0f)
+                {
+                    Vector2 center = new Vector2(sp.x, Screen.height - sp.y);
+                    float wave = Mathf.Repeat(now * 2.2f, 1f);
+                    float r = Mathf.Lerp(16f, 44f, wave) * scale;
+                    Color ringCol = activePingColor;
+                    ringCol.a = (1f - wave) * 0.85f;
+                    CombatGlyphs.Ring(center, r, 2.2f * scale, ringCol, 28);
+                    CombatGlyphs.Ring(center, 14f * scale, 2.0f * scale, activePingColor, 24);
+                    bannerSubStyle.normal.textColor = activePingColor;
+                    GUI.Label(new Rect(center.x - 90f, center.y - 32f * scale, 180f, 20f), activePingLabel, bannerSubStyle);
+                }
+            }
+
+            // Live Turret Range & Target Reticle when in placement mode
+            if (placingTurret && localTurretCharges > 0)
+            {
+                GameObject localHero = LocalHeroContext.Find();
+                if (localHero != null)
+                {
+                    Vector2 pointer = Mouse.current != null
+                        ? Mouse.current.position.ReadValue()
+                        : new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+                    if (ETouch.activeTouches.Count > 0)
+                        pointer = ETouch.activeTouches[0].screenPosition;
+
+                    if (TryScreenToArenaGround(pointer, localHero.transform.position, out Vector3 groundPt))
+                    {
+                        Vector3 centerScreen = cam.WorldToScreenPoint(groundPt + Vector3.up * 0.1f);
+                        Vector3 edgeScreen = cam.WorldToScreenPoint(groundPt + cam.transform.right * KillstreakBoltTurret.AttackRange + Vector3.up * 0.1f);
+                        if (centerScreen.z > 0f && edgeScreen.z > 0f)
+                        {
+                            Vector2 c = new Vector2(centerScreen.x, Screen.height - centerScreen.y);
+                            float pixelRadius = Mathf.Clamp(Vector2.Distance(c, new Vector2(edgeScreen.x, Screen.height - edgeScreen.y)), 28f, Screen.width * 0.45f);
+                            Color rangeCol = new Color(0.22f, 0.90f, 1f, 0.65f);
+                            CombatGlyphs.Ring(c, pixelRadius, 1.8f * scale, rangeCol, 48);
+                            CombatGlyphs.Ring(c, 12f * scale, 2.0f * scale, new Color(1f, 0.82f, 0.25f, 0.92f), 20);
+                        }
+                    }
+                }
             }
         }
     }
