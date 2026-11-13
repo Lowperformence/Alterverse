@@ -25,3 +25,4 @@ jobs:
       - run: python Tools/Multiplayer/LoadingRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Lobby/Regression/offline_ui.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/UI/HeroPortraitRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/UI/HeroPortraitRegression/planet.py --dotnet-root "$DOTNET_ROOT"
