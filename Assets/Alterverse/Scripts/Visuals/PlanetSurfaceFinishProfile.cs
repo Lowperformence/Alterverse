@@ -12,20 +12,20 @@ namespace Alterverse.Visuals
 
         public static PlanetSurfaceFinishProfile For(ArenaVariant planet) => planet switch
         {
-            ArenaVariant.Moon => new(.12f,.30f,.34f),
-            ArenaVariant.Mars => new(.10f,.25f,.36f),
-            ArenaVariant.GreenPlanet => new(.08f,.28f,.26f),
-            ArenaVariant.Noxara => new(-.03f,.30f,.30f),
-            ArenaVariant.Kryon => new(-.15f,.16f,.18f),
-            ArenaVariant.Earth => new(.08f,.32f,.27f),
-            ArenaVariant.Pyraxis => new(.12f,.35f,.28f),
-            ArenaVariant.Neptune => new(-.14f,.24f,.24f),
-            ArenaVariant.Dark00 => new(.10f,.12f,.15f),
-            ArenaVariant.DiamondCore => new(-.20f,.12f,.13f),
-            ArenaVariant.GJ504b => new(.12f,.25f,.32f),
-            ArenaVariant.Wasp76b => new(-.07f,.28f,.26f),
-            ArenaVariant.Trappist1e => new(-.04f,.25f,.24f),
-            ArenaVariant.Toi715b => new(.09f,.26f,.30f),
+            ArenaVariant.Moon => new(.10f,.42f,.44f),
+            ArenaVariant.Mars => new(.08f,.36f,.46f),
+            ArenaVariant.GreenPlanet => new(.06f,.38f,.34f),
+            ArenaVariant.Noxara => new(-.05f,.40f,.38f),
+            ArenaVariant.Kryon => new(-.18f,.24f,.26f),
+            ArenaVariant.Earth => new(.06f,.42f,.35f),
+            ArenaVariant.Pyraxis => new(.10f,.46f,.36f),
+            ArenaVariant.Neptune => new(-.16f,.34f,.32f),
+            ArenaVariant.Dark00 => new(.08f,.18f,.20f),
+            ArenaVariant.DiamondCore => new(-.22f,.18f,.18f),
+            ArenaVariant.GJ504b => new(.10f,.36f,.40f),
+            ArenaVariant.Wasp76b => new(-.09f,.38f,.34f),
+            ArenaVariant.Trappist1e => new(-.06f,.35f,.32f),
+            ArenaVariant.Toi715b => new(.07f,.36f,.38f),
             _ => throw new ArgumentOutOfRangeException(nameof(planet))
         };
     }

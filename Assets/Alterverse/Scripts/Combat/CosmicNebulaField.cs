@@ -37,17 +37,17 @@ namespace Alterverse.Combat
         }
         // Shown to the owner and allies only while enemies outside the cloud cannot see this hero.
         public static bool IsConcealed(Health target)
-            =>instance!=null&&target!=null&&!target.IsDead&&target.GetComponent<HeroIdentity>()!=null&&
-              instance.At(target.transform.position)>=0&&(target.GetComponent<CosmicNebulaState>()?.RevealRemaining??0)<=0;
+            =>instance!=null&&target!=null&&!target.IsDead&&instance.At(target.transform.position)>=0&&
+              target.GetComponent<HeroIdentity>()!=null&&(target.GetComponent<CosmicNebulaState>()?.RevealRemaining??0)<=0;
         public static bool HiddenFrom(GameObject observer,Health target)
         {
-            if(instance==null||observer==null||target==null||target.IsDead||observer==target.gameObject||
-                target.GetComponent<HeroIdentity>()==null)return false;
+            if(instance==null||observer==null||target==null||target.IsDead||observer==target.gameObject)return false;
+            int cloud=instance.At(target.transform.position);
+            if(cloud<0||target.GetComponent<HeroIdentity>()==null)return false;
             var viewer=observer.GetComponent<TeamMember>();var owner=target.GetComponent<TeamMember>();
             int viewerTeam=viewer!=null?viewer.Team:observer.GetComponent<LaneMinion>()?.Team??observer.GetComponent<LaneTower>()?.Team??-1;
             if(viewerTeam<0||owner==null||viewerTeam==owner.Team)return false;
-            int cloud=instance.At(target.transform.position);
-            return CosmicNebulaLayout.Concealed(true,cloud>=0,cloud>=0&&instance.At(observer.transform.position)==cloud,
+            return CosmicNebulaLayout.Concealed(true,true,instance.At(observer.transform.position)==cloud,
                 target.GetComponent<CosmicNebulaState>()?.RevealRemaining??0);
         }
         public static void BroadcastReveal(GameObject actor)

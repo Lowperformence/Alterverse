@@ -6,7 +6,7 @@
 half DFMicroVisibility(float3 positionWS,float frequency)
 {
     float footprint=max(length(ddx(positionWS)),length(ddy(positionWS)))*frequency;
-    return 1-smoothstep(.06,.30,footprint);
+    return 1-smoothstep(.12,.48,footprint);
 }
 
 half4 DFMicroTriplanar(TEXTURE2D_PARAM(textureData,textureSampler),float3 p,half3 n,float3 dx,float3 dy,out half3 gradient)

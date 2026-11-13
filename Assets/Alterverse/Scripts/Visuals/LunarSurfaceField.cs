@@ -255,7 +255,7 @@ namespace Alterverse.Visuals
                 else if (quality == Alterverse.Performance.MobileQuality.Balanced)
                 {
                     size = 768;
-                    aniso = 4;
+                    aniso = 6;
                 }
                 else
                 {
@@ -361,7 +361,7 @@ namespace Alterverse.Visuals
                 }
             }
 
-            float normalStrength=moon?2.4f:ArenaVariantRuntime.IsEarth?.85f:1.8f;
+            float normalStrength=moon?2.85f:ArenaVariantRuntime.IsEarth?1.15f:2.25f;
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)
             {
                 float dx=(heights[z*size+Mathf.Min(size-1,x+1)]-heights[z*size+Mathf.Max(0,x-1)])/(2*spanX/(size-1));

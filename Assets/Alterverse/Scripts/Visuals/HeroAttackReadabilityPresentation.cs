@@ -20,7 +20,9 @@ namespace Alterverse.Visuals
         private TeamMember team;
         private HeroVisualMotion motion;
 
+        private static Camera cachedMainCamera;
         private Transform root,orb,muzzle;
+        private bool partsSearched;
 
         private float previousBasic;
         private readonly float[] previousAbility=new float[4];
@@ -235,7 +237,8 @@ namespace Alterverse.Visuals
             Color core=Color.Lerp(accent,Color.white,.72f);
             core.a=.86f;
             float power=slot==3?1.25f:slot<0?.74f:1f;
-            Camera view=Camera.main;
+            if(cachedMainCamera==null||!cachedMainCamera.isActiveAndEnabled)cachedMainCamera=Camera.main;
+            Camera view=cachedMainCamera;
             HeroVfxPool.Emit(HeroFxShape.ContactStar,hand,hand,Vector3.one*.16f*power,core,.065f,
                 HeroFxMotion.Contract,view!=null?view.transform.rotation:facing,gameObject,decorative:true);
             switch(hero)
@@ -281,13 +284,16 @@ namespace Alterverse.Visuals
         {
             if(motion==null)motion=GetComponent<HeroVisualMotion>();
             if(motion!=null)return motion.ReleasePoint;
-            if(root==null)root=transform.Find("DF_VisualRoot");
-            if(muzzle==null)muzzle=FindPart("Muzzle");
-            if(orb==null)orb=FindPart("Orb");
+            if(!partsSearched)
+            {
+                partsSearched=true;
+                if(root==null)root=transform.Find("DF_VisualRoot");
+                if(muzzle==null)muzzle=FindPart("Muzzle");
+                if(orb==null)orb=FindPart("Orb");
+            }
             if(muzzle!=null)return muzzle.position;
             if(orb!=null)return orb.position;
             return transform.position+Vector3.up*.75f+transform.forward*.35f;
         }
-
     }
 }

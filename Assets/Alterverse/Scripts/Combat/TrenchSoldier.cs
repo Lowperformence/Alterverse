@@ -17,8 +17,13 @@ namespace Alterverse.Combat
     {
         public const float WaveInterval=30f;
         public const int MaxAlivePerTeam=10;
+        private static SpawnHealingZone[] cachedZones;
+        private static Transform cachedMatchWorld;
         private float nextWaveAt;
         private int waveIndex;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetDirectorCache(){cachedZones=null;cachedMatchWorld=null;}
 
         private void Start(){nextWaveAt=Time.time+WaveInterval;}
 
@@ -56,10 +61,9 @@ namespace Alterverse.Combat
 
         private static Vector3 ResolveDeploymentPoint(int team,int slot,DefenseTrench sourceTrench)
         {
-            // Unity 6.6: use the parameterless FindObjectsByType overload. Do not depend on
-            // SpawnHealingZone exposing a Team property; choose the healing zone on the owning
-            // side of the arena and then prefer the one closest to the source trench.
-            SpawnHealingZone[] zones=Object.FindObjectsByType<SpawnHealingZone>();
+            if(cachedZones==null||cachedZones.Length==0||cachedZones[0]==null)
+                cachedZones=Object.FindObjectsByType<SpawnHealingZone>();
+            SpawnHealingZone[] zones=cachedZones;
             SpawnHealingZone bestZone=null;
             float bestDistance=float.MaxValue;
 
@@ -150,9 +154,57 @@ namespace Alterverse.Combat
         private float moveBlend,stridePhase,attackStarted=-10f,attackLength=.46f,attackAimYaw,deathBlend;
 
         private Material suitMat,darkMat,visorMat,weaponMat,energyMat;
+        private sealed class SharedPalette
+        {
+            public Material Suit,Dark,Visor,Weapon,Energy;
+            public bool Valid=>Suit!=null&&Dark!=null&&Visor!=null&&Weapon!=null&&Energy!=null;
+        }
+        private static readonly SharedPalette[] teamPalettes=new SharedPalette[2];
+        private static readonly Dictionary<PrimitiveType,Mesh> primitiveMeshes=new();
+        private static Transform cachedSoldierWorld;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetRegistry()=>active.Clear();
+        private static void ResetRegistry()
+        {
+            active.Clear();
+            teamPalettes[0]=null;
+            teamPalettes[1]=null;
+            primitiveMeshes.Clear();
+            cachedSoldierWorld=null;
+        }
+
+        private static Mesh GetSharedPrimitiveMesh(PrimitiveType type)
+        {
+            if(primitiveMeshes.TryGetValue(type,out Mesh mesh)&&mesh!=null)return mesh;
+            GameObject temp=GameObject.CreatePrimitive(type);
+            MeshFilter mf=temp.GetComponent<MeshFilter>();
+            mesh=mf!=null?mf.sharedMesh:null;
+            Object.Destroy(temp);
+            if(mesh!=null)primitiveMeshes[type]=mesh;
+            return mesh;
+        }
+
+        private static SharedPalette GetTeamPalette(int teamIndex,Shader shader)
+        {
+            int idx=Mathf.Clamp(teamIndex,0,1);
+            SharedPalette p=teamPalettes[idx];
+            if(p!=null&&p.Valid)return p;
+            Color teamEnergy=idx==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
+            Color suit=new(.77f,.80f,.80f,1f);
+            Color suitDark=new(.27f,.30f,.31f,1f);
+            Color visor=new(.045f,.075f,.105f,1f);
+            Color weapon=new(.06f,.28f,.52f,1f);
+            p=new SharedPalette
+            {
+                Suit=MakeMaterial(shader,suit,.18f,.46f,Color.black),
+                Dark=MakeMaterial(shader,suitDark,.45f,.38f,Color.black),
+                Visor=MakeMaterial(shader,visor,.34f,.72f,new Color(.02f,.10f,.16f)*.35f),
+                Weapon=MakeMaterial(shader,weapon,.58f,.40f,Color.black),
+                Energy=MakeMaterial(shader,teamEnergy,.08f,.74f,teamEnergy*2.2f)
+            };
+            teamPalettes[idx]=p;
+            return p;
+        }
         private void OnEnable(){if(!active.Contains(this))active.Add(this);}
         private void OnDisable(){active.Remove(this);}
 
@@ -176,8 +228,8 @@ namespace Alterverse.Combat
             GameObject go=new(team==0?"DF_ZeroTrenchSoldier":"DF_LumenTrenchSoldier");
             go.layer=GameplayCollision.Units;
             go.transform.position=position;
-            GameObject world=GameObject.Find("DF_MatchWorld");
-            if(world!=null)go.transform.SetParent(world.transform,true);
+            if(cachedSoldierWorld==null){GameObject world=GameObject.Find("DF_MatchWorld");if(world!=null)cachedSoldierWorld=world.transform;}
+            if(cachedSoldierWorld!=null)go.transform.SetParent(cachedSoldierWorld,true);
 
             Health hp=go.AddComponent<Health>();hp.Configure(MaxHp,true);
             go.AddComponent<TeamMember>().Initialize(team);
@@ -451,17 +503,12 @@ namespace Alterverse.Combat
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
             if(shader==null)return;
 
-            Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Color suit=new(.77f,.80f,.80f,1f);
-            Color suitDark=new(.27f,.30f,.31f,1f);
-            Color visor=new(.045f,.075f,.105f,1f);
-            Color weapon=new(.06f,.28f,.52f,1f);
-
-            suitMat=MakeMaterial(shader,suit,.18f,.46f,Color.black);
-            darkMat=MakeMaterial(shader,suitDark,.45f,.38f,Color.black);
-            visorMat=MakeMaterial(shader,visor,.34f,.72f,new Color(.02f,.10f,.16f)*.35f);
-            weaponMat=MakeMaterial(shader,weapon,.58f,.40f,Color.black);
-            energyMat=MakeMaterial(shader,teamEnergy,.08f,.74f,teamEnergy*2.2f);
+            SharedPalette palette=GetTeamPalette(team,shader);
+            suitMat=palette.Suit;
+            darkMat=palette.Dark;
+            visorMat=palette.Visor;
+            weaponMat=palette.Weapon;
+            energyMat=palette.Energy;
 
             visualRoot=new GameObject("DF_TrenchSoldierVisual").transform;
             visualRoot.SetParent(transform,false);
@@ -605,19 +652,39 @@ namespace Alterverse.Combat
 
         private static Transform Part(string name,PrimitiveType type,Transform parent,Vector3 position,Vector3 scale,Material material,Quaternion rotation)
         {
-            GameObject go=GameObject.CreatePrimitive(type);
-            go.name="DF_TrenchSoldier_"+name;
-            go.transform.SetParent(parent,false);
-            go.transform.localPosition=position;go.transform.localScale=scale;go.transform.localRotation=rotation;
-            Collider collider=go.GetComponent<Collider>();if(collider!=null){collider.enabled=false;Object.Destroy(collider);}
-            Renderer renderer=go.GetComponent<Renderer>();
-            if(renderer!=null){renderer.sharedMaterial=material;renderer.shadowCastingMode=ShadowCastingMode.On;renderer.receiveShadows=true;}
+            Mesh sharedMesh=GetSharedPrimitiveMesh(type);
+            GameObject go;
+            Renderer renderer;
+            if(sharedMesh!=null)
+            {
+                go=new GameObject("DF_TrenchSoldier_"+name);
+                go.transform.SetParent(parent,false);
+                go.transform.localPosition=position;go.transform.localScale=scale;go.transform.localRotation=rotation;
+                go.AddComponent<MeshFilter>().sharedMesh=sharedMesh;
+                renderer=go.AddComponent<MeshRenderer>();
+            }
+            else
+            {
+                go=GameObject.CreatePrimitive(type);
+                go.name="DF_TrenchSoldier_"+name;
+                go.transform.SetParent(parent,false);
+                go.transform.localPosition=position;go.transform.localScale=scale;go.transform.localRotation=rotation;
+                Collider collider=go.GetComponent<Collider>();if(collider!=null){collider.enabled=false;Object.Destroy(collider);}
+                renderer=go.GetComponent<Renderer>();
+            }
+            if(renderer!=null)
+            {
+                renderer.sharedMaterial=material;
+                bool castShadow=name=="Torso";
+                renderer.shadowCastingMode=castShadow?ShadowCastingMode.On:ShadowCastingMode.Off;
+                renderer.receiveShadows=true;
+            }
             return go.transform;
         }
 
         private static Material MakeMaterial(Shader shader,Color color,float metallic,float smoothness,Color emission)
         {
-            Material material=new(shader){color=color};
+            Material material=new(shader){color=color,enableInstancing=true};
             if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",color);
             if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",metallic);
             if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",smoothness);
@@ -631,11 +698,6 @@ namespace Alterverse.Combat
         private void OnDestroy()
         {
             active.Remove(this);
-            if(suitMat!=null)Destroy(suitMat);
-            if(darkMat!=null)Destroy(darkMat);
-            if(visorMat!=null)Destroy(visorMat);
-            if(weaponMat!=null)Destroy(weaponMat);
-            if(energyMat!=null)Destroy(energyMat);
         }
     }
 
@@ -646,58 +708,115 @@ namespace Alterverse.Combat
     /// </summary>
     public static class TeamSupportGroup
     {
+        private struct CachedUnitRole
+        {
+            public bool IsStructure;
+            public bool IsHero;
+            public int Team;
+        }
+        private static readonly Dictionary<Health,CachedUnitRole> roleCache=new(64);
+        private static readonly List<Health> team0Heroes=new(8);
+        private static readonly List<Health> team1Heroes=new(8);
+        private static int cacheFrame=-1;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetGroupCache()
+        {
+            roleCache.Clear();
+            team0Heroes.Clear();
+            team1Heroes.Clear();
+            cacheFrame=-1;
+        }
+
+        private static void EnsureFrameCache()
+        {
+            int frame=Time.frameCount;
+            if(cacheFrame==frame)return;
+            cacheFrame=frame;
+            roleCache.Clear();
+            team0Heroes.Clear();
+            team1Heroes.Clear();
+            var active=Health.Active;
+            for(int i=0;i<active.Count;i++)
+            {
+                Health candidate=active[i];
+                if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled)continue;
+                bool isStructure=candidate.GetComponent<RealityCore>()!=null||candidate.GetComponent<LaneTower>()!=null;
+                int unitTeam=-1;
+                bool isHero=false;
+                if(!isStructure)
+                {
+                    TeamMember member=candidate.GetComponent<TeamMember>();
+                    if(member!=null)
+                    {
+                        unitTeam=member.Team;
+                        isHero=candidate.GetComponent<HeroIdentity>()!=null;
+                    }
+                    else
+                    {
+                        LaneMinion minion=candidate.GetComponent<LaneMinion>();
+                        if(minion!=null)unitTeam=minion.Team;
+                    }
+                }
+                roleCache[candidate]=new CachedUnitRole{IsStructure=isStructure,IsHero=isHero,Team=unitTeam};
+                if(isHero)
+                {
+                    if(unitTeam==0)team0Heroes.Add(candidate);
+                    else if(unitTeam==1)team1Heroes.Add(candidate);
+                }
+            }
+        }
+
         public static bool TryGetAnchor(int team,Vector3 from,out Health leader,out Vector3 anchor)
         {
+            EnsureFrameCache();
             leader=null;anchor=Vector3.zero;
+            List<Health> alliedHeroes=team==0?team0Heroes:team1Heroes;
+            int heroCount=alliedHeroes.Count;
+            if(heroCount==0)return false;
             int bestNearby=-1;float bestDistance=float.MaxValue;
-
-            for(int i=0;i<Health.Active.Count;i++)
+            for(int i=0;i<heroCount;i++)
             {
-                Health candidate=Health.Active[i];
-                if(!IsAlliedHero(candidate,team))continue;
+                Health candidate=alliedHeroes[i];
+                if(candidate==null||candidate.IsDead)continue;
                 int nearby=0;
-                for(int j=0;j<Health.Active.Count;j++)
+                Vector3 cPos=candidate.transform.position;
+                for(int j=0;j<heroCount;j++)
                 {
-                    Health other=Health.Active[j];
-                    if(!IsAlliedHero(other,team))continue;
-                    Vector3 groupDelta=other.transform.position-candidate.transform.position;groupDelta.y=0;
+                    Health other=alliedHeroes[j];
+                    if(other==null||other.IsDead)continue;
+                    Vector3 groupDelta=other.transform.position-cPos;groupDelta.y=0;
                     if(groupDelta.sqrMagnitude<=9f*9f)nearby++;
                 }
-                Vector3 d=candidate.transform.position-from;d.y=0;
+                Vector3 d=cPos-from;d.y=0;
                 float distance=d.sqrMagnitude;
                 if(nearby>bestNearby||nearby==bestNearby&&distance<bestDistance)
                 {
                     bestNearby=nearby;bestDistance=distance;leader=candidate;
                 }
             }
-
             if(leader==null)return false;
-
             Vector3 sum=Vector3.zero;int count=0;
-            for(int i=0;i<Health.Active.Count;i++)
+            Vector3 lPos=leader.transform.position;
+            for(int i=0;i<heroCount;i++)
             {
-                Health other=Health.Active[i];
-                if(!IsAlliedHero(other,team))continue;
-                Vector3 d=other.transform.position-leader.transform.position;d.y=0;
+                Health other=alliedHeroes[i];
+                if(other==null||other.IsDead)continue;
+                Vector3 d=other.transform.position-lPos;d.y=0;
                 if(d.sqrMagnitude>9f*9f)continue;
                 sum+=other.transform.position;count++;
             }
-            anchor=count>0?sum/count:leader.transform.position;
+            anchor=count>0?sum/count:lPos;
             return true;
         }
 
         public static bool TryGetMonsterAnchor(int team,Vector3 from,out Health leader,out Vector3 anchor)
         {
             leader=null;anchor=Vector3.zero;
-
-            // Hot Zone rewards behave like heavy members of the infantry group first.
-            // If no living soldier is reasonably close, they immediately fall back to the
-            // hero group so the reward never wanders around the map by itself.
             const float soldierJoinRadius=15f;
             float joinSqr=soldierJoinRadius*soldierJoinRadius;
             TrenchSoldier closest=null;
             float closestSqr=float.MaxValue;
-
             IReadOnlyList<TrenchSoldier> soldiers=TrenchSoldier.Active;
             for(int i=0;i<soldiers.Count;i++)
             {
@@ -708,7 +827,6 @@ namespace Alterverse.Combat
                 if(sqr>joinSqr||sqr>=closestSqr)continue;
                 closest=soldier;closestSqr=sqr;
             }
-
             if(closest!=null)
             {
                 Vector3 sum=Vector3.zero;int count=0;
@@ -720,12 +838,10 @@ namespace Alterverse.Combat
                     if(d.sqrMagnitude>8f*8f)continue;
                     sum+=soldier.transform.position;count++;
                 }
-
                 leader=closest.Vitals;
                 anchor=count>0?sum/count:closest.transform.position;
                 return true;
             }
-
             return TryGetAnchor(team,from,out leader,out anchor);
         }
 
@@ -740,21 +856,25 @@ namespace Alterverse.Combat
         public static bool IsEnemyCombatUnit(Health candidate,int team)
         {
             if(candidate==null||candidate.IsDead)return false;
+            EnsureFrameCache();
+            if(roleCache.TryGetValue(candidate,out CachedUnitRole role))
+                return !role.IsStructure&&role.Team>=0&&role.Team!=team;
             if(candidate.GetComponent<RealityCore>()!=null||candidate.GetComponent<LaneTower>()!=null)return false;
-
             TeamMember member=candidate.GetComponent<TeamMember>();
             if(member!=null)return member.Team!=team;
-
             LaneMinion minion=candidate.GetComponent<LaneMinion>();
             return minion!=null&&minion.Team!=team;
         }
 
         private static bool IsAlliedHero(Health candidate,int team)
         {
-            if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled||candidate.GetComponent<HeroIdentity>()==null)return false;
+            if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled)return false;
+            EnsureFrameCache();
+            if(roleCache.TryGetValue(candidate,out CachedUnitRole role))
+                return role.IsHero&&role.Team==team;
+            if(candidate.GetComponent<HeroIdentity>()==null)return false;
             TeamMember member=candidate.GetComponent<TeamMember>();
             return member!=null&&member.Team==team;
         }
     }
 }
-

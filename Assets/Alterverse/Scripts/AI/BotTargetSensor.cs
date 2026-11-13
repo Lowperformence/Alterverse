@@ -51,28 +51,37 @@ namespace Alterverse.AI
             public HeroCombatStatus Status;
             public DimensionPlanet Planet;
             public RealityCore Core;
+            public bool Cacheable;
         }
         private static readonly System.Collections.Generic.Dictionary<EntityId, CachedUnit> unitCache = new(64);
         private static CachedUnit ResolveUnit(Health health)
         {
             if (health == null) return default;
             EntityId id = health.GetEntityId();
-            if (unitCache.TryGetValue(id, out CachedUnit cached) && ReferenceEquals(cached.Health, health))
+            if (unitCache.TryGetValue(id, out CachedUnit cached) && ReferenceEquals(cached.Health, health) && cached.Cacheable)
                 return cached;
             if (unitCache.Count > 256) unitCache.Clear();
+            var hero = health.GetComponent<HeroIdentity>();
+            var team = health.GetComponent<TeamMember>();
+            var planet = health.GetComponent<DimensionPlanet>();
+            var core = health.GetComponent<RealityCore>();
+            bool cacheable = hero != null || team != null || planet != null || core != null ||
+                             health.GetComponent<LaneMinion>() != null || health.GetComponent<LaneTower>() != null;
             cached = new CachedUnit
             {
                 Health = health,
-                Hero = health.GetComponent<HeroIdentity>(),
-                Team = health.GetComponent<TeamMember>(),
+                Hero = hero,
+                Team = team,
                 Status = health.GetComponent<HeroCombatStatus>(),
-                Planet = health.GetComponent<DimensionPlanet>(),
-                Core = health.GetComponent<RealityCore>()
+                Planet = planet,
+                Core = core,
+                Cacheable = cacheable
             };
-            if (cached.Hero != null || cached.Team != null || cached.Planet != null || cached.Core != null)
+            if (cacheable)
                 unitCache[id] = cached;
             return cached;
         }
+
         private MobaBotBrain brain;
         private HotZoneDirector hotZone;
         private float nextHotZoneSearch;

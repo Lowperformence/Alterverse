@@ -52,14 +52,14 @@ namespace Alterverse.Visuals
             material.SetFloat("_CavityStrength",finish.CavityStrength);
             material.SetFloat("_DetailContrast",finish.DetailContrast);
             material.SetFloat("_MacroScale",.047f);
-            material.SetFloat("_MacroStrength",ArenaVariantRuntime.IsExoplanet?.42f:ArenaVariantRuntime.IsDiamondCore?.34f:ArenaVariantRuntime.IsKryon?.40f:.52f);
+            material.SetFloat("_MacroStrength",ArenaVariantRuntime.IsExoplanet?.50f:ArenaVariantRuntime.IsDiamondCore?.40f:ArenaVariantRuntime.IsKryon?.48f:.60f);
             material.SetFloat("_SurfaceMode",ground?0f:crater?1f:2f);
             material.SetFloat("_DetailScale",ArenaVariantRuntime.IsDiamondCore?.18f:ArenaVariantRuntime.IsKryon?.16f:ArenaVariantRuntime.IsMars?.34f:ArenaVariantRuntime.IsGJ504b?.21f:.27f); // Finer world-space detail, shared by ground, craters and cliffs.
-            material.SetFloat("_SandStrength",ArenaVariantRuntime.IsToi715b?.24f:ArenaVariantRuntime.IsWasp76b?.06f:ArenaVariantRuntime.IsTrappist1e?.14f:ArenaVariantRuntime.IsGJ504b?.46f:ArenaVariantRuntime.IsMars?.33f:
-                ArenaVariantRuntime.IsKryon?.13f:ArenaVariantRuntime.IsGreenPlanet?.20f:
-                ArenaVariantRuntime.IsEarth?.12f:ArenaVariantRuntime.IsPyraxis?.08f:ArenaVariantRuntime.IsNeptune?.10f:.27f);
-            material.SetFloat("_RockStrength",ArenaVariantRuntime.IsGJ504b?.42f:ArenaVariantRuntime.IsPyraxis?.48f:ArenaVariantRuntime.IsNeptune?.40f:.34f);
-            material.SetFloat("_BumpScale",ground?(ArenaVariantRuntime.IsEarth?.34f:ArenaVariantRuntime.IsNeptune?.38f:.44f):0f);
+            material.SetFloat("_SandStrength",ArenaVariantRuntime.IsToi715b?.28f:ArenaVariantRuntime.IsWasp76b?.08f:ArenaVariantRuntime.IsTrappist1e?.18f:ArenaVariantRuntime.IsGJ504b?.52f:ArenaVariantRuntime.IsMars?.38f:
+                ArenaVariantRuntime.IsKryon?.16f:ArenaVariantRuntime.IsGreenPlanet?.24f:
+                ArenaVariantRuntime.IsEarth?.15f:ArenaVariantRuntime.IsPyraxis?.11f:ArenaVariantRuntime.IsNeptune?.13f:.32f);
+            material.SetFloat("_RockStrength",ArenaVariantRuntime.IsGJ504b?.48f:ArenaVariantRuntime.IsPyraxis?.55f:ArenaVariantRuntime.IsNeptune?.46f:.42f);
+            material.SetFloat("_BumpScale",ground?(ArenaVariantRuntime.IsEarth?.44f:ArenaVariantRuntime.IsNeptune?.48f:.56f):0f);
         }
 
         static Texture2D Bake(bool rock)

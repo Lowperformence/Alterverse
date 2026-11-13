@@ -1,15 +1,38 @@
+using System.Collections.Generic;
 using UnityEngine;
+
 namespace Alterverse.Combat
 {
     // Only the strongest slow is kept; durations never add. Short post-stun immunity prevents chains.
     public sealed class HeroCombatStatus : MonoBehaviour
     {
+        private static readonly Dictionary<GameObject, HeroCombatStatus> statusByActor = new(32);
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticLookup() => statusByActor.Clear();
+
         private float slowUntil, slowFactor = 1f, stunUntil, stunImmuneUntil, speedBoostUntil, speedBoostFactor = 1f;
         private bool networkOverride,networkStunned;
         private float networkMoveMultiplier=1f;
         private Object rootOwner;
         private float rootUntil;
         private bool rootLocksActions;
+
+        private void Awake()
+        {
+            if (gameObject != null) statusByActor[gameObject] = this;
+        }
+
+        private void OnEnable()
+        {
+            if (gameObject != null) statusByActor[gameObject] = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (gameObject != null) statusByActor.Remove(gameObject);
+        }
+
         public bool Rooted => networkOverride ? !networkStunned && networkMoveMultiplier<=.001f : rootOwner != null && Time.time < rootUntil;
         public bool ActionLocked => Rooted && rootLocksActions;
         public bool Stunned => networkOverride?networkStunned:Time.time < stunUntil;
@@ -63,16 +86,33 @@ namespace Alterverse.Combat
         }
         public void ClearNetworkSnapshot(){networkOverride=false;networkStunned=false;networkMoveMultiplier=1f;}
         public void Clear() { slowUntil = stunUntil = stunImmuneUntil = speedBoostUntil = rootUntil = 0; rootOwner=null;rootLocksActions=false;slowFactor = speedBoostFactor = 1f; networkOverride=false;networkStunned=false;networkMoveMultiplier=1f; }
+
+        private static HeroCombatStatus FindStatus(GameObject actor)
+        {
+            if (actor == null) return null;
+            if (statusByActor.TryGetValue(actor, out HeroCombatStatus cached))
+            {
+                if (cached != null) return cached;
+                statusByActor.Remove(actor);
+            }
+            return null;
+        }
+
         public static bool CanAct(GameObject actor)
-        {var status=actor.GetComponent<HeroCombatStatus>();return status==null||!status.Stunned&&!status.ActionLocked;}
-        public static float Speed(GameObject actor) => actor.GetComponent<HeroCombatStatus>()?.MoveMultiplier ?? 1f;
+        {
+            var status = FindStatus(actor);
+            return status == null || !status.Stunned && !status.ActionLocked;
+        }
+
+        public static float Speed(GameObject actor) => FindStatus(actor)?.MoveMultiplier ?? 1f;
+
         public static void Apply(Health target, float slow, float duration, float stun = 0f)
         {
             if (target == null || target.IsDead || (target.GetComponent<Alterverse.Characters.HeroIdentity>() == null && target.GetComponent<LaneMinion>() == null)) return;
-            var status = target.GetComponent<HeroCombatStatus>() ?? target.gameObject.AddComponent<HeroCombatStatus>();
+            var status = FindStatus(target.gameObject) ?? target.GetComponent<HeroCombatStatus>() ?? target.gameObject.AddComponent<HeroCombatStatus>();
+            statusByActor[target.gameObject] = status;
             if (slow < 1f) status.Slow(slow, duration);
             if (stun > 0) status.Stun(stun);
         }
     }
 }
-

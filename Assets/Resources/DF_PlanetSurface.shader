@@ -193,7 +193,7 @@ Shader "Alterverse/PlanetSurface"
                 float3 geoGradient=(ddx(geoHeight)*tangentX+ddy(geoHeight)*tangentY)*inverseDeterminant;
                 geoGradient*=min(1.0,.28/max(length(geoGradient),.0001));
                 half geoVisibility=DFMicroVisibility(p,_MacroScale);
-                half broadRelief=geologicalContrast*lerp(.65h,1.35h,saturate(_SurfaceMode*.5h));
+                half broadRelief=geologicalContrast*lerp(.85h,1.65h,saturate(_SurfaceMode*.5h));
                 gradient+=geoGradient*(broadRelief*geoVisibility);
                 half fineVisibility=DFMicroVisibility(p,_FineScale);
                 float3 fineDx=ddx(p)*_FineScale,fineDy=ddy(p)*_FineScale;
@@ -217,13 +217,14 @@ Shader "Alterverse/PlanetSurface"
                 n=normalize(n-(gradient-n*dot(n,gradient)));
                 albedo*=1+(data.a-.5h)*_DetailContrast; // scalar variation cannot rotate the planet hue.
                 // Broad combat courts retain quiet detail; peripheral fissures receive deeper contact shading.
-                half cavityWeight=_CavityStrength*lerp(1.0h,.45h,quietGeology);
-                half cavity=lerp(1.0h,lerp(.70h,1.0h,saturate(data.a*2))*lerp(.80h,1.0h,geology.g),cavityWeight);
+                half cavityWeight=_CavityStrength*lerp(1.0h,.52h,quietGeology);
+                half cavity=lerp(1.0h,lerp(.58h,1.0h,saturate(data.a*2))*lerp(.72h,1.0h,geology.g),cavityWeight);
                 // Recessed mineral seams are slightly rougher than exposed crests. Authored
                 // roughness still dominates, preserving the difference between ice and basalt.
                 half seam=saturate((.5h-data.a)*2);
-                half roughness=clamp(data.b+_RoughnessBias+seam*.065h,.03h,.97h);
-                half smooth=saturate(lerp(_Smoothness,1-roughness,.58h));
+                half crest=saturate((data.a-.5h)*2);
+                half roughness=clamp(data.b+_RoughnessBias+seam*.085h-crest*.055h,.03h,.97h);
+                half smooth=saturate(lerp(_Smoothness,1-roughness,.66h));
                 half3 rgb=DFSurfaceLighting(p,n,albedo,_Metallic,smooth,cavity,_EmissionColor.rgb,i.positionCS);
                 return half4(MixFog(rgb,i.fog),1);
             }

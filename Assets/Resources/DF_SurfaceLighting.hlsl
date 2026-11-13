@@ -28,15 +28,23 @@ half3 DFSurfaceLighting(float3 positionWS, half3 normalWS, half3 albedo,
     SurfaceData surface = (SurfaceData)0;
     surface.albedo = albedo;
     surface.metallic = saturate(metallic);
-    surface.specular = half3(.04h,.04h,.04h);
-    // Filter small specular highlights at the gameplay camera distance.
-    half variance = min(.22h, length(fwidth(lighting.normalWS)) * .20h);
+    surface.specular = half3(.052h,.052h,.052h);
+    // Filter small specular highlights at the gameplay camera distance while preserving crisp mineral micro-glints.
+    half variance = min(.10h, length(fwidth(lighting.normalWS)) * .10h);
     surface.smoothness = saturate(smoothness - variance);
     surface.normalTS = half3(0,0,1);
     surface.occlusion = saturate(occlusion);
     surface.emission = emission;
     surface.alpha = 1;
-    return UniversalFragmentPBR(lighting, surface).rgb;
+    half3 pbr = UniversalFragmentPBR(lighting, surface).rgb;
+    Light mainLight = GetMainLight(lighting.shadowCoord);
+    half ndotl = saturate(dot(lighting.normalWS, mainLight.direction));
+    half fresnel = pow(1.0h - saturate(dot(lighting.normalWS, lighting.viewDirectionWS)), 3.5h);
+    half shadowTerm = mainLight.distanceAttenuation * mainLight.shadowAttenuation;
+    // Directional micro-crest contrast and subtle grazing rim give rock/regolith high-end sculptural relief.
+    pbr += albedo * mainLight.color * (shadowTerm * smoothstep(.52h, .95h, ndotl) * (.07h * surface.occlusion));
+    pbr += lerp(albedo, mainLight.color, .45h) * (fresnel * surface.smoothness * surface.occlusion * (.045h + .055h * shadowTerm));
+    return pbr;
 }
 
 // Opaque shadow/depth passes have no texture dependency or Lit material-layout dependency.

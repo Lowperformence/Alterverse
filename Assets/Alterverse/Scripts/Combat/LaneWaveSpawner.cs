@@ -147,6 +147,27 @@ namespace Alterverse.Combat
             return null;
         }
 
+        private static Transform cachedMatchWorld;
+        private static Mesh sharedCubeMesh;
+
+        private static Transform ResolveMatchWorld()
+        {
+            if(cachedMatchWorld!=null)return cachedMatchWorld;
+            GameObject world=GameObject.Find("DF_MatchWorld");
+            if(world!=null)cachedMatchWorld=world.transform;
+            return cachedMatchWorld;
+        }
+
+        private static Mesh ResolveSharedCubeMesh()
+        {
+            if(sharedCubeMesh!=null)return sharedCubeMesh;
+            GameObject temp=GameObject.CreatePrimitive(PrimitiveType.Cube);
+            MeshFilter mf=temp.GetComponent<MeshFilter>();
+            if(mf!=null)sharedCubeMesh=mf.sharedMesh;
+            Destroy(temp);
+            return sharedCubeMesh;
+        }
+
         private static void CreateMinion(int team,Vector3 spawn,Vector3 destination,int index,string key,bool announceNetwork)
         {
             Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
@@ -155,8 +176,8 @@ namespace Alterverse.Combat
             GameObject minion=GameObject.CreatePrimitive(PrimitiveType.Capsule);
             minion.name=team==0?$"DF_ZeroMinion_{index}":$"DF_LumenMinion_{index}";
             minion.transform.position=spawn;
-            GameObject world=GameObject.Find("DF_MatchWorld");
-            if(world!=null)minion.transform.SetParent(world.transform,true);
+            Transform world=ResolveMatchWorld();
+            if(world!=null)minion.transform.SetParent(world,true);
             minion.transform.localScale=new Vector3(.5f,.5f,.5f);
 
             Renderer renderer=minion.GetComponent<Renderer>();
@@ -195,8 +216,8 @@ namespace Alterverse.Combat
             GameObject mech=GameObject.CreatePrimitive(PrimitiveType.Capsule);
             mech.name=team==0?"DF_ZeroSiegeMech":"DF_LumenSiegeMech";
             mech.transform.position=spawn;
-            GameObject world=GameObject.Find("DF_MatchWorld");
-            if(world!=null)mech.transform.SetParent(world.transform,true);
+            Transform world=ResolveMatchWorld();
+            if(world!=null)mech.transform.SetParent(world,true);
 
             mech.transform.localScale=new Vector3(1.05f,1.05f,1.05f);
             Renderer renderer=mech.GetComponent<Renderer>();
@@ -229,10 +250,30 @@ namespace Alterverse.Combat
 
         private static void CreatePart(Transform parent,string name,PrimitiveType type,Vector3 pos,Vector3 scale,Color color)
         {
-            GameObject p=GameObject.CreatePrimitive(type);
-            p.name=name;p.transform.SetParent(parent,false);p.transform.localPosition=pos;p.transform.localScale=scale;
-            Collider c=p.GetComponent<Collider>();if(c!=null){c.enabled=false;Destroy(c);}
-            Renderer r=p.GetComponent<Renderer>();if(r!=null)RuntimeMaterialPalette.Tint(parent.gameObject,r,color);
+            Mesh cube=type==PrimitiveType.Cube?ResolveSharedCubeMesh():null;
+            GameObject p;
+            Renderer r;
+            if(cube!=null)
+            {
+                p=new GameObject(name);
+                p.transform.SetParent(parent,false);
+                p.transform.localPosition=pos;
+                p.transform.localScale=scale;
+                p.AddComponent<MeshFilter>().sharedMesh=cube;
+                MeshRenderer mr=p.AddComponent<MeshRenderer>();
+                mr.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+                mr.receiveShadows=true;
+                r=mr;
+            }
+            else
+            {
+                p=GameObject.CreatePrimitive(type);
+                p.name=name;p.transform.SetParent(parent,false);p.transform.localPosition=pos;p.transform.localScale=scale;
+                Collider c=p.GetComponent<Collider>();if(c!=null){c.enabled=false;Destroy(c);}
+                r=p.GetComponent<Renderer>();
+                if(r!=null)r.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+            if(r!=null)RuntimeMaterialPalette.Tint(parent.gameObject,r,color);
         }
     }
 }
