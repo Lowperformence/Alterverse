@@ -26,6 +26,7 @@ namespace Alterverse.Visuals
             if(shader==null||!shader.isSupported)return false;
             if(details[index]==null)details[index]=Resources.Load<Texture2D>("StructureFinishes/"+finish);
             if(details[index]==null)return false;
+            SurfaceTextureFiltering.Configure(details[index]);
 
             Color tint=material.HasProperty("_BaseColor")?material.GetColor("_BaseColor"):material.color;
             float metallic=material.HasProperty("_Metallic")?material.GetFloat("_Metallic"):0f;
@@ -36,6 +37,7 @@ namespace Alterverse.Visuals
             if(concreteFine==null)concreteFine=Resources.Load<Texture2D>("SurfaceMicro/Concrete");
             if(metalFine==null)metalFine=Resources.Load<Texture2D>("SceneryFinishes/Metal");
             Texture2D fine=concrete?concreteFine:metalFine;
+            SurfaceTextureFiltering.Configure(fine);
             material.shader=shader;
             material.SetColor("_BaseColor",tint);material.SetColor("_EmissionColor",emission);
             material.SetTexture("_BaseMap",map!=null?map:Texture2D.whiteTexture);

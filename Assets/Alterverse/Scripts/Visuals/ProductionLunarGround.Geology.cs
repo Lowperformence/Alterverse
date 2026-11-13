@@ -6,6 +6,88 @@ namespace Alterverse.Visuals
 {
     public sealed partial class ProductionLunarGround
     {
+        readonly List<Transform> moonDriftingRocks=new();
+        readonly List<Vector3> moonDriftingOrigins=new();
+        Material moonBeaconMaterial;
+
+        void BuildMoonImpactRubble(bool lowEndMobile)
+        {
+            // Fragmented, half-buried ejecta follows the existing large crater rims.
+            // These pieces join the existing clearance pass and spatial static batches.
+            Vector3[] impacts={new(-22.5f,7.8f,24f),new(23.5f,7.3f,-24.5f),
+                new(-31f,6.1f,-17f),new(30f,6.4f,18.5f)};
+            int fragments=lowEndMobile?5:9;
+            for(int site=0;site<impacts.Length;site++)for(int i=0;i<fragments;i++)
+            {
+                Vector3 impact=impacts[site];
+                float angle=(i*360f/fragments+site*37f)*Mathf.Deg2Rad;
+                float radius=impact.y*(.91f+(i%3)*.10f);
+                Vector2 p=new(impact.x+Mathf.Cos(angle)*radius,impact.z+Mathf.Sin(angle)*radius);
+                if(Mathf.Abs(p.x)>39f||Mathf.Abs(p.y)>33f)continue;
+                float size=.27f+(i%4)*.13f;
+                LandmarkRock("DF_MoonImpactEjecta",p,new Vector3(size,.12f+(i%3)*.08f,size*.72f),
+                    i*59f+site*41f,0f,i%3==0?darkRegolith:rimMat);
+            }
+        }
+
+        void BuildMoonLivingDetails(SceneryBuildingClearance clearance,bool lowEndMobile)
+        {
+            // Four off-centre research remnants. Moving pieces are presentation only and have
+            // no colliders; bounds reserve room for the entire drift around bases and structures.
+            Vector2[] sites={new(-20f,27f),new(20f,-27f),new(-22f,-25f),new(22f,25f)};
+            Mesh fragment=LunarFragmentGeometry.Create(83);
+            meshes.Add(fragment);
+            moonBeaconMaterial=RuntimeShaderLibrary.Create(new Color(.72f,.26f,.025f),true,Color.black,0f,0f);
+            if(moonBeaconMaterial!=null)materials.Add(moonBeaconMaterial);
+            Material casing=Mat(new Color(.13f,.15f,.16f),.55f,.28f);
+            Mesh box=ProductionMeshFactory.RoundedBox();
+            int count=lowEndMobile?2:sites.Length;
+            for(int site=0;site<count;site++)
+            {
+                Vector3 anchor=LunarSurfaceField.Surface(sites[site].x,sites[site].y);
+                if(clearance.Blocks(new Bounds(anchor+Vector3.up,new Vector3(3.4f,3f,3.4f))))continue;
+
+                GameObject basePart=MeshObject("DF_MoonSurveyBeacon",box,casing,anchor+new Vector3(.45f,.23f,0));
+                basePart.transform.localScale=new Vector3(.36f,.46f,.30f);
+                if(moonBeaconMaterial!=null)
+                {
+                    GameObject light=MeshObject("DF_MoonSurveyBeaconLight",box,moonBeaconMaterial,anchor+new Vector3(.45f,.50f,0));
+                    light.transform.localScale=new Vector3(.25f,.10f,.23f);
+                }
+
+                int fragments=lowEndMobile?1:2;
+                for(int i=0;i<fragments;i++)
+                {
+                    Vector3 origin=anchor+new Vector3(-.60f+i*.75f,.72f+i*.35f,.30f-i*.55f);
+                    GameObject rock=MeshObject("DF_MoonFloatingFragment",fragment,i==0?rimMat:darkRegolith,origin);
+                    float scale=.28f+i*.10f;
+                    rock.transform.localScale=new Vector3(scale,scale*.68f,scale*.82f);
+                    moonDriftingRocks.Add(rock.transform);
+                    moonDriftingOrigins.Add(origin);
+                }
+            }
+        }
+
+        void Update()
+        {
+            if(moonDriftingRocks.Count==0)return;
+            float t=Time.time;
+            for(int i=0;i<moonDriftingRocks.Count;i++)
+            {
+                Transform rock=moonDriftingRocks[i];
+                if(rock==null)continue;
+                float phase=t*.48f+i*1.73f;
+                rock.localPosition=moonDriftingOrigins[i]+new Vector3(Mathf.Sin(phase)*.10f,
+                    Mathf.Sin(phase*1.17f)*.12f,Mathf.Cos(phase)*.10f);
+                rock.localRotation=Quaternion.Euler(8f+Mathf.Sin(phase)*8f,i*59f+t*8f,-7f+Mathf.Cos(phase)*7f);
+            }
+            if(moonBeaconMaterial!=null)
+            {
+                float pulse=.70f+.24f*Mathf.Sin(t*2.1f);
+                moonBeaconMaterial.SetColor("_BaseColor",new Color(.72f*pulse,.26f*pulse,.025f*pulse));
+            }
+        }
+
         void BuildReferenceSilhouettes()
         {
             // Large silhouette groups stay at the broken perimeter and midfield flanks, never in the combat corridors.

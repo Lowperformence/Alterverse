@@ -95,8 +95,8 @@ namespace Alterverse.Combat
         {
             visual = new GameObject("DF_HealStation").transform;
             visual.SetParent(transform, false);
-            greenMat = MakeMaterial(new Color(.02f, 1f, .12f, 1f), true);
-            stoneMat = MakeMaterial(new Color(.18f, .23f, .30f), false);
+            greenMat = HealingVisualPalette.CreateGreen(HealingVisualPalette.Energy);
+            stoneMat = RuntimeShaderLibrary.Create(new Color(.18f, .20f, .18f), false, Color.black, .35f, .28f);
             BuildPedestal();
             plus = new GameObject("DF_HealingPlus").transform;
             plus.SetParent(visual, false);
@@ -136,18 +136,5 @@ namespace Alterverse.Combat
             return g.transform;
         }
 
-        private Material MakeMaterial(Color color, bool emissive)
-        {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            Material m = new Material(shader);
-            m.color = color;
-            if (emissive)
-            {
-                m.EnableKeyword("_EMISSION");
-                m.SetColor("_EmissionColor", color * 4.5f);
-                if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", color);
-            }
-            return m;
-        }
     }
 }

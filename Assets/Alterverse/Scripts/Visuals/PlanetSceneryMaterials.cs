@@ -42,6 +42,7 @@ namespace Alterverse.Visuals
                 ?"PlanetSurfaces/"+profile+"/Stone":"SceneryFinishes/"+finish;
             Texture2D texture=Resources.Load<Texture2D>(texturePath);
             if(texture==null){Debug.LogWarning("Scenery finish missing: "+texturePath);return;}
+            SurfaceTextureFiltering.Configure(texture);
             Color albedo=material.HasProperty("_BaseColor")?material.GetColor("_BaseColor"):material.color;
             Color emission=material.HasProperty("_EmissionColor")?material.GetColor("_EmissionColor"):Color.black;
             float metal=material.HasProperty("_Metallic")?material.GetFloat("_Metallic"):0f;
@@ -70,6 +71,7 @@ namespace Alterverse.Visuals
         public static void ApplyMicro(Material material,PlanetSurfaceMicroProfile profile)
         {
             Texture2D texture=profile.TextureName!=null?Resources.Load<Texture2D>("SurfaceMicro/"+profile.TextureName):null;
+            SurfaceTextureFiltering.Configure(texture);
             material.SetTexture("_FineData",texture!=null?texture:Texture2D.grayTexture);
             material.SetFloat("_FineScale",profile.Scale);
             material.SetFloat("_FineRelief",texture!=null?profile.Relief:0f);
