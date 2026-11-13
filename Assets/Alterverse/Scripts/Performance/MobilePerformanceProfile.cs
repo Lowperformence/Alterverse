@@ -277,15 +277,15 @@ namespace Alterverse.Performance
                 quality == MobileQuality.Balanced ? (underBudget ? 18f : 26f) : (underBudget ? 28f : 38f);
             QualitySettings.shadowDistance = distance;
             QualitySettings.streamingMipmapsActive = true;
-            QualitySettings.streamingMipmapsMemoryBudget = quality == MobileQuality.Battery ? 96f :
-                quality == MobileQuality.Balanced ? 192f : 384f;
+            QualitySettings.streamingMipmapsMemoryBudget = quality == MobileQuality.Battery ? 128f :
+                quality == MobileQuality.Balanced ? 224f : 384f;
 
             // Apply extra QualitySettings for older phones via reflection so lightweight test stubs still compile.
             Type qsType = typeof(QualitySettings);
             SetStaticProperty(qsType, "shadows", quality == MobileQuality.Battery ? 0 : 1);
-            SetStaticProperty(qsType, "globalTextureMipmapLimit", quality == MobileQuality.Battery ? 1 : 0);
+            SetStaticProperty(qsType, "globalTextureMipmapLimit", 0);
             SetStaticProperty(qsType, "skinWeights", quality == MobileQuality.Battery ? 2 : 4);
-            SetStaticProperty(qsType, "anisotropicFiltering", quality == MobileQuality.Battery ? 0 : 1);
+            SetStaticProperty(qsType, "anisotropicFiltering", 1);
             SetStaticProperty(qsType, "softParticles", false);
             SetStaticProperty(qsType, "realtimeReflectionProbes", false);
             SetStaticProperty(qsType, "particleRaycastBudget", quality == MobileQuality.Battery ? 16 :
@@ -303,12 +303,14 @@ namespace Alterverse.Performance
             }
             runtimePipeline.shadowDistance = distance;
             runtimePipeline.shadowCascadeCount = quality == MobileQuality.Battery ? 1 : 2;
-            runtimePipeline.msaaSampleCount = quality == MobileQuality.Performance && !underBudget ? 2 : 1;
+            runtimePipeline.msaaSampleCount = quality != MobileQuality.Battery && !underBudget ? 2 : 1;
 
-            float baseScale = quality == MobileQuality.Battery ? .65f :
-                quality == MobileQuality.Balanced ? .82f : 1f;
+            // Preserve automatic performance adaptation, but avoid the very soft / blocky
+            // low-resolution image previously used across every arena.
+            float baseScale = quality == MobileQuality.Battery ? .80f :
+                quality == MobileQuality.Balanced ? .90f : 1f;
             if (underBudget)
-                baseScale = Mathf.Max(.55f, baseScale - .10f);
+                baseScale = Mathf.Max(.65f, baseScale - .15f);
             SetInstanceProperty(runtimePipeline, "renderScale", baseScale);
             SetInstanceProperty(runtimePipeline, "supportsHDR", quality == MobileQuality.Performance && !underBudget);
         }
