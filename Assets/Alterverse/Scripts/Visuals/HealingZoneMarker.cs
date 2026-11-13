@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Alterverse.Combat;
 
@@ -9,7 +10,8 @@ namespace Alterverse.Visuals
 
         private Transform root, plus, auraRing, auraDisc;
         private readonly Transform[] motes = new Transform[MoteCount];
-        private Material energy, metal, trim, auraMat, moteMat;
+        private readonly List<Mesh> ownedMeshes = new();
+        private Material energy, metal, trim, deck, auraMat, moteMat;
         private ParticleSystem healParticles;
         private SpawnHealingZone zone;
         private float occupiedBlend;
@@ -25,8 +27,12 @@ namespace Alterverse.Visuals
             if (energy != null) Destroy(energy);
             if (metal != null) Destroy(metal);
             if (trim != null) Destroy(trim);
+            if (deck != null) Destroy(deck);
             if (auraMat != null) Destroy(auraMat);
             if (moteMat != null) Destroy(moteMat);
+            foreach (Mesh mesh in ownedMeshes)
+                if (mesh != null) Destroy(mesh);
+            ownedMeshes.Clear();
         }
 
         private void Build()
@@ -35,29 +41,29 @@ namespace Alterverse.Visuals
             root.SetParent(transform, false);
             root.localScale = new Vector3(ArenaLayout.HealingPlateScale, 1f, ArenaLayout.HealingPlateScale);
 
-            Color baseGreen = new Color(.02f, 1f, .16f);
-            energy = Mat(baseGreen, .08f, .68f, true);
-            metal = Mat(new Color(.055f, .075f, .10f), .78f, .30f);
-            trim = Mat(new Color(.19f, .24f, .29f), .62f, .46f);
-            auraMat = Mat(new Color(.12f, 1f, .32f), .04f, .82f, true);
-            moteMat = Mat(new Color(.28f, 1f, .44f), .02f, .90f, true);
+            energy = HealingVisualPalette.CreateGreen(HealingVisualPalette.Energy);
+            metal = Mat(new Color(.055f, .07f, .055f), .78f, .30f);
+            trim = Mat(new Color(.16f, .21f, .15f), .62f, .46f);
+            deck = HealingVisualPalette.CreateGreen(HealingVisualPalette.Deck);
+            auraMat = HealingVisualPalette.CreateGreen(HealingVisualPalette.Aura);
+            moteMat = HealingVisualPalette.CreateGreen(HealingVisualPalette.Mote);
 
             StructureSurfaceMaterials.Apply(metal, StructureFinish.Deck);
             StructureSurfaceMaterials.Apply(trim, StructureFinish.Metal);
 
             Disc("HealBase", 2.15f, .025f, .025f, metal);
-            Disc("HealDeck", 1.78f, .065f, .015f, trim);
+            Disc("HealDeck", 1.78f, .065f, .015f, deck);
 
-            GameObject halo = ProductionMeshFactory.MeshObject("DF_HealEnergyRing", root, ProductionMeshFactory.Ring(1.42f, .050f, 32, 8), energy);
+            GameObject halo = ProductionMeshFactory.MeshObject("DF_HealEnergyRing", root, Own(ProductionMeshFactory.Ring(1.42f, .050f, 32, 8)), energy);
             halo.transform.localPosition = new Vector3(0, .185f, 0);
 
             // Active occupied outer ring and ground glow disc
-            GameObject activeRingObj = ProductionMeshFactory.MeshObject("DF_HealOccupiedRing", root, ProductionMeshFactory.Ring(1.74f, .042f, 32, 8), auraMat);
+            GameObject activeRingObj = ProductionMeshFactory.MeshObject("DF_HealOccupiedRing", root, Own(ProductionMeshFactory.Ring(1.74f, .042f, 32, 8)), auraMat);
             auraRing = activeRingObj.transform;
             auraRing.localPosition = new Vector3(0, .195f, 0);
             auraRing.localScale = Vector3.zero;
 
-            GameObject activeDiscObj = ProductionMeshFactory.MeshObject("DF_HealOccupiedAuraDisc", root, ProductionMeshFactory.Disc(1.58f, .006f, 32), auraMat);
+            GameObject activeDiscObj = ProductionMeshFactory.MeshObject("DF_HealOccupiedAuraDisc", root, Own(ProductionMeshFactory.Disc(1.58f, .006f, 32)), auraMat);
             auraDisc = activeDiscObj.transform;
             auraDisc.localPosition = new Vector3(0, .092f, 0);
             auraDisc.localScale = Vector3.zero;
@@ -70,20 +76,16 @@ namespace Alterverse.Visuals
                 Tube("HealFeed", outer, inner, .026f, i % 2 == 0 ? energy : trim);
             }
 
-            plus = new GameObject("DF_SpawnHealingPlus").transform;
-            plus.SetParent(root, false);
+            Mesh plusMesh = CrossMesh(new Vector3(.16f, .44f, .10f), new Vector3(.44f, .16f, .10f));
+            plus = Cross("DF_SpawnHealingPlus", plusMesh, energy);
             plus.localPosition = new Vector3(0, .92f, 0);
-            BoxOn(plus, "PlusVertical", new Vector3(.16f, .44f, .10f), energy);
-            BoxOn(plus, "PlusHorizontal", new Vector3(.44f, .16f, .10f), energy);
 
             // Rising 3D luminous green healing motes/crosses
+            Mesh moteMesh = CrossMesh(new Vector3(.045f, .14f, .045f), new Vector3(.14f, .045f, .045f));
             for (int i = 0; i < MoteCount; i++)
             {
-                Transform mote = new GameObject("DF_HealRisingMote_" + i).transform;
-                mote.SetParent(root, false);
+                Transform mote = Cross("DF_HealRisingMote_" + i, moteMesh, moteMat);
                 mote.localScale = Vector3.zero;
-                BoxOn(mote, "MoteV", new Vector3(.045f, .14f, .045f), moteMat);
-                BoxOn(mote, "MoteH", new Vector3(.14f, .045f, .045f), moteMat);
                 motes[i] = mote;
             }
 
@@ -105,7 +107,7 @@ namespace Alterverse.Visuals
             main.startLifetime = new ParticleSystem.MinMaxCurve(.85f, 1.45f);
             main.startSpeed = new ParticleSystem.MinMaxCurve(1.15f, 2.15f);
             main.startSize = new ParticleSystem.MinMaxCurve(.06f, .13f);
-            main.startColor = new Color(.25f, 1f, .42f, .92f);
+            main.startColor = HealingVisualPalette.Mote;
             main.maxParticles = 36;
 
             var emission = healParticles.emission;
@@ -172,9 +174,9 @@ namespace Alterverse.Visuals
 
             if (energy != null)
             {
-                Color baseC = Color.Lerp(new Color(.02f, 1f, .16f), new Color(.24f, 1f, .42f), occupiedBlend);
-                float pulse = 1.8f + occupiedBlend * (2.45f + Mathf.Sin(t * 6.2f) * .65f);
-                SetEmission(energy, baseC, baseC * pulse);
+                Color baseC = Color.Lerp(HealingVisualPalette.Energy, HealingVisualPalette.Active, occupiedBlend);
+                float glow = .04f + occupiedBlend * (.02f + Mathf.Sin(t * 6.2f) * .015f);
+                SetEmission(energy, baseC, new Color(.005f, glow, 0f));
             }
 
             if (auraRing != null && auraDisc != null)
@@ -185,8 +187,7 @@ namespace Alterverse.Visuals
                     auraRing.localScale = new Vector3(ringPulse, 1f, ringPulse) * occupiedBlend;
                     float discScale = (.82f + Mathf.Sin(t * 4.4f) * .06f) * occupiedBlend;
                     auraDisc.localScale = new Vector3(discScale, 1f, discScale);
-                    Color auraColor = new Color(.18f, 1f, .38f);
-                    SetEmission(auraMat, auraColor, auraColor * (3.2f * occupiedBlend));
+                    SetEmission(auraMat, HealingVisualPalette.Aura, new Color(.005f, .12f * occupiedBlend, 0f));
                 }
                 else
                 {
@@ -197,8 +198,7 @@ namespace Alterverse.Visuals
 
             if (moteMat != null && occupiedBlend > .001f)
             {
-                Color moteColor = new Color(.35f, 1f, .48f);
-                SetEmission(moteMat, moteColor, moteColor * (3.6f * occupiedBlend));
+                SetEmission(moteMat, HealingVisualPalette.Mote, new Color(.005f, .06f * occupiedBlend, 0f));
             }
 
             // Animate 12 rising green healing motes around the pad when occupied
@@ -240,43 +240,64 @@ namespace Alterverse.Visuals
 
         private void Disc(string n, float radius, float y, float halfHeight, Material mat)
         {
-            GameObject g = ProductionMeshFactory.MeshObject("DF_" + n, root, ProductionMeshFactory.Disc(radius, halfHeight, 32), mat);
+            GameObject g = ProductionMeshFactory.MeshObject("DF_" + n, root, Own(ProductionMeshFactory.Disc(radius, halfHeight, 32)), mat);
             g.transform.localPosition = new Vector3(0, y, 0);
         }
 
         private void Tube(string n, Vector3 a, Vector3 b, float radius, Material mat)
         {
-            ProductionMeshFactory.MeshObject("DF_" + n, root, ProductionMeshFactory.Tube(a, b, radius, 8), mat);
+            ProductionMeshFactory.MeshObject("DF_" + n, root, Own(ProductionMeshFactory.Tube(a, b, radius, 8)), mat);
         }
 
-        private void BoxOn(Transform parent, string n, Vector3 scale, Material mat)
+        private Mesh Own(Mesh mesh)
         {
-            GameObject g = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            g.name = "DF_" + n;
-            g.transform.SetParent(parent, false);
-            g.transform.localScale = scale;
-            var r = g.GetComponent<Renderer>();
-            r.sharedMaterial = mat;
+            if (mesh != null) ownedMeshes.Add(mesh);
+            return mesh;
+        }
+
+        private Mesh CrossMesh(Vector3 vertical, Vector3 horizontal)
+        {
+            Mesh box = ProductionMeshFactory.RoundedBox();
+            var parts = new[]
+            {
+                new CombineInstance { mesh = box, transform = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, vertical) },
+                new CombineInstance { mesh = box, transform = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, horizontal) }
+            };
+            Mesh mesh = Own(new Mesh { name = "DF_HealingCross" });
+            mesh.CombineMeshes(parts, true, true);
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        private Transform Cross(string name, Mesh mesh, Material mat)
+        {
+            GameObject g = ProductionMeshFactory.MeshObject(name, root, mesh, mat);
+            var r = g.GetComponent<MeshRenderer>();
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             r.receiveShadows = false;
-            Collider c = g.GetComponent<Collider>();
-            if (c != null) Destroy(c);
+            return g.transform;
         }
 
-        private Material Mat(Color c, float metallic, float smooth, bool emissive = false)
+        private Material Mat(Color c, float metallic, float smooth)
         {
-            Shader sh = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            Material m = new(sh);
-            m.color = c;
-            if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
-            if (m.HasProperty("_Metallic")) m.SetFloat("_Metallic", metallic);
-            if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", smooth);
-            if (emissive)
-            {
-                m.EnableKeyword("_EMISSION");
-                m.SetColor("_EmissionColor", c * 1.8f);
-            }
-            return m;
+            return RuntimeShaderLibrary.Create(c, false, Color.black, metallic, smooth);
+        }
+    }
+
+    // Unlit green keeps healing readable under every planet's coloured lighting.
+    public static class HealingVisualPalette
+    {
+        public static readonly Color Deck = new(.025f, .46f, .005f, 1f);
+        public static readonly Color Energy = new(.09f, .84f, .01f, 1f);
+        public static readonly Color Active = new(.15f, .92f, .015f, 1f);
+        public static readonly Color Aura = new(.04f, .60f, .005f, 1f);
+        public static readonly Color Mote = new(.15f, .90f, .01f, 1f);
+
+        public static Material CreateGreen(Color color)
+        {
+            Material material = RuntimeShaderLibrary.Create(color, true, Color.black, 0f, 0f);
+            if (material == null) Debug.LogError("DIMENSIONS FRONT: healing material is unavailable.");
+            return material;
         }
     }
 }
