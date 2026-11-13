@@ -53,6 +53,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         bool lowEndMobile = (Application.isMobilePlatform || !Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled) &&
                             Alterverse.Performance.MobilePerformanceProfile.Current == Alterverse.Performance.MobileQuality.Battery;
         BuildRocks();
+        if(ArenaVariantRuntime.Current==ArenaVariant.Moon)BuildMoonImpactRubble(lowEndMobile);
         if(ArenaVariantRuntime.IsGreenPlanet)BuildAlienMineralAccents();
         if(ArenaVariantRuntime.IsKryon)BuildKryonIceAccents();
         if (!lowEndMobile)
@@ -68,6 +69,9 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         // The Blender-authored border now owns the small edge fragments and cliff rocks.
         BuildGeologicalSlab();
         BatchStaticDetails();
+        // Dynamic details must be created after static batching or their motion would be baked away.
+        if(ArenaVariantRuntime.Current==ArenaVariant.Moon && SystemInfo.graphicsDeviceType!=GraphicsDeviceType.Null)
+            BuildMoonLivingDetails(clearance,lowEndMobile);
         ArenaLayout.StretchTerrain(root);
     }
 
