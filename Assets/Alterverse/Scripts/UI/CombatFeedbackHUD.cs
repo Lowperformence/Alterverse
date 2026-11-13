@@ -1,3 +1,4 @@
+using Alterverse.Audio;
 using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Combat;
@@ -458,7 +459,7 @@ namespace Alterverse.UI
                 if (localKiller)
                 {
                     localTurretCharges++;
-                    Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.PlanetCaptured, 0.85f);
+                    Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.PlanetArrival, 0.85f);
                 }
                 else if (CoopAuthority.CanSimulateHostGameplay && killerHealth.GetComponent<Alterverse.AI.MobaBotBrain>() != null)
                 {
