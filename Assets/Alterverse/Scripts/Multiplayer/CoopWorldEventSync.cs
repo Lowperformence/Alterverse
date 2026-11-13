@@ -30,6 +30,8 @@ namespace Alterverse.Multiplayer
         private const string LaneUnitMessage="DF_COOP_LANE_UNIT_V2";
         private const string FractureSpawnMessage="DF_COOP_FRACTURE_SPAWN_V2";
         private const string FractureClaimMessage="DF_COOP_FRACTURE_CLAIM_V2";
+        private const string SupplySpawnMessage="DF_COOP_SUPPLY_SPAWN_V1";
+        private const string SupplyClaimMessage="DF_COOP_SUPPLY_CLAIM_V1";
 
         private CustomMessagingManager messaging;
         private bool attached,eventsBound;
@@ -63,6 +65,8 @@ namespace Alterverse.Multiplayer
             LaneWaveSpawner.NetworkUnitSpawned+=OnHostLaneUnitSpawned;
             FractureCorePickup.NetworkSpawned+=OnHostFractureSpawned;
             FractureCorePickup.NetworkClaimed+=OnHostFractureClaimed;
+            BattleItemAirdropSchedule.NetworkSupplySpawned+=OnHostSupplySpawned;
+            BattleItemAirdropSchedule.NetworkSupplyClaimed+=OnHostSupplyClaimed;
             Alterverse.Visuals.CombatMotion.Started+=OnAttackStarted;
             Alterverse.Visuals.MonsterAttackVfx.Resolved+=OnMonsterImpact;
             Alterverse.Visuals.MonsterAttackVfx.LaserChanged+=OnMonsterLaser;
@@ -86,6 +90,8 @@ namespace Alterverse.Multiplayer
             LaneWaveSpawner.NetworkUnitSpawned-=OnHostLaneUnitSpawned;
             FractureCorePickup.NetworkSpawned-=OnHostFractureSpawned;
             FractureCorePickup.NetworkClaimed-=OnHostFractureClaimed;
+            BattleItemAirdropSchedule.NetworkSupplySpawned-=OnHostSupplySpawned;
+            BattleItemAirdropSchedule.NetworkSupplyClaimed-=OnHostSupplyClaimed;
             Alterverse.Visuals.CombatMotion.Started-=OnAttackStarted;
             Alterverse.Visuals.MonsterAttackVfx.Resolved-=OnMonsterImpact;
             Alterverse.Visuals.MonsterAttackVfx.LaserChanged-=OnMonsterLaser;
@@ -357,6 +363,25 @@ namespace Alterverse.Multiplayer
             SendAll(FractureClaimMessage,writer);
         }
 
+        private void OnHostSupplySpawned(int slot,int generation,Vector3 position)
+        {
+            if(!CanBroadcast())return;
+            using FastBufferWriter writer=new(32,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            writer.WriteValueSafe(slot);writer.WriteValueSafe(generation);
+            writer.WriteValueSafe(position.x);writer.WriteValueSafe(position.y);writer.WriteValueSafe(position.z);
+            SendAll(SupplySpawnMessage,writer);
+        }
+
+        private void OnHostSupplyClaimed(int slot,int generation)
+        {
+            if(!CanBroadcast())return;
+            using FastBufferWriter writer=new(16,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            writer.WriteValueSafe(slot);writer.WriteValueSafe(generation);
+            SendAll(SupplyClaimMessage,writer);
+        }
+
         private bool CanBroadcast()
         {
             NetworkManager manager=NetworkManager.Singleton;
@@ -488,6 +513,22 @@ namespace Alterverse.Multiplayer
             FractureCorePickup.ApplyNetworkClaim(id);
         }
 
+        private void OnSupplySpawn(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
+            reader.ReadValueSafe(out int slot);reader.ReadValueSafe(out int generation);
+            reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
+            if(!Finite(x)||!Finite(y)||!Finite(z)||generation<=0)return;
+            Object.FindAnyObjectByType<BattleItemAirdropSchedule>()?.ApplyNetworkSupplySpawn(slot,generation,new Vector3(x,y,z));
+        }
+
+        private void OnSupplyClaim(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
+            reader.ReadValueSafe(out int slot);reader.ReadValueSafe(out int generation);
+            Object.FindAnyObjectByType<BattleItemAirdropSchedule>()?.ApplyNetworkSupplyClaim(slot,generation);
+        }
+
         private static bool ValidServerMessage(ulong sender)
         {
             NetworkManager manager=NetworkManager.Singleton;
@@ -516,6 +557,8 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(LaneUnitMessage,OnLaneUnit);
             messaging.RegisterNamedMessageHandler(FractureSpawnMessage,OnFractureSpawn);
             messaging.RegisterNamedMessageHandler(FractureClaimMessage,OnFractureClaim);
+            messaging.RegisterNamedMessageHandler(SupplySpawnMessage,OnSupplySpawn);
+            messaging.RegisterNamedMessageHandler(SupplyClaimMessage,OnSupplyClaim);
             attached=true;
         }
 
@@ -539,6 +582,8 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(LaneUnitMessage);
             messaging.UnregisterNamedMessageHandler(FractureSpawnMessage);
             messaging.UnregisterNamedMessageHandler(FractureClaimMessage);
+            messaging.UnregisterNamedMessageHandler(SupplySpawnMessage);
+            messaging.UnregisterNamedMessageHandler(SupplyClaimMessage);
             messaging=null;attached=false;
         }
     }
