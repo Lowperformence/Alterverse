@@ -11,6 +11,9 @@ namespace Alterverse.Characters
         private HeroAbilityKit kit;
         private HeroIdentity identity;
         private HeroMotor motor;
+        private int bufferedSlot = -1;
+        private AimPose bufferedPose;
+        private float bufferExpiresAt;
 
         public float QRemaining => RemainingFor(0);
         public float WRemaining => RemainingFor(1);
