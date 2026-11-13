@@ -19,6 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /Assets/Alterverse/Scripts/Combat/CentralHealingPickup.cs
+            /Assets/Alterverse/Scripts/Performance/MobilePerformanceProfile.cs
+            /Assets/Alterverse/Scripts/Visuals/*.cs
+            /Tools/Maps/Regression/check_*.py
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
