@@ -14,9 +14,11 @@ ROOT=Path(__file__).resolve().parents[2]
 PARSER=Parser(Language(tree_sitter_c_sharp.language()))
 STUB=r'''
 using System;using System.Collections.Generic;using Alterverse.Visuals;using Alterverse.Match;
-namespace Alterverse.Match {public enum ArenaVariant {Moon,Mars,GreenPlanet,Noxara,Kryon,Earth,Pyraxis,Neptune,Dark00,DiamondCore,GJ504b}}
+namespace Alterverse.Match {public enum ArenaVariant {Moon,Mars,GreenPlanet,Noxara,Kryon,Earth,Pyraxis,Neptune,Dark00,DiamondCore,GJ504b,Wasp76b,Trappist1e,Toi715b}}
 namespace UnityEngine {
- public class Texture2D {public static readonly Texture2D grayTexture=new Texture2D();}
+ public enum FilterMode {Bilinear,Trilinear}
+ public class Texture2D {public static readonly Texture2D grayTexture=new Texture2D();public int mipmapCount=4,anisoLevel=1;public FilterMode filterMode;}
+ public static class Mathf {public static int Max(int a,int b){return Math.Max(a,b);}}
  public class Shader {public bool isSupported=true;}
  public class MeshRenderer {public bool enabled=true;}
  public class GameObject {public static Dictionary<string,GameObject> all=new Dictionary<string,GameObject>();public MeshRenderer renderer;public static GameObject Find(string name){GameObject value;return all.TryGetValue(name,out value)?value:null;}public T GetComponent<T>() where T:class{return renderer as T;}}
@@ -47,7 +49,12 @@ class Regression {
   UnityEngine.Resources.assets.Clear();PlanetSceneryMaterials.ApplyMicro(m,p);Check((float)m.data["_FineRelief"]==0,"missing texture needs safe disabled fallback");Check(m.data["_FineData"]==UnityEngine.Texture2D.grayTexture,"missing texture fallback not neutral");
  }
  static void Main(){
-  string[] expected={"Sand","Sand","Soil","Stone",null,"Soil","Stone","Stone","Stone",null,"Sand"};
+  var filtered=new UnityEngine.Texture2D();SurfaceTextureFiltering.Configure(filtered);
+  Check(filtered.filterMode==UnityEngine.FilterMode.Trilinear&&filtered.anisoLevel==4,"mipmapped map texture filtering");
+  var single=new UnityEngine.Texture2D();single.mipmapCount=1;SurfaceTextureFiltering.Configure(single);
+  Check(single.filterMode==UnityEngine.FilterMode.Bilinear,"single-level map texture filtering");
+  SurfaceTextureFiltering.Configure(null);
+  string[] expected={"Sand","Sand","Soil","Stone",null,"Soil","Stone","Stone","Stone",null,"Sand","Stone","Soil","Soil"};
   foreach(ArenaVariant planet in Enum.GetValues(typeof(ArenaVariant))){var p=PlanetSurfaceMicroProfile.Ground(planet);Check(p.TextureName==expected[(int)planet],"incorrect planet material: "+planet);Check(p.Relief>=0&&p.Relief<=.2f&&p.Contrast>=0&&p.Contrast<=.5f,"invalid bounds");Bind(p);Emit("ground",planet.ToString(),p);
    for(int layer=0;layer<4;layer++){SceneryFinish f=PlanetSceneryMaterials.LandscapeFinish(planet,layer);Check(Enum.IsDefined(typeof(SceneryFinish),f),"landscape layer mapping missing");}}
   foreach(SceneryFinish finish in Enum.GetValues(typeof(SceneryFinish))){var p=PlanetSurfaceMicroProfile.Scenery(finish);bool quiet=finish==SceneryFinish.Metal||finish==SceneryFinish.Bark||finish==SceneryFinish.Leaf||finish==SceneryFinish.Ice;Check((p.TextureName==null)==quiet,"unexpected organic/metal/ice micro grain");Bind(p);Emit("scenery",finish.ToString(),p);}
@@ -85,6 +92,7 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--mono-root',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
     source=ROOT/'Assets/Alterverse/Scripts/Visuals';scenery=(source/'PlanetSceneryMaterials.cs').read_text();enum=re.search(r'public enum SceneryFinish \{[^}]+\}',scenery).group()
     subset='using System;using UnityEngine;using Alterverse.Match;namespace Alterverse.Visuals {'+enum+'public static class PlanetSceneryMaterials {'+method(source/'PlanetSceneryMaterials.cs','LandscapeFinish')+method(source/'PlanetSceneryMaterials.cs','ApplyMicro')+'}}'
+    subset+='namespace Alterverse.Visuals {public static class SurfaceTextureFiltering {'+method(source/'PlanetSurfaceMaterials.cs','Configure')+'}}'
     subset+='namespace Alterverse.Visuals {public class DiamondCoreArenaRuntime {'+method(source/'DiamondCoreArenaRuntime.cs','ConfigureClearFloor')+'}public class DiamondCoreFloorSeamFix {'+method(source/'DiamondCoreFloorSeamFix.cs','DisableOverlay')+'}}'
     env=dict(os.environ,MONO_PATH=str(a.mono_root/'usr/lib/mono/4.5'),MONO_CFG_DIR=str(a.mono_root/'etc'))
     with tempfile.TemporaryDirectory() as d:
@@ -97,7 +105,7 @@ def main():
         parts=line.split('|')
         if parts[0]=='PROFILE':profiles[parts[1]][parts[2]]={'texture':parts[3] or None,'scale':float(parts[4]),'relief':float(parts[5]),'contrast':float(parts[6])}
         elif parts[0]=='CHECKS':checks=int(parts[1])
-    assert len(profiles['ground'])==11 and len(profiles['scenery'])==8 and checks>200
+    assert len(profiles['ground'])==14 and len(profiles['scenery'])==8 and checks>200
     (a.output/'material-profiles.json').write_text(json.dumps(profiles,indent=2)+'\n')
     textures=[]
     for path in sorted((ROOT/'Assets/Alterverse/Resources/SurfaceMicro').glob('*.png')):
