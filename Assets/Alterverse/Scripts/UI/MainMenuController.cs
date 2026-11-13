@@ -278,12 +278,12 @@ namespace Alterverse.UI
             DrawShardWallet(new Rect(Right-280,20,280,56));
             FrontEndTheme.Fill(new Rect(Left,85,ContentWidth,1),new Color(.75f,.65f,.47f,.50f));
         }
-        private const string DiscordChannelUrl = "https://discord.com/channels/1562160339942907947/1562167745225691148";
+        private const string DiscordInviteUrl = "https://discord.gg/52WYQMHqy";
         private void DrawDiscordButton(Rect rect)
         {
             bool hovered=rect.Contains(Event.current.mousePosition);
             if(theme.Navigation(rect,"DISCORD",11))
-                Application.OpenURL(DiscordChannelUrl);
+                Application.OpenURL(DiscordInviteUrl);
             Color blurple=new Color(.35f,.40f,.95f,hovered?.95f:.72f);
             FrontEndTheme.Fill(new Rect(rect.x+1f,rect.y+8f,2f,rect.height-16f),blurple);
             if(hovered)
