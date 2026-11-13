@@ -155,6 +155,8 @@ namespace Alterverse.UI
         private void Update()
         {
             if (!visible || suspended || OnlineMatchLoadingScreen.IsVisible) return;
+            // Warm the small lobby portraits while the player chooses a play mode.
+            if (!launching && (page == Page.Play || page == Page.Coop)) StylizedHeroCard.PrepareRoster();
             if (!PrepareAccountPresentation()) return;
             UpdateReviewPrompt();
             if (ReviewPromptVisible)

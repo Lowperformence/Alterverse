@@ -6,14 +6,17 @@ namespace Alterverse.UI
     {
         private static Texture2D orbitalRingTex;
         private static Texture2D softGlowTex;
+        private static Texture2D loadingPlanetTex;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetMotifTextures()
         {
             if (orbitalRingTex != null) Object.Destroy(orbitalRingTex);
             if (softGlowTex != null) Object.Destroy(softGlowTex);
+            if (loadingPlanetTex != null) Object.Destroy(loadingPlanetTex);
             orbitalRingTex = null;
             softGlowTex = null;
+            loadingPlanetTex = null;
         }
 
         private static void EnsureMotifTextures()
@@ -223,7 +226,7 @@ namespace Alterverse.UI
             // Soft atmospheric nebula bloom in the background (uses smooth radial texture, never blocky bars).
             float bloomX=viewport.x+viewport.width*(.64f-px*.025f);
             float bloomY=viewport.y+viewport.height*(.42f-py*.020f);
-            GUI.color=new Color(heroAccent.r,heroAccent.g,heroAccent.b,.08f+Mathf.Sin(time*.7f)*.02f);
+            GUI.color=new Color(heroAccent.r,heroAccent.g,heroAccent.b,(.08f+Mathf.Sin(time*.7f)*.02f)*old.a);
             GUI.DrawTexture(new Rect(bloomX-340f,bloomY-260f,680f,520f),softGlowTex);
 
             // Soft-glow drifting cosmic bokeh motes across 3 depth planes.
@@ -241,10 +244,59 @@ namespace Alterverse.UI
                 if(twinkle<=.15f)continue;
                 Color c=i%3==0?heroAccent:i%3==1?cyan:gold;
                 float size=(i%4==0?16f:10f)*(.65f+depth*.55f);
-                GUI.color=new Color(c.r,c.g,c.b,twinkle*(.18f+depth*.16f));
+                GUI.color=new Color(c.r,c.g,c.b,twinkle*(.18f+depth*.16f)*old.a);
                 GUI.DrawTexture(new Rect(x-size*.5f,y-size*.5f,size,size),softGlowTex);
             }
             GUI.color=old;
+        }
+
+        /// <summary>A softly shaded planet with slowly rotating surface detail for loading screens.</summary>
+        public static void DrawLoadingPlanet(Rect rect,Color tint,float rotation)
+        {
+            if(rect.width<=0f||rect.height<=0f)return;
+            EnsureMotifTextures();
+            if(loadingPlanetTex==null)
+            {
+                // Generate once; bilinear sampling and a soft edge keep the planet smooth at mobile sizes.
+                const int size=256;
+                loadingPlanetTex=new Texture2D(size,size,TextureFormat.RGBA32,false)
+                {
+                    name="DF_LoadingPlanet",hideFlags=HideFlags.HideAndDontSave,
+                    wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Bilinear
+                };
+                var pixels=new Color32[size*size];
+                float half=(size-1)*.5f;
+                for(int y=0;y<size;y++)
+                for(int x=0;x<size;x++)
+                {
+                    float nx=(x-half)/half,ny=(y-half)/half;
+                    float radius2=nx*nx+ny*ny;
+                    if(radius2>=1f)continue;
+                    float depth=Mathf.Sqrt(1f-radius2);
+                    float light=Mathf.Clamp01(.32f+depth*.58f-nx*.23f+ny*.16f);
+                    float band=.5f+.5f*Mathf.Sin(ny*15f+Mathf.Sin(nx*5.5f+ny*3f)*2.1f);
+                    float detail=.5f+.5f*Mathf.Sin(nx*18f-ny*7f+Mathf.Sin(ny*8f)*1.3f);
+                    float color=light*(.60f+band*.25f+detail*.15f);
+                    float edge=Mathf.Clamp01((1f-Mathf.Sqrt(radius2))*size*.40f);
+                    pixels[y*size+x]=new Color32((byte)Mathf.RoundToInt(255f*color),
+                        (byte)Mathf.RoundToInt(255f*color),(byte)Mathf.RoundToInt(255f*color),
+                        (byte)Mathf.RoundToInt(255f*edge));
+                }
+                loadingPlanetTex.SetPixels32(pixels);
+                loadingPlanetTex.Apply(false,true);
+            }
+
+            Color old=GUI.color;Matrix4x4 matrix=GUI.matrix;
+            try
+            {
+                GUI.color=new Color(tint.r,tint.g,tint.b,.30f*old.a);
+                GUI.DrawTexture(new Rect(rect.x-rect.width*.28f,rect.y-rect.height*.28f,
+                    rect.width*1.56f,rect.height*1.56f),softGlowTex);
+                GUIUtility.RotateAroundPivot(rotation,rect.center);
+                GUI.color=new Color(tint.r,tint.g,tint.b,.95f*old.a);
+                GUI.DrawTexture(rect,loadingPlanetTex);
+            }
+            finally {GUI.matrix=matrix;GUI.color=old;}
         }
 
         /// <summary>

@@ -18,6 +18,7 @@ namespace Alterverse.Visuals
 
         private static readonly Dictionary<HeroId, Texture2D> PortraitCache = new Dictionary<HeroId, Texture2D>();
         private static readonly Dictionary<HeroId, Texture2D> BackdropCache = new Dictionary<HeroId, Texture2D>();
+        private static readonly HeroId[] RosterHeroes = (HeroId[])System.Enum.GetValues(typeof(HeroId));
         private static Shader portraitShader;
         private static readonly Queue<HeroId> Pending = new();
         private static readonly HashSet<HeroId> Queued = new();
@@ -27,6 +28,8 @@ namespace Alterverse.Visuals
         {
             if(Pending.Count==0)return;
             HeroId hero=Pending.Dequeue();Queued.Remove(hero);
+            // Prepare the matching world art outside IMGUI as well as the hero bust.
+            GetOriginBackdrop(hero);
             Texture2D rendered=RenderHeroBustPortrait(hero);
             if(rendered!=null)PortraitCache[hero]=rendered;
             else RetryAt[hero]=Time.unscaledTime+1f;
@@ -38,7 +41,25 @@ namespace Alterverse.Visuals
             PortraitCache.Clear();BackdropCache.Clear();Pending.Clear();Queued.Clear();RetryAt.Clear();worker=null;
         }
 
-        public static void Draw(Rect rect, HeroId hero, Texture2D pixel, float time)
+        // Call from the menu update, not its layout/repaint events. The worker keeps its
+        // one-portrait-per-frame budget and the cache is shared by all lobby cards.
+        public static void PrepareRoster()
+        {
+            if(Application.isBatchMode || SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null)return;
+            for(int i=0;i<RosterHeroes.Length;i++)GetOrRenderPortrait(RosterHeroes[i]);
+        }
+
+        public static bool RosterReady
+        {
+            get
+            {
+                for(int i=0;i<RosterHeroes.Length;i++)
+                    if(!PortraitCache.TryGetValue(RosterHeroes[i],out Texture2D portrait)||portrait==null)return false;
+                return true;
+            }
+        }
+
+        public static void Draw(Rect rect, HeroId hero, Texture2D pixel, float time, bool showPortrait = true)
         {
             if (rect.width <= 4f || rect.height <= 4f) return;
             pixel ??= Texture2D.whiteTexture;
@@ -70,7 +91,7 @@ namespace Alterverse.Visuals
                     new Color(0.015f, 0.025f, 0.045f, 0.52f));
 
                 // Cached 3D hero bust portrait
-                Texture2D portrait = GetOrRenderPortrait(hero);
+                Texture2D portrait = showPortrait ? GetOrRenderPortrait(hero) : null;
                 if (portrait != null)
                 {
                     GUI.color = new Color(1f, 1f, 1f, before.a);

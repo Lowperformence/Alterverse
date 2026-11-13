@@ -23,9 +23,11 @@ namespace UnityEngine {
  public enum RuntimeInitializeLoadType{SubsystemRegistration,AfterSceneLoad}
  public class RuntimeInitializeOnLoadMethodAttribute:Attribute {public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType t){}}
  public struct Vector3{public Vector3(float x,float y,float z){}public static Vector3 one=>new();public static Vector3 operator*(Vector3 v,float n)=>v;}
+ public struct Vector2{public static Vector2 zero=>new();}
  public struct Quaternion{public static Quaternion identity=>new();}
  public struct Matrix4x4{public int value;public static Matrix4x4 identity=>new();public static Matrix4x4 TRS(Vector3 a,Quaternion b,Vector3 c)=>new();}
- public struct Color{public float a;public Color(float r,float g,float b,float a){this.a=a;}public static Color white=>new(1,1,1,1);}
+ public struct Color{public float r,g,b,a;public Color(float r,float g,float b,float a){this.r=r;this.g=g;this.b=b;this.a=a;}public static Color white=>new(1,1,1,1);}
+ public class Texture2D{}
  public struct Rect{public float x,y,width,height;public float yMax=>y+height;public Rect(float x,float y,float w,float h){this.x=x;this.y=y;width=w;height=h;}}
  public static class Screen{public static int width=1600,height=720;public static Rect safeArea=new(20,0,1560,720);}
  public static class Time{public static float unscaledTime,unscaledDeltaTime=.1f;public static int frameCount;}
@@ -33,10 +35,14 @@ namespace UnityEngine {
  public static class GUI{public static Matrix4x4 matrix;public static Color color;public static bool enabled;public static int depth;}
 }
 namespace Unity.Netcode{public class NetworkManager{public static NetworkManager Singleton;public bool IsServer,IsListening,IsConnectedClient;}}
-namespace Alterverse.Characters{public static class PlayerHeroSelection{public static int Selected;public static void Select(int hero){Selected=hero;}}}
+namespace Alterverse.Characters{
+ public enum HeroId{Rook,Nyra,Elyra,Veyr}
+ public static class PlayerHeroSelection{public static HeroId Selected;public static void Select(HeroId hero){Selected=hero;}}
+ public static class HeroIdentity{public static string NameFor(HeroId h)=>h.ToString();public static string RoleFor(HeroId h)=>"VANGUARD";}
+}
 namespace Alterverse.Match{
- public class MatchPlayerSlot{public int Hero;}
- public class MatchSession{public bool IsFull=true;public MatchPlayerSlot[] Slots={new(){Hero=3}};}
+ public class MatchPlayerSlot{public Alterverse.Characters.HeroId Hero;}
+ public class MatchSession{public bool IsFull=true;public MatchPlayerSlot[] Slots={new(){Hero=Alterverse.Characters.HeroId.Veyr}};}
  public enum PauseReason{Menu,Result}
  public static class MatchClock{public static bool InBackground;public static void Set(PauseReason p,bool b){}}
  public static class ArenaVariantRuntime{public static string Current="Moon",Selected="Moon";public static bool ShuffleEnabled;}
@@ -57,13 +63,21 @@ namespace Alterverse.UI{
   public MainMenuController(bool coop=false){coopLaunching=coop;}
  }
  public class FrontEndTheme{
-  public object Title,Heading,Body,Small;public static UnityEngine.Color Raised,Accent;
-  public static List<string> Labels=new(),Actions=new();public static UnityEngine.Rect Cover;public static bool Click;
-  public static void Fill(UnityEngine.Rect r,UnityEngine.Color c){if(r.width==UnityEngine.Screen.width)Cover=r;}
+  public object Title,Heading,Body,Small;public static UnityEngine.Color Raised,Accent,Zero;public static UnityEngine.Texture2D Pixel=new();
+  public static List<string> Labels=new(),Actions=new();public static List<UnityEngine.Rect> Fills=new();public static UnityEngine.Rect Cover;public static bool Click;
+  public static void Fill(UnityEngine.Rect r,UnityEngine.Color c){Fills.Add(r);if(r.width==UnityEngine.Screen.width)Cover=r;}
+  public void Panel(UnityEngine.Rect r){}public void Frame(UnityEngine.Rect r,bool selected=false){}
+  public void StatusBadge(UnityEngine.Rect r,string s,UnityEngine.Color c){Labels.Add(s);}
   public void Label(UnityEngine.Rect r,string s,object t,bool muted=false){Labels.Add(s);}
   public void FitLabel(UnityEngine.Rect r,string s,object t,bool muted=false){Labels.Add(s);}
   public bool Action(UnityEngine.Rect r,string s){Actions.Add(s);bool b=Click;Click=false;return b;}
  }
+ public static class DimensionUiMotif{
+  public static List<float> PlanetRotations=new();
+  public static void DrawCosmicParallaxOverlay(UnityEngine.Rect r,UnityEngine.Texture2D p,UnityEngine.Color c,float t,UnityEngine.Vector2 v){}
+  public static void DrawLoadingPlanet(UnityEngine.Rect r,UnityEngine.Color c,float rotation){PlanetRotations.Add(rotation);}
+ }
+ public static class StylizedHeroCard{public static void Draw(UnityEngine.Rect r,Alterverse.Characters.HeroId h,UnityEngine.Texture2D t,float time){}}
 }
 namespace Alterverse.Shop{
  public class ArenaFixture{public string Name;}
@@ -85,5 +99,8 @@ namespace Alterverse.Prototype{
 
 
 namespace Alterverse.Combat { public static class HotZoneTank { public static bool FinishMatchPreparation()=>true; } }
-namespace Alterverse.Visuals { public static class MatchInsertionTransport { public static void PrepareForReveal(UnityEngine.GameObject world){} } }
+namespace Alterverse.Visuals {
+ public static class MatchInsertionTransport { public static void PrepareForReveal(UnityEngine.GameObject world){} }
+ public static class StylizedArtDirection {public static UnityEngine.Color HeroAccent(Alterverse.Characters.HeroId h)=>new(1,1,1,1);}
+}
 
