@@ -21,8 +21,8 @@ namespace Alterverse.UI
                 GUI.color = new Color(1f, 1f, 1f, alpha);
                 GUI.enabled = true;
                 GUI.depth = -10000;
-                // Cover the complete screen, including the area outside the mobile safe area.
-                FrontEndTheme.Fill(new Rect(0, 0, Screen.width, Screen.height), new Color(.008f, .014f, .026f, alpha));
+                // Cover the whole screen, including notches and other unsafe areas.
+                FrontEndTheme.Fill(new Rect(0, 0, Screen.width, Screen.height), new Color(.008f, .014f, .032f, 1f));
                 Rect safe = Screen.safeArea;
                 if (safe.width <= 0 || safe.height <= 0) return false;
                 float scale = Mathf.Min(safe.height / 720f, safe.width / 1500f);
@@ -30,51 +30,65 @@ namespace Alterverse.UI
                 float y = Screen.height - safe.yMax + (safe.height - 720f * scale) * .5f;
                 GUI.matrix = Matrix4x4.TRS(new Vector3(safe.x, y, 0), Quaternion.identity, Vector3.one * scale);
 
+                HeroId activeHero = PlayerHeroSelection.Selected;
+                Color accent = Alterverse.Visuals.StylizedArtDirection.HeroAccent(activeHero);
                 Texture2D pixel = FrontEndTheme.Pixel;
+                // Smooth, slow-moving starlight uses the same cached artwork as the menu.
+                DimensionUiMotif.DrawCosmicParallaxOverlay(new Rect(0, 0, width, 720f), pixel,
+                    accent, Time.unscaledTime, Vector2.zero);
+
                 float panelWidth = Mathf.Min(1080f, width - 100f);
                 float left = (width - panelWidth) * .5f;
-                Rect shell = new Rect(left, 114f, panelWidth, 502f);
+                DimensionUiMotif.DrawLoadingPlanet(new Rect(left - 176f, 174f, 150f, 150f),
+                    new Color(.48f, .76f, 1f, 1f), Time.unscaledTime * 10f);
+                DimensionUiMotif.DrawLoadingPlanet(new Rect(left + panelWidth + 44f, 430f, 100f, 100f),
+                    new Color(1f, .70f, .40f, 1f), -Time.unscaledTime * 13f);
+                Rect shell = new Rect(left, 88f, panelWidth, 548f);
                 theme.Panel(shell);
+                FrontEndTheme.Fill(new Rect(left + 1f, 89f, 4f, 546f),
+                    new Color(accent.r, accent.g, accent.b, .85f));
 
-                HeroId activeHero = PlayerHeroSelection.Selected;
-                Color heroAccent = Alterverse.Visuals.StylizedArtDirection.HeroAccent(activeHero);
-
-                theme.StatusBadge(new Rect(left + 36f, 144f, 224f, 28f),
-                    "4v4 TACTICAL DEPLOYMENT", FrontEndTheme.Zero);
-                theme.Label(new Rect(left + 36f, 180f, panelWidth - 280f, 56f), "ENTERING THE FRONT", theme.Title);
-
-                // Right-side Champion Loadout Badge with 3D Hero Mini-Portrait
-                Rect heroCard = new Rect(left + panelWidth - 246f, 138f, 210f, 112f);
-                theme.Panel(heroCard);
-                theme.Frame(heroCard, true);
-                StylizedHeroCard.Draw(new Rect(heroCard.x + 12f, heroCard.y + 12f, 72f, 88f), activeHero, pixel, Time.unscaledTime);
-                theme.Label(new Rect(heroCard.x + 94f, heroCard.y + 18f, 104f, 18f), "CHAMPION", theme.Small, true);
-                theme.FitLabel(new Rect(heroCard.x + 94f, heroCard.y + 40f, 104f, 26f),
-                    HeroIdentity.NameFor(activeHero), theme.Heading);
-                theme.StatusBadge(new Rect(heroCard.x + 94f, heroCard.y + 70f, 104f, 22f),
-                    HeroIdentity.RoleFor(activeHero).ToString().ToUpperInvariant(), heroAccent);
-
-                theme.Label(new Rect(left + 38f, 266f, panelWidth - 76f, 38f), stage, theme.Heading);
-                theme.FitLabel(new Rect(left + 38f, 310f, panelWidth - 76f, 28f), detail, theme.Body, true);
+                float textX = left + 42f;
+                float textWidth = panelWidth - 400f;
+                theme.StatusBadge(new Rect(textX, 122f, 226f, 28f), "4v4 TACTICAL DEPLOYMENT", FrontEndTheme.Zero);
+                theme.Label(new Rect(textX, 166f, textWidth, 58f), "ENTERING THE FRONT", theme.Title);
+                theme.Label(new Rect(textX, 242f, textWidth, 38f), stage, theme.Heading);
+                theme.FitLabel(new Rect(textX, 286f, textWidth, 30f), detail, theme.Body, true);
                 if (!string.IsNullOrEmpty(context))
-                    theme.FitLabel(new Rect(left + 38f, 344f, panelWidth - 76f, 22f), context, theme.Small, true);
+                    theme.FitLabel(new Rect(textX, 320f, textWidth, 24f), context, theme.Small, true);
 
-                // Smooth orbital progress bar
-                float barW = panelWidth - 76f;
-                float pulse = 0.25f + 0.75f * Mathf.PingPong(Time.unscaledTime * 0.9f, 1f);
-                theme.Progress(new Rect(left + 38f, 384f, barW, 8f), pulse);
+                // This is an indeterminate activity indicator, not a made-up percentage.
+                Rect rail = new Rect(textX, 365f, textWidth, 6f);
+                FrontEndTheme.Fill(rail, new Color(.22f, .32f, .44f, .45f));
+                float segmentWidth = Mathf.Min(130f, rail.width * .24f);
+                float travel = Mathf.Max(0f, rail.width - segmentWidth);
+                float segmentX = rail.x + travel * Mathf.PingPong(Time.unscaledTime * .55f, 1f);
+                FrontEndTheme.Fill(new Rect(segmentX, rail.y, segmentWidth, rail.height),
+                    new Color(accent.r, accent.g, accent.b, .92f));
 
                 string[] tips = LoadingTipContent.Tips;
                 if (tips.Length > 0)
                 {
-                    Rect tipBox = new Rect(left + 38f, 412f, panelWidth - 76f, 74f);
-                    theme.Panel(tipBox);
-                    theme.Label(new Rect(tipBox.x + 18f, tipBox.y + 10f, 220f, 18f), "TACTICAL INTEL", theme.Small, true);
-                    theme.Label(new Rect(tipBox.x + 18f, tipBox.y + 32f, tipBox.width - 36f, 34f),
+                    Rect tip = new Rect(textX, 404f, textWidth, 100f);
+                    theme.Panel(tip);
+                    theme.Label(new Rect(tip.x + 18f, tip.y + 10f, tip.width - 36f, 20f), "TACTICAL INTEL", theme.Small, true);
+                    theme.Label(new Rect(tip.x + 18f, tip.y + 34f, tip.width - 36f, 52f),
                         tips[(int)(Time.unscaledTime / 8f) % tips.Length], theme.Small, true);
                 }
 
-                return canReturnToMenu && theme.Action(new Rect(left + 38f, 542f, 260f, 48f), "RETURN TO MENU");
+                // A large sharp champion card gives the screen a clear visual focus.
+                Rect heroCard = new Rect(left + panelWidth - 310f, 120f, 268f, 418f);
+                theme.Panel(heroCard);
+                theme.Frame(heroCard, true);
+                Rect portrait = new Rect(heroCard.x + 14f, heroCard.y + 14f, heroCard.width - 28f, 292f);
+                StylizedHeroCard.Draw(portrait, activeHero, pixel, Time.unscaledTime);
+                theme.Label(new Rect(heroCard.x + 16f, heroCard.y + 318f, heroCard.width - 32f, 18f), "CHAMPION", theme.Small, true);
+                theme.FitLabel(new Rect(heroCard.x + 16f, heroCard.y + 342f, heroCard.width - 32f, 32f),
+                    HeroIdentity.NameFor(activeHero), theme.Heading);
+                theme.StatusBadge(new Rect(heroCard.x + 16f, heroCard.y + 382f, heroCard.width - 32f, 24f),
+                    HeroIdentity.RoleFor(activeHero).ToString().ToUpperInvariant(), accent);
+
+                return canReturnToMenu && theme.Action(new Rect(textX, 554f, 260f, 48f), "RETURN TO MENU");
             }
             finally
             {

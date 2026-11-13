@@ -85,6 +85,16 @@ static class Regression {
   Check(FrontEndTheme.Actions.Count==0&&!MatchExit.Leaving&&ReferenceEquals(plan,CoopAuthority.ActivePlan)&&!OnlineMatchLoadingScreen.IsVisible,"Local presentation cannot expose online exit or change match state");
   Check(FrontEndTheme.Cover.width==Screen.width&&FrontEndTheme.Cover.height==Screen.height,"Offline loading covers mobile unsafe area");
   Check(GUI.depth==42&&!GUI.enabled&&GUI.color.a==.4f&&GUI.matrix.value==18,"Offline loading restores caller GUI state");
+  FrontEndTheme.Fills.Clear();DimensionUiMotif.PlanetRotations.Clear();Time.unscaledTime=0;
+  MatchLoadingPresentation.Draw(new FrontEndTheme(),"PREPARING BATTLEFIELD","Preparing");
+  var segments=FrontEndTheme.Fills.FindAll(r=>r.height==6f);
+  Check(segments.Count==2&&segments[1].width<segments[0].width,"Activity indicator is a moving segment rather than a percentage");
+  float firstSegmentX=segments[1].x;FrontEndTheme.Fills.Clear();Time.unscaledTime=.5f;
+  MatchLoadingPresentation.Draw(new FrontEndTheme(),"PREPARING BATTLEFIELD","Preparing");
+  segments=FrontEndTheme.Fills.FindAll(r=>r.height==6f);
+  Check(segments[1].x>firstSegmentX,"Loading activity moves as time advances");
+  Check(DimensionUiMotif.PlanetRotations.Count==4&&DimensionUiMotif.PlanetRotations[2]>0&&DimensionUiMotif.PlanetRotations[3]<0,
+      "Two planets turn in different directions over time");
   FrontEndTheme.Labels.Clear();ArenaVariantRuntime.ShuffleEnabled=true;Call(local,"DrawLaunch");
   Check(FrontEndTheme.Labels.Contains("MATCH 4v4  /  RANDOM OWNED ARENA  /  ZERO TEAM"),"Shuffle mode keeps its arena description");
   FrontEndTheme.Labels.Clear();plan.Arena="Mars";Call(new MainMenuController(true),"DrawLaunch");

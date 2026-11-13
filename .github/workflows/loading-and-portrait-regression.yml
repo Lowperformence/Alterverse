@@ -1,0 +1,27 @@
+name: Loading and portrait regression
+on:
+  pull_request:
+    paths:
+      - 'Assets/Alterverse/Scripts/UI/**'
+      - 'Assets/Alterverse/Scripts/Visuals/StylizedHeroCard.cs'
+      - 'Tools/Multiplayer/LoadingRegression/**'
+      - 'Tools/Lobby/Regression/offline_ui.py'
+      - 'Tools/UI/HeroPortraitRegression/**'
+      - '.github/workflows/loading-and-portrait-regression.yml'
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            Assets/Alterverse/Scripts
+            Tools/Multiplayer/LoadingRegression
+            Tools/Lobby/Regression
+            Tools/UI/HeroPortraitRegression
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python Tools/Multiplayer/LoadingRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Lobby/Regression/offline_ui.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/UI/HeroPortraitRegression/run.py --dotnet-root "$DOTNET_ROOT"
