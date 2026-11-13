@@ -29,6 +29,9 @@ namespace Alterverse.Visuals
             if(ownsSand||ownsStone)Debug.LogWarning("DIMENSIONS FRONT: authored surface detail missing for "+profile+"; using generated detail.");
             if(ownsSand)sand=Bake(false);
             if(ownsStone)stone=Bake(true);
+            SurfaceTextureFiltering.Configure(geology);
+            SurfaceTextureFiltering.Configure(sand);
+            SurfaceTextureFiltering.Configure(stone);
         }
 
         public void Apply(Material material,bool ground=false,bool crater=false)
@@ -115,6 +118,17 @@ namespace Alterverse.Visuals
         {
             if(ownsSand&&sand!=null)Object.Destroy(sand);
             if(ownsStone&&stone!=null)Object.Destroy(stone);
+        }
+    }
+
+    // Map resources are shared, so set sampler quality once when each surface is bound.
+    public static class SurfaceTextureFiltering
+    {
+        public static void Configure(Texture2D texture)
+        {
+            if(texture==null)return;
+            texture.filterMode=texture.mipmapCount>1?FilterMode.Trilinear:FilterMode.Bilinear;
+            if(texture.mipmapCount>1)texture.anisoLevel=Mathf.Max(texture.anisoLevel,4);
         }
     }
 }
