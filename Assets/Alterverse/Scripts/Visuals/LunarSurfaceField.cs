@@ -57,6 +57,38 @@ namespace Alterverse.Visuals
             new(18,2.25f,30),new(20.1f,.82f,31.7f),new(15.8f,.58f,32.1f)
         };
 
+        // The atlas samples hundreds of thousands of pixels. Index crater AABBs once so
+        // increasing atlas resolution does not scan every crater for every sample.
+        private const float BucketSize=8f, BucketMinX=-48f, BucketMinZ=-42f;
+        private const int BucketColumns=12, BucketRows=11;
+        private static readonly int[][] craterBuckets=BuildCraterBuckets();
+
+        private static int[][] BuildCraterBuckets()
+        {
+            var buckets=new System.Collections.Generic.List<int>[BucketColumns*BucketRows];
+            for(int i=0;i<buckets.Length;i++)buckets[i]=new System.Collections.Generic.List<int>();
+            for(int i=0;i<craters.Length;i++)
+            {
+                Vector3 c=craters[i];float radius=c.y*1.65f;
+                int x0=Mathf.Clamp(Mathf.FloorToInt((c.x-radius-BucketMinX)/BucketSize),0,BucketColumns-1);
+                int x1=Mathf.Clamp(Mathf.FloorToInt((c.x+radius-BucketMinX)/BucketSize),0,BucketColumns-1);
+                int z0=Mathf.Clamp(Mathf.FloorToInt((c.z-radius-BucketMinZ)/BucketSize),0,BucketRows-1);
+                int z1=Mathf.Clamp(Mathf.FloorToInt((c.z+radius-BucketMinZ)/BucketSize),0,BucketRows-1);
+                for(int z=z0;z<=z1;z++)for(int x=x0;x<=x1;x++)buckets[z*BucketColumns+x].Add(i);
+            }
+            var result=new int[buckets.Length][];
+            for(int i=0;i<result.Length;i++)result[i]=buckets[i].ToArray();
+            return result;
+        }
+
+        private static int[] CraterCandidates(float x,float z)
+        {
+            if(x<BucketMinX||x>48f||z<BucketMinZ||z>42f)return null;
+            int bx=Mathf.Clamp(Mathf.FloorToInt((x-BucketMinX)/BucketSize),0,BucketColumns-1);
+            int bz=Mathf.Clamp(Mathf.FloorToInt((z-BucketMinZ)/BucketSize),0,BucketRows-1);
+            return craterBuckets[bz*BucketColumns+bx];
+        }
+
         private static bool IsMoon=>ArenaVariantRuntime.IsMoon||ArenaVariantRuntime.IsExoplanet;
         private static float Noise(float x,float z,float f,float seed)=>Mathf.PerlinNoise(x*f+seed,z*f+seed*.71f);
 
@@ -108,8 +140,11 @@ namespace Alterverse.Visuals
                 // The Moon gets flatter crater floors, steeper walls and brighter broken rims. Actual gameplay
                 // collision remains unchanged: this is presentation geometry only. Relief near the active centre
                 // is deliberately restrained while outer landmark craters can read much deeper from the MOBA camera.
-                for(int i=0;i<craters.Length;i++)
+                int[] candidates=CraterCandidates(x,z);
+                int count=candidates!=null?candidates.Length:craters.Length;
+                for(int candidate=0;candidate<count;candidate++)
                 {
+                    int i=candidates!=null?candidates[candidate]:candidate;
                     Vector3 c=craters[i];float dx=x-c.x,dz=z-c.z,r=c.y;
                     if(Mathf.Abs(dx)>r*1.65f||Mathf.Abs(dz)>r*1.65f)continue;
                     float angle=Mathf.Atan2(dz,dx);
@@ -214,12 +249,12 @@ namespace Alterverse.Visuals
                 var quality = Alterverse.Performance.MobilePerformanceProfile.Current;
                 if (quality == Alterverse.Performance.MobileQuality.Battery)
                 {
-                    size = 384;
-                    aniso = 1;
+                    size = 512;
+                    aniso = 4;
                 }
                 else if (quality == Alterverse.Performance.MobileQuality.Balanced)
                 {
-                    size = 512;
+                    size = 768;
                     aniso = 4;
                 }
                 else
