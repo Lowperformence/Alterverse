@@ -40,7 +40,7 @@ public sealed class MeteorStrike:MonoBehaviour
 {
 private static readonly System.Collections.Generic.List<MeteorStrike> active=new();public static System.Collections.Generic.IReadOnlyList<MeteorStrike> Active=>active;
 [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]private static void ResetRegistry(){active.Clear();warningInk=warningRingInk=rockMaterial=null;meteorMesh=null;}
-private const float ImpactRadius=2.1f;private Material warningInk,warningRingInk,rockMaterial;private Mesh meteorMesh;private LineRenderer warningLine,trail;
+private const float ImpactRadius=2.1f;private static Material warningInk,warningRingInk,rockMaterial;private static Mesh meteorMesh;private LineRenderer warningLine,trail;
 private const int HitBufferSize=32;private readonly Collider[] hitBuffer=new Collider[HitBufferSize];private float spawnAt,hitAt,damage;private GameObject warning,meteor;private Vector3 startPosition;private DimensionPlanet owner;private DimensionsFront front;
 public Vector3 ImpactPosition=>startPosition;public float BlastRadius=>ImpactRadius;public float TelegraphAge=>Mathf.Max(0f,Time.time-spawnAt);public float TimeRemaining=>Mathf.Max(0f,hitAt-Time.time);public bool IsTelegraphing=>Time.time<hitAt&&owner!=null&&owner.Available;
 private void OnEnable(){if(!active.Contains(this))active.Add(this);}private void OnDisable(){active.Remove(this);}
