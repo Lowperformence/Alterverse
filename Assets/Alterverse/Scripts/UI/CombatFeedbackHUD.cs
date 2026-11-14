@@ -851,7 +851,7 @@ namespace Alterverse.UI
                 Color barColor = new Color(0.24f, 0.84f, 1f, 0.88f);
                 FrontEndTheme.Fill(new Rect(pill.x, pill.yMax - 2f, pill.width * (streakProgress / (float)KillsPerTurret), 2f), barColor);
                 turretBtnSubStyle.normal.textColor = new Color(0.88f, 0.94f, 1f, 0.90f);
-                GUI.Label(pill, GameLanguage.Text($"GESCHÜTZ-STREAK: {streakProgress} / {KillsPerTurret} KILLS"), turretBtnSubStyle);
+                GUI.Label(pill, GameLanguage.Text("TURRET STREAK") + $": {streakProgress} / {KillsPerTurret} KILLS", turretBtnSubStyle);
             }
         }
 

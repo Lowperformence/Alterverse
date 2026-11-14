@@ -74,6 +74,7 @@ namespace Alterverse.Profile
                     ["TURRET DEPLOYED!"] = "GESCHÜTZ PLATZIERT!",
                     ["DEPLOY MOBILE TURRET"] = "FAHRBARES GESCHÜTZ PLATZIEREN",
                     ["DEPLOY TURRET"] = "GESCHÜTZ PLATZIEREN",
+                    ["TURRET STREAK"] = "GESCHÜTZ-SERIE",
                     ["TAP THE MAP TO DEPLOY"] = "AUF KARTE TIPPEN ZUM PLATZIEREN",
                     ["TAP A LOCATION OR PRESS ESC TO CANCEL"] = "ORT WÄHLEN ODER ESC ZUM ABBRECHEN",
                     ["250 HP  •  2 DAMAGE  •  MOBILE"] = "250 LP  •  2 SCHADEN  •  FAHRBAR",
