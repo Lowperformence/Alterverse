@@ -23,6 +23,9 @@ namespace Alterverse.Combat
         private SoftTargeting targeting;
         private float nextAttackTime;
         private float nextNetworkAttempt;
+        private float bufferedAttackExpiresAt = -1f;
+        private bool bufferedHasPose;
+        private AimPose bufferedPose;
 
         private HeroCombatProfile Profile
         {
@@ -63,6 +66,23 @@ namespace Alterverse.Combat
             if (Time.timeScale <= 0f) return;
             Alterverse.Multiplayer.CoopHeroSlot slot = GetComponent<Alterverse.Multiplayer.CoopHeroSlot>();
             if (slot != null && !slot.IsLocalHuman) return;
+            if (bufferedAttackExpiresAt > 0f)
+            {
+                if (Time.unscaledTime > bufferedAttackExpiresAt || selfHealth == null || selfHealth.IsDead)
+                {
+                    bufferedAttackExpiresAt = -1f;
+                    bufferedHasPose = false;
+                }
+                else if (Time.time >= nextAttackTime && CanAct())
+                {
+                    bufferedAttackExpiresAt = -1f;
+                    bool usedPose = bufferedHasPose;
+                    AimPose pose = bufferedPose;
+                    bufferedHasPose = false;
+                    if (usedPose) TryAttackAimed(pose);
+                    else TryAttack();
+                }
+            }
             if (Keyboard.current != null && Keyboard.current.spaceKey.isPressed) TryAttack();
         }
 
@@ -84,7 +104,15 @@ namespace Alterverse.Combat
             Vector3 direction = target.transform.position - transform.position;
             locomotion.FaceAction(direction, .08f);
             motor?.TrackBasicTarget(target, .08f);
-            if (Time.time < nextAttackTime) return false;
+            if (Time.time < nextAttackTime)
+            {
+                if (nextAttackTime - Time.time <= 0.12f)
+                {
+                    bufferedHasPose = false;
+                    bufferedAttackExpiresAt = Time.unscaledTime + 0.14f;
+                }
+                return false;
+            }
             AimPose pose = new AimPose(target.transform.position - transform.position, target.transform.position,
                 spec.targetingMode == TargetingMode.Homing || spec.targetingMode == TargetingMode.AutoBasic ? target : null, true);
             bool success = TryAttackAimed(pose);
@@ -94,7 +122,17 @@ namespace Alterverse.Combat
 
         public bool TryAttackAimed(AimPose pose)
         {
-            if (!CanAttempt() || !AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
+            if (!CanAttempt())
+            {
+                if (CanAct() && nextAttackTime - Time.time <= 0.12f && AimGeometry.Finite(pose.Direction) && AimGeometry.Finite(pose.Point))
+                {
+                    bufferedPose = pose;
+                    bufferedHasPose = true;
+                    bufferedAttackExpiresAt = Time.unscaledTime + 0.14f;
+                }
+                return false;
+            }
+            if (!AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
             if (Alterverse.Multiplayer.CoopGameplayCommands.ShouldRouteClientCommand(gameObject))
             {
                 if (Time.time < nextNetworkAttempt) return false;

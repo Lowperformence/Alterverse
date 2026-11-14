@@ -67,6 +67,94 @@
       ]
     },
     {
+      "id": "pirate_hat",
+      "price": 150,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_PirateHat",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "chef_hat",
+      "price": 100,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_ChefHat",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "viking_helm",
+      "price": 150,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_VikingHelm",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "golden_crown",
+      "price": 200,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_GoldenCrown",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "cardboard_robot_head",
+      "price": 100,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_CardboardRobotHead",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "cyber_pumpkin_head",
+      "price": 150,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_CyberPumpkinHead",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "shark_head_mask",
+      "price": 150,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_SharkHeadMask",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "tv_head",
+      "price": 150,
+      "writes": [
+        {
+          "key": "DF_HeadwearOwned_TvHead",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
       "id": "angel_wings",
       "price": 11000,
       "writes": [
@@ -1363,5 +1451,3 @@
     "basePlanId": "monthly"
   }
 }
-
-

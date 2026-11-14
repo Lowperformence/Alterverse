@@ -67,7 +67,32 @@ namespace Alterverse.Visuals
             if(shader==null){LastFitError="Headwear material shader unavailable.";return false;}
             Head=head;HeadBounds=bounds;CrownSection=crown;
             string resource=HeadwearSelection.ResourceFor(selected);
-            bool asset=selected!=UniversalHeroCosmetic.BetaCap;
+            bool isProcedural=ProceduralHeadwearMeshes.IsProcedural(selected);
+            if(isProcedural&&ProceduralHeadwearMeshes.IsFullHead(selected))
+            {
+                if(!ProceduralHeadwearMeshes.TryBuild(selected,shader,out mesh,out materials))
+                {LastFitError="Procedural full-head helmet build failed.";return false;}
+                float maxSpan=Mathf.Max(bounds.size.x,Mathf.Max(bounds.size.y,bounds.size.z));
+                Vector3 fullScale=new Vector3(
+                    Mathf.Max(bounds.size.x*.66f,maxSpan*.56f),
+                    Mathf.Max(bounds.size.y*.66f,maxSpan*.56f),
+                    Mathf.Max(bounds.size.z*.66f,maxSpan*.56f));
+                Vector3 centerSeat=bounds.center;
+                if(referenceHead==null)TryReferenceFrame(visualRoot,out referenceHead,out referenceToHead);
+                Matrix4x4 fullFit=referenceToHead*Matrix4x4.TRS(centerSeat,Quaternion.identity,fullScale);
+                SeatInHeadSpace=fullFit.MultiplyPoint3x4(Vector3.zero);
+                ReferenceWidth=mesh.bounds.size.x*fullScale.x;
+                var fullVerts=mesh.vertices;
+                for(int i=0;i<fullVerts.Length;i++)fullVerts[i]=fullFit.MultiplyPoint3x4(fullVerts[i]);
+                mesh.vertices=fullVerts;mesh.RecalculateNormals();mesh.RecalculateBounds();
+                mounted=new GameObject("DF_Headwear_"+resource);mounted.layer=visualRoot.gameObject.layer;
+                mounted.transform.SetParent(head,false);
+                mounted.AddComponent<MeshFilter>().sharedMesh=mesh;
+                mounted.AddComponent<MeshRenderer>().sharedMaterials=materials;
+                Current=selected;LastFitError=null;
+                return true;
+            }
+            bool asset=selected!=UniversalHeroCosmetic.BetaCap&&!isProcedural;
             if(!FitOpening(selected,bounds,crown,surface,out Vector3 scale))
             {LastFitError="Head shape needs a manual headwear fit.";return false;}
             Vector3 referenceScale=scale;
@@ -79,9 +104,15 @@ namespace Alterverse.Visuals
             // The approved reference is 25% larger than the previous one-third UFO.
             // Apply the model-specific visual adjustments around that shared reference.
             float adjustment=selected==UniversalHeroCosmetic.WizardHat?1.25f:
-                selected==UniversalHeroCosmetic.PropellerCap||selected==UniversalHeroCosmetic.MushroomHat?.75f:1f;
+                selected==UniversalHeroCosmetic.PropellerCap||selected==UniversalHeroCosmetic.MushroomHat?.75f:
+                isProcedural?ProceduralHeadwearMeshes.WidthAdjustment(selected):1f;
             float width=referenceBounds.size.x*referenceScale.x*(1.25f/3f)*adjustment*1.15f;
-            if(asset)
+            if(isProcedural)
+            {
+                if(!ProceduralHeadwearMeshes.TryBuild(selected,shader,out mesh,out materials))
+                {LastFitError="Procedural headwear build failed.";return false;}
+            }
+            else if(asset)
             {
                 if(!UfoHatMesh.TryBuildResource(resource,Matrix4x4.identity,shader,out mesh,out materials,out string message))
                 {LastFitError=message;return false;}
@@ -292,6 +323,8 @@ namespace Alterverse.Visuals
                 return ProfileRadius(y,WizardHeights,WizardRadii);
             if(selected==UniversalHeroCosmetic.MushroomHat)
                 return ProfileRadius(y,MushroomHeights,MushroomRadii);
+            if(ProceduralHeadwearMeshes.IsProcedural(selected))
+                return y>=.99f?0:Mathf.Sqrt(Mathf.Max(0,1-y*y))-.02f;
             return 0;
         }
         static float ProfileRadius(float y,float[] heights,float[] radii)

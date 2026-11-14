@@ -610,7 +610,7 @@ static class Regression
                 Check(writes.Length==1&&writes[0].GetProperty("key").GetString()==definition.OwnedKey&&
                     writes[0].GetProperty("number").GetInt32()==1,"Client/server hat ownership keys differ.");
             }
-            Check(hats==4,"Not all four hats are in the Skins shop.");
+            Check(hats==12,"Not all shop hats are in the Skins shop.");
             Check(!items.Any(x=>x.TryGetProperty("writes",out var w)&&w.EnumerateArray().Any(e=>e.GetProperty("key").GetString()==HeadwearSelection.BetaCapOwnedKey)),"BETA cap leaked into the shard shop.");
         }
         Reset(1,false);int commits=ProfileTransaction.Commits.Count;

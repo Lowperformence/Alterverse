@@ -570,12 +570,28 @@ namespace Alterverse.Combat
             Destroy(gameObject);
         }
 
+        private static readonly System.Collections.Generic.Dictionary<PrimitiveType,Mesh> sharedBombMeshes=new();
+        private static Mesh GetBombMesh(PrimitiveType type)
+        {
+            if(sharedBombMeshes.TryGetValue(type,out Mesh m)&&m!=null)return m;
+            GameObject temp=GameObject.CreatePrimitive(type);
+            MeshFilter mf=temp.GetComponent<MeshFilter>();
+            m=mf!=null?mf.sharedMesh:null;
+            Destroy(temp);
+            if(m!=null)sharedBombMeshes[type]=m;
+            return m;
+        }
         private static Transform Primitive(string name,PrimitiveType type,Transform parent,Vector3 pos,Vector3 scale,Material material,Quaternion rotation)
         {
-            GameObject p=GameObject.CreatePrimitive(type);p.name="DF_Bomb_"+name;p.transform.SetParent(parent,false);
+            GameObject p=new GameObject("DF_Bomb_"+name);p.transform.SetParent(parent,false);
             p.transform.localPosition=pos;p.transform.localScale=scale;p.transform.localRotation=rotation;
-            Collider c=p.GetComponent<Collider>();if(c!=null)c.enabled=false;
-            Renderer r=p.GetComponent<Renderer>();if(r!=null){r.sharedMaterial=material;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;}
+            Mesh m=GetBombMesh(type);
+            if(m!=null)
+            {
+                p.AddComponent<MeshFilter>().sharedMesh=m;
+                MeshRenderer r=p.AddComponent<MeshRenderer>();
+                r.sharedMaterial=material;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
+            }
             return p.transform;
         }
 

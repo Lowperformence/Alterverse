@@ -51,7 +51,31 @@ namespace Alterverse.Shop
                 headwear:true,purchaseSku:"propeller_cap",headwearResource:"PropellerCap"),
             new(UniversalHeroCosmetic.MushroomHat,"COSMIC MUSHROOM",HeadwearSelection.ShopPrice,"DF_HeadwearOwned_MushroomHat",CosmeticCategory.Skins,
                 "A red mushroom canopy with cream spots and a soft fitted headband.",new Color(.95f,.30f,.35f),
-                headwear:true,purchaseSku:"mushroom_hat",headwearResource:"MushroomHat")
+                headwear:true,purchaseSku:"mushroom_hat",headwearResource:"MushroomHat"),
+            new(UniversalHeroCosmetic.TvHead,"CYBER TV HEAD",150,"DF_HeadwearOwned_TvHead",CosmeticCategory.Skins,
+                "Full-head retro monitor helmet with a glowing neon pixel face and dual rabbit-ear antennas.",new Color(.18f,.92f,1f),
+                headwear:true,purchaseSku:"tv_head",headwearResource:"TvHead"),
+            new(UniversalHeroCosmetic.SharkHeadMask,"APEX SHARK JAWS",150,"DF_HeadwearOwned_SharkHeadMask",CosmeticCategory.Skins,
+                "Full-head deep-sea shark helmet with razor teeth jaws, dorsal fin and glowing predator eyes.",new Color(.22f,.62f,.98f),
+                headwear:true,purchaseSku:"shark_head_mask",headwearResource:"SharkHeadMask"),
+            new(UniversalHeroCosmetic.CyberPumpkinHead,"NEON JACK-O'-HEAD",150,"DF_HeadwearOwned_CyberPumpkinHead",CosmeticCategory.Skins,
+                "Full-head cosmic pumpkin helmet with glowing plasma eyes, carved grin and twisted vine stem.",new Color(1f,.52f,.14f),
+                headwear:true,purchaseSku:"cyber_pumpkin_head",headwearResource:"CyberPumpkinHead"),
+            new(UniversalHeroCosmetic.CardboardRobotHead,"MECHA BOX MK-0",100,"DF_HeadwearOwned_CardboardRobotHead",CosmeticCategory.Skins,
+                "Full-head DIY cardboard box robot helmet with packing tape, glowing visor slots and tin-foil dish.",new Color(.82f,.64f,.42f),
+                headwear:true,purchaseSku:"cardboard_robot_head",headwearResource:"CardboardRobotHead"),
+            new(UniversalHeroCosmetic.GoldenCrown,"ROYAL EMPEROR CROWN",200,"DF_HeadwearOwned_GoldenCrown",CosmeticCategory.Skins,
+                "Gleaming solid-gold imperial crown set with ruby, emerald and sapphire gems over crimson velvet.",new Color(1f,.82f,.22f),
+                headwear:true,purchaseSku:"golden_crown",headwearResource:"GoldenCrown"),
+            new(UniversalHeroCosmetic.VikingHelm,"VALHALLA HORNED HELM",150,"DF_HeadwearOwned_VikingHelm",CosmeticCategory.Skins,
+                "Forged Nordic steel war-helm with riveted brow-plate, nose guard and sweeping ivory horns.",new Color(.76f,.80f,.88f),
+                headwear:true,purchaseSku:"viking_helm",headwearResource:"VikingHelm"),
+            new(UniversalHeroCosmetic.ChefHat,"GALACTIC MASTER CHEF",100,"DF_HeadwearOwned_ChefHat",CosmeticCategory.Skins,
+                "Tall, puffy white master-chef toque with pleated cloud folds and a crimson-gold ribbon band.",new Color(.96f,.96f,.98f),
+                headwear:true,purchaseSku:"chef_hat",headwearResource:"ChefHat"),
+            new(UniversalHeroCosmetic.PirateHat,"VOID CAPTAIN TRICORNE",150,"DF_HeadwearOwned_PirateHat",CosmeticCategory.Skins,
+                "Wide-brimmed space-pirate captain tricorne with gold trim, skull crest and scarlet feather plume.",new Color(.92f,.24f,.34f),
+                headwear:true,purchaseSku:"pirate_hat",headwearResource:"PirateHat")
         };
         public static IReadOnlyList<CosmeticDefinition> All { get; }=System.Array.AsReadOnly(definitions);
         public static CosmeticDefinition Find(UniversalHeroCosmetic id)

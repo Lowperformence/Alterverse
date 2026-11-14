@@ -274,6 +274,10 @@ namespace Alterverse.AI
             {
                 priority=Mathf.Lerp(1.30f,.78f,objectiveAwareness);
             }
+            else if(candidate.name!=null&&candidate.name.EndsWith("_BoltTurret"))
+            {
+                priority=.55f*Mathf.Lerp(.45f,1f,candidate.Normalized);
+            }
 
             float accuracy=Difficulty.TargetAccuracy;
             // Stable perceptual bias: never reroll target preference every scan.

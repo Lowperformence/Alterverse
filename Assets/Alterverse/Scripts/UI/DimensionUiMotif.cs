@@ -273,10 +273,13 @@ namespace Alterverse.UI
                     float radius2=nx*nx+ny*ny;
                     if(radius2>=1f)continue;
                     float depth=Mathf.Sqrt(1f-radius2);
-                    float light=Mathf.Clamp01(.32f+depth*.58f-nx*.23f+ny*.16f);
-                    float band=.5f+.5f*Mathf.Sin(ny*15f+Mathf.Sin(nx*5.5f+ny*3f)*2.1f);
-                    float detail=.5f+.5f*Mathf.Sin(nx*18f-ny*7f+Mathf.Sin(ny*8f)*1.3f);
-                    float color=light*(.60f+band*.25f+detail*.15f);
+                    float sun=Mathf.Clamp01(.22f+depth*.62f-nx*.36f+ny*.26f);
+                    float lat=ny+nx*.16f+Mathf.Sin(nx*3.1f)*.035f;
+                    float band=.5f+.5f*Mathf.Sin(lat*8.5f)*(.70f+.30f*Mathf.Sin(lat*3.8f+1.2f));
+                    float swirl=.5f+.5f*Mathf.Sin(nx*4.8f+ny*6.2f+Mathf.Sin(lat*6f)*.65f);
+                    float rim=Mathf.Clamp01(1f-depth);
+                    float fresnel=rim*rim*Mathf.Clamp01(.42f-nx*.42f+ny*.32f);
+                    float color=Mathf.Clamp01(sun*(.72f+band*.19f+swirl*.09f)+fresnel*.48f);
                     float edge=Mathf.Clamp01((1f-Mathf.Sqrt(radius2))*size*.40f);
                     pixels[y*size+x]=new Color32((byte)Mathf.RoundToInt(255f*color),
                         (byte)Mathf.RoundToInt(255f*color),(byte)Mathf.RoundToInt(255f*color),
