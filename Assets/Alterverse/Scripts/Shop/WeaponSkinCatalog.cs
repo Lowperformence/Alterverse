@@ -34,34 +34,35 @@ namespace Alterverse.Shop
         // standard weapon model, pivot, animation, grip, range, damage and timing unchanged.
         public static readonly WeaponSkinItem[] Items=
         {
-            new(HeroId.Veyr,"VIOLET ECLIPSE","Crescent Rift Blades","The authored crescent blades in a deep black-violet finish with restrained dimensional glow. Same weapon model and combat behavior.",new Color(.66f,.16f,1f),0),
-            new(HeroId.Veyr,"CRIMSON ECLIPSE","Crescent Rift Blades","The authored crescent blades in a dark crimson-metal finish with a brighter red edge glow. Same weapon model and combat behavior.",new Color(1f,.10f,.20f),1),
+            new(HeroId.Veyr,"CRIMSON STRIPE","Crescent Rift Blades","Blutrote Klingen mit scharfem Tiger-Streifenmuster. Gleiches Waffenmodell und Kampfverhalten.",new Color(1f,.08f,.16f),0),
+            new(HeroId.Veyr,"EMERALD HEX","Crescent Rift Blades","Smaragdgrüne Klingen auf Platin-Weiß mit leuchtendem Waben-Gittermuster. Gleiches Waffenmodell und Kampfverhalten.",new Color(.08f,1f,.36f),1),
 
-            new(HeroId.Kaelon,"EMBER FORGE","Anchor Hammer","Kaelon's original Anchor Hammer in forged charcoal metal with hot amber accents. Same weapon model and combat behavior.",new Color(1f,.48f,.08f),0),
-            new(HeroId.Kaelon,"ION FORGE","Anchor Hammer","Kaelon's original Anchor Hammer in cold gunmetal with electric cyan accents. Same weapon model and combat behavior.",new Color(.12f,.78f,1f),1),
+            new(HeroId.Kaelon,"SOLAR WHITE-GOLD","Anchor Hammer","Strahlend weiß-goldener Hammer mit diagonalem Sonnen-Chevron-Muster. Gleiches Waffenmodell und Kampfverhalten.",new Color(1f,.82f,.12f),0),
+            new(HeroId.Kaelon,"NEON PINK CORE","Anchor Hammer","Knalliges Neon-Pink mit hexagonalem Reaktor-Wabenmuster. Gleiches Waffenmodell und Kampfverhalten.",new Color(1f,.14f,.68f),1),
 
-            new(HeroId.Nyra,"REDLINE","Pulse Rifle","Nyra's original Pulse Rifle in blackened alloy with a sharp red energy treatment. Same weapon model and combat behavior.",new Color(1f,.05f,.035f),0),
-            new(HeroId.Nyra,"ARCTIC COIL","Pulse Rifle","Nyra's original Pulse Rifle in pale gunmetal with an icy blue energy treatment. Same weapon model and combat behavior.",new Color(.20f,.72f,1f),1),
+            new(HeroId.Nyra,"ARCTIC WHITE STRIPE","Pulse Rifle","Reinweißes Spec-Ops-Gewehr mit scharfen taktischen Kontraststreifen. Gleiches Waffenmodell und Kampfverhalten.",new Color(.95f,.98f,1f),0),
+            new(HeroId.Nyra,"VENOM GREEN HEX","Pulse Rifle","Leuchtend giftgrünes Gewehr mit kristallinem Waben-Netzwerk. Gleiches Waffenmodell und Kampfverhalten.",new Color(.12f,1f,.28f),1),
 
-            new(HeroId.Elyra,"VOID ARCANA","Arcane Focus Staff","Elyra's original Arcane Focus Staff in dark violet crystal-metal tones. Same weapon model and combat behavior.",new Color(.66f,.18f,1f),0),
-            new(HeroId.Elyra,"STARLIGHT ARCANA","Arcane Focus Staff","Elyra's original Arcane Focus Staff in bright blue-white starlight tones. Same weapon model and combat behavior.",new Color(.40f,.72f,1f),1),
+            new(HeroId.Elyra,"SAKURA PINK","Arcane Focus Staff","Kräftiges Sakura-Pink mit diagonalem Sternen-Streifenmuster. Gleiches Waffenmodell und Kampfverhalten.",new Color(1f,.20f,.74f),0),
+            new(HeroId.Elyra,"PEARL WHITE ASTRAL","Arcane Focus Staff","Edles Reinweiß mit leuchtenden Astral-Ringen und Kristallgitter. Gleiches Waffenmodell und Kampfverhalten.",new Color(.96f,.98f,1f),1),
 
-            new(HeroId.Mira,"MINT BLOOM","Lifeweave Staff","Mira's original Lifeweave Staff in a clean pearl finish with light-green healing accents. Same weapon model and combat behavior.",new Color(.38f,1f,.52f),0),
-            new(HeroId.Mira,"GOLDEN BLOOM","Lifeweave Staff","Mira's original Lifeweave Staff in warm ivory-gold with soft solar accents. Same weapon model and combat behavior.",new Color(1f,.78f,.30f),1),
+            new(HeroId.Mira,"JADE EMERALD","Lifeweave Staff","Leuchtendes Smaragdgrün mit geschwungenen Lebens-Streifen. Gleiches Waffenmodell und Kampfverhalten.",new Color(.06f,1f,.38f),0),
+            new(HeroId.Mira,"RUBY ROSE","Lifeweave Staff","Kräftiges Rubinrot-Pink mit kristallinem Rosetten-Wabenmuster. Gleiches Waffenmodell und Kampfverhalten.",new Color(1f,.12f,.38f),1),
 
-            new(HeroId.Rook,"MAGMA STEEL","Titan Gauntlets","Rook's original Titan Gauntlets in dark forged steel with molten orange-red accents. Same weapon model and combat behavior.",new Color(1f,.24f,.04f),0),
-            new(HeroId.Rook,"FROST STEEL","Titan Gauntlets","Rook's original Titan Gauntlets in cool metallic steel with bright cyan accents. Same weapon model and combat behavior.",new Color(.16f,.82f,1f),1),
+            new(HeroId.Rook,"REACTOR BREAKER // EPIC","Titan Gauntlets","Feuerrote Handschuhe mit markanten Warn-Streifen. Gleiches Waffenmodell und Kampfverhalten.",new Color(1f,.06f,.08f),0),
+            new(HeroId.Rook,"GLACIER WHITE TITAN","Titan Gauntlets","Reinweiße Titan-Handschuhe mit eisblauem Panzer-Wabenmuster. Gleiches Waffenmodell und Kampfverhalten.",new Color(.94f,.98f,1f),1),
 
-            new(HeroId.Traveler,"CHRONO VIOLET","Chronolux Focus","The Traveler's original Chronolux Focus in dark temporal metal with violet chronolight. Same weapon model and combat behavior.",new Color(.72f,.28f,1f),0),
-            new(HeroId.Traveler,"CHRONO GOLD","Chronolux Focus","The Traveler's original Chronolux Focus in pale royal metal with warm golden chronolight. Same weapon model and combat behavior.",new Color(1f,.62f,.22f),1),
-            new(HeroId.Nerok,"TIDAL CIRCUIT","Abyssal Anchor","Epic cyan anchor engraving over the original anchor. Cosmetic only.",new Color(.08f,.82f,1f),0),
-            new(HeroId.Nerok,"DEEP CORAL","Abyssal Anchor","Epic coral anchor engraving over the original anchor. Cosmetic only.",new Color(1f,.25f,.36f),1),
+            new(HeroId.Traveler,"PARADOX PINK","Chronolux Focus","Leuchtendes Neon-Pink mit gezackten Zeit-Riss-Streifen. Gleiches Waffenmodell und Kampfverhalten.",new Color(1f,.16f,.72f),0),
+            new(HeroId.Traveler,"MATRIX EMERALD","Chronolux Focus","Kräftiges Matrix-Grün mit konzentrischen Chronolux-Ringen und Waben. Gleiches Waffenmodell und Kampfverhalten.",new Color(.10f,1f,.42f),1),
 
-            new(HeroId.VoidKnight,"AMETHYST RIFT","Rift Edge Greatsword","The original two-handed greatsword with amethyst void engraving and violet edge energy. Cosmetic only.",new Color(.72f,.22f,1f),0),
-            new(HeroId.VoidKnight,"GLACIAL RIFT","Rift Edge Greatsword","The original two-handed greatsword with cold cyan rift engraving and glacial edge energy. Cosmetic only.",new Color(.16f,.82f,1f),1),
+            new(HeroId.Nerok,"CRIMSON SHARK","Abyssal Anchor","Tiefroter Anker mit scharfem Haifischzahn-Streifenmuster. Rein kosmetisch.",new Color(1f,.10f,.18f),0),
+            new(HeroId.Nerok,"PEARL WHITE ABYSS","Abyssal Anchor","Strahlend weißer Perlen-Anker mit türkisem Schuppen-Wabenmuster. Rein kosmetisch.",new Color(.95f,.99f,1f),1),
 
-            new(HeroId.Bolt7,"ION BARRAGE","Gatling & Grenade Launcher","BOLT-7\u0027s original Gatling and grenade launcher with electric cyan circuitry and a dark alloy finish. Cosmetic only.",new Color(.12f,.78f,1f),0),
-            new(HeroId.Bolt7,"EMBER BARRAGE","Gatling & Grenade Launcher","BOLT-7\u0027s original Gatling and grenade launcher with glowing amber circuitry and a dark alloy finish. Cosmetic only.",new Color(1f,.45f,.08f),1)
+            new(HeroId.VoidKnight,"BLOOD ECLIPSE","Rift Edge Greatsword","Blutrotes Großschwert mit diagonalem Riss-Streifenmuster. Rein kosmetisch.",new Color(1f,.08f,.18f),0),
+            new(HeroId.VoidKnight,"ROYAL WHITE RIFT","Rift Edge Greatsword","Reinweißes Großschwert mit violett-goldenem Diamant-Wabenmuster. Rein kosmetisch.",new Color(.96f,.94f,1f),1),
+
+            new(HeroId.Bolt7,"CYBER PINK BARRAGE","Gatling & Grenade Launcher","Knalliges Cyber-Pink mit markanten Rennstreifen und Tech-Chevrons. Rein kosmetisch.",new Color(1f,.14f,.66f),0),
+            new(HeroId.Bolt7,"TOXIC GREEN BARRAGE","Gatling & Grenade Launcher","Leuchtendes Giftgrün mit hexagonalem Reaktor-Wabenmuster. Rein kosmetisch.",new Color(.14f,1f,.26f),1)
         };
 
         public static WeaponSkinItem For(HeroId hero)=>For(hero,0);

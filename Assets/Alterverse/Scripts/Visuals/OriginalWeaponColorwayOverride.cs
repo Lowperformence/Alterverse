@@ -224,15 +224,22 @@ namespace Alterverse.Visuals
                 else { Destroy(layer);continue; }
                 var material=new Material(shader) { name="DF_PremiumColorway_"+hero+"_"+variant };
                 Color glow=item.Glow;
-                // Leave the authored texture visible between the brighter inset runes while boosting aura presence.
-                glow.a=.31f;
+                bool isWhiteTheme = glow.r > .88f && glow.g > .88f && glow.b > .88f;
+                Color metalCoat = isWhiteTheme
+                    ? new Color(.92f, .95f, .99f, 1f)
+                    : Color.Lerp(new Color(.10f, .11f, .14f, 1f), new Color(glow.r, glow.g, glow.b, 1f), .68f);
+                Color secondaryAccent = SecondaryPatternAccent(hero, variant, glow, isWhiteTheme);
+                // Strong, unmistakable lacquer coat so Red, Green, White, Pink and Gold read immediately.
+                glow.a = isWhiteTheme ? .84f : .76f;
                 material.SetColor("_GlowColor",glow);
-                material.SetColor("_MetalColor",new Color(.16f+glow.r*.18f,.18f+glow.g*.18f,.21f+glow.b*.18f));
-                material.SetFloat("_Metallic",.90f);
-                material.SetFloat("_Smoothness",.78f);
-                material.SetFloat("_RimOpacity",.78f);
-                material.SetFloat("_PatternStyle",(PatternStyle(hero)+variant)%4);
-                material.SetFloat("_PatternOffset",variant*.53f+((int)hero)*.19f);
+                material.SetColor("_MetalColor",metalCoat);
+                material.SetColor("_SecondaryColor",secondaryAccent);
+                material.SetFloat("_Metallic",isWhiteTheme ? .65f : .82f);
+                material.SetFloat("_Smoothness",isWhiteTheme ? .88f : .82f);
+                material.SetFloat("_RimOpacity",.92f);
+                material.SetFloat("_PatternStyle",variant == 0 ? 0f : 2f);
+                material.SetFloat("_PatternVariant",variant);
+                material.SetFloat("_PatternOffset",variant*1.37f+((int)hero)*.31f);
                 material.SetFloat("_PatternStrength",1f);
                 var slots=new Material[submeshes];
                 Material inscription=null;
@@ -268,6 +275,33 @@ namespace Alterverse.Visuals
             if(hero==HeroId.Elyra||hero==HeroId.Mira)return 1;
             if(hero==HeroId.Kaelon||hero==HeroId.Rook)return 2;
             return 3;
+        }
+
+        private static Color SecondaryPatternAccent(HeroId hero, int variant, Color primary, bool isWhiteTheme)
+        {
+            if (isWhiteTheme)
+            {
+                return hero switch
+                {
+                    HeroId.Nyra => new Color(.12f, .55f, 1f, 1f),       // White + Cobalt Blue stripes
+                    HeroId.Elyra => new Color(1f, .76f, .18f, 1f),      // White + Celestial Gold rings
+                    HeroId.Rook => new Color(.08f, .82f, 1f, 1f),       // White + Glacier Cyan hex
+                    HeroId.Nerok => new Color(.06f, .92f, .78f, 1f),    // White + Deep Turquoise scales
+                    HeroId.VoidKnight => new Color(.68f, .22f, 1f, 1f), // White + Royal Violet diamond
+                    _ => new Color(.20f, .78f, 1f, 1f)
+                };
+            }
+            if (variant == 0)
+            {
+                // Variant 0: High-contrast obsidian/white/gold stripe accent
+                return primary.g > .7f && primary.r < .5f
+                    ? new Color(.92f, 1f, .95f, 1f) // Emerald Green + Crisp White stripes
+                    : new Color(1f, .86f, .28f, 1f); // Red / Pink / Gold + Bright Solar Gold-White stripes
+            }
+            // Variant 1: High-contrast secondary glow for honeycomb/crystal lattice
+            return primary.g > .7f
+                ? new Color(.94f, 1f, .98f, 1f)     // Green + Pearl White hex lattice
+                : new Color(.16f, .95f, 1f, 1f);    // Pink / Ruby + Electric Cyan-White hex lattice
         }
 
         // Rest coordinates keep patterns attached during skinning. Only the overlay owns this copy.
