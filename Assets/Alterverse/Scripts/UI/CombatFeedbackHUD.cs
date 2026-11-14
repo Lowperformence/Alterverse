@@ -892,7 +892,7 @@ namespace Alterverse.UI
                 FrontEndTheme.Fill(new Rect(barRect.x, barRect.y, barRect.width * hpNorm, barRect.height), teamCol);
                 turretBtnSubStyle.normal.textColor = new Color(0.92f, 0.96f, 1f, 0.92f);
                 GUI.Label(new Rect(barRect.x - 18f, barRect.y - 14f * scale, barRect.width + 36f, 14f),
-                    $"{Mathf.CeilToInt(turret.TurretHealth.CurrentHealth)} HP", turretBtnSubStyle);
+                    $"{Mathf.CeilToInt(hpNorm * KillstreakBoltTurret.MaxHp)} HP", turretBtnSubStyle);
             }
 
             // Active Tactical Ping Marker in world space

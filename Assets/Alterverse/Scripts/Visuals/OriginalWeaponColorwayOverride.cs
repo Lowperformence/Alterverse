@@ -118,7 +118,7 @@ namespace Alterverse.Visuals
         private static int BotWeaponVariant(HeroIdentity identity)
         {
             if(identity==null||identity.GetComponent<Alterverse.AI.MobaBotBrain>()==null)return -1;
-            int hash=Mathf.Abs(identity.gameObject.GetInstanceID()^((int)identity.Hero*41));
+            int hash=Mathf.Abs(identity.gameObject.GetEntityId().GetHashCode()^((int)identity.Hero*41));
             return hash%3==0?-1:(hash&1);
         }
         private void CaptureOriginalWeaponRenderers()
