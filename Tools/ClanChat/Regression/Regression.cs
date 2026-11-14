@@ -12,8 +12,8 @@ namespace Alterverse.Shop {
  public class PaidShardCommerce {
   public class Snapshot {public string accountHash;public Alterverse.Profile.AccountProfilePrefs.Entry[] profile;}
   public static PaidShardCommerce Instance=new();public bool Ready=true;public string AccountHash="owner";public int SessionVersion;
-  public int Flushes;public bool SaveSucceeds=true;
-  public Task<bool> FlushProfileAsync(){Flushes++;return Task.FromResult(SaveSucceeds);}public bool TryBeginSocialSpend()=>true;
+  public int Flushes;public bool SaveSucceeds=true;public TaskCompletionSource<bool> StalledSave;
+  public Task<bool> FlushProfileAsync(){Flushes++;return StalledSave?.Task??Task.FromResult(SaveSucceeds);}public bool TryBeginSocialSpend()=>true;
   public void EndSocialSpend(int s,Snapshot w,Alterverse.Profile.AccountProfilePrefs.Entry[] e){}public void Refresh(){}
  }
  public static class AvatarShopCatalog {public class Item {public int AvatarId;}public static Item[] Items=Array.Empty<Item>();}
@@ -73,6 +73,19 @@ public static class Fixture {
   request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/levels",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}
   Assert(reads==2&&Alterverse.Shop.PaidShardCommerce.Instance.Flushes==flushes+1&&service.Levels?.players?[0].level==7,"Player rankings must try saving first and still load saved server levels after a save failure");
   Assert(service.Status.Contains("synchronization pending")&&Alterverse.Profile.AccountProfilePrefs.Dirty,"Player ranking reads must retain unsaved local progression and explain the saved values");
+  var stalled=new TaskCompletionSource<bool>();Alterverse.Shop.PaidShardCommerce.Instance.StalledSave=stalled;
+  int beforeStall=Alterverse.Shop.PaidShardCommerce.Instance.Flushes;UnityEngine.Time.realtimeSinceStartup=0;
+  request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/levels",new Alterverse.Profile.SocialService.Request(),0});
+  Assert(request.MoveNext(),"Ranking waits briefly for a pending save");
+  UnityEngine.Time.realtimeSinceStartup=6;while(request.MoveNext()){}
+  Assert(Alterverse.Shop.PaidShardCommerce.Instance.Flushes==beforeStall+1&&service.Levels?.players?[0].level==7,"Stalled save must not block saved ranking data");
+  Assert(service.Status.Contains("synchronization pending")&&Alterverse.Profile.AccountProfilePrefs.Dirty,"Timed out read preserves local progress");
+  request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/levels",new Alterverse.Profile.SocialService.Request(),0});
+  Assert(request.MoveNext(),"Retry waits on the same pending save");
+  UnityEngine.Time.realtimeSinceStartup=12;while(request.MoveNext()){}
+  Assert(Alterverse.Shop.PaidShardCommerce.Instance.Flushes==beforeStall+1,"Refresh reuses stalled save");
+  stalled.SetResult(false);Alterverse.Shop.PaidShardCommerce.Instance.StalledSave=null;
+
   reads=1;
   UnityEngine.Networking.UnityWebRequest.Handler=r=>{reads++;r.downloadHandler.text="{\"fulfilled\":true,\"social\":{\"clans\":[{\"clanId\":\"saved-clan\",\"totalLevel\":35}],\"total\":1}}";return new UnityEngine.Networking.UnityWebRequestAsyncOperation();};
   request=(System.Collections.IEnumerator)send.Invoke(service,new object[]{"/social/clan-levels",new Alterverse.Profile.SocialService.Request(),0});while(request.MoveNext()){}

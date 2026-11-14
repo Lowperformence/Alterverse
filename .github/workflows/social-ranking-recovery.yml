@@ -1,0 +1,21 @@
+name: Social ranking recovery
+on:
+  pull_request:
+    paths:
+      - 'Assets/Alterverse/Scripts/Profile/SocialService.cs'
+      - 'Tools/ClanChat/Regression/**'
+      - '.github/workflows/social-ranking-recovery.yml'
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            Assets/Alterverse/Scripts
+            Assets/Alterverse/Resources/Social
+            Tools/ClanChat/Regression
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python Tools/ClanChat/Regression/run.py --dotnet-root "$DOTNET_ROOT"

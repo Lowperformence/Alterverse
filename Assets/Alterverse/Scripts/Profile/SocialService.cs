@@ -119,6 +119,8 @@ namespace Alterverse.Profile
         Func<string> token;
         int generation;
         bool loadedSyncedProfile;
+        System.Threading.Tasks.Task<bool> pendingReadSave;
+        const float ReadSaveWaitSeconds=5f;
         float chatVisibleUntil,nextChatPoll;
         bool chatFocused=true,chatPaused,chatPolling;
         public void KeepChatOpen(){chatVisibleUntil=Time.unscaledTime+.3f;}
@@ -151,7 +153,7 @@ namespace Alterverse.Profile
             if(clanSpending)PaidShardCommerce.Instance?.EndSocialSpend(clanSpendSession,null,null);
             clanSpending=false;clanSubmitted=null;
             generation++;StopAllCoroutines();Busy=false;chatPolling=false;
-            loadedSyncedProfile=false;
+            loadedSyncedProfile=false;pendingReadSave=null;
             State=Search=Levels=Clans=ClanLevels=null;
             Chat=Reports=Friends=null;FriendsLastAction=null;SentOperationId=null;chatVisibleUntil=nextChatPoll=0;
             ChatStatus="Connecting to clan chat…";
@@ -203,6 +205,8 @@ namespace Alterverse.Profile
         IEnumerator Send(string route,Request body,int version)
         {
             bool silentPoll=chatPolling&&!Busy&&route=="/social/chat/read"&&Chat!=null;
+            try
+            {
             // Try to publish current progression first. Social state and standings may
             // still read authoritative saved data when an unrelated profile save fails.
             var commerce=PaidShardCommerce.Instance;
@@ -212,10 +216,17 @@ namespace Alterverse.Profile
             bool needsProfile=route=="/social/state"||route=="/social/levels"||route=="/social/clan-levels"||accountSpend||route=="/social/friend/state";
             if(needsProfile&&commerce!=null&&commerce.Ready&&AccountProfilePrefs.Dirty)
             {
-                var save=commerce.FlushProfileAsync();
-                while(!save.IsCompleted)yield return null;
+                // Read-only requests can use saved server data if a local save stalls.
+                // Reuse the pending task to avoid starting a new save on every refresh.
+                if(pendingReadSave!=null&&pendingReadSave.IsCompleted)pendingReadSave=null;
+                var save=accountSpend?commerce.FlushProfileAsync():
+                    pendingReadSave??(pendingReadSave=commerce.FlushProfileAsync());
+                float deadline=Time.realtimeSinceStartup+ReadSaveWaitSeconds;
+                while(!save.IsCompleted&&(accountSpend||Time.realtimeSinceStartup<deadline))
+                    yield return null;
                 if(version!=generation){chatPolling=false;yield break;}
-                if(save.IsFaulted||save.IsCanceled||!save.Result)
+                if(!accountSpend&&save.IsCompleted)pendingReadSave=null;
+                if(!save.IsCompleted||save.IsFaulted||save.IsCanceled||!save.Result)
                 {
                     if(accountSpend)
                     {Status="Account save pending. Retry after synchronization.";Busy=false;chatPolling=false;yield break;}
@@ -327,6 +338,17 @@ namespace Alterverse.Profile
                 Status=route=="/social/chat/report"?"Report saved for the game administration.":
                     usingSavedProfile?"Showing saved server data. Account synchronization pending.":"Synchronized.";
             Busy=false;chatPolling=false;
+            }
+            finally
+            {
+                // An unexpected exception must not leave Refresh permanently disabled.
+                if(version==generation)
+                {
+                    if(!silentPoll&&Busy)
+                    {Busy=false;Status="Social request interrupted. Tap REFRESH to retry.";}
+                    chatPolling=false;
+                }
+            }
         }
         // Also protects displays during a staggered client/server rollout.
         internal static void CleanSnapshot(Snapshot value)
