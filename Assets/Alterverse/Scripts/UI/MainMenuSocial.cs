@@ -7,6 +7,7 @@ namespace Alterverse.UI
 {
     public sealed partial class MainMenuController
     {
+        private const int PlayerRankingLimit=100;
         int rankingTab=1,clanTab,memberOffset;
         int requestedRankingTab=-1;
         string rankingAccount;
@@ -57,6 +58,7 @@ namespace Alterverse.UI
         void LoadRankingPage(SocialService service,int offset)
         {
             if(service.Busy)return;
+            if(rankingTab==1)offset=Mathf.Clamp(offset,0,PlayerRankingLimit-4);
             requestedRankingTab=rankingTab;
             rankingAccount=PaidShardCommerce.Instance?.AccountHash;
             rankingProfileRevision=AccountProfilePrefs.Revision;
@@ -97,7 +99,7 @@ namespace Alterverse.UI
         bool DrawRankingTabs()
         {
             if(rankingTab<1||rankingTab>2)rankingTab=1;
-            Heading(rankingTab==1?"Player Levels":"Clan Levels",rankingTab==1?"All players ranked by level, then total experience.":"Clans ranked by the sum of every member's player level.");
+            Heading(rankingTab==1?"Player Levels":"Clan Levels",rankingTab==1?"TOP 100 PLAYERS BY LEVEL AND EXPERIENCE.":"Clans ranked by the sum of every member's player level.");
             string[] tabs={"PLAYER LEVELS","CLAN LEVELS"};
             for(int i=0;i<tabs.Length;i++)
             {
@@ -130,8 +132,9 @@ namespace Alterverse.UI
             int count;
             if(rankingTab==1)
             {
-                var rows=result.players??NoPlayers;count=rows.Length;
-                for(int i=0;i<rows.Length;i++)
+                var rows=result.players??NoPlayers;
+                count=Mathf.Min(rows.Length,Mathf.Max(0,PlayerRankingLimit-result.offset));
+                for(int i=0;i<count;i++)
                 {
                     var p=rows[i];float y=322+i*37;
                     theme.RankingPanel(new Rect(Left,y,ContentWidth,34),p.rank);
@@ -153,7 +156,8 @@ namespace Alterverse.UI
                     theme.FitLabel(new Rect(Right-350,y,330,34),$"TOTAL {c.totalLevel:N0}  /  {c.memberCount}/50 MEMBERS",theme.Small);
                 }
             }
-            DrawSocialPager(result.offset,count,offset=>LoadRankingPage(service,offset),result.total);
+            int visibleTotal=rankingTab==1?Mathf.Min(result.total,PlayerRankingLimit):result.total;
+            DrawSocialPager(result.offset,count,offset=>LoadRankingPage(service,offset),visibleTotal);
             SocialFooter();return true;
         }
 

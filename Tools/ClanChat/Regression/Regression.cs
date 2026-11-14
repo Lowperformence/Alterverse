@@ -22,13 +22,14 @@ namespace Alterverse.Shop {
 }
 namespace Alterverse.UI {
  public class FrontEndTheme {
-   public void RankingPanel(Rect r,int rank){Panel(r);}public void RankingBadge(Rect r,int rank){}
+   public static System.Collections.Generic.List<int> RankingRanks=new();public static string LastCenter;
+   public void RankingPanel(Rect r,int rank){RankingRanks.Add(rank);Panel(r);}public void RankingBadge(Rect r,int rank){}
   public static object Positive,Accent;public GUIStyle Body=new(),Small=new(),Heading=new(),Field=new();
   public static System.Collections.Generic.List<(Rect Rect,string Text,bool Enabled)> Actions=new();
   public static Func<Rect,string,bool> Click;
   public bool Action(Rect r,string l,bool primary=false,bool selected=false,bool enabled=true,bool locked=false){Actions.Add((r,l,enabled&&!locked));return enabled&&!locked&&Click?.Invoke(r,l)==true;}
   public void Label(Rect r,string l,GUIStyle s,bool muted=false){}public void FitLabel(Rect r,string l,GUIStyle s,bool muted=false){}
-  public static Rect LastCheckbox;public static void Fill(Rect r,object c){}public void Panel(Rect r){}public void Frame(Rect r,bool emphasized=false){LastCheckbox=r;}public void Center(Rect r,string l){}public void StatusBadge(Rect r,string l,object c){}public void EmptyState(Rect r,string a,string b){}
+  public static Rect LastCheckbox;public static void Fill(Rect r,object c){}public void Panel(Rect r){}public void Frame(Rect r,bool emphasized=false){LastCheckbox=r;}public void Center(Rect r,string l){LastCenter=l;}public void StatusBadge(Rect r,string l,object c){}public void EmptyState(Rect r,string a,string b){}
  }
  public static class AvatarBadgeRenderer {public static void Draw(Rect r,int id,Texture2D t,float time){}}
  public sealed partial class MainMenuController {
@@ -133,6 +134,7 @@ public static class Fixture {
   buy=(bool)purchase.Invoke(menu,new object[]{new Rect(0,0,200,50),"EQUIP",0,true,true,false});
   Assert(buy&&!(bool)ui.GetField("shardShop",flags).GetValue(menu),"Owned equipment must never redirect for insufficient funds");
   CheckRankingRefresh(service);
+  CheckTop100(service);
   Console.WriteLine("Chat UI, ownership, navigation, failure states and ranking refresh checks passed.");
  }
  static void CheckRankingRefresh(Alterverse.Profile.SocialService service){
@@ -159,6 +161,34 @@ public static class Fixture {
   busy.SetValue(service,false);UnityEngine.Time.unscaledTime+=31f;draw.Invoke(menu,null);
   Assert(service.Busy,"Visible rankings must periodically refresh without a manual tap");
  }
+ static void CheckTop100(Alterverse.Profile.SocialService service){
+  var flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+  var menu=new Alterverse.UI.MainMenuController();var ui=menu.GetType();
+  var draw=ui.GetMethod("DrawRankingTabs",flags);
+  ui.GetField("rankingTab",flags).SetValue(menu,1);
+  ui.GetField("requestedRankingTab",flags).SetValue(menu,1);
+  ui.GetField("rankingAccount",flags).SetValue(menu,Alterverse.Shop.PaidShardCommerce.Instance.AccountHash);
+  ui.GetField("rankingProfileRevision",flags).SetValue(menu,Alterverse.Profile.AccountProfilePrefs.Revision);
+  ui.GetField("rankingRefreshAt",flags).SetValue(menu,UnityEngine.Time.unscaledTime+100);
+  service.GetType().GetProperty("Busy").SetValue(service,false);
+  var rows=new Alterverse.Profile.SocialService.Player[8];
+  for(int i=0;i<8;i++)rows[i]=new Alterverse.Profile.SocialService.Player{rank=97+i,name="Player"+(97+i),xp=200-i,level=20};
+  var snapshot=new Alterverse.Profile.SocialService.Snapshot{offset=96,total=120,players=rows,selfRank=110};
+  service.GetType().GetProperty("Levels").SetValue(service,snapshot);
+  Alterverse.UI.FrontEndTheme.RankingRanks.Clear();Alterverse.UI.FrontEndTheme.Actions.Clear();
+  draw.Invoke(menu,null);
+  Assert(Alterverse.UI.FrontEndTheme.RankingRanks.Count==4&&Alterverse.UI.FrontEndTheme.RankingRanks[3]==100,"Last page ends at rank 100");
+  Assert(Alterverse.UI.FrontEndTheme.LastCenter=="97–100 / 100","Last page count uses top 100 total");
+  Assert(Alterverse.UI.FrontEndTheme.Actions.Find(a=>a.Text=="NEXT").Enabled==false,"Next page disabled at 100");
+  snapshot.offset=88;for(int i=0;i<8;i++)rows[i].rank=89+i;
+  Alterverse.UI.FrontEndTheme.RankingRanks.Clear();Alterverse.UI.FrontEndTheme.Actions.Clear();
+  draw.Invoke(menu,null);
+  Assert(Alterverse.UI.FrontEndTheme.RankingRanks.Count==8&&Alterverse.UI.FrontEndTheme.Actions.Find(a=>a.Text=="NEXT").Enabled,"Earlier page can advance to last four");
+  var load=ui.GetMethod("LoadRankingPage",flags);
+  load.Invoke(menu,new object[]{service,104});
+  Assert(service.Busy,"Out-of-range page request is bounded and still dispatched");
+ }
+
 }
 
 

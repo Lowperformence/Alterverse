@@ -78,6 +78,7 @@ namespace Alterverse.Profile
                     ["Choose an app to share the invitation."] = "Wähle eine App zum Teilen der Einladung.",
                     ["Invitation copied. Paste it into WhatsApp or another app."] = "Einladung kopiert. Füge sie in WhatsApp oder einer anderen App ein.",
 
+                    ["TOP 100 PLAYERS BY LEVEL AND EXPERIENCE."] = "DIE 100 BESTEN SPIELER NACH LEVEL UND ERFAHRUNG.",
                     ["OFFLINE LOBBY"] = "OFFLINE-LOBBY",
                     ["Choose your hero and both teams before starting a local 4v4 match."] = "Wähle deinen Helden und beide Teams für dein lokales 4-gegen-4-Match.",
                     ["YOUR TEAM"] = "DEIN TEAM",
