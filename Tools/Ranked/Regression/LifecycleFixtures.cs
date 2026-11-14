@@ -11,6 +11,12 @@ namespace Alterverse.UI
 {
  public static class OnlineMatchLoadingScreen {public static void Cancel(){}}
  public class CombatHudLayout {public CombatHudLayout(Rect r){}public Matrix4x4 Matrix;public float Width=1280;}
+ public class KillstreakBoltTurret:MonoBehaviour
+ {
+  public static readonly System.Collections.Generic.List<KillstreakBoltTurret> Active=new();
+  public bool IsMobile;public Alterverse.Combat.Health TurretHealth;
+  public static KillstreakBoltTurret EnsureNetworkReplica(string key,Vector3 position)=>null;
+ }
 }
 namespace Alterverse.Prototype
 {

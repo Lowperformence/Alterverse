@@ -215,6 +215,14 @@ namespace Alterverse.Combat
  }
 }
 namespace Alterverse.Characters {public sealed class TeamMember:Component {}}
+namespace Alterverse.UI
+{
+ public sealed class KillstreakBoltTurret:Component
+ {
+  public static readonly List<KillstreakBoltTurret> Active=new();
+  public bool IsMobile;public Alterverse.Combat.Health TurretHealth;
+ }
+}
 namespace Alterverse.Multiplayer
 {
  public sealed class CoopWorldEntityKey:Component {public string Key;}

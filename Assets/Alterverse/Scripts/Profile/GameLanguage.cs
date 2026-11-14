@@ -68,6 +68,17 @@ namespace Alterverse.Profile
             {
                 ["de"] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
+                    ["MOBILE TURRET READY!"] = "FAHRBARES GESCHÜTZ BEREIT!",
+                    ["TURRET READY!"] = "GESCHÜTZ BEREIT!",
+                    ["MOBILE TURRET DEPLOYED!"] = "FAHRBARES GESCHÜTZ PLATZIERT!",
+                    ["TURRET DEPLOYED!"] = "GESCHÜTZ PLATZIERT!",
+                    ["DEPLOY MOBILE TURRET"] = "FAHRBARES GESCHÜTZ PLATZIEREN",
+                    ["DEPLOY TURRET"] = "GESCHÜTZ PLATZIEREN",
+                    ["TAP THE MAP TO DEPLOY"] = "AUF KARTE TIPPEN ZUM PLATZIEREN",
+                    ["TAP A LOCATION OR PRESS ESC TO CANCEL"] = "ORT WÄHLEN ODER ESC ZUM ABBRECHEN",
+                    ["250 HP  •  2 DAMAGE  •  MOBILE"] = "250 LP  •  2 SCHADEN  •  FAHRBAR",
+                    ["250 HP  •  1 DAMAGE  •  5 KILLS: MOBILE"] = "250 LP  •  1 SCHADEN  •  5 KILLS: FAHRBAR",
+                    ["250 HP  •  1 DAMAGE"] = "250 LP  •  1 SCHADEN",
                     ["HOME"] = "START",
                     ["Online lobby could not open. Please try again."] = "Online-Lobby konnte nicht geöffnet werden. Bitte erneut versuchen.",
                     ["GAME LINK"] = "SPIEL-LINK",

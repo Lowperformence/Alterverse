@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Combat;
 using Alterverse.Match;
+using Alterverse.UI;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -123,6 +124,14 @@ namespace Alterverse.Multiplayer
                     // A newly spawned minion joins after the next full snapshot assigns its key.
                     if(entity!=null&&!string.IsNullOrEmpty(entity.Key))live.Add(entity);
                 }
+                var turrets=KillstreakBoltTurret.Active;
+                for(int i=0;i<turrets.Count;i++)
+                {
+                    KillstreakBoltTurret turret=turrets[i];
+                    if(turret==null||!turret.IsMobile||turret.TurretHealth==null)continue;
+                    CoopWorldEntityKey entity=turret.GetComponent<CoopWorldEntityKey>();
+                    if(entity!=null&&!string.IsNullOrEmpty(entity.Key))live.Add(entity);
+                }
             }
             else
             {
@@ -131,7 +140,8 @@ namespace Alterverse.Multiplayer
                     if(entity==null)continue;
                     Health health=entity.GetComponent<Health>();
                     if(health==null)continue;
-                    bool moving=entity.GetComponent<HotZoneTank>()!=null||entity.GetComponent<LaneMinion>()!=null;
+                    var turret=entity.GetComponent<KillstreakBoltTurret>();
+                    bool moving=entity.GetComponent<HotZoneTank>()!=null||entity.GetComponent<LaneMinion>()!=null||turret!=null&&turret.IsMobile;
                     if(snapshotHistory.ShouldSend(entity.Key,entity.transform.position,entity.transform.eulerAngles.y,
                         health.Current,health.Shield,health.IsDead,moving,Time.unscaledTime))live.Add(entity);
                 }
@@ -223,6 +233,11 @@ namespace Alterverse.Multiplayer
                         !MatchNetworkProtocol.Finite(current)||!MatchNetworkProtocol.Finite(shield))continue;
                     HotZoneTank reward=HotZoneTank.EnsureNetworkReplica(id);
                     entity=reward!=null?reward.GetComponent<CoopWorldEntityKey>():null;
+                    if(entity==null)
+                    {
+                        KillstreakBoltTurret turret=KillstreakBoltTurret.EnsureNetworkReplica(id,new Vector3(x,y,z));
+                        entity=turret!=null?turret.GetComponent<CoopWorldEntityKey>():null;
+                    }
                     if(entity==null)continue;
                     entities[id]=entity;
                 }
