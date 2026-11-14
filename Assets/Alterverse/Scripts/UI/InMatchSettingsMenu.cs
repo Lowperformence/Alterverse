@@ -167,7 +167,7 @@ namespace Alterverse.UI
 
                 if (!IsOpen)
                 {
-                    Rect settingsButton = new Rect(layout.Width - 62, 16, 46, 46);
+                    Rect settingsButton = new Rect(layout.Width - 74f, 14f, 60f, 60f);
                     bool openSettings = theme.Action(settingsButton, string.Empty);
                     DrawSettingsGear(settingsButton);
                     if (openSettings)
@@ -202,7 +202,7 @@ namespace Alterverse.UI
             settingsGearIcon ??= CreateSettingsGearIcon();
             if (settingsGearIcon == null) return;
 
-            const float iconSize = 30f;
+            const float iconSize = 36f;
             Rect iconRect = new Rect(
                 rect.center.x - iconSize * .5f,
                 rect.center.y - iconSize * .5f,

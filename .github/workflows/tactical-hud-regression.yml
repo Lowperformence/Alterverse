@@ -1,0 +1,24 @@
+name: Match HUD layout and ping localization
+on:
+  pull_request:
+    paths:
+      - 'Assets/Alterverse/Scripts/UI/CombatFeedbackHUD.cs'
+      - 'Assets/Alterverse/Scripts/UI/InMatchSettingsMenu.cs'
+      - 'Assets/Alterverse/Scripts/Match/MatchScoreboard.cs'
+      - 'Assets/Alterverse/Resources/Localization/InterfaceLanguages.json'
+      - 'Tools/UI/TacticalHudRegression/**'
+      - '.github/workflows/tactical-hud-regression.yml'
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            Assets/Alterverse/Scripts
+            Assets/Alterverse/Resources/Localization
+            Tools/UI/TacticalHudRegression
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python Tools/UI/TacticalHudRegression/run.py --dotnet-root "$DOTNET_ROOT"
