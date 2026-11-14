@@ -26,4 +26,5 @@ jobs:
       - run: python Tools/Combat/KillstreakRegression/check_syntax.py
       - run: python Tools/Combat/KillstreakRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Multiplayer/HotZoneResultRegression/run.py --dotnet-root "$DOTNET_ROOT"
-      - run: python Tools/Ranked/Regression/run.py --dotnet-root "$DOTNET_ROOT"
+      - if: always()
+        run: python Tools/Ranked/Regression/run.py --dotnet-root "$DOTNET_ROOT"

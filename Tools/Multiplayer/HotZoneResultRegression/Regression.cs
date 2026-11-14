@@ -109,7 +109,9 @@ class Regression {
   replica.Configure(HotZoneRewardKey.Create(50,0));
   sync.Receive(Pose(first,1,false,30));
   Check(replica.GetComponent<Health>().Current==120&&replica.transform.position.x==14,"late old-occurrence pose/health cannot mutate a reused actor");
-  replica.Configure(first);sync=new GameObject().AddComponent<CoopWorldStateSync>();sync.Receive(Pose(first,120,false,14));
+  // Start the remaining lifecycle checks with a clean registry. A re-keyed actor
+  // and a late snapshot can coexist until the host's removal message arrives.
+  Reset();sync=new GameObject().AddComponent<CoopWorldStateSync>();sync.Receive(Pose(first,120,false,14));replica=sync.Find(first);
   sync.Receive(Pose(first,0,true));Check(replica.GetComponent<Health>().IsDead&&replica.Hidden,"authoritative death hides replica");
   string second=HotZoneRewardKey.Create(1,1);sync.Receive(Pose(second));sync.Receive(Pose(HotZoneRewardKey.Create(2,0)));
   Check(sync.Find(second)?.GetComponent<TeamMember>().Team==1&&HotZoneTank.Active.Count==3,"client cache cap cannot suppress real host reward");
