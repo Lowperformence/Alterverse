@@ -115,6 +115,7 @@ namespace Alterverse.Combat
  public sealed class HotZoneTank:Component {public static readonly List<HotZoneTank> Active=new();public Health TankHealth;}
  public sealed class Health:Component
  {
+  public static readonly List<Health> Active=new();
   public float Current=100,Shield,TemporaryShield,Max=100;public bool IsDead;private bool hasPresence,presence;
   public float Normalized=>Current/Max;public bool HasTemporaryShieldForPresentation=>hasPresence?presence:TemporaryShield>0;
   public void Heal(float value){Current=Math.Min(Max,Current+value);}

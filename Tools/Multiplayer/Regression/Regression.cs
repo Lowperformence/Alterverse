@@ -207,10 +207,11 @@ static class Regression
  }
  static void HealingAndStatusCases()
  {
+  Health.Active.Clear();
   CoopAuthority.Active=true;CoopAuthority.LocalIsHost=false;CoopAuthority.LocalHasServerAuthority=true;
   Time.time=0;Time.timeScale=1;
   var pickup=new GameObject().AddComponent<CentralHealingPickup>();
-  var member=new GameObject().AddComponent<TeamMember>();var health=member.gameObject.AddComponent<Health>();health.Current=40;
+  var member=new GameObject().AddComponent<TeamMember>();var health=member.gameObject.AddComponent<Health>();health.Current=40;Health.Active.Add(health);
   pickup.Members.Add(member);int changes=0;bool available=true;
   Action<bool,float> changed=(value,delay)=>{changes++;available=value;};
   CentralHealingPickup.NetworkAvailabilityChanged+=changed;

@@ -18,6 +18,7 @@ jobs:
             Assets/Alterverse/Resources/Social
             Tools/Combat/KillstreakRegression
             Tools/Multiplayer/HotZoneResultRegression
+            Tools/Multiplayer/Regression
             Tools/Ranked/Regression
       - uses: actions/setup-dotnet@v4
         with:
@@ -28,3 +29,5 @@ jobs:
       - run: python Tools/Multiplayer/HotZoneResultRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - if: always()
         run: python Tools/Ranked/Regression/run.py --dotnet-root "$DOTNET_ROOT"
+      - if: always()
+        run: python Tools/Multiplayer/Regression/run.py --dotnet-root "$DOTNET_ROOT"
