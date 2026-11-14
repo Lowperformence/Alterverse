@@ -328,7 +328,6 @@ namespace Alterverse.UI
                 }
             FrontEndTheme.Fill(new Rect(c.x-3,c.y-8,6,26),Color.white);
         }
-    }
 
         private static void DrawProceduralHeadwearIcon(Rect rect,CosmeticDefinition definition,bool owned)
         {
@@ -407,6 +406,7 @@ namespace Alterverse.UI
                     break;
             }
         }
+    }
 
     // The same geometry is used for real collections and large-count regression fixtures.
     internal static class CollectionGridLayout
