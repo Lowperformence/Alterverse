@@ -343,7 +343,8 @@ private void DrawScoreboardOverlayControls()
     if(respawning)manualBoardOpen=false;
     else
     {
-        Rect scoreBtn=new Rect(HudWidth-136f,16f,68f,46f);
+        // The front HUD is centered and 420 units wide in this same coordinate system.
+        Rect scoreBtn=new Rect(HudWidth*.5f+224f,16f,82f,54f);
         if(boardTheme.Action(scoreBtn,manualBoardOpen?"CLOSE":"SCORE",selected:manualBoardOpen))
             manualBoardOpen=!manualBoardOpen;
     }

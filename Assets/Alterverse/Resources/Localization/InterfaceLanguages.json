@@ -27,7 +27,10 @@
     "RESUME MATCH",
     "LEAVE MATCH",
     "CANCEL",
-    "MAIN MENU"
+    "MAIN MENU",
+    "ATTACK",
+    "RALLY",
+    "DEFEND"
   ],
   "languages": [
     {
@@ -62,7 +65,10 @@
         "RESUME MATCH",
         "LEAVE MATCH",
         "CANCEL",
-        "MAIN MENU"
+        "MAIN MENU",
+        "ATTACK",
+        "RALLY",
+        "DEFEND"
       ]
     },
     {
@@ -97,7 +103,10 @@
         "SPIEL FORTSETZEN",
         "SPIEL VERLASSEN",
         "ABBRECHEN",
-        "HAUPTMENÜ"
+        "HAUPTMENÜ",
+        "ANGRIFF",
+        "SAMMELN",
+        "SCHUTZ"
       ]
     },
     {
@@ -132,7 +141,10 @@
         "REPRENDRE",
         "QUITTER LA PARTIE",
         "ANNULER",
-        "MENU PRINCIPAL"
+        "MENU PRINCIPAL",
+        "ATTAQUE",
+        "RALLIEMENT",
+        "DÉFENSE"
       ]
     },
     {
@@ -167,7 +179,10 @@
         "CONTINUAR PARTIDA",
         "SALIR DE LA PARTIDA",
         "CANCELAR",
-        "MENÚ PRINCIPAL"
+        "MENÚ PRINCIPAL",
+        "ATAQUE",
+        "REUNIRSE",
+        "DEFENSA"
       ]
     },
     {
@@ -202,7 +217,10 @@
         "CONTINUAR PARTIDA",
         "SALIR DE LA PARTIDA",
         "CANCELAR",
-        "MENÚ PRINCIPAL"
+        "MENÚ PRINCIPAL",
+        "ATAQUE",
+        "REUNIRSE",
+        "DEFENSA"
       ]
     },
     {
@@ -237,7 +255,10 @@
         "RIPRENDI PARTITA",
         "ESCI DALLA PARTITA",
         "ANNULLA",
-        "MENU PRINCIPALE"
+        "MENU PRINCIPALE",
+        "ATTACCO",
+        "RADUNO",
+        "DIFESA"
       ]
     },
     {
@@ -272,7 +293,10 @@
         "RETOMAR PARTIDA",
         "SAIR DA PARTIDA",
         "CANCELAR",
-        "MENU PRINCIPAL"
+        "MENU PRINCIPAL",
+        "ATAQUE",
+        "REAGRUPAR",
+        "DEFESA"
       ]
     },
     {
@@ -307,7 +331,10 @@
         "CONTINUAR PARTIDA",
         "SAIR DA PARTIDA",
         "CANCELAR",
-        "MENU PRINCIPAL"
+        "MENU PRINCIPAL",
+        "ATAQUE",
+        "REAGRUPAR",
+        "DEFESA"
       ]
     },
     {
@@ -342,7 +369,10 @@
         "WEDSTRIJD HERVATTEN",
         "WEDSTRIJD VERLATEN",
         "ANNULEREN",
-        "HOOFDMENU"
+        "HOOFDMENU",
+        "AANVALLEN",
+        "VERZAMELEN",
+        "VERDEDIG"
       ]
     },
     {
@@ -377,7 +407,10 @@
         "WZNÓW MECZ",
         "OPUŚĆ MECZ",
         "ANULUJ",
-        "MENU GŁÓWNE"
+        "MENU GŁÓWNE",
+        "ATAK",
+        "ZBIÓRKA",
+        "OBRONA"
       ]
     },
     {
@@ -412,7 +445,10 @@
         "POKRAČOVAT",
         "OPUSTIT ZÁPAS",
         "ZRUŠIT",
-        "HLAVNÍ NABÍDKA"
+        "HLAVNÍ NABÍDKA",
+        "ÚTOK",
+        "SRAZ",
+        "OBRANA"
       ]
     },
     {
@@ -447,7 +483,10 @@
         "POKRAČOVAŤ",
         "OPUSTIŤ ZÁPAS",
         "ZRUŠIŤ",
-        "HLAVNÁ PONUKA"
+        "HLAVNÁ PONUKA",
+        "ÚTOK",
+        "ZRAZ",
+        "OBRANA"
       ]
     },
     {
@@ -482,7 +521,10 @@
         "FOLYTATÁS",
         "MÉRKŐZÉS ELHAGYÁSA",
         "MÉGSE",
-        "FŐMENÜ"
+        "FŐMENÜ",
+        "TÁMADÁS",
+        "GYÜLEKEZŐ",
+        "VÉDEKEZÉS"
       ]
     },
     {
@@ -517,7 +559,10 @@
         "REIA MECIUL",
         "PĂRĂSEȘTE MECIUL",
         "ANULEAZĂ",
-        "MENIU PRINCIPAL"
+        "MENIU PRINCIPAL",
+        "ATAC",
+        "ADUNARE",
+        "APĂRARE"
       ]
     },
     {
@@ -552,7 +597,10 @@
         "ПРОДЪЛЖИ МАЧА",
         "НАПУСНИ МАЧА",
         "ОТКАЗ",
-        "ГЛАВНО МЕНЮ"
+        "ГЛАВНО МЕНЮ",
+        "АТАКА",
+        "СБОР",
+        "ЗАЩИТА"
       ]
     },
     {
@@ -587,7 +635,10 @@
         "ΣΥΝΕΧΕΙΑ ΑΓΩΝΑ",
         "ΕΞΟΔΟΣ ΑΠΟ ΑΓΩΝΑ",
         "ΑΚΥΡΩΣΗ",
-        "ΚΥΡΙΟ ΜΕΝΟΥ"
+        "ΚΥΡΙΟ ΜΕΝΟΥ",
+        "ΕΠΙΘΕΣΗ",
+        "ΣΥΓΚΕΝΤΡΩΣΗ",
+        "ΑΜΥΝΑ"
       ]
     },
     {
@@ -622,7 +673,10 @@
         "ПРОДОЛЖИТЬ МАТЧ",
         "ПОКИНУТЬ МАТЧ",
         "ОТМЕНА",
-        "ГЛАВНОЕ МЕНЮ"
+        "ГЛАВНОЕ МЕНЮ",
+        "АТАКА",
+        "СБОР",
+        "ЗАЩИТА"
       ]
     },
     {
@@ -657,7 +711,10 @@
         "ПРОДОВЖИТИ МАТЧ",
         "ЗАЛИШИТИ МАТЧ",
         "СКАСУВАТИ",
-        "ГОЛОВНЕ МЕНЮ"
+        "ГОЛОВНЕ МЕНЮ",
+        "АТАКА",
+        "ЗБІР",
+        "ЗАХИСТ"
       ]
     },
     {
@@ -692,7 +749,10 @@
         "MAÇA DEVAM ET",
         "MAÇTAN AYRIL",
         "İPTAL",
-        "ANA MENÜ"
+        "ANA MENÜ",
+        "SALDIRI",
+        "TOPLAN",
+        "SAVUN"
       ]
     },
     {
@@ -727,7 +787,10 @@
         "FORTSÄTT MATCH",
         "LÄMNA MATCH",
         "AVBRYT",
-        "HUVUDMENY"
+        "HUVUDMENY",
+        "ANFALL",
+        "SAMLING",
+        "FÖRSVAR"
       ]
     },
     {
@@ -762,7 +825,10 @@
         "FORTSÆT KAMP",
         "FORLAD KAMP",
         "ANNULLER",
-        "HOVEDMENU"
+        "HOVEDMENU",
+        "ANGREB",
+        "SAMLING",
+        "FORSVAR"
       ]
     },
     {
@@ -797,7 +863,10 @@
         "FORTSETT KAMP",
         "FORLAT KAMP",
         "AVBRYT",
-        "HOVEDMENY"
+        "HOVEDMENY",
+        "ANGREP",
+        "SAMLING",
+        "FORSVAR"
       ]
     },
     {
@@ -832,7 +901,10 @@
         "JATKA OTTELUA",
         "POISTU OTTELUSTA",
         "PERUUTA",
-        "PÄÄVALIKKO"
+        "PÄÄVALIKKO",
+        "HYÖKKÄYS",
+        "KOKOONTUKAA",
+        "PUOLUSTUS"
       ]
     },
     {
@@ -867,7 +939,10 @@
         "NASTAVI MEČ",
         "NAPUSTI MEČ",
         "ODUSTANI",
-        "GLAVNI IZBORNIK"
+        "GLAVNI IZBORNIK",
+        "NAPAD",
+        "OKUPLJANJE",
+        "OBRANA"
       ]
     },
     {
@@ -902,7 +977,10 @@
         "НАСТАВИ МЕЧ",
         "НАПУСТИ МЕЧ",
         "ОТКАЖИ",
-        "ГЛАВНИ МЕНИ"
+        "ГЛАВНИ МЕНИ",
+        "НАПАД",
+        "ОКУПЉАЊЕ",
+        "ОДБРАНА"
       ]
     },
     {
@@ -937,7 +1015,10 @@
         "NADALJUJ TEKMO",
         "ZAPUSTI TEKMO",
         "PREKLIČI",
-        "GLAVNI MENI"
+        "GLAVNI MENI",
+        "NAPAD",
+        "ZBOR",
+        "OBRAMBA"
       ]
     },
     {
@@ -972,7 +1053,10 @@
         "TĘSTI RUNGTYNES",
         "PALIKTI RUNGTYNES",
         "ATŠAUKTI",
-        "PAGRINDINIS MENIU"
+        "PAGRINDINIS MENIU",
+        "PUOLIMAS",
+        "SUSIBŪRIMAS",
+        "GYNYBA"
       ]
     },
     {
@@ -1007,7 +1091,10 @@
         "TURPINĀT SPĒLI",
         "PAMEST SPĒLI",
         "ATCELT",
-        "GALVENĀ IZVĒLNE"
+        "GALVENĀ IZVĒLNE",
+        "UZBRUKUMS",
+        "PULCĒTIES",
+        "AIZSARDZĪBA"
       ]
     },
     {
@@ -1042,7 +1129,10 @@
         "JÄTKA MÄNGU",
         "LAHKU MÄNGUST",
         "TÜHISTA",
-        "PEAMENÜÜ"
+        "PEAMENÜÜ",
+        "RÜNNAK",
+        "KOGUNEMINE",
+        "KAITSE"
       ]
     },
     {
@@ -1077,7 +1167,10 @@
         "متابعة المباراة",
         "مغادرة المباراة",
         "إلغاء",
-        "القائمة الرئيسية"
+        "القائمة الرئيسية",
+        "هجوم",
+        "تجمع",
+        "دفاع"
       ]
     },
     {
@@ -1112,7 +1205,10 @@
         "המשך המשחק",
         "עזיבת המשחק",
         "ביטול",
-        "תפריט ראשי"
+        "תפריט ראשי",
+        "התקפה",
+        "התאספות",
+        "הגנה"
       ]
     },
     {
@@ -1147,7 +1243,10 @@
         "मैच जारी रखें",
         "मैच छोड़ें",
         "रद्द करें",
-        "मुख्य मेन्यू"
+        "मुख्य मेन्यू",
+        "हमला",
+        "एकत्र हों",
+        "रक्षा"
       ]
     },
     {
@@ -1182,7 +1281,10 @@
         "继续对局",
         "离开对局",
         "取消",
-        "主菜单"
+        "主菜单",
+        "进攻",
+        "集合",
+        "防守"
       ]
     },
     {
@@ -1217,7 +1319,10 @@
         "繼續對局",
         "離開對局",
         "取消",
-        "主選單"
+        "主選單",
+        "進攻",
+        "集合",
+        "防守"
       ]
     },
     {
@@ -1252,7 +1357,10 @@
         "試合を再開",
         "試合を退出",
         "キャンセル",
-        "メインメニュー"
+        "メインメニュー",
+        "攻撃",
+        "集合",
+        "防衛"
       ]
     },
     {
@@ -1287,7 +1395,10 @@
         "경기 계속",
         "경기 나가기",
         "취소",
-        "메인 메뉴"
+        "메인 메뉴",
+        "공격",
+        "집결",
+        "방어"
       ]
     },
     {
@@ -1322,7 +1433,10 @@
         "LANJUTKAN",
         "KELUAR PERTANDINGAN",
         "BATAL",
-        "MENU UTAMA"
+        "MENU UTAMA",
+        "SERANG",
+        "BERKUMPUL",
+        "BERTAHAN"
       ]
     },
     {
@@ -1357,7 +1471,10 @@
         "TIẾP TỤC",
         "RỜI TRẬN ĐẤU",
         "HỦY",
-        "MENU CHÍNH"
+        "MENU CHÍNH",
+        "TẤN CÔNG",
+        "TẬP HỢP",
+        "PHÒNG THỦ"
       ]
     },
     {
@@ -1392,7 +1509,10 @@
         "เล่นต่อ",
         "ออกจากการแข่งขัน",
         "ยกเลิก",
-        "เมนูหลัก"
+        "เมนูหลัก",
+        "โจมตี",
+        "รวมพล",
+        "ป้องกัน"
       ]
     },
     {
@@ -1427,9 +1547,11 @@
         "SAMBUNG PERLAWANAN",
         "KELUAR PERLAWANAN",
         "BATAL",
-        "MENU UTAMA"
+        "MENU UTAMA",
+        "SERANG",
+        "BERKUMPUL",
+        "BERTAHAN"
       ]
     }
   ]
 }
-

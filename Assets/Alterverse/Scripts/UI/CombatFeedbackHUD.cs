@@ -746,11 +746,10 @@ namespace Alterverse.UI
 
         private static Rect GetPingButtonRect(CombatHudLayout layout, int index)
         {
-            float w = 104f;
-            float h = 26f;
-            float x = layout.Width - w - 14f;
-            float y = 186f + index * 31f;
-            return new Rect(x, y, w, h);
+            // One row along the bottom of the safe area, below the ability cluster.
+            const float width = 104f, height = 28f, gap = 6f, inset = 12f;
+            float x = layout.Width - inset - (width * 3f + gap * 2f) + index * (width + gap);
+            return new Rect(x, layout.Height - inset - height, width, height);
         }
 
         private void HandleTacticalPingInput()
@@ -817,21 +816,21 @@ namespace Alterverse.UI
             {
                 pingPos = focus != null ? focus.transform.position : localHero.transform.position + localHero.transform.forward * 5.5f;
                 activePingColor = new Color(1f, 0.36f, 0.32f, 0.96f);
-                activePingLabel = GameLanguage.Text("⚔ ANGRIFF!");
+                activePingLabel = "⚔ " + GameLanguage.Text("ATTACK") + "!";
             }
             else if (kind == 1) // Rally / Objective
             {
                 DimensionPlanet planet = FindAnyObjectByType<DimensionPlanet>();
                 pingPos = (planet != null && planet.Available) ? planet.transform.position : Vector3.zero;
                 activePingColor = new Color(1f, 0.82f, 0.24f, 0.96f);
-                activePingLabel = GameLanguage.Text("🪐 SAMMELN BEIM ZIEL!");
+                activePingLabel = "🪐 " + GameLanguage.Text("RALLY") + "!";
             }
             else // Defend
             {
                 float homeX = team == 0 ? -ArenaLayout.HealingX * 0.65f : ArenaLayout.HealingX * 0.65f;
                 pingPos = new Vector3(homeX, 0f, 0f);
                 activePingColor = new Color(0.24f, 0.86f, 1f, 0.96f);
-                activePingLabel = GameLanguage.Text("🛡 VERTEIDIGEN!");
+                activePingLabel = "🛡 " + GameLanguage.Text("DEFEND") + "!";
             }
             pingPos.y = LunarSurfaceField.WorldSurface(pingPos.x, pingPos.z).y;
             activePingWorldPos = pingPos;
@@ -846,7 +845,7 @@ namespace Alterverse.UI
         private void DrawTacticalPingHud(CombatHudLayout layout)
         {
             if (InMatchSettingsMenu.IsOpen || (front != null && front.HasEnded)) return;
-            string[] labels = { "⚔ ANGRIFF [1]", "🪐 SAMMELN [2]", "🛡 SCHUTZ [3]" };
+            string[] labels = { "⚔ " + GameLanguage.Text("ATTACK") + " [1]", "🪐 " + GameLanguage.Text("RALLY") + " [2]", "🛡 " + GameLanguage.Text("DEFEND") + " [3]" };
             Color[] colors = {
                 new Color(1f, 0.42f, 0.38f, 0.92f),
                 new Color(1f, 0.82f, 0.28f, 0.92f),
@@ -858,7 +857,7 @@ namespace Alterverse.UI
                 theme.HudPanel(r, 0.74f);
                 FrontEndTheme.Fill(new Rect(r.x, r.y, 3f, r.height), colors[i]);
                 turretBtnSubStyle.normal.textColor = Color.Lerp(colors[i], Color.white, 0.42f);
-                GUI.Label(new Rect(r.x + 6f, r.y + 3f, r.width - 8f, r.height - 6f), labels[i], turretBtnSubStyle);
+                theme.FitLabel(new Rect(r.x + 6f, r.y + 3f, r.width - 8f, r.height - 6f), labels[i], turretBtnSubStyle);
             }
         }
 
