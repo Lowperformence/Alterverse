@@ -11,7 +11,7 @@ Nerok is appended as HeroId 7. Existing hero/save identifiers, Traveler's 1,500-
 | Passive — Salvage Tide | A damaging hook against a hero grants 12 shield for 2s. | Tied to hook |
 | Anchor Recall | 28 damage, 6.2m target range, 0.30s windup plus visible flight. Pull mobile enemies up to 4.2m, stopping 1.3m from Nerok. | 12s |
 | Pressure Hull | 45 shield for 3s; 15% speed boost for 2s. | 14s |
-| Breaker Wave | 26 damage in 2.8m after 0.30s; 25% slow for 1.2s. | 9s |
+| Breaker Wave | 45 damage in 2.8m after 0.30s; 25% slow for 1.2s. | 9s |
 | Abyssal Maelstrom | Fixed 3.2m radius at up to 6m range, 0.65s warning, six ticks totaling 60 damage over 3s; 25% slow and small inward nudges. | 58s |
 
 The existing 45-second initial ultimate lock applies. Leaving the hook's range, breaking sight, or interrupting its windup avoids the hook. Buildings block the throw and swept movement. Buildings/cores/towers are not displaced. Leaving the vortex prevents remaining ticks. Pending casts/fields end on death or disable; no new colliders change hero hitboxes.
