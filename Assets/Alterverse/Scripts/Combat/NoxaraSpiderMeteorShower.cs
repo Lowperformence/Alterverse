@@ -95,7 +95,16 @@ namespace Alterverse.Combat
         public static System.Collections.Generic.IReadOnlyList<NoxaraMeteorStrike> Active=>active;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetRegistry()=>active.Clear();
+        private static void ResetRegistry()
+        {
+            active.Clear();
+            cachedWorld=null;
+            cachedFront=null;
+            if(warningInk!=null){Destroy(warningInk);warningInk=null;}
+            if(warningRingInk!=null){Destroy(warningRingInk);warningRingInk=null;}
+            if(rockMaterial!=null){Destroy(rockMaterial);rockMaterial=null;}
+            if(meteorMesh!=null){Destroy(meteorMesh);meteorMesh=null;}
+        }
 
         private const float ImpactRadius=2.1f;
         private const int HitBufferSize=32;
@@ -103,8 +112,12 @@ namespace Alterverse.Combat
         private static readonly Color PoisonGreenHot=new(.62f,1f,.08f,1f);
 
         private readonly Collider[] hitBuffer=new Collider[HitBufferSize];
-        private Material warningInk,warningRingInk,rockMaterial;
-        private Mesh meteorMesh;
+        private static Material warningInk;
+        private static Material warningRingInk;
+        private static Material rockMaterial;
+        private static Mesh meteorMesh;
+        private static Transform cachedWorld;
+        private static DimensionsFront cachedFront;
         private LineRenderer warningLine,trail;
         private float spawnAt,hitAt,damage;
         private GameObject warning,meteor;
@@ -125,7 +138,8 @@ namespace Alterverse.Combat
         public static void Create(Vector3 point,float delay,float dmg,float stagger,HotZoneTank source)
         {
             GameObject root=new("DF_NoxaraMeteorStrike");
-            Transform world=GameObject.Find("DF_MatchWorld")?.transform;
+            if(cachedWorld==null)cachedWorld=GameObject.Find("DF_MatchWorld")?.transform;
+            Transform world=cachedWorld;
             if(world!=null)root.transform.SetParent(world,true);
 
             NoxaraMeteorStrike strike=root.AddComponent<NoxaraMeteorStrike>();
@@ -134,7 +148,8 @@ namespace Alterverse.Combat
             strike.spawnAt=Time.time;
             strike.hitAt=Time.time+Mathf.Max(.35f,delay)+Mathf.Max(0f,stagger);
             strike.impactPosition=point;
-            strike.front=FindAnyObjectByType<DimensionsFront>();
+            if(cachedFront==null)cachedFront=FindAnyObjectByType<DimensionsFront>();
+            strike.front=cachedFront;
             strike.BuildVisuals(world);
         }
 
@@ -144,19 +159,25 @@ namespace Alterverse.Combat
         {
             // Keep the strike and its original deadline; headless servers need no art.
             if(Alterverse.Multiplayer.DedicatedServerNetworkRuntime.Requested)return;
-            Shader ink=Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
-            Shader rock=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
-            if(ink==null||rock==null)return;
-
-            warningInk=new Material(ink){name="DF_NoxaraMeteorWarningInk",color=PoisonGreen};
-            warningRingInk=new Material(Resources.Load<Shader>("DF_TargetRing")??ink){name="DF_NoxaraMeteorTargetRing",color=PoisonGreen};
-            rockMaterial=new Material(rock){name="DF_NoxaraMeteorRock",color=new Color(.055f,.075f,.045f,1f)};
-            if(rockMaterial.HasProperty("_BaseColor"))rockMaterial.SetColor("_BaseColor",new Color(.055f,.075f,.045f,1f));
-            if(rockMaterial.HasProperty("_Smoothness"))rockMaterial.SetFloat("_Smoothness",.10f);
-            if(rockMaterial.HasProperty("_EmissionColor"))
+            if(warningInk==null||warningRingInk==null||rockMaterial==null)
             {
-                rockMaterial.EnableKeyword("_EMISSION");
-                rockMaterial.SetColor("_EmissionColor",PoisonGreen*2.4f);
+                Shader ink=Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
+                Shader rock=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
+                if(ink==null||rock==null)return;
+
+                if(warningInk==null)warningInk=new Material(ink){name="DF_NoxaraMeteorWarningInk",color=PoisonGreen};
+                if(warningRingInk==null)warningRingInk=new Material(Resources.Load<Shader>("DF_TargetRing")??ink){name="DF_NoxaraMeteorTargetRing",color=PoisonGreen};
+                if(rockMaterial==null)
+                {
+                    rockMaterial=new Material(rock){name="DF_NoxaraMeteorRock",color=new Color(.055f,.075f,.045f,1f)};
+                    if(rockMaterial.HasProperty("_BaseColor"))rockMaterial.SetColor("_BaseColor",new Color(.055f,.075f,.045f,1f));
+                    if(rockMaterial.HasProperty("_Smoothness"))rockMaterial.SetFloat("_Smoothness",.10f);
+                    if(rockMaterial.HasProperty("_EmissionColor"))
+                    {
+                        rockMaterial.EnableKeyword("_EMISSION");
+                        rockMaterial.SetColor("_EmissionColor",PoisonGreen*2.4f);
+                    }
+                }
             }
 
             warning=new GameObject("DF_NoxaraMeteorWarning");
@@ -182,7 +203,7 @@ namespace Alterverse.Combat
                     impactPosition.z+Mathf.Sin(angle)*ImpactRadius));
             }
 
-            meteorMesh=LunarFragmentGeometry.Create(17);
+            if(meteorMesh==null)meteorMesh=LunarFragmentGeometry.Create(17);
             meteor=ProductionMeshFactory.MeshObject("DF_NoxaraFallingMeteor",world,meteorMesh,rockMaterial);
             meteor.transform.localScale=Vector3.one*.58f;
             meteor.transform.position=impactPosition+Vector3.up*9f;
@@ -276,10 +297,6 @@ namespace Alterverse.Combat
             active.Remove(this);
             if(warning!=null)Destroy(warning);
             if(meteor!=null)Destroy(meteor);
-            if(warningInk!=null)Destroy(warningInk);
-            if(warningRingInk!=null)Destroy(warningRingInk);
-            if(rockMaterial!=null)Destroy(rockMaterial);
-            if(meteorMesh!=null)Destroy(meteorMesh);
         }
     }
 }

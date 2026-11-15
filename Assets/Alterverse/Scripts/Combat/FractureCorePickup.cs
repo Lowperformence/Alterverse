@@ -21,6 +21,8 @@ namespace Alterverse.Combat
 
         static Material coreMaterial,zeroMaterial,lumenMaterial,metalMaterial;
         static Mesh ringMesh;
+        static Transform cachedWorld;
+        static DimensionsFront cachedFront;
         static int coopSerial;
         public static event System.Action<int,Vector3> NetworkSpawned;
         public static event System.Action<int> NetworkClaimed;
@@ -40,14 +42,15 @@ namespace Alterverse.Combat
             if(lumenMaterial!=null)Destroy(lumenMaterial);
             if(metalMaterial!=null)Destroy(metalMaterial);
             if(ringMesh!=null)Destroy(ringMesh);
-            coreMaterial=null;zeroMaterial=null;lumenMaterial=null;metalMaterial=null;ringMesh=null;coopSerial=0;
+            coreMaterial=null;zeroMaterial=null;lumenMaterial=null;metalMaterial=null;ringMesh=null;cachedWorld=null;cachedFront=null;coopSerial=0;
         }
 
         int networkId=-1;
 
         public static void Spawn(Vector3 deathPosition)
         {
-            DimensionsFront front=FindAnyObjectByType<DimensionsFront>();
+            if(cachedFront==null)cachedFront=FindAnyObjectByType<DimensionsFront>();
+            DimensionsFront front=cachedFront;
             if(front!=null&&front.HasEnded)return;
             // Fracture cores are battlefield pickups. Editor fixtures and any invalid/out-of-arena
             // death position must never be fed into the lunar surface sampler.
@@ -56,8 +59,8 @@ namespace Alterverse.Combat
                Mathf.Abs(deathPosition.x)>41f*ArenaLayout.LengthScale||Mathf.Abs(deathPosition.z)>35f)return;
 
             GameObject go=new("DF_FractureCore");
-            GameObject world=GameObject.Find("DF_MatchWorld");
-            if(world!=null)go.transform.SetParent(world.transform,true);
+            if(cachedWorld==null)cachedWorld=GameObject.Find("DF_MatchWorld")?.transform;
+            if(cachedWorld!=null)go.transform.SetParent(cachedWorld,true);
 
             // Anchor to the authored lunar surface so craters and relief never leave the pickup floating or buried.
             Vector3 ground=deathPosition;
@@ -79,8 +82,8 @@ namespace Alterverse.Combat
             FractureCorePickup[] existing=FindObjectsByType<FractureCorePickup>(FindObjectsInactive.Exclude);
             for(int i=0;i<existing.Length;i++)if(existing[i]!=null&&existing[i].networkId==id)return;
             GameObject go=new($"DF_FractureCore_Net_{id}");
-            GameObject world=GameObject.Find("DF_MatchWorld");
-            if(world!=null)go.transform.SetParent(world.transform,true);
+            if(cachedWorld==null)cachedWorld=GameObject.Find("DF_MatchWorld")?.transform;
+            if(cachedWorld!=null)go.transform.SetParent(cachedWorld,true);
             go.transform.position=ground;
             FractureCorePickup pickup=go.AddComponent<FractureCorePickup>();
             pickup.networkId=id;pickup.groundPosition=ground;pickup.BuildVisual();
@@ -99,7 +102,8 @@ namespace Alterverse.Combat
             EnsureSharedVisuals();
             spawnedAt=Time.time;
             nextScan=spawnedAt+PickupDelay;
-            front=FindAnyObjectByType<DimensionsFront>();
+            if(cachedFront==null)cachedFront=FindAnyObjectByType<DimensionsFront>();
+            front=cachedFront;
 
             visual=new GameObject("DF_FractureCoreVisual").transform;
             visual.SetParent(transform,false);

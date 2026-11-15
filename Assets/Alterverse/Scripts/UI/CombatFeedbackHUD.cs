@@ -595,6 +595,26 @@ namespace Alterverse.UI
             }
 
             bool localKiller = local != null && killerHealth.gameObject == local;
+            if (wasShutdown)
+            {
+                if (CoopAuthority.CanSimulateHostGameplay && killerHealth != null && !killerHealth.IsDead)
+                {
+                    killerHealth.Heal(killerHealth.Max * 0.12f, false);
+                    (killerHealth.GetComponent<HeroCombatStatus>() ?? killerHealth.gameObject.AddComponent<HeroCombatStatus>()).BoostSpeed(1.15f, 5f);
+                    PrototypeVfx.Ring(killerHealth.transform.position, new Color(1f, 0.84f, 0.22f), 1.65f, 0.42f);
+                }
+                if (localKiller)
+                {
+                    PlayerWallet.Grant(2);
+                    SpawnFloating(
+                        victim.transform.position + Vector3.up * 2.15f,
+                        GameLanguage.Pick("★ KOPFGELD +2 SHARDS!", "★ BOUNTY +2 SHARDS!"),
+                        new Color(1f, 0.85f, 0.22f, 1f),
+                        22,
+                        1.45f);
+                    UiSoundRouter.Confirm();
+                }
+            }
             bool earnedTurret = false;
             bool earnedMobile = false;
             if(CoopAuthority.CanSimulateHostGameplay)
@@ -646,7 +666,11 @@ namespace Alterverse.UI
                 activeBannerSub = earnedTurret && localKiller
                     ? GameLanguage.Text("TAP THE MAP TO DEPLOY")
                     : $"{killerName}  ⚔  {victimName}" +
-                      (wasShutdown ? "   •   +1.5% FRONT" : isComebackKill ? "   •   +0.75% FRONT" : string.Empty);
+                      (wasShutdown
+                          ? (localKiller
+                              ? GameLanguage.Pick("   •   KOPFGELD +2 SHARDS & +1.5% FRONT", "   •   BOUNTY +2 SHARDS & +1.5% FRONT")
+                              : "   •   +1.5% FRONT")
+                          : isComebackKill ? "   •   +0.75% FRONT" : string.Empty);
                 activeBannerColor = killerTeam.Team == 0 ? FrontEndTheme.Zero : FrontEndTheme.Accent;
                 activeBannerUntil = now + (earnedTurret && localKiller ? 3.6f : 2.6f);
             }
@@ -977,6 +1001,29 @@ namespace Alterverse.UI
         {
             float scale = Mathf.Clamp(Screen.height / 900f, 0.75f, 1.25f);
             float now = Time.unscaledTime;
+
+            // World-Space Kopfgeld / Bounty Badge above any hero on a 3+ Killstreak (+2 Shards reward)
+            var activeHeroes = Health.Active;
+            for (int i = 0; i < activeHeroes.Count; i++)
+            {
+                Health h = activeHeroes[i];
+                if (h == null || h.IsDead || h.GetComponent<HeroIdentity>() == null) continue;
+                if (!streakByHero.TryGetValue(h, out int hStreak) || hStreak < 3) continue;
+                Vector3 bsp = cam.WorldToScreenPoint(h.transform.position + Vector3.up * 2.72f);
+                if (bsp.z <= 0f) continue;
+
+                float pulse = 0.86f + 0.14f * Mathf.Sin(now * 5.2f);
+                float badgeW = 148f * scale;
+                float badgeH = 19f * scale;
+                Rect bountyRect = new Rect(bsp.x - badgeW * 0.5f, Screen.height - bsp.y - badgeH * 0.5f, badgeW, badgeH);
+                FrontEndTheme.Fill(new Rect(bountyRect.x - 1f, bountyRect.y - 1f, bountyRect.width + 2f, bountyRect.height + 2f),
+                    new Color(1f, 0.82f, 0.20f, 0.90f * pulse));
+                FrontEndTheme.Fill(bountyRect, new Color(0.08f, 0.05f, 0.01f, 0.92f));
+                turretBtnSubStyle.normal.textColor = new Color(1f, 0.88f, 0.28f, 0.98f);
+                GUI.Label(bountyRect,
+                    GameLanguage.Pick($"★ KOPFGELD ({hStreak}x) +2 SHARDS", $"★ BOUNTY ({hStreak}x) +2 SHARDS"),
+                    turretBtnSubStyle);
+            }
 
             // Active Turret World-Space Health Bars (250 HP + Damage Trail)
             var activeTurrets = KillstreakBoltTurret.Active;

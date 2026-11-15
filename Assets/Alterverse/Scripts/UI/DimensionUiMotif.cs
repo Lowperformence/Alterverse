@@ -223,11 +223,32 @@ namespace Alterverse.UI
             float px=Mathf.Clamp(pointerNormalized.x,-1f,1f);
             float py=Mathf.Clamp(pointerNormalized.y,-1f,1f);
 
-            // Soft atmospheric nebula bloom in the background (uses smooth radial texture, never blocky bars).
-            float bloomX=viewport.x+viewport.width*(.64f-px*.025f);
+            // Multi-layered deep-space nebula clouds & anamorphic horizon glow (smooth radial textures).
+            float bloomX=viewport.x+viewport.width*(.68f-px*.025f);
             float bloomY=viewport.y+viewport.height*(.42f-py*.020f);
-            GUI.color=new Color(heroAccent.r,heroAccent.g,heroAccent.b,(.08f+Mathf.Sin(time*.7f)*.02f)*old.a);
-            GUI.DrawTexture(new Rect(bloomX-340f,bloomY-260f,680f,520f),softGlowTex);
+            GUI.color=new Color(heroAccent.r,heroAccent.g,heroAccent.b,(.14f+Mathf.Sin(time*.7f)*.03f)*old.a);
+            GUI.DrawTexture(new Rect(bloomX-420f,bloomY-310f,840f,620f),softGlowTex);
+
+            float leftBloomX=viewport.x+viewport.width*(.24f+px*.018f);
+            float leftBloomY=viewport.y+viewport.height*(.38f+py*.015f);
+            GUI.color=new Color(cyan.r,cyan.g,cyan.b,(.11f+Mathf.Sin(time*.55f+1.4f)*.025f)*old.a);
+            GUI.DrawTexture(new Rect(leftBloomX-360f,leftBloomY-280f,720f,560f),softGlowTex);
+
+            // Subtle holographic astrolabe ring in deep space behind the command deck
+            if(orbitalRingTex!=null)
+            {
+                Matrix4x4 prevMat=GUI.matrix;
+                float ringDim=Mathf.Min(viewport.width,viewport.height)*.82f;
+                Vector2 ringCenter=new Vector2(viewport.x+viewport.width*.50f,viewport.y+viewport.height*.50f);
+                GUIUtility.RotateAroundPivot((time*3.2f)%360f,ringCenter);
+                GUI.color=new Color(cyan.r,cyan.g,cyan.b,.085f*old.a);
+                GUI.DrawTexture(new Rect(ringCenter.x-ringDim*.5f,ringCenter.y-ringDim*.5f,ringDim,ringDim),orbitalRingTex);
+                GUI.matrix=prevMat;
+            }
+
+            // Anamorphic horizontal warp horizon flare
+            GUI.color=new Color(heroAccent.r,heroAccent.g,heroAccent.b,.12f*old.a);
+            GUI.DrawTexture(new Rect(viewport.x+viewport.width*.08f,viewport.y+viewport.height*.12f,viewport.width*.84f,18f),softGlowTex);
 
             // Soft-glow drifting cosmic bokeh motes across 3 depth planes.
             const int moteCount=22;
