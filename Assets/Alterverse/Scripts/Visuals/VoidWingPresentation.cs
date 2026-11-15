@@ -13,14 +13,16 @@ namespace Alterverse.Visuals
 
         public void Build(Transform visual,bool isPreview)
         {
-            if(mesh!=null)return;preview=isPreview;betaSupporter=false;plague=false;
+            if(mesh!=null)return;preview=isPreview;betaSupporter=false;plague=false;deluxe=false;angel=false;rgbRift=false;
             Shader coreShader=WingCoreShader(),edgeShader=WingEnergyShader();if(coreShader==null||edgeShader==null)return;
             core=CreateWingMaterial(coreShader,"DF_VoidObsidian",new Color(.055f,.028f,.105f));
             edge=CreateWingMaterial(edgeShader,"DF_VoidFractureEnergy",new Color(.56f,.16f,.94f));
+            if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",.28f);
             if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.68f);
             energyColor=new Color(.68f,.22f,1f);
-            EnableWingEmission(core,new Color(.24f,.07f,.52f)*1.35f);
-            EnableWingEmission(edge,energyColor*3.25f);
+            // Keep core emission subtle so the dark obsidian base color is never washed out by glow.
+            EnableWingEmission(core,new Color(.24f,.07f,.52f)*.12f);
+            EnableWingEmission(edge,energyColor*1.55f);
             var v=new System.Collections.Generic.List<Vector3>();var t=new System.Collections.Generic.List<int>();
             for(int blade=0;blade<3;blade++)
             {
@@ -30,28 +32,31 @@ namespace Alterverse.Visuals
             }
             AddBackFaces(v,t);
             mesh=new Mesh{name="DF_VoidWingFractures"};mesh.SetVertices(v);mesh.SetTriangles(t,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
+            HeroId hero=GetComponent<HeroIdentity>() is HeroIdentity id?id.Hero:HeroId.Veyr;
+            GetHeroWingMount(hero,.94f,out float scale,out float xSpread,out float height,out float zDepth);
             for(int side=0;side<2;side++)
             {
                 var wing=new GameObject(side==0?"DF_VoidWingLeft":"DF_VoidWingRight");wing.transform.SetParent(visual,false);wings[side]=wing.transform;
-                wing.transform.localPosition=new Vector3(side==0?-.12f:.12f,.22f,-.27f);
-                wing.transform.localScale=new Vector3(side==0?-1:1,1,1)*WingSize;
-                wing.AddComponent<MeshFilter>().sharedMesh=mesh;var r=wing.AddComponent<MeshRenderer>();r.sharedMaterial=core;r.shadowCastingMode=ShadowCastingMode.Off;
-                AddEnergyEdges(wing.transform,v,3,.036f,"VoidEnergyEdge");
+                wing.transform.localPosition=new Vector3(side==0?-xSpread:xSpread,height,zDepth);
+                wing.transform.localScale=new Vector3((side==0?-1:1)*scale,scale,scale);
+                wing.AddComponent<MeshFilter>().sharedMesh=mesh;var r=wing.AddComponent<MeshRenderer>();r.sharedMaterial=core;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
+                AddEnergyEdges(wing.transform,v,3,.032f,"VoidEnergyEdge");
             }
             lastPosition=transform.position;
         }
 
         public void BuildBetaSupporter(Transform visual,bool isPreview,HeroId hero)
         {
-            if(mesh!=null)return;preview=isPreview;betaSupporter=true;plague=false;
+            if(mesh!=null)return;preview=isPreview;betaSupporter=true;plague=false;deluxe=false;angel=false;rgbRift=false;
             Shader coreShader=WingCoreShader(),edgeShader=WingEnergyShader();if(coreShader==null||edgeShader==null)return;
-            core=CreateWingMaterial(coreShader,"DF_BetaSupporterWingCore",new Color(.085f,.012f,.018f));
-            edge=CreateWingMaterial(edgeShader,"DF_BetaSupporterWingEnergy",new Color(.92f,.04f,.05f));
-            if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",.32f);
+            core=CreateWingMaterial(coreShader,"DF_BetaSupporterWingCore",new Color(.11f,.018f,.026f));
+            edge=CreateWingMaterial(edgeShader,"DF_BetaSupporterWingEnergy",new Color(.92f,.06f,.08f));
+            if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",.38f);
             if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.64f);
-            energyColor=new Color(1f,.08f,.06f);
-            EnableWingEmission(core,new Color(.48f,.03f,.04f)*1.45f);
-            EnableWingEmission(edge,energyColor*3.55f);
+            energyColor=new Color(1f,.10f,.08f);
+            // Restrained core emission preserves the dark obsidian-crimson blade body while edges glow crisp red.
+            EnableWingEmission(core,new Color(.32f,.02f,.03f)*.12f);
+            EnableWingEmission(edge,energyColor*1.65f);
 
             var v=new System.Collections.Generic.List<Vector3>();var t=new System.Collections.Generic.List<int>();
             for(int blade=0;blade<4;blade++)
@@ -72,36 +77,32 @@ namespace Alterverse.Visuals
             AddBackFaces(v,t);
             mesh=new Mesh{name="DF_BetaSupporterWingBlades"};mesh.SetVertices(v);mesh.SetTriangles(t,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
 
-            float scale=HeroScale(hero,1.06f,.94f,.96f,1.02f,1.15f,1.18f)*WingSize;
-            float height=hero==HeroId.Rook?.31f:hero==HeroId.Kaelon?.28f:.25f;
+            GetHeroWingMount(hero,.96f,out float scale,out float xSpread,out float height,out float zDepth);
             for(int side=0;side<2;side++)
             {
                 var wing=new GameObject(side==0?"DF_BetaSupporterWingLeft":"DF_BetaSupporterWingRight");wing.transform.SetParent(visual,false);wings[side]=wing.transform;
-                wing.transform.localPosition=new Vector3(side==0?-.16f:.16f,height,-.34f);
+                wing.transform.localPosition=new Vector3(side==0?-xSpread:xSpread,height,zDepth);
                 wing.transform.localScale=new Vector3((side==0?-1:1)*scale,scale,scale);
                 wing.AddComponent<MeshFilter>().sharedMesh=mesh;var r=wing.AddComponent<MeshRenderer>();r.sharedMaterial=core;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
-                AddEnergyEdges(wing.transform,v,4,.044f,"BetaSupporterEnergyEdge");
+                AddEnergyEdges(wing.transform,v,4,.036f,"BetaSupporterEnergyEdge");
             }
             lastPosition=transform.position;
         }
 
         public void BuildPlague(Transform visual,bool isPreview,HeroId hero)
         {
-            if(mesh!=null)return;preview=isPreview;betaSupporter=false;plague=true;
+            if(mesh!=null)return;preview=isPreview;betaSupporter=false;plague=true;deluxe=false;angel=false;rgbRift=false;
             Shader coreShader=WingCoreShader(),edgeShader=WingEnergyShader();if(coreShader==null||edgeShader==null)return;
 
-            // Intentionally simpler and less prestigious than the Beta Supporter wings:
-            // moss-green diseased plates with restrained toxic seams, tied to Green Planet.
+            // Moss-green diseased plates with restrained toxic seams, tied to Green Planet.
             core=CreateWingMaterial(coreShader,"DF_PlagueWingCore",new Color(.15f,.28f,.075f));
             edge=CreateWingMaterial(edgeShader,"DF_PlagueWingToxin",new Color(.44f,.88f,.14f));
             if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",.08f);
             if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.34f);
             energyColor=new Color(.48f,1f,.14f);
-            EnableWingEmission(core,new Color(.18f,.44f,.08f)*1.30f);
-            EnableWingEmission(edge,energyColor*3.15f);
+            EnableWingEmission(core,new Color(.18f,.44f,.08f)*.12f);
+            EnableWingEmission(edge,energyColor*1.55f);
 
-            // Three torn pest leaves only: smaller, narrower and visibly less heroic than Beta Wings.
-            // Their irregular shoulders read as rotten organic plates rather than premium energy blades.
             var v=new System.Collections.Generic.List<Vector3>();var t=new System.Collections.Generic.List<int>();
             float[] tipX={1.02f,1.22f,1.08f};
             float[] tipY={1.12f,.38f,-.48f};
@@ -120,18 +121,16 @@ namespace Alterverse.Visuals
             AddBackFaces(v,t);
             mesh=new Mesh{name="DF_PlagueWingLeaves"};mesh.SetVertices(v);mesh.SetTriangles(t,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
 
-            float scale=HeroScale(hero,.88f,.80f,.82f,.85f,.96f,.99f)*WingSize;
-            float height=hero==HeroId.Rook?.27f:hero==HeroId.Kaelon?.25f:.21f;
+            GetHeroWingMount(hero,.84f,out float scale,out float xSpread,out float height,out float zDepth);
             for(int side=0;side<2;side++)
             {
                 var wing=new GameObject(side==0?"DF_PlagueWingLeft":"DF_PlagueWingRight");wing.transform.SetParent(visual,false);wings[side]=wing.transform;
-                wing.transform.localPosition=new Vector3(side==0?-.13f:.13f,height,-.33f);
+                wing.transform.localPosition=new Vector3(side==0?-xSpread:xSpread,height,zDepth);
                 wing.transform.localScale=new Vector3((side==0?-1:1)*scale,scale,scale);
                 wing.AddComponent<MeshFilter>().sharedMesh=mesh;
                 var r=wing.AddComponent<MeshRenderer>();r.sharedMaterial=core;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
-                AddEnergyEdges(wing.transform,v,3,.032f,"PlagueToxinVein");
+                AddEnergyEdges(wing.transform,v,3,.028f,"PlagueToxinVein");
 
-                // One restrained toxin node per wing keeps the diseased identity without making it flashy.
                 var toxicNode=GameObject.CreatePrimitive(PrimitiveType.Sphere);
                 toxicNode.name="DF_PlagueToxinNode";
                 toxicNode.transform.SetParent(wing.transform,false);
@@ -143,14 +142,12 @@ namespace Alterverse.Visuals
             lastPosition=transform.position;
         }
 
-
         public void BuildDeluxe(Transform visual,bool isPreview,HeroId hero)
         {
-            if(mesh!=null)return;preview=isPreview;deluxe=true;betaSupporter=false;plague=false;
-            // Keep white elements luminous on desktop previews and Android alike.
+            if(mesh!=null)return;preview=isPreview;deluxe=true;betaSupporter=false;plague=false;angel=false;rgbRift=false;
             Shader surface=WingCoreShader(),energy=RuntimeShaderLibrary.Unlit;if(surface==null||energy==null)return;
             core=CreateWingMaterial(surface,"DF_DeluxeSilver",new Color(.16f,.21f,.26f));
-            facet=CreateWingMaterial(surface,"DF_DeluxePolishedCrystal",new Color(.92f,.97f,1f));
+            facet=CreateWingMaterial(surface,"DF_DeluxePolishedCrystal",new Color(.82f,.90f,.98f));
             edge=CreateWingMaterial(energy,"DF_DeluxeWhiteFractures",Color.white);
             foreach(Material material in new[]{core,facet})
             {
@@ -158,13 +155,12 @@ namespace Alterverse.Visuals
                 if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",.86f);
             }
             energyColor=Color.white;
-            EnableWingEmission(core,new Color(.52f,.62f,.74f)*1.35f);
-            EnableWingEmission(facet,new Color(.88f,.95f,1f)*1.95f);
-            edge.EnableKeyword("_EMISSION");edge.SetColor("_EmissionColor",energyColor*2.85f);
+            // Keep silver and crystal non-blown-out so their metallic facets stay distinct from the white energy seams.
+            EnableWingEmission(core,new Color(.52f,.62f,.74f)*.10f);
+            EnableWingEmission(facet,new Color(.88f,.95f,1f)*.16f);
+            edge.EnableKeyword("_EMISSION");edge.SetColor("_EmissionColor",energyColor*1.65f);
             var vertices=new System.Collections.Generic.List<Vector3>();
             var triangles=new[]{new System.Collections.Generic.List<int>(),new System.Collections.Generic.List<int>(),new System.Collections.Generic.List<int>()};
-            // Layered, closed crystal feathers: raised silver ridges, dark recesses and
-            // sparse fluorescent white facets. The swept crown and long tapered tips follow the reference.
             int crystal=0;
             for(int row=0;row<3;row++)for(int column=0;column<7;column++)
             {
@@ -186,12 +182,12 @@ namespace Alterverse.Visuals
             mesh.SetVertices(vertices);mesh.subMeshCount=3;
             for(int i=0;i<3;i++)mesh.SetTriangles(triangles[i],i,false);
             mesh.RecalculateNormals();mesh.RecalculateBounds();
-            float scale=HeroScale(hero,1f,.92f,.94f,.98f,1.10f,1.12f)*WingSize;
+            GetHeroWingMount(hero,.92f,out float scale,out float xSpread,out float height,out float zDepth);
             for(int side=0;side<2;side++)
             {
                 var wing=new GameObject(side==0?"DF_DeluxeWingLeft":"DF_DeluxeWingRight");
                 wing.transform.SetParent(visual,false);wings[side]=wing.transform;
-                wing.transform.localPosition=new Vector3(side==0?-.13f:.13f,.25f,-.34f);
+                wing.transform.localPosition=new Vector3(side==0?-xSpread:xSpread,height,zDepth);
                 wing.transform.localScale=new Vector3((side==0?-1:1)*scale,scale,scale);
                 wing.AddComponent<MeshFilter>().sharedMesh=mesh;
                 var renderer=wing.AddComponent<MeshRenderer>();renderer.sharedMaterials=new[]{core,facet,edge};
@@ -210,14 +206,11 @@ namespace Alterverse.Visuals
             Vector3[] points={root,shoulder+across,tip,shoulder-across,
                 ridge+Vector3.forward*depth,ridge-Vector3.forward*depth};
             int[] faces={0,1,4,1,2,4,2,3,4,3,0,4,1,0,5,2,1,5,3,2,5,0,3,5};
-            // Separate vertices keep each triangular facet flat instead of rounding crystals.
             for(int face=0;face<8;face++)
             {
                 int material=face==1&&crystal%3==0?2:(face+crystal)%2;
                 for(int corner=0;corner<3;corner++)
                 {triangles[material].Add(vertices.Count);vertices.Add(points[faces[face*3+corner]]);}
-                // Mirroring the left wing reverses winding; isolated back faces keep both
-                // sides visible with correct flat normals under either transform sign.
                 for(int corner=2;corner>=0;corner--)
                 {triangles[material].Add(vertices.Count);vertices.Add(points[faces[face*3+corner]]);}
             }
@@ -226,7 +219,6 @@ namespace Alterverse.Visuals
         private static Shader WingCoreShader()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
-            // Resources-backed shader is guaranteed into release builds; Shader.Find variants can be stripped.
             return RuntimeShaderLibrary.Lit;
 #else
             return Shader.Find("Universal Render Pipeline/Lit")??RuntimeShaderLibrary.Lit??Shader.Find("Standard");
@@ -236,7 +228,6 @@ namespace Alterverse.Visuals
         private static Shader WingEnergyShader()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
-            // Energy seams must stay bright even without scene lighting on mobile.
             return RuntimeShaderLibrary.Unlit;
 #else
             return Shader.Find("Universal Render Pipeline/Lit")??RuntimeShaderLibrary.Unlit??Shader.Find("Standard");
@@ -260,17 +251,85 @@ namespace Alterverse.Visuals
             if(material.HasProperty("_EmissionColor"))material.SetColor("_EmissionColor",emission);
         }
 
-        private static float HeroScale(HeroId hero,float standard,float marksman,float support,float mage,float tank,float bruiser)
+        /// <summary>
+        /// Calibrated per-hero upper-back socket position and proportional wing scale in DF_VisualRoot space.
+        /// Accounts for Andromeda Timmy's 0.70x foot-anchored model scale as well as slender vs heavy tank frames.
+        /// </summary>
+        internal static void GetHeroWingMount(HeroId hero,float styleMultiplier,out float scale,out float xSpread,out float yHeight,out float zDepth)
         {
-            return hero switch
+            float heroFactor;
+            switch(hero)
             {
-                HeroId.Kaelon=>tank,
-                HeroId.Rook=>bruiser,
-                HeroId.Nyra=>marksman,
-                HeroId.Mira=>support,
-                HeroId.Elyra=>mage,
-                _=>standard
-            };
+                case HeroId.Timmy:
+                    // Timmy's authored mesh sits at y=-0.96 with 0.70x scale, placing his upper back around y=-0.16, z=-0.20.
+                    heroFactor=.58f;
+                    xSpread=.080f;
+                    yHeight=-.16f;
+                    zDepth=-.20f;
+                    break;
+                case HeroId.Nyra:
+                    heroFactor=.80f;
+                    xSpread=.105f;
+                    yHeight=.19f;
+                    zDepth=-.24f;
+                    break;
+                case HeroId.Mira:
+                    heroFactor=.82f;
+                    xSpread=.11f;
+                    yHeight=.20f;
+                    zDepth=-.25f;
+                    break;
+                case HeroId.Elyra:
+                    heroFactor=.84f;
+                    xSpread=.11f;
+                    yHeight=.21f;
+                    zDepth=-.25f;
+                    break;
+                case HeroId.Veyr:
+                    heroFactor=.88f;
+                    xSpread=.12f;
+                    yHeight=.21f;
+                    zDepth=-.27f;
+                    break;
+                case HeroId.Traveler:
+                    heroFactor=.90f;
+                    xSpread=.125f;
+                    yHeight=.22f;
+                    zDepth=-.29f;
+                    break;
+                case HeroId.VoidKnight:
+                    heroFactor=.96f;
+                    xSpread=.135f;
+                    yHeight=.24f;
+                    zDepth=-.30f;
+                    break;
+                case HeroId.Nerok:
+                    heroFactor=1.04f;
+                    xSpread=.145f;
+                    yHeight=.26f;
+                    zDepth=-.34f;
+                    break;
+                case HeroId.Kaelon:
+                    heroFactor=1.06f;
+                    xSpread=.15f;
+                    yHeight=.27f;
+                    zDepth=-.35f;
+                    break;
+                case HeroId.Rook:
+                    heroFactor=1.08f;
+                    xSpread=.155f;
+                    yHeight=.28f;
+                    zDepth=-.35f;
+                    break;
+                default:
+                    // BOLT-7 (root anchored at feet y=-0.98, scale 0.85) or fallback hero
+                    heroFactor=.96f;
+                    xSpread=.14f;
+                    yHeight=1.36f;
+                    zDepth=-.32f;
+                    break;
+            }
+            scale=heroFactor*styleMultiplier*WingSize;
         }
 
         private void AddEnergyEdges(Transform wing,System.Collections.Generic.List<Vector3> vertices,int bladeCount,float width,string label)
@@ -320,13 +379,13 @@ namespace Alterverse.Visuals
             {
                 float hue=Mathf.Repeat(time/6f,1f);
                 edge.SetFloat("_HueShift",hue);
-                edge.SetFloat("_Intensity",2.85f+Mathf.Sin(time*1.8f)*.28f+pulse*.75f);
+                edge.SetFloat("_Intensity",1.55f+Mathf.Sin(time*1.8f)*.16f+pulse*.45f);
             }
             else if(edge!=null)
             {
-                float baseIntensity=deluxe?2.75f:angel?2.85f:plague?2.65f:betaSupporter?3.25f:2.85f;
-                float wave=plague?Mathf.Sin(time*1.45f)*.22f:betaSupporter?Mathf.Sin(time*1.8f)*.28f:Mathf.Sin(time*2.1f)*.24f;
-                float pulseBoost=plague?.75f:betaSupporter?1.15f:.95f;
+                float baseIntensity=deluxe?1.55f:angel?1.35f:plague?1.42f:betaSupporter?1.58f:1.45f;
+                float wave=plague?Mathf.Sin(time*1.45f)*.12f:betaSupporter?Mathf.Sin(time*1.8f)*.15f:Mathf.Sin(time*2.1f)*.14f;
+                float pulseBoost=plague?.45f:betaSupporter?.65f:.55f;
                 Color dynamicEmission=energyColor*(baseIntensity+wave+pulse*pulseBoost);
                 edge.SetColor("_EmissionColor",dynamicEmission);
                 if(angel&&edge.HasProperty("_BaseColor"))edge.SetColor("_BaseColor",dynamicEmission);
@@ -335,5 +394,3 @@ namespace Alterverse.Visuals
         void OnDestroy(){if(mountMesh!=null)Destroy(mountMesh);if(mesh!=null)Destroy(mesh);if(core!=null)Destroy(core);if(edge!=null)Destroy(edge);if(facet!=null)Destroy(facet);}
     }
 }
-
-

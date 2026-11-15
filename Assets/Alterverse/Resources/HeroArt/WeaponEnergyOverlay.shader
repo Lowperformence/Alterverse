@@ -173,10 +173,10 @@ Shader "DimensionsFront/WeaponEnergyOverlay"
     half3 metal=DFSurfaceLighting(i.world,n,alloy,_Metallic,polish,1,half3(0,0,0),i.position);
     half pulse=.94h+.12h*sin(_Time.y*2.8h+(i.pattern.x+i.pattern.y+i.pattern.z)*2.6h);
     half3 lineAccent=lerp(_GlowColor.rgb,_SecondaryColor.rgb,0.35h);
-    half3 hotCore=lerp(lineAccent,half3(1,1,1),marks.x*.42h);
-    // Crisp glowing pattern lines + vivid colored body coat
-    half3 color=metal+hotCore*((marks.x*3.65h+marks.y*1.05h+rim*1.25h)*pulse);
-    half alpha=saturate(lerp(_GlowColor.a,_RimOpacity,rim)+marks.x*.92h+marks.z*.18h);
+    half3 hotCore=lerp(lineAccent,half3(1,1,1),marks.x*.32h);
+    // Preserve original weapon base color underneath: only pattern lines and subtle rim emit strong color
+    half3 color=metal+hotCore*((marks.x*2.15h+marks.y*0.35h+rim*0.55h)*pulse);
+    half alpha=saturate(lerp(_GlowColor.a,_RimOpacity,rim*0.65h)+marks.x*.82h+marks.z*.22h);
     return half4(color,alpha);
    }
    ENDHLSL

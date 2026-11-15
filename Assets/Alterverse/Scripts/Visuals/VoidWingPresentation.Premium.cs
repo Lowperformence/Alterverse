@@ -36,44 +36,46 @@ namespace Alterverse.Visuals
             Shader surface=WingCoreShader();
             Shader energy=rgb?Resources.Load<Shader>("DF_RGBWingEnergy"):RuntimeShaderLibrary.Unlit;
             if(surface==null||energy==null||design==null)return;
-            preview=isPreview;angel=!rgb;rgbRift=rgb;
+            preview=isPreview;angel=!rgb;rgbRift=rgb;betaSupporter=false;plague=false;deluxe=false;
             core=CreateWingMaterial(surface,rgb?"DF_MechanicalAnthracite":"DF_AngelGold",
                 rgb?new Color(.045f,.052f,.064f):new Color(.92f,.56f,.12f));
             if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",rgb?.85f:.88f);
             if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.76f);
-            EnableWingEmission(core,rgb?new Color(.12f,.18f,.32f)*1.25f:new Color(1f,.68f,.18f)*1.55f);
+            // Keep surface emission low so gold/ivory and anthracite/gunmetal keep their true base colors.
+            EnableWingEmission(core,rgb?new Color(.12f,.18f,.32f)*.10f:new Color(1f,.68f,.18f)*.14f);
 
             facet=CreateWingMaterial(surface,rgb?"DF_MechanicalGunmetal":"DF_AngelIvory",
                 rgb?new Color(.17f,.19f,.22f):new Color(1f,.93f,.72f));
             if(facet.HasProperty("_Metallic"))facet.SetFloat("_Metallic",.46f);
             if(facet.HasProperty("_Smoothness"))facet.SetFloat("_Smoothness",.72f);
-            EnableWingEmission(facet,rgb?new Color(.28f,.42f,.68f)*1.75f:new Color(1f,.92f,.66f)*2.15f);
+            EnableWingEmission(facet,rgb?new Color(.28f,.42f,.68f)*.14f:new Color(1f,.92f,.66f)*.18f);
 
             energyColor=rgb?Color.white:new Color(1f,.76f,.28f);
             edge=CreateWingMaterial(energy,rgb?"DF_RiftSpectrumEnergy":"DF_AngelWarmLight",energyColor);
-            if(rgb){edge.SetFloat("_Intensity",2.95f);}
+            if(rgb){edge.SetFloat("_Intensity",1.55f);}
             else
             {
                 edge.EnableKeyword("_EMISSION");
-                if(edge.HasProperty("_BaseColor"))edge.SetColor("_BaseColor",energyColor*2.65f);
-                if(edge.HasProperty("_Color"))edge.SetColor("_Color",energyColor*2.65f);
-                if(edge.HasProperty("_EmissionColor"))edge.SetColor("_EmissionColor",energyColor*2.65f);
+                if(edge.HasProperty("_BaseColor"))edge.SetColor("_BaseColor",energyColor*1.35f);
+                if(edge.HasProperty("_Color"))edge.SetColor("_Color",energyColor*1.35f);
+                if(edge.HasProperty("_EmissionColor"))edge.SetColor("_EmissionColor",energyColor*1.35f);
             }
 
             mesh=PremiumMesh(design.wing,rgb?"DF_MechanicalRgbBlades":"DF_AngelGoldenFeathers");
             mountMesh=PremiumMesh(design.back,rgb?"DF_MechanicalBackMount":"DF_AngelAureoleMount");
-            float scale=HeroScale(hero,1f,.92f,.94f,.98f,1.10f,1.12f)*WingSize;
+            GetHeroWingMount(hero,.92f,out float scale,out float xSpread,out float height,out float zDepth);
+            Vector3 mountPos=new Vector3(0f,height,zDepth);
             for(int side=0;side<2;side++)
             {
                 var wing=new GameObject((rgb?"DF_RgbRiftWing":"DF_AngelWing")+(side==0?"Left":"Right"));
                 wing.transform.SetParent(visual,false);wings[side]=wing.transform;
-                wing.transform.localPosition=new Vector3(0,.25f,-.34f);
+                wing.transform.localPosition=mountPos;
                 wing.transform.localScale=new Vector3((side==0?-1:1)*scale,scale,scale);
                 PremiumRenderer(wing,mesh);
             }
             var mount=new GameObject(rgb?"DF_RgbRiftBackMount":"DF_AngelBackMount");
             mount.transform.SetParent(visual,false);
-            mount.transform.localPosition=new Vector3(0,.25f,-.34f);
+            mount.transform.localPosition=mountPos;
             mount.transform.localScale=Vector3.one*scale;
             PremiumRenderer(mount,mountMesh);
             lastPosition=transform.position;

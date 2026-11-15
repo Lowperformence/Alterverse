@@ -11,7 +11,7 @@ namespace Alterverse.UI
     /// Combines an Orbital Radar & Rift Telemetry Bay, a 28-cell Quantum Warp Progress Stream,
     /// an 8-Champion 4v4 Squadron Portrait Showdown, and a Deluxe 3D Champion Spotlight Dossier.
     /// </summary>
-    public static class MatchLoadingPresentation
+    internal static class MatchLoadingPresentation
     {
         private static readonly HeroId[] AllyLineupFallback =
         {

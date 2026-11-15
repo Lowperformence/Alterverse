@@ -267,14 +267,15 @@ namespace Alterverse.Visuals
                     ? new Color(.92f, .95f, .99f, 1f)
                     : Color.Lerp(new Color(.10f, .11f, .14f, 1f), new Color(glow.r, glow.g, glow.b, 1f), .68f);
                 Color secondaryAccent = SecondaryPatternAccent(hero, variant, glow, isWhiteTheme);
-                // Strong, unmistakable lacquer coat so Red, Green, White, Pink and Gold read immediately.
-                glow.a = isWhiteTheme ? .84f : .76f;
+                // Keep base alpha low so the weapon's original base color and texture stay visible underneath,
+                // while the patterned rune lines, stripes/hexes, and edge rim glow cleanly on top.
+                glow.a = isWhiteTheme ? .20f : .16f;
                 material.SetColor("_GlowColor",glow);
                 material.SetColor("_MetalColor",metalCoat);
                 material.SetColor("_SecondaryColor",secondaryAccent);
                 material.SetFloat("_Metallic",isWhiteTheme ? .65f : .82f);
                 material.SetFloat("_Smoothness",isWhiteTheme ? .88f : .82f);
-                material.SetFloat("_RimOpacity",.92f);
+                material.SetFloat("_RimOpacity",.38f);
                 material.SetFloat("_PatternStyle",variant == 0 ? 0f : 2f);
                 material.SetFloat("_PatternVariant",variant);
                 material.SetFloat("_PatternOffset",variant*1.37f+((int)hero)*.31f);
