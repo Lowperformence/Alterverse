@@ -35,14 +35,15 @@ namespace UnityEditor
 {
  [AttributeUsage(AttributeTargets.Method)]public sealed class MenuItem:Attribute {public MenuItem(string path){}}
  [AttributeUsage(AttributeTargets.Method)]public sealed class InitializeOnLoadMethodAttribute:Attribute {}
+ public enum BuildTargetGroup {Unknown,Standalone,Android}
  public enum BuildTarget {Android,StandaloneLinux64}
  public enum StandaloneBuildSubtarget {Player,Server}
  public enum BuildOptions {None,CleanBuildCache}
- public struct BuildPlayerOptions {public string[] scenes;public string locationPathName;public BuildTarget target;public int subtarget;public BuildOptions options;}
+ public struct BuildPlayerOptions {public string[] scenes;public string locationPathName;public BuildTargetGroup targetGroup;public BuildTarget target;public int subtarget;public BuildOptions options;}
  public class EditorBuildSettingsScene {public bool enabled;public string path;}
  public static class EditorBuildSettings {public static EditorBuildSettingsScene[] scenes;}
- public static class EditorUserBuildSettings {public static BuildTarget activeBuildTarget;}
- public static class EditorApplication {public static Action delayCall;}
+ public static class EditorUserBuildSettings {public static BuildTarget activeBuildTarget;public static StandaloneBuildSubtarget standaloneBuildSubtarget;public static bool SwitchActiveBuildTarget(BuildTargetGroup targetGroup,BuildTarget target){activeBuildTarget=target;return true;}}
+ public static class EditorApplication {public static Action delayCall;public static bool isPlaying,isPlayingOrWillChangePlaymode,isCompiling,isUpdating;}
  public static class EditorUtility {public static void RevealInFinder(string path){}}
  public static class PlayerSettings {public static bool dedicatedServerOptimizations;}
  public static class BuildPipeline

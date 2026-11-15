@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
@@ -14,25 +15,66 @@ namespace Alterverse.EditorTools
         private const string DockerfileName="Dockerfile";
         private const string PlayGamesSettingsPath="Assets/GooglePlayGames/Resources/PlayGamesSettings.asset";
         private const string HeldPlayGamesSettingsPath="Assets/Alterverse/Editor/PlayGamesSettings.server-build.asset";
+        private static bool deferredBuildPending;
+
+        private static readonly string[] PrebuildTypes=
+        {
+            "Alterverse.Editor.BomberNukeBuilder",
+            "Alterverse.Editor.UltimateLightningBuilder",
+            "Alterverse.Editor.HotZoneSpawnAuraBuilder",
+            "Alterverse.Editor.AttackExplosionVfxBuilder",
+            "Alterverse.Editor.Bolt7Importer",
+            "Alterverse.Editor.SelectedAbilityVfxBuilder",
+            "Alterverse.Editor.SivraNovaBuilder",
+            "Alterverse.Editor.SmallBulletBuilder",
+            "Alterverse.Editor.ThalaHealingBuilder",
+            "Alterverse.Editor.TravelerLightningBuilder"
+        };
 
         [InitializeOnLoadMethod]
         private static void RestoreAfterInterruptedBuild()
         {
-            EditorApplication.delayCall+=()=>
-            {
-                if(!BuildPipeline.isBuildingPlayer) RestorePlayGamesSettings();
-            };
+            EditorApplication.delayCall-=RestoreIfNotBuilding;
+            EditorApplication.delayCall+=RestoreIfNotBuilding;
+        }
+
+        private static void RestoreIfNotBuilding()
+        {
+            if(!BuildPipeline.isBuildingPlayer) RestorePlayGamesSettings();
         }
 
         [MenuItem("Tools/Dimensions Front/Build Linux Dedicated Server")]
         public static void BuildLinuxDedicatedServer()
         {
+            if(!Application.isBatchMode)
+            {
+                if(BuildPipeline.isBuildingPlayer)
+                {
+                    Debug.LogWarning("DIMENSIONS FRONT SERVER BUILD: a player build is already running.");
+                    return;
+                }
+                if(EditorApplication.isPlaying||EditorApplication.isPlayingOrWillChangePlaymode||
+                   EditorApplication.isCompiling||EditorApplication.isUpdating)
+                {
+                    if(EditorApplication.isPlaying||EditorApplication.isPlayingOrWillChangePlaymode)
+                    {
+                        Debug.Log("DIMENSIONS FRONT SERVER BUILD: leaving Play Mode first; Linux Dedicated Server build will start automatically once Edit Mode is ready.");
+                        EditorApplication.isPlaying=false;
+                    }
+                    else
+                    {
+                        Debug.Log("DIMENSIONS FRONT SERVER BUILD: waiting for script compilation/asset import to finish before building Linux Dedicated Server...");
+                    }
+                    ScheduleDeferredBuild();
+                    return;
+                }
+            }
+
             RestorePlayGamesSettings();
             string[] scenes=EditorBuildSettings.scenes
                 .Where(scene=>scene.enabled&&!string.IsNullOrEmpty(scene.path))
                 .Select(scene=>scene.path)
                 .ToArray();
-
             if(scenes.Length==0)
                 throw new InvalidOperationException("No enabled scenes are configured in Build Profiles/Build Settings.");
 
@@ -45,6 +87,7 @@ namespace Alterverse.EditorTools
             {
                 scenes=scenes,
                 locationPathName=executablePath,
+                targetGroup=BuildTargetGroup.Standalone,
                 target=BuildTarget.StandaloneLinux64,
                 subtarget=(int)StandaloneBuildSubtarget.Server,
                 options=BuildOptions.CleanBuildCache
@@ -65,6 +108,8 @@ namespace Alterverse.EditorTools
                 // Hold it under Editor for this build; MoveAsset preserves the asset and GUID.
                 if(AssetFileExists(PlayGamesSettingsPath))
                     MoveSettingsAsset(PlayGamesSettingsPath,HeldPlayGamesSettingsPath);
+                if(!Application.isBatchMode)
+                    PrepareInteractiveServerBuildEnvironment();
                 report=BuildPipeline.BuildPlayer(options);
             }
             finally
@@ -80,6 +125,48 @@ namespace Alterverse.EditorTools
             Debug.Log($"DIMENSIONS FRONT SERVER BUILD READY: {executablePath} • {summary.totalSize} bytes • {summary.totalTime}");
             Debug.Log($"DIMENSIONS FRONT EDGEGAP: Dockerfile ready at {Path.Combine(outputDirectory,DockerfileName)}");
             if(!Application.isBatchMode) EditorUtility.RevealInFinder(outputDirectory);
+        }
+
+        private static void ScheduleDeferredBuild()
+        {
+            if(deferredBuildPending) return;
+            deferredBuildPending=true;
+            EditorApplication.delayCall-=PollDeferredBuild;
+            EditorApplication.delayCall+=PollDeferredBuild;
+        }
+
+        private static void PollDeferredBuild()
+        {
+            if(EditorApplication.isPlaying||EditorApplication.isPlayingOrWillChangePlaymode||
+               EditorApplication.isCompiling||EditorApplication.isUpdating||BuildPipeline.isBuildingPlayer)
+            {
+                EditorApplication.delayCall-=PollDeferredBuild;
+                EditorApplication.delayCall+=PollDeferredBuild;
+                return;
+            }
+            deferredBuildPending=false;
+            BuildLinuxDedicatedServer();
+        }
+
+        private static void PrepareInteractiveServerBuildEnvironment()
+        {
+            if(EditorUserBuildSettings.activeBuildTarget!=BuildTarget.StandaloneLinux64||
+               EditorUserBuildSettings.standaloneBuildSubtarget!=StandaloneBuildSubtarget.Server)
+            {
+                EditorUserBuildSettings.standaloneBuildSubtarget=StandaloneBuildSubtarget.Server;
+                EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone,BuildTarget.StandaloneLinux64);
+            }
+
+            Assembly assembly=typeof(DimensionsFrontDedicatedServerBuilder).Assembly;
+            foreach(string typeName in PrebuildTypes)
+            {
+                Type builderType=assembly.GetType(typeName);
+                MethodInfo buildMethod=builderType?.GetMethod("Build",BindingFlags.Public|BindingFlags.Static);
+                if(buildMethod==null||buildMethod.GetParameters().Length!=0) continue;
+                try { buildMethod.Invoke(null,null); }
+                catch(Exception) { }
+            }
+            AssetDatabase.SaveAssets();
         }
 
         private static bool AssetFileExists(string path)=>
