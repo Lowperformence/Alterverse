@@ -40,9 +40,17 @@ private bool HasInvitedFriend()
     if(plan.Session.Mode==SessionMode.Private)return true;
     OnlinePartyService party=OnlinePartyService.Instance;
     if(party==null||!party.InParty)return false;
-    bool localInParty=false;int members=0;
-    foreach(var member in party.Members)if(member!=null&&member.IsPartyMember){members++;if(member.IsLocal)localInParty=true;}
-    return localInParty&&members>=2;
+    bool localInParty=false,friendInMatch=false;
+    foreach(var member in party.Members)
+    {
+        if(member==null||!member.IsPartyMember||string.IsNullOrEmpty(member.PlayerId))continue;
+        if(member.IsLocal && member.PlayerId==plan.Session.Slots[local].PlayerId)localInParty=true;
+        if(member.IsLocal)continue;
+        foreach(var slot in plan.Session.Slots)
+            if(slot!=null&&!slot.IsBot&&slot.Team==team&&slot.PlayerId==member.PlayerId)
+                friendInMatch=true;
+    }
+    return localInParty&&friendInMatch;
 }
 private void RefreshLocalRespawn()
 {
