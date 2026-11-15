@@ -471,6 +471,7 @@ namespace Alterverse.UI
         {
             if(IsHomeBannerBlocked||!PlayerWallet.CanAfford(BannerBlockPrice)) return;
             ProfileTransaction.Recover();
+            if(IsHomeBannerBlocked||!PlayerWallet.CanAfford(BannerBlockPrice)) return;
             if(PlayerWallet.EarnedBalance>=BannerBlockPrice)
             {
                 ProfileTransaction.Commit(
