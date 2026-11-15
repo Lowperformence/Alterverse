@@ -14,6 +14,9 @@ namespace Alterverse.Profile
         private const string HotZonesKey = "DF_DailyQuestHotZones_v2";
         private const string SoldierKillsKey = "DF_DailyQuestSoldierKills_v2";
         private const string RewardedAdsKey = "DF_DailyQuestRewardedAds_v1";
+        private const string FriendMatchesKey = "DF_DailyQuestFriendMatches_v1";
+        private const string TurretsKey = "DF_DailyQuestTurrets_v1";
+        private const string MvpKey = "DF_DailyQuestMvp_v1";
         private const string ClaimedKey = "DF_DailyQuestClaimed_v2";
 
         private const string MapsKey = "DF_DailyQuestWonMaps_v1";
@@ -28,6 +31,9 @@ namespace Alterverse.Profile
             2 => 60,
             3 => 5,
             4 => 5,
+            5 => 2,
+            6 => 3,
+            7 => 3,
             _ => 0
         };
 
@@ -43,6 +49,9 @@ namespace Alterverse.Profile
                 0 => KillsKey,
                 1 => HotZonesKey,
                 4 => RewardedAdsKey,
+                5 => FriendMatchesKey,
+                6 => TurretsKey,
+                7 => MvpKey,
                 _ => SoldierKillsKey
             };
             return Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(key, 0), 0, Target(index));
@@ -55,8 +64,8 @@ namespace Alterverse.Profile
         public static int ShardReward(int index) => index >= 0 && index < PlayerChallengeContent.Daily.Length
             ? WingMatchRewardBonus.DailyShardReward(PlayerChallengeContent.Daily[index].Shards) : 0;
 
-        public static ProfileTransaction.Write[] MatchWrites(int kills, int hotZoneCaptures, int soldierKills, bool won = false, ArenaVariant arena = ArenaVariant.Moon)
-            => ProgressWrites(Today, kills, hotZoneCaptures, soldierKills, 0, won, arena);
+        public static ProfileTransaction.Write[] MatchWrites(int kills, int hotZoneCaptures, int soldierKills, bool won = false, ArenaVariant arena = ArenaVariant.Moon, bool invitedFriend = false, int turrets = 0, bool mvp = false)
+            => ProgressWrites(Today, kills, hotZoneCaptures, soldierKills, 0, won, arena, invitedFriend, turrets, mvp);
 
         // Receipt day is recorded on the earned callback, so collecting an old saved
         // reward after midnight never advances today's ad quest.
@@ -68,7 +77,7 @@ namespace Alterverse.Profile
                 : Array.Empty<ProfileTransaction.Write>();
         }
 
-        private static ProfileTransaction.Write[] ProgressWrites(int today, int kills, int hotZoneCaptures, int soldierKills, int rewardedAds, bool won, ArenaVariant arena)
+        private static ProfileTransaction.Write[] ProgressWrites(int today, int kills, int hotZoneCaptures, int soldierKills, int rewardedAds, bool won, ArenaVariant arena, bool invitedFriend = false, int turrets = 0, bool mvp = false)
         {
             int stored = Alterverse.Profile.AccountProfilePrefs.GetInt(DayKey, 0);
             if (stored > today)
@@ -79,6 +88,9 @@ namespace Alterverse.Profile
             int priorHotZones = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(HotZonesKey, 0) : 0;
             int priorSoldierKills = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(SoldierKillsKey, 0) : 0;
             int priorRewardedAds = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(RewardedAdsKey, 0) : 0;
+            int priorFriendMatches = sameDay ? AccountProfilePrefs.GetInt(FriendMatchesKey, 0) : 0;
+            int priorTurrets = sameDay ? AccountProfilePrefs.GetInt(TurretsKey, 0) : 0;
+            int priorMvp = sameDay ? AccountProfilePrefs.GetInt(MvpKey, 0) : 0;
             int claimed = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(ClaimedKey, 0) : 0;
 
             int maps = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(MapsKey, 0) : 0;
@@ -91,6 +103,9 @@ namespace Alterverse.Profile
                 new ProfileTransaction.Write(HotZonesKey, Mathf.Min(Target(1), ProfileTransaction.Add(priorHotZones, Mathf.Max(0, hotZoneCaptures)))),
                 new ProfileTransaction.Write(SoldierKillsKey, Mathf.Min(Target(2), ProfileTransaction.Add(priorSoldierKills, Mathf.Max(0, soldierKills)))),
                 new ProfileTransaction.Write(RewardedAdsKey, Mathf.Min(Target(4), ProfileTransaction.Add(priorRewardedAds, Mathf.Max(0, rewardedAds)))),
+                new ProfileTransaction.Write(FriendMatchesKey, Mathf.Min(Target(5), ProfileTransaction.Add(priorFriendMatches, invitedFriend ? 1 : 0))),
+                new ProfileTransaction.Write(TurretsKey, Mathf.Min(Target(6), ProfileTransaction.Add(priorTurrets, Mathf.Max(0, turrets)))),
+                new ProfileTransaction.Write(MvpKey, Mathf.Min(Target(7), ProfileTransaction.Add(priorMvp, mvp ? 1 : 0))),
                 new ProfileTransaction.Write(ClaimedKey, claimed),
                 new ProfileTransaction.Write(MapsKey, maps)
             };
@@ -130,6 +145,24 @@ namespace Alterverse.Profile
             return true;
         }
     }
+
+    // One-time account-scoped reward for opening the Discord invite.
+    // This rewards the click; it does not assert that the player joined Discord.
+    public static class DiscordClickReward
+    {
+        private const string ClaimedKey = "DF_DiscordClickReward_v1";
+        public const int Shards = 5;
+        public static bool Claimed => AccountProfilePrefs.GetInt(ClaimedKey, 0) != 0;
+
+        public static bool TryGrant()
+        {
+            ProfileTransaction.Recover();
+            if (Claimed) return false;
+            ProfileTransaction.Commit(
+                new ProfileTransaction.Write("DF_Shards",
+                    ProfileTransaction.Add(PlayerWallet.EarnedBalance, Shards)),
+                new ProfileTransaction.Write(ClaimedKey, 1));
+            return true;
+        }
+    }
 }
-
-

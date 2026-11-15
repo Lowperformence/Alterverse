@@ -57,7 +57,7 @@ namespace Alterverse.Combat {
 namespace Alterverse.Match {
  public static class ArenaVariantRuntime {public static bool IsMars,IsGreenPlanet,IsNoxara,IsKryon,IsExoplanet,IsGJ504b;public static int Current;}
  public static class ExoplanetArenaProfile {public static string MonsterName(int i)=>"variant";}
- public class MatchTelemetry {public class HeroStats {public int Kills,Deaths,Assists,Objectives,HotZoneCaptures,SoldierKills;public float DamageDealt,DamageTaken,Healing,FrontContribution;}
+ public class MatchTelemetry {public class HeroStats {public int Kills,Deaths,Assists,Objectives,HotZoneCaptures,SoldierKills,TurretsDeployed;public float DamageDealt,DamageTaken,Healing,FrontContribution;}
  public static MatchTelemetry Instance=new();public HeroStats Stats=new();public HeroStats GetStats(Health health)=>Stats;}
  public sealed partial class MatchScoreboard {
   public static MatchScoreboard Instance=new();class Entry{public int Kills,Deaths,Assists;}Dictionary<Health,Entry> entries=new();void RefreshRoster(){}
@@ -125,10 +125,11 @@ class Regression {
   CoopAuthority.ActivePlan=new(){MatchId="round2"};var newRound=Pose(second);newRound[0]="round2";sync.Receive(newRound);Check(sync.Find(second)!=null,"new round clears tombstone history");
   Reset();sync=new GameObject().AddComponent<CoopWorldStateSync>();sync.Receive(Pose(first),55);Check(HotZoneTank.Active.Count==0,"reject nonserver spawn");sync.Receive(Pose(first,476,false,float.NaN));Check(HotZoneTank.Active.Count==0,"reject malformed spawn position");
   Reset();CoopAuthority.LocalHasServerAuthority=true;Check(HotZoneTank.Spawn(0,0)&&HotZoneTank.Spawn(1,1)&&!HotZoneTank.Spawn(0,2),"host retains two living rewards cap");Check(HotZoneTank.EnsureNetworkReplica(first)==null,"host cannot consume replica spawn path");
-  Reset();CoopAuthority.LocalHasServerAuthority=true;var hero=new GameObject();hero.AddComponent<CoopHeroSlot>().Slot=3;var health=hero.AddComponent<Health>();MatchScoreboard.Instance=new();MatchScoreboard.Instance.Seed(health,2,1,4);MatchTelemetry.Instance.Stats=new(){Kills=19,Deaths=1,Assists=4,SoldierKills=16,HotZoneCaptures=2};
+  Reset();CoopAuthority.LocalHasServerAuthority=true;var hero=new GameObject();hero.AddComponent<CoopHeroSlot>().Slot=3;var health=hero.AddComponent<Health>();MatchScoreboard.Instance=new();MatchScoreboard.Instance.Seed(health,2,1,4);MatchTelemetry.Instance.Stats=new(){Kills=19,Deaths=1,Assists=4,SoldierKills=16,HotZoneCaptures=2,TurretsDeployed=3};
   var result=new GameObject().AddComponent<CoopMatchResultSync>();result.Capture(1);var score=result.Read(3);
   Check(score.Kills==2&&score.Deaths==1&&score.Assists==4,"final KDA exactly matches hero-only live scoreboard");
   Check(score.QuestKills==19&&score.SoldierKills==16&&score.HotZoneCaptures==2,"quest totals remain separate and intact");
+  Check(score.HasTurretStats&&score.TurretsDeployed==3,"authoritative placements survive result capture");
   Console.WriteLine($"PASS {checks} reward lifecycle/result checks; production spawn, snapshot receive and result capture. Native art/physics/NGO are fixtures.");
  }
 }
