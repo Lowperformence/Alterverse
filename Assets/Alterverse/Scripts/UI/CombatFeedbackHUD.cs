@@ -608,7 +608,7 @@ namespace Alterverse.UI
                     PlayerWallet.Grant(2);
                     SpawnFloating(
                         victim.transform.position + Vector3.up * 2.15f,
-                        GameLanguage.Pick("★ KOPFGELD +2 SHARDS!", "★ BOUNTY +2 SHARDS!"),
+                        "★ " + GameLanguage.Text("BOUNTY") + " +2 SHARDS!",
                         new Color(1f, 0.85f, 0.22f, 1f),
                         22,
                         1.45f);
@@ -668,7 +668,7 @@ namespace Alterverse.UI
                     : $"{killerName}  ⚔  {victimName}" +
                       (wasShutdown
                           ? (localKiller
-                              ? GameLanguage.Pick("   •   KOPFGELD +2 SHARDS & +1.5% FRONT", "   •   BOUNTY +2 SHARDS & +1.5% FRONT")
+                              ? "   •   " + GameLanguage.Text("BOUNTY") + " +2 SHARDS & +1.5% FRONT"
                               : "   •   +1.5% FRONT")
                           : isComebackKill ? "   •   +0.75% FRONT" : string.Empty);
                 activeBannerColor = killerTeam.Team == 0 ? FrontEndTheme.Zero : FrontEndTheme.Accent;
@@ -1021,7 +1021,7 @@ namespace Alterverse.UI
                 FrontEndTheme.Fill(bountyRect, new Color(0.08f, 0.05f, 0.01f, 0.92f));
                 turretBtnSubStyle.normal.textColor = new Color(1f, 0.88f, 0.28f, 0.98f);
                 GUI.Label(bountyRect,
-                    GameLanguage.Pick($"★ KOPFGELD ({hStreak}x) +2 SHARDS", $"★ BOUNTY ({hStreak}x) +2 SHARDS"),
+                    $"★ {GameLanguage.Text(\"BOUNTY\")} ({hStreak}x) +2 SHARDS",
                     turretBtnSubStyle);
             }
 
