@@ -1062,6 +1062,11 @@ namespace Alterverse.UI
         private float nextSupportScan;
         private Health supportLeader;
         private Vector3 supportAnchor;
+        private HeroLocomotion locomotion;
+        private float blockedTime, detourUntil;
+        private Vector3 detourDirection, lastReplicaPosition;
+        private int movementRecoveryAttempt;
+        private bool hasReplicaPosition;
 
         public GameObject OwnerHero => ownerHero;
         public int Team => team;
@@ -1168,6 +1173,8 @@ namespace Alterverse.UI
             team = assignedTeam;
             ownerHero = owner;
             mobile=mobileTurret;
+            if(mobile&&CoopAuthority.CanSimulateHostGameplay)
+                locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();
             nextScanTime = Time.time + 0.05f;
             nextFireTime = Time.time + 0.15f;
             BuildTurretVisual();
@@ -1187,7 +1194,19 @@ namespace Alterverse.UI
             if (recoilOffset > 0.0001f)
                 recoilOffset = Mathf.MoveTowards(recoilOffset, 0f, Time.deltaTime * 0.35f);
 
-            if (!CoopAuthority.CanSimulateHostGameplay) return;
+            if (!CoopAuthority.CanSimulateHostGameplay)
+            {
+                if(mobile)
+                {
+                    if(hasReplicaPosition)
+                    {
+                        float distance=Vector3.Distance(lastReplicaPosition,transform.position);
+                        for(int i=0;i<wheels.Length;i++)if(wheels[i]!=null)wheels[i].Rotate(Vector3.up,120f*distance,Space.Self);
+                    }
+                    lastReplicaPosition=transform.position;hasReplicaPosition=true;
+                }
+                return;
+            }
 
             if (currentTarget != null && !IsValidTarget(currentTarget))
                 currentTarget = null;
@@ -1338,14 +1357,39 @@ namespace Alterverse.UI
         private void MoveToward(Vector3 destination,float stopDistance)
         {
             Vector3 delta=destination-transform.position;delta.y=0f;
-            if(delta.sqrMagnitude<=stopDistance*stopDistance)return;
-            Vector3 next=Vector3.MoveTowards(transform.position,transform.position+delta,1.8f*Time.deltaTime);
-            next=GameplayCollision.ClampToRoundedArena(next,ArenaLayout.MovementHalfWidth-1.5f,ArenaLayout.MovementHalfHeight-1.5f,1f);
-            next.y=LunarSurfaceField.WorldSurface(next.x,next.z).y;
-            if(Physics.CheckSphere(next+Vector3.up*.7f,.7f,GameplayCollision.SightMask,QueryTriggerInteraction.Ignore))return;
-            transform.position=next;
-            if(delta.sqrMagnitude>.001f)transform.rotation=Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(delta,Vector3.up),180f*Time.deltaTime);
-            for(int i=0;i<wheels.Length;i++)if(wheels[i]!=null)wheels[i].Rotate(Vector3.up,220f*Time.deltaTime,Space.Self);
+            if(locomotion==null||delta.sqrMagnitude<=stopDistance*stopDistance){blockedTime=0f;return;}
+            Vector3 direction=Time.time<detourUntil?detourDirection:delta.normalized;
+            Vector3 requested=direction*1.8f*Time.deltaTime;
+            Vector3 moved=locomotion.Move(requested,ArenaLayout.MovementHalfWidth-1.5f,ArenaLayout.MovementHalfHeight-1.5f);
+            if(moved.sqrMagnitude>.00001f)
+            {
+                Vector3 position=transform.position;
+                position.y=LunarSurfaceField.WorldSurface(position.x,position.z).y;
+                transform.position=position;
+                locomotion.FaceMovement(moved);
+                for(int i=0;i<wheels.Length;i++)if(wheels[i]!=null)wheels[i].Rotate(Vector3.up,120f*moved.magnitude,Space.Self);
+            }
+            bool blocked=requested.sqrMagnitude>.00001f&&moved.sqrMagnitude<requested.sqrMagnitude*.30f;
+            if(blocked)blockedTime+=Time.deltaTime;
+            else
+            {
+                blockedTime=0f;
+                if(moved.sqrMagnitude>requested.sqrMagnitude*.65f)movementRecoveryAttempt=0;
+            }
+            if(blockedTime>.24f&&Time.time>=detourUntil)
+            {
+                movementRecoveryAttempt++;
+                int side=((team+movementRecoveryAttempt)&1)==0?1:-1;
+                Vector3 desired=delta.normalized;
+                if(!locomotion.TryFindClearDirection(desired,1.35f,side,out detourDirection))
+                {
+                    detourDirection=Vector3.Cross(Vector3.up,desired)*side;
+                    if(detourDirection.sqrMagnitude<.01f)detourDirection=team==0?Vector3.right:Vector3.left;
+                    detourDirection.Normalize();
+                }
+                detourUntil=Time.time+Mathf.Min(1f,.62f+movementRecoveryAttempt*.10f);
+                blockedTime=0f;
+            }
         }
 
         private static Mesh GetSharedMesh(PrimitiveType type)

@@ -54,3 +54,9 @@ with tempfile.TemporaryDirectory(prefix='df-killstreak-') as tmp:
     fixture=(here/'ReplicaFixtures.cs').read_text().replace('/*PRODUCTION_METHODS*/',methods)
     generated=tmp/'Replica.cs';generated.write_text(fixture)
     run_csharp(tmp,'Replica',[generated])
+
+    # Verify the real steering decisions with controlled collision outcomes.
+    fixture=(here/'MovementFixtures.cs').read_text().replace('/*PRODUCTION_METHOD*/',
+        block(hud,'private void MoveToward('))
+    generated=tmp/'Movement.cs';generated.write_text(fixture)
+    run_csharp(tmp,'Movement',[generated])
