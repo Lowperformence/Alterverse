@@ -403,7 +403,6 @@ namespace Alterverse.UI
             theme.FitLabel(new Rect(textX,250,textWidth,28),"CHOOSE. DEPLOY. CONQUER.",homeSubtitle);
             theme.Label(new Rect(textX,286,textWidth,90),"TWO REALITIES.\nONE FRONT.",theme.Title);
             theme.Label(new Rect(textX,382,textWidth-12,62),"Choose your hero. Fight alongside your team. Claim the Hotzone and break the enemy core.",theme.Body,true);
-            DrawHomeArenaPreviewStrip(new Rect(textX,452,Mathf.Max(220f,textWidth-14f),68f));
 
             DrawHomeHeroSpotlightCaption(heroAccent);
 
@@ -418,55 +417,6 @@ namespace Alterverse.UI
             if(theme.Navigation(new Rect(Left+(cardWidth+12)*2,672,cardWidth,44),GameLanguage.Text("CLANS"),NavigationIcon(Page.Clans)))SetPage(Page.Clans);
             DrawHomeNews();
             DrawHomeAdvertising();
-        }
-
-        private void DrawHomeArenaPreviewStrip(Rect rect)
-        {
-            ArenaVariant selectedArena=ArenaVariantRuntime.Selected;
-            bool shuffle=ArenaVariantRuntime.ShuffleEnabled;
-            ArenaShopItem arenaItem=ArenaShopCatalog.For(selectedArena);
-            Color planetAccent=shuffle?FrontEndTheme.Accent:new Color(arenaItem.Accent.r,arenaItem.Accent.g,arenaItem.Accent.b,1f);
-            bool hovered=rect.Contains(Event.current.mousePosition);
-            theme.HudPanel(rect,hovered?.62f:.46f);
-            FrontEndTheme.Fill(new Rect(rect.x,rect.y+8f,3f,rect.height-16f),planetAccent);
-            DimensionUiMotif.DrawCornerCuts(rect,Texture2D.whiteTexture,planetAccent);
-            theme.FitLabel(new Rect(rect.x+12f,rect.y+6f,rect.width-92f,18f),
-                shuffle?"NEXT DROP  •  ARENA SHUFFLE ACTIVE":"NEXT DROP  •  ACTIVE BATTLEFIELD",theme.Small,true);
-            string planetTitle=shuffle?"RANDOM OWNED PLANET":arenaItem.Name.ToUpperInvariant();
-            theme.FitLabel(new Rect(rect.x+12f,rect.y+24f,rect.width-92f,26f),planetTitle,theme.Heading);
-            FrontEndTheme.Fill(new Rect(rect.x+12f,rect.yMax-10f,Mathf.Min(120f,rect.width-104f),2f),
-                new Color(planetAccent.r,planetAccent.g,planetAccent.b,.85f));
-
-            float btnW=32f,btnH=32f,btnY=rect.y+(rect.height-btnH)*.5f;
-            Rect prevRect=new Rect(rect.xMax-74f,btnY,btnW,btnH);
-            Rect nextRect=new Rect(rect.xMax-38f,btnY,btnW,btnH);
-            if(theme.Action(prevRect,"<"))CycleHomeArena(-1);
-            if(theme.Action(nextRect,">"))CycleHomeArena(1);
-            Rect mainClick=new Rect(rect.x,rect.y,rect.width-78f,rect.height);
-            if(GUI.Button(mainClick,GUIContent.none,GUIStyle.none))
-            {
-                Alterverse.Audio.UiSoundRouter.Confirm();
-                SetPage(Page.Play);
-            }
-        }
-
-        private void CycleHomeArena(int step)
-        {
-            int count=ArenaShopCatalog.Items.Length;
-            if(count<=0)return;
-            if(playArenaBrowseIndex<0||playArenaBrowseIndex>=count)
-                playArenaBrowseIndex=ArenaShopCatalog.IndexOf(ArenaVariantRuntime.Selected);
-            for(int attempt=0;attempt<count;attempt++)
-            {
-                playArenaBrowseIndex=(playArenaBrowseIndex+step+count)%count;
-                ArenaShopItem candidate=ArenaShopCatalog.Items[playArenaBrowseIndex];
-                if(ArenaUnlockInventory.Owned(candidate.Variant))
-                {
-                    ArenaVariantRuntime.SetShuffleEnabled(false);
-                    ArenaVariantRuntime.Select(candidate.Variant);
-                    break;
-                }
-            }
         }
 
         private void DrawHomeHeroSpotlightCaption(Color heroAccent)
