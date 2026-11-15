@@ -1021,7 +1021,7 @@ namespace Alterverse.UI
                 FrontEndTheme.Fill(bountyRect, new Color(0.08f, 0.05f, 0.01f, 0.92f));
                 turretBtnSubStyle.normal.textColor = new Color(1f, 0.88f, 0.28f, 0.98f);
                 GUI.Label(bountyRect,
-                    $"★ {GameLanguage.Text(\"BOUNTY\")} ({hStreak}x) +2 SHARDS",
+                    "★ " + GameLanguage.Text("BOUNTY") + $" ({hStreak}x) +2 SHARDS",
                     turretBtnSubStyle);
             }
 
