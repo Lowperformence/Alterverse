@@ -68,6 +68,7 @@ namespace Alterverse.Profile
             {
                 ["de"] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
+                    ["JOIN AND EARN 5 SHARDS"] = "BEITRETEN & 5 SHARDS ERHALTEN",
                     ["Complete 2 matches with an invited friend"] = "Schließe 2 Runden mit einem eingeladenen Freund ab",
                     ["Deploy 3 turrets"] = "Stelle 3 Geschütze auf",
                     ["Become match MVP 3 times"] = "Werde 3-mal MVP",
@@ -324,6 +325,7 @@ namespace Alterverse.Profile
                 },
                 ["es"] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
+                    ["JOIN AND EARN 5 SHARDS"] = "ÚNETE Y GANA 5 SHARDS",
                     ["Complete 2 matches with an invited friend"] = "Completa 2 partidas con un amigo invitado",
                     ["Deploy 3 turrets"] = "Despliega 3 torretas",
                     ["Become match MVP 3 times"] = "Sé el MVP de la partida 3 veces",
@@ -401,6 +403,7 @@ namespace Alterverse.Profile
                 },
                 ["fr"] = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
+                    ["JOIN AND EARN 5 SHARDS"] = "REJOIGNEZ ET GAGNEZ 5 SHARDS",
                     ["Complete 2 matches with an invited friend"] = "Terminez 2 parties avec un ami invité",
                     ["Deploy 3 turrets"] = "Déployez 3 tourelles",
                     ["Become match MVP 3 times"] = "Soyez MVP de la partie 3 fois",
