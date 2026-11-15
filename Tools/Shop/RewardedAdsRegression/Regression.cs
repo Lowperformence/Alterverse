@@ -152,6 +152,7 @@ static class Regression
 #endif
         CheckDailyWingRewards();
         CheckNewDailyQuests();
+        CheckDiscordClickReward();
     }
 
     static void CheckDailyWingRewards()
@@ -279,6 +280,27 @@ static class Regression
         ProfileTransaction.Commit(DailyQuestProgress.MatchWrites(0, 0, 0));
         Check(DailyQuestProgress.Progress(5)==0 && DailyQuestProgress.Progress(6)==0 && DailyQuestProgress.Progress(7)==0 && !DailyQuestProgress.Claimed(5), "Daily reset clears all new quests");
         Console.WriteLine("PASS: new daily targets, rewards, claim once, preservation and reset.");
+    }
+
+    static void CheckDiscordClickReward()
+    {
+        AccountProfilePrefs.Attach("discord-click-a", 1, Profile(12));
+        Check(!DiscordClickReward.Claimed, "New player sees the Discord click reward");
+        Check(DiscordClickReward.TryGrant() && PlayerWallet.EarnedBalance == 17 &&
+              DiscordClickReward.Claimed, "The first click pays five shards and hides the offer");
+        Check(!DiscordClickReward.TryGrant() && PlayerWallet.EarnedBalance == 17,
+              "Repeated clicks cannot pay again");
+        AccountProfilePrefs.SetInt("DF_DailyQuestDay_v2", DailyCalendar.Yesterday);
+        ProfileTransaction.Commit(DailyQuestProgress.MatchWrites(0, 0, 0));
+        Check(DiscordClickReward.Claimed && !DiscordClickReward.TryGrant(),
+              "A daily reset never restores the permanent Discord reward");
+        AccountProfilePrefs.Attach("discord-click-b", 1, Profile(0));
+        Check(!DiscordClickReward.Claimed && DiscordClickReward.TryGrant() &&
+              PlayerWallet.EarnedBalance == 5, "Each account has its own one-time reward");
+        AccountProfilePrefs.Attach("discord-click-a", 1, Profile(0));
+        Check(DiscordClickReward.Claimed && PlayerWallet.EarnedBalance == 17 &&
+              !DiscordClickReward.TryGrant(), "Returning to an account preserves its claim");
+        Console.WriteLine("PASS: Discord click reward is five shards, permanent and account-scoped.");
     }
 
 }

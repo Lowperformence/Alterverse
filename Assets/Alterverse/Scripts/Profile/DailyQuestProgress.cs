@@ -145,6 +145,24 @@ namespace Alterverse.Profile
             return true;
         }
     }
+
+    // One-time account-scoped reward for opening the Discord invite.
+    // This rewards the click; it does not assert that the player joined Discord.
+    public static class DiscordClickReward
+    {
+        private const string ClaimedKey = "DF_DiscordClickReward_v1";
+        public const int Shards = 5;
+        public static bool Claimed => AccountProfilePrefs.GetInt(ClaimedKey, 0) != 0;
+
+        public static bool TryGrant()
+        {
+            ProfileTransaction.Recover();
+            if (Claimed) return false;
+            ProfileTransaction.Commit(
+                new ProfileTransaction.Write("DF_Shards",
+                    ProfileTransaction.Add(PlayerWallet.EarnedBalance, Shards)),
+                new ProfileTransaction.Write(ClaimedKey, 1));
+            return true;
+        }
+    }
 }
-
-

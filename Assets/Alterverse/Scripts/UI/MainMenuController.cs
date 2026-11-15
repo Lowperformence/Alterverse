@@ -284,8 +284,13 @@ namespace Alterverse.UI
         private void DrawDiscordButton(Rect rect)
         {
             bool hovered=rect.Contains(Event.current.mousePosition);
-            if(theme.Navigation(rect,"DISCORD",11))
+            string label=DiscordClickReward.Claimed?"DISCORD":"DISCORD +5";
+            if(theme.Navigation(rect,label,11))
+            {
+                try { DiscordClickReward.TryGrant(); }
+                catch (Exception ex) { Debug.LogWarning("DIMENSIONS FRONT: Discord click reward could not be saved: "+ex.Message); }
                 Application.OpenURL(DiscordInviteUrl);
+            }
             Color blurple=new Color(.35f,.40f,.95f,hovered?.95f:.72f);
             FrontEndTheme.Fill(new Rect(rect.x+1f,rect.y+8f,2f,rect.height-16f),blurple);
             if(hovered)
