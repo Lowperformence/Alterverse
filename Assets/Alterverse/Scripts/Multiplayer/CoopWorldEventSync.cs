@@ -1,6 +1,7 @@
 using Alterverse.Combat;
 using Alterverse.Characters;
 using Alterverse.Match;
+using Alterverse.UI;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -30,6 +31,7 @@ namespace Alterverse.Multiplayer
         private const string LaneUnitMessage="DF_COOP_LANE_UNIT_V2";
         private const string FractureSpawnMessage="DF_COOP_FRACTURE_SPAWN_V2";
         private const string FractureClaimMessage="DF_COOP_FRACTURE_CLAIM_V2";
+        private const string TurretShotMessage="DF_COOP_KILLSTREAK_SHOT_V1";
 
         private CustomMessagingManager messaging;
         private bool attached,eventsBound;
@@ -63,6 +65,7 @@ namespace Alterverse.Multiplayer
             LaneWaveSpawner.NetworkUnitSpawned+=OnHostLaneUnitSpawned;
             FractureCorePickup.NetworkSpawned+=OnHostFractureSpawned;
             FractureCorePickup.NetworkClaimed+=OnHostFractureClaimed;
+            KillstreakBoltTurret.NetworkShot+=OnTurretShot;
             Alterverse.Visuals.CombatMotion.Started+=OnAttackStarted;
             Alterverse.Visuals.MonsterAttackVfx.Resolved+=OnMonsterImpact;
             Alterverse.Visuals.MonsterAttackVfx.LaserChanged+=OnMonsterLaser;
@@ -86,6 +89,7 @@ namespace Alterverse.Multiplayer
             LaneWaveSpawner.NetworkUnitSpawned-=OnHostLaneUnitSpawned;
             FractureCorePickup.NetworkSpawned-=OnHostFractureSpawned;
             FractureCorePickup.NetworkClaimed-=OnHostFractureClaimed;
+            KillstreakBoltTurret.NetworkShot-=OnTurretShot;
             Alterverse.Visuals.CombatMotion.Started-=OnAttackStarted;
             Alterverse.Visuals.MonsterAttackVfx.Resolved-=OnMonsterImpact;
             Alterverse.Visuals.MonsterAttackVfx.LaserChanged-=OnMonsterLaser;
@@ -164,6 +168,31 @@ namespace Alterverse.Multiplayer
             writer.WriteValueSafe(to.x);writer.WriteValueSafe(to.y);writer.WriteValueSafe(to.z);
             writer.WriteValueSafe(NetworkManager.Singleton.ServerTime.Time);
             SendAll(MonsterImpactMessage,writer);
+        }
+
+        private void OnTurretShot(KillstreakBoltTurret turret,Vector3 target)
+        {
+            if(!CanBroadcast()||turret==null)return;
+            CoopWorldEntityKey key=turret.GetComponent<CoopWorldEntityKey>();
+            if(key==null||string.IsNullOrEmpty(key.Key))return;
+            using FastBufferWriter writer=new(192,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            writer.WriteValueSafe(new FixedString128Bytes(key.Key));
+            writer.WriteValueSafe(target.x);writer.WriteValueSafe(target.y);writer.WriteValueSafe(target.z);
+            NetworkManager manager=NetworkManager.Singleton;
+            if(manager?.ConnectedClientsIds==null)return;
+            foreach(ulong id in manager.ConnectedClientsIds)
+                if(id!=NetworkManager.ServerClientId)messaging.SendNamedMessage(TurretShotMessage,id,writer,NetworkDelivery.UnreliableSequenced);
+        }
+
+        private void OnTurretShotMessage(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader)||!reader.TryBeginRead(sizeof(ushort)))return;
+            reader.ReadValueSafe(out FixedString128Bytes key);
+            if(!reader.TryBeginRead(3*sizeof(float)))return;
+            reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
+            if(!Finite(x)||!Finite(y)||!Finite(z))return;
+            FindWorldActor(key.ToString())?.GetComponent<KillstreakBoltTurret>()?.PresentNetworkShot(new Vector3(x,y,z));
         }
         private void OnMonsterImpactMessage(ulong sender,FastBufferReader reader)
         {
@@ -516,6 +545,7 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(LaneUnitMessage,OnLaneUnit);
             messaging.RegisterNamedMessageHandler(FractureSpawnMessage,OnFractureSpawn);
             messaging.RegisterNamedMessageHandler(FractureClaimMessage,OnFractureClaim);
+            messaging.RegisterNamedMessageHandler(TurretShotMessage,OnTurretShotMessage);
             attached=true;
         }
 
@@ -539,6 +569,7 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(LaneUnitMessage);
             messaging.UnregisterNamedMessageHandler(FractureSpawnMessage);
             messaging.UnregisterNamedMessageHandler(FractureClaimMessage);
+            messaging.UnregisterNamedMessageHandler(TurretShotMessage);
             messaging=null;attached=false;
         }
     }

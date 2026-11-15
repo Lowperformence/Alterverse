@@ -15,7 +15,7 @@ result=(src/'Multiplayer/CoopMatchResultSync.cs').read_text()
 score=(src/'Match/MatchScoreboard.cs').read_text()
 # Also ensure resolve events cannot create unconfirmed rewards.
 assert 'HotZoneTank.Spawn(' not in block((src/'Match/HotZoneDirector.cs').read_text(),'public void ApplyNetworkResolve(')
-parts=['using System;using System.Collections.Generic;using UnityEngine;using Unity.Netcode;using Unity.Collections;using Alterverse.Combat;using Alterverse.Characters;using Alterverse.Match;using Alterverse.Multiplayer;']
+parts=['using System;using System.Collections.Generic;using UnityEngine;using Unity.Netcode;using Unity.Collections;using Alterverse.Combat;using Alterverse.Characters;using Alterverse.Match;using Alterverse.Multiplayer;using Alterverse.UI;']
 parts.append('namespace Alterverse.Combat {public sealed partial class HotZoneTank {'+''.join(block(hot,d) for d in ['public static bool Spawn(', 'public static HotZoneTank EnsureNetworkReplica(', 'private static bool SpawnReward(', 'private static HotZoneTank CreateReward('])+'}}')
 parts.append('namespace Alterverse.Multiplayer {public sealed partial class CoopWorldStateSync {'+''.join(block(world,d) for d in ['private void RefreshEntities(', 'private void OnState('])+'}}')
 parts.append('namespace Alterverse.Multiplayer {public sealed partial class CoopMatchResultSync {'+block(result,'public readonly struct SlotResult')+block(result,'private void CaptureHostResult(')+'}}')

@@ -339,6 +339,10 @@ namespace Alterverse.Multiplayer
             return targetTeam==int.MinValue||TargetTeam(candidate)==targetTeam;
         }
 
+        // Other server-owned combat requests use the same round and player binding.
+        internal bool TryAuthorizeTurretPlacement(ulong senderClientId,ref FastBufferReader reader,out GameObject actor)
+            =>TryReadAuthorizedActor(senderClientId,ref reader,out actor);
+
         private bool TryReadAuthorizedActor(ulong senderClientId,ref FastBufferReader reader,out GameObject actor)
         {
             actor=null;

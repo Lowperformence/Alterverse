@@ -71,6 +71,13 @@ namespace Alterverse.UI
         private float activeBannerUntil;
 
         private int localTurretCharges;
+        private int localMobileTurretCharges;
+        private int networkLocalStreak;
+        private bool localUpgradeEligible;
+        private readonly KillstreakRewardState offlineRewards = new();
+        private readonly KillstreakRewardState[] networkRewards = new KillstreakRewardState[MatchSession.MaxPlayers];
+        private CoopMatchPlan rewardPlan;
+        private float nextTurretRequestAt;
         private bool placingTurret;
         private int placementToggleFrame = -1;
         private float nextPreviewPulse;
@@ -113,7 +120,7 @@ namespace Alterverse.UI
         {
             if (MainMenuController.IsVisible || Time.timeScale <= 0f)
             {
-                if (MainMenuController.IsVisible && (numbers.Count > 0 || streakByHero.Count > 0 || localTurretCharges > 0 || placingTurret || KillstreakBoltTurret.Active.Count > 0))
+                if (MainMenuController.IsVisible && (numbers.Count > 0 || streakByHero.Count > 0 || localTurretCharges > 0 || localMobileTurretCharges > 0 || placingTurret || KillstreakBoltTurret.Active.Count > 0))
                 {
                     numbers.Clear();
                     feed.Clear();
@@ -122,10 +129,22 @@ namespace Alterverse.UI
                     lastKillAt.Clear();
                     activeBannerUntil = 0f;
                     localTurretCharges = 0;
+                    localMobileTurretCharges = 0;localUpgradeEligible = false;networkLocalStreak = 0;
+                    offlineRewards.Reset();
                     placingTurret = false;
                     KillstreakBoltTurret.ClearAll();
                 }
                 return;
+            }
+
+            // Dedicated servers do not visit the menu between network rounds.
+            if (!ReferenceEquals(rewardPlan, CoopAuthority.ActivePlan))
+            {
+                rewardPlan=CoopAuthority.ActivePlan;
+                for(int i=0;i<networkRewards.Length;i++)networkRewards[i]=null;
+                streakByHero.Clear();multiKillCount.Clear();lastKillAt.Clear();
+                localTurretCharges=localMobileTurretCharges=networkLocalStreak=0;
+                localUpgradeEligible=false;placingTurret=false;nextTurretRequestAt=0f;
             }
 
             if (cam == null || !cam.isActiveAndEnabled) cam = Camera.main;
@@ -164,7 +183,7 @@ namespace Alterverse.UI
 
         private void HandleTurretPlacementInput()
         {
-            if (localTurretCharges <= 0 || InMatchSettingsMenu.IsOpen)
+            if (localTurretCharges <= 0 && localMobileTurretCharges <= 0 || InMatchSettingsMenu.IsOpen)
             {
                 placingTurret = false;
                 return;
@@ -255,21 +274,94 @@ namespace Alterverse.UI
 
         private bool TryDeployTurretAtScreenPoint(Vector2 screenPosition, GameObject localHero)
         {
-            if (localTurretCharges <= 0 || localHero == null) return false;
+            if ((localTurretCharges <= 0 && localMobileTurretCharges <= 0) || localHero == null || Time.unscaledTime < nextTurretRequestAt) return false;
             if (!TryScreenToArenaGround(screenPosition, localHero.transform.position, out Vector3 worldPoint))
                 return false;
 
             TeamMember tm = localHero.GetComponent<TeamMember>();
             int team = tm != null ? tm.Team : 0;
-            KillstreakBoltTurret.Spawn(team, worldPoint, localHero);
-            localTurretCharges = Mathf.Max(0, localTurretCharges - 1);
+            if(CoopAuthority.Active&&!CoopAuthority.LocalHasServerAuthority)
+            {
+                if(!KillstreakNetworkSync.TrySendPlacement(localHero,worldPoint))return false;
+                nextTurretRequestAt=Time.unscaledTime+1f;
+                placingTurret=false;
+                return true; // Wait for the authoritative reward snapshot before consuming.
+            }
+            KillstreakRewardState rewards=CoopAuthority.Active?RewardsFor(localHero):offlineRewards;
+            if(rewards==null||!rewards.HasReward)return false;
+            bool mobile=rewards.NextIsMobile;
+            if(KillstreakBoltTurret.Spawn(team, worldPoint, localHero, mobile)==null)return false;
+            rewards.Consume();CopyLocalRewards(rewards);
             placingTurret = false;
 
             Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.TowerTarget, 0.85f);
-            activeBannerTitle = GameLanguage.Text("BOLT-GESCHÜTZ PLATZIERT!");
-            activeBannerSub = GameLanguage.Text("250 HP  •  Bolt-Basisangriff (1 Schaden)");
+            activeBannerTitle = GameLanguage.Text(mobile?"MOBILE TURRET DEPLOYED!":"TURRET DEPLOYED!");
+            activeBannerSub = GameLanguage.Text(mobile?"250 HP  •  2 DAMAGE  •  MOBILE":"250 HP  •  1 DAMAGE");
             activeBannerColor = team == 0 ? FrontEndTheme.Zero : FrontEndTheme.Accent;
             activeBannerUntil = Time.unscaledTime + 2.2f;
+            return true;
+        }
+
+        private KillstreakRewardState RewardsFor(GameObject actor)
+        {
+            CoopHeroSlot slot=actor!=null?actor.GetComponent<CoopHeroSlot>():null;
+            if(slot==null||!slot.IsHuman||slot.Slot<0||slot.Slot>=networkRewards.Length)return null;
+            return networkRewards[slot.Slot]??=new KillstreakRewardState();
+        }
+
+        private void CopyLocalRewards(KillstreakRewardState state)
+        {localTurretCharges=state.Standard;localMobileTurretCharges=state.Mobile;localUpgradeEligible=state.UpgradeEligible;}
+
+        // The server owns rewards and validates placements. Clients receive only their UI snapshot.
+        public static bool GetNetworkReward(int slot,out int standard,out int mobile,out bool eligible,out int streak)
+        {
+            standard=mobile=streak=0;eligible=false;
+            if(instance==null||!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||slot<0||slot>=MatchSession.MaxPlayers)return false;
+            var state=instance.networkRewards[slot];
+            if(state!=null){standard=state.Standard;mobile=state.Mobile;eligible=state.UpgradeEligible;}
+            foreach(Health hp in Health.Active)
+            {
+                var hero=hp!=null?hp.GetComponent<CoopHeroSlot>():null;
+                if(hero!=null&&hero.Slot==slot&&instance.streakByHero.TryGetValue(hp,out int current)){streak=current;break;}
+            }
+            return true;
+        }
+
+        public static void ApplyNetworkReward(int slot,int standard,int mobile,bool eligible,int streak)
+        {
+            if(instance==null||!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority)return;
+            GameObject player=LocalHeroContext.Find();
+            CoopHeroSlot hero=player!=null?player.GetComponent<CoopHeroSlot>():null;
+            if(hero==null||!hero.IsLocalHuman||hero.Slot!=slot)return;
+            bool mobileEarned=mobile>instance.localMobileTurretCharges;
+            bool standardEarned=standard>instance.localTurretCharges;
+            instance.localTurretCharges=Mathf.Max(0,standard);
+            instance.localMobileTurretCharges=Mathf.Max(0,mobile);
+            instance.localUpgradeEligible=eligible&&standard>0;
+            instance.networkLocalStreak=Mathf.Max(0,streak);
+            if(mobileEarned||standardEarned)
+            {
+                TeamMember member=player.GetComponent<TeamMember>();
+                instance.activeBannerTitle=GameLanguage.Text(mobileEarned?"MOBILE TURRET READY!":"TURRET READY!");
+                instance.activeBannerSub=GameLanguage.Text("TAP THE MAP TO DEPLOY");
+                instance.activeBannerColor=member!=null&&member.Team==1?FrontEndTheme.Accent:FrontEndTheme.Zero;
+                instance.activeBannerUntil=Time.unscaledTime+3.6f;
+                Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.PlanetArrival,.85f);
+            }
+        }
+
+        public static bool DeployNetworkTurret(GameObject actor,Vector3 position)
+        {
+            if(instance==null||!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||actor==null)return false;
+            Health hp=actor.GetComponent<Health>();TeamMember member=actor.GetComponent<TeamMember>();
+            KillstreakRewardState state=instance.RewardsFor(actor);
+            if(hp==null||hp.IsDead||member==null||state==null||!state.HasReward||
+                !MatchNetworkProtocol.Finite(position.x)||!MatchNetworkProtocol.Finite(position.y)||!MatchNetworkProtocol.Finite(position.z))return false;
+            position=GameplayCollision.ClampToRoundedArena(position,ArenaLayout.MovementHalfWidth-1.25f,ArenaLayout.MovementHalfHeight-1.25f,1f);
+            position.y=LunarSurfaceField.WorldSurface(position.x,position.z).y;
+            if(KillstreakBoltTurret.Spawn(member.Team,position,actor,state.NextIsMobile)==null)return false;
+            state.Consume();
+            if(actor==LocalHeroContext.Find())instance.CopyLocalRewards(state);
             return true;
         }
 
@@ -452,6 +544,15 @@ namespace Alterverse.UI
             GameObject local = LocalHeroContext.Find();
             if (local != null && victim.gameObject == local)
                 placingTurret = false;
+            if(CoopAuthority.CanSimulateHostGameplay)
+            {
+                if(CoopAuthority.Active)
+                {
+                    var victimRewards=RewardsFor(victim.gameObject);
+                    if(victimRewards!=null){victimRewards.RecordDeath();if(local==victim.gameObject)CopyLocalRewards(victimRewards);}
+                }
+                else if(local!=null&&victim.gameObject==local){offlineRewards.RecordDeath();CopyLocalRewards(offlineRewards);}
+            }
 
             Health killerHealth = source != null ? source.GetComponentInParent<Health>() : null;
             if (killerHealth != null && killerHealth.GetComponent<KillstreakBoltTurret>() is KillstreakBoltTurret turretOwner && turretOwner.OwnerHero != null)
@@ -494,15 +595,23 @@ namespace Alterverse.UI
             }
 
             bool localKiller = local != null && killerHealth.gameObject == local;
-            bool earnedTurret = newStreak > 0 && (newStreak % KillsPerTurret == 0);
-            if (earnedTurret)
+            bool earnedTurret = false;
+            bool earnedMobile = false;
+            if(CoopAuthority.CanSimulateHostGameplay)
             {
-                if (localKiller)
+                KillstreakRewardState reward=CoopAuthority.Active?RewardsFor(killerHealth.gameObject):localKiller?offlineRewards:null;
+                if(reward!=null)
                 {
-                    localTurretCharges++;
-                    Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.PlanetArrival, 0.85f);
+                    int previousMobile=reward.Mobile;
+                    earnedTurret=reward.RecordKill(newStreak);
+                    earnedMobile=reward.Mobile>previousMobile;
+                    if(localKiller&&earnedTurret)
+                    {
+                        CopyLocalRewards(reward);
+                        Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.PlanetArrival, 0.85f);
+                    }
                 }
-                else if (CoopAuthority.CanSimulateHostGameplay && killerHealth.GetComponent<Alterverse.AI.MobaBotBrain>() != null)
+                else if (newStreak % KillsPerTurret == 0 && killerHealth.GetComponent<Alterverse.AI.MobaBotBrain>() != null)
                 {
                     Vector3 botPos = killerHealth.transform.position + killerHealth.transform.forward * 2.1f;
                     botPos = GameplayCollision.ClampToRoundedArena(botPos, ArenaLayout.MovementHalfWidth - 1.5f, ArenaLayout.MovementHalfHeight - 1.5f, 1f);
@@ -511,7 +620,7 @@ namespace Alterverse.UI
                 }
             }
 
-            string badge = earnedTurret && localKiller ? GameLanguage.Text("3ER KILLSTREAK — GESCHÜTZ BEREIT!")
+            string badge = earnedTurret && localKiller ? GameLanguage.Text(earnedMobile?"MOBILE TURRET READY!":"TURRET READY!")
                 : wasShutdown ? GameLanguage.Text("SHUTDOWN!")
                 : multi >= 4 ? GameLanguage.Text("QUADRA FRONT WIPE!")
                 : multi == 3 ? GameLanguage.Text("TRIPLE KILL!")
@@ -535,7 +644,7 @@ namespace Alterverse.UI
             {
                 activeBannerTitle = !string.IsNullOrEmpty(badge) ? badge : GameLanguage.Text("TAKEDOWN!");
                 activeBannerSub = earnedTurret && localKiller
-                    ? GameLanguage.Text("Tippe unten auf [GESCHÜTZ PLATZIEREN], um es frei aufzustellen!")
+                    ? GameLanguage.Text("TAP THE MAP TO DEPLOY")
                     : $"{killerName}  ⚔  {victimName}" +
                       (wasShutdown ? "   •   +1.5% FRONT" : isComebackKill ? "   •   +0.75% FRONT" : string.Empty);
                 activeBannerColor = killerTeam.Team == 0 ? FrontEndTheme.Zero : FrontEndTheme.Accent;
@@ -600,6 +709,7 @@ namespace Alterverse.UI
 
         private int GetLocalStreakProgress()
         {
+            if(CoopAuthority.Active&&!CoopAuthority.LocalHasServerAuthority)return networkLocalStreak % KillsPerTurret;
             GameObject local = LocalHeroContext.Find();
             if (local == null) return 0;
             Health hp = local.GetComponent<Health>();
@@ -707,7 +817,7 @@ namespace Alterverse.UI
         {
             if (InMatchSettingsMenu.IsOpen || (front != null && front.HasEnded)) return;
 
-            if (localTurretCharges > 0)
+            if (localTurretCharges > 0 || localMobileTurretCharges > 0)
             {
                 Rect btn = GetTurretButtonRect(layout);
                 float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5.2f);
@@ -720,17 +830,18 @@ namespace Alterverse.UI
                 FrontEndTheme.Fill(new Rect(btn.x, btn.y, btn.width, 2.5f), accent);
                 FrontEndTheme.Fill(new Rect(btn.x, btn.yMax - 2f, btn.width, 2f), new Color(accent.r, accent.g, accent.b, 0.55f));
 
+                bool mobile=localMobileTurretCharges>0;
                 string title = placingTurret
-                    ? GameLanguage.Text("🎯 AUF MAP TIPPEN ZUM AUFSTELLEN")
-                    : GameLanguage.Text($"⚡ GESCHÜTZ PLATZIEREN ({localTurretCharges})  [T]");
+                    ? GameLanguage.Text("TAP THE MAP TO DEPLOY")
+                    : GameLanguage.Text(mobile?"DEPLOY MOBILE TURRET":"DEPLOY TURRET") + " (" + (mobile?localMobileTurretCharges:localTurretCharges) + ")  [T]";
                 string sub = placingTurret
-                    ? GameLanguage.Text("Hier tippen oder [ESC] zum Abbrechen")
-                    : GameLanguage.Text("250 HP  •  BOLT-GATLING (1 DMG)  •  FREI WÄHLBAR");
+                    ? GameLanguage.Text("TAP A LOCATION OR PRESS ESC TO CANCEL")
+                    : GameLanguage.Text(mobile?"250 HP  •  2 DAMAGE  •  MOBILE":localUpgradeEligible?"250 HP  •  1 DAMAGE  •  5 KILLS: MOBILE":"250 HP  •  1 DAMAGE");
 
                 turretBtnTitleStyle.normal.textColor = Color.Lerp(accent, Color.white, 0.35f);
                 turretBtnSubStyle.normal.textColor = new Color(0.86f, 0.92f, 0.98f, 0.92f);
-                GUI.Label(new Rect(btn.x + 8f, btn.y + 5f, btn.width - 16f, 22f), title, turretBtnTitleStyle);
-                GUI.Label(new Rect(btn.x + 8f, btn.y + 26f, btn.width - 16f, 18f), sub, turretBtnSubStyle);
+                theme.FitLabel(new Rect(btn.x + 8f, btn.y + 5f, btn.width - 16f, 22f), title, turretBtnTitleStyle);
+                theme.FitLabel(new Rect(btn.x + 8f, btn.y + 26f, btn.width - 16f, 18f), sub, turretBtnSubStyle);
             }
             else if (streakProgress > 0)
             {
@@ -741,7 +852,7 @@ namespace Alterverse.UI
                 Color barColor = new Color(0.24f, 0.84f, 1f, 0.88f);
                 FrontEndTheme.Fill(new Rect(pill.x, pill.yMax - 2f, pill.width * (streakProgress / (float)KillsPerTurret), 2f), barColor);
                 turretBtnSubStyle.normal.textColor = new Color(0.88f, 0.94f, 1f, 0.90f);
-                GUI.Label(pill, GameLanguage.Text($"GESCHÜTZ-STREAK: {streakProgress} / {KillsPerTurret} KILLS"), turretBtnSubStyle);
+                GUI.Label(pill, GameLanguage.Text("TURRET STREAK") + $": {streakProgress} / {KillsPerTurret} KILLS", turretBtnSubStyle);
             }
         }
 
@@ -873,7 +984,7 @@ namespace Alterverse.UI
             {
                 KillstreakBoltTurret turret = activeTurrets[i];
                 if (turret == null || turret.TurretHealth == null || turret.TurretHealth.IsDead) continue;
-                Vector3 tsp = cam.WorldToScreenPoint(turret.transform.position + Vector3.up * 1.55f);
+                Vector3 tsp = cam.WorldToScreenPoint(turret.transform.position + Vector3.up * (turret.IsMobile ? 3.1f : 1.55f));
                 if (tsp.z <= 0f) continue;
                 float hpNorm = Mathf.Clamp01(turret.TurretHealth.Normalized);
                 if (hpNorm >= turret.TrailingHp) turret.TrailingHp = hpNorm;
@@ -955,10 +1066,14 @@ namespace Alterverse.UI
         public const float AttackRange = Bolt7Balance.BasicRange;
 
         private static readonly List<KillstreakBoltTurret> active = new(8);
+        public static IReadOnlyList<KillstreakBoltTurret> Active=>active;
+        public static event System.Action<KillstreakBoltTurret,Vector3> NetworkShot;
         private static readonly Dictionary<PrimitiveType, Mesh> sharedMeshes = new();
         private static Material armorMat, darkMetalMat, boltGoldMat;
         private static readonly Material[] teamGlowMats = new Material[2];
         private static Transform cachedMatchWorld;
+        private static CoopMatchPlan serialPlan;
+        private static int networkSerial;
 
         private Health health;
         private Health currentTarget;
@@ -971,24 +1086,36 @@ namespace Alterverse.UI
         private float nextFireTime;
         private float barrelSpinAngle;
         private float recoilOffset;
+        private bool mobile;
+        private readonly Transform[] wheels=new Transform[4];
+        private float nextSupportScan;
+        private Health supportLeader;
+        private Vector3 supportAnchor;
+        private HeroLocomotion locomotion;
+        private float blockedTime, detourUntil;
+        private Vector3 detourDirection, lastReplicaPosition;
+        private int movementRecoveryAttempt;
+        private bool hasReplicaPosition;
 
-        public static IReadOnlyList<KillstreakBoltTurret> Active => active;
         public GameObject OwnerHero => ownerHero;
         public int Team => team;
-        public Health TurretHealth => health;
+        public Health TurretHealth=>health;
+        public bool IsMobile=>mobile;
         public float TrailingHp { get; set; } = 1f;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStaticState()
         {
             active.Clear();
+            NetworkShot=null;
             sharedMeshes.Clear();
             armorMat = darkMetalMat = boltGoldMat = null;
             teamGlowMats[0] = teamGlowMats[1] = null;
             cachedMatchWorld = null;
+            serialPlan=null;networkSerial=0;
         }
 
-        public static KillstreakBoltTurret Spawn(int teamId, Vector3 position, GameObject owner)
+        public static KillstreakBoltTurret Spawn(int teamId, Vector3 position, GameObject owner,bool mobile=false,string networkKey=null)
         {
             int clampedTeam = Mathf.Clamp(teamId, 0, 1);
             Vector3 surface = LunarSurfaceField.WorldSurface(position.x, position.z);
@@ -1006,6 +1133,7 @@ namespace Alterverse.UI
             }
             if (cachedMatchWorld != null)
                 go.transform.SetParent(cachedMatchWorld, true);
+            if(mobile)go.transform.localScale=Vector3.one*2f;
 
             CapsuleCollider col = go.AddComponent<CapsuleCollider>();
             col.radius = 0.42f;
@@ -1019,12 +1147,33 @@ namespace Alterverse.UI
             tm.Initialize(clampedTeam);
 
             KillstreakBoltTurret turret = go.AddComponent<KillstreakBoltTurret>();
-            turret.Initialize(clampedTeam, owner);
+            turret.Initialize(clampedTeam, owner,mobile);
+            if(CoopAuthority.Active)
+            {
+                if(string.IsNullOrEmpty(networkKey)&&CoopAuthority.LocalHasServerAuthority)
+                {
+                    if(!ReferenceEquals(serialPlan,CoopAuthority.ActivePlan)){serialPlan=CoopAuthority.ActivePlan;networkSerial=0;}
+                    networkKey=$"KST:{clampedTeam}:{(mobile?1:0)}:{++networkSerial}";
+                }
+                if(!string.IsNullOrEmpty(networkKey))
+                    (go.GetComponent<CoopWorldEntityKey>()??go.AddComponent<CoopWorldEntityKey>()).Configure(networkKey);
+            }
 
             Color teamColor = clampedTeam == 0 ? StylizedArtDirection.ZeroEnergy : StylizedArtDirection.LumenEnergy;
             PrototypeVfx.Ring(position, teamColor, 1.35f, 0.32f);
             PrototypeVfx.Burst(position + Vector3.up * 0.45f, teamColor, 0.55f, 6);
             return turret;
+        }
+
+        public static KillstreakBoltTurret EnsureNetworkReplica(string key,Vector3 position)
+        {
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||string.IsNullOrEmpty(key))return null;
+            string[] parts=key.Split(':');
+            if(parts.Length!=4||parts[0]!="KST"||!int.TryParse(parts[1],out int teamId)||teamId<0||teamId>1||
+                !int.TryParse(parts[2],out int type)||(type!=0&&type!=1)||!int.TryParse(parts[3],out int serial)||serial<=0)return null;
+            for(int i=0;i<active.Count;i++)
+                if(active[i]!=null&&active[i].GetComponent<CoopWorldEntityKey>()?.Key==key)return active[i];
+            return Spawn(teamId,position,null,type==1,key);
         }
 
         private void Awake()
@@ -1049,10 +1198,13 @@ namespace Alterverse.UI
             if (health != null) health.Died -= OnTurretDied;
         }
 
-        private void Initialize(int assignedTeam, GameObject owner)
+        private void Initialize(int assignedTeam, GameObject owner,bool mobileTurret)
         {
             team = assignedTeam;
             ownerHero = owner;
+            mobile=mobileTurret;
+            if(mobile&&CoopAuthority.CanSimulateHostGameplay)
+                locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();
             nextScanTime = Time.time + 0.05f;
             nextFireTime = Time.time + 0.15f;
             BuildTurretVisual();
@@ -1085,7 +1237,19 @@ namespace Alterverse.UI
             if (recoilOffset > 0.0001f)
                 recoilOffset = Mathf.MoveTowards(recoilOffset, 0f, Time.deltaTime * 0.35f);
 
-            if (!CoopAuthority.CanSimulateHostGameplay) return;
+            if (!CoopAuthority.CanSimulateHostGameplay)
+            {
+                if(mobile)
+                {
+                    if(hasReplicaPosition)
+                    {
+                        float distance=Vector3.Distance(lastReplicaPosition,transform.position);
+                        for(int i=0;i<wheels.Length;i++)if(wheels[i]!=null)wheels[i].Rotate(Vector3.up,120f*distance,Space.Self);
+                    }
+                    lastReplicaPosition=transform.position;hasReplicaPosition=true;
+                }
+                return;
+            }
 
             if (currentTarget != null && !IsValidTarget(currentTarget))
                 currentTarget = null;
@@ -1096,7 +1260,18 @@ namespace Alterverse.UI
                 currentTarget = FindTarget();
             }
 
-            if (currentTarget == null) return;
+            if (currentTarget == null)
+            {
+                if(mobile)AdvanceWithTeam();
+                return;
+            }
+
+            Vector3 targetDelta=currentTarget.transform.position-transform.position;targetDelta.y=0f;
+            if(mobile&&targetDelta.sqrMagnitude>AttackRange*AttackRange)
+            {
+                MoveToward(currentTarget.transform.position,AttackRange*.8f);
+                return;
+            }
 
             AimAt(currentTarget.transform.position);
             if (barrelCluster != null)
@@ -1133,13 +1308,24 @@ namespace Alterverse.UI
             Vector3 hitPoint = victim.transform.position;
             Bolt7Vfx.Basic(vfxOrigin, hitPoint, 0.06f);
             Bolt7Vfx.BasicImpact(vfxOrigin, hitPoint);
+            if(CoopAuthority.Active&&CoopAuthority.LocalHasServerAuthority)NetworkShot?.Invoke(this,hitPoint);
 
             // Credit the owner hero on a lethal blow for scoreboard/killstreak tracking,
             // while passing the turret GameObject on non-lethal hits so damage stays strictly 1.0.
-            GameObject damageSource = (victim.Current + victim.Shield <= AttackDamage + 0.05f && ownerHero != null)
+            float damage=AttackDamage*(mobile?2f:1f);
+            GameObject damageSource = (victim.Current + victim.Shield <= damage + 0.05f && ownerHero != null)
                 ? ownerHero
                 : gameObject;
-            victim.TakeDamage(AttackDamage, damageSource);
+            victim.TakeDamage(damage, damageSource);
+        }
+
+        public void PresentNetworkShot(Vector3 hitPoint)
+        {
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||health==null||health.IsDead)return;
+            AimAt(hitPoint);recoilOffset=.045f;
+            if(barrelCluster!=null){barrelSpinAngle=Mathf.Repeat(barrelSpinAngle+75f,360f);barrelCluster.localRotation=Quaternion.Euler(0f,0f,barrelSpinAngle);}
+            GameObject origin=muzzleActor!=null?muzzleActor:gameObject;
+            Bolt7Vfx.Basic(origin,hitPoint,.06f);Bolt7Vfx.BasicImpact(origin,hitPoint);
         }
 
         private bool IsValidTarget(Health candidate)
@@ -1150,7 +1336,8 @@ namespace Alterverse.UI
                 return false;
             Vector3 d = candidate.transform.position - transform.position;
             d.y = 0f;
-            if (d.sqrMagnitude > AttackRange * AttackRange)
+            float range=mobile?AttackRange+7f:AttackRange;
+            if (d.sqrMagnitude > range * range)
                 return false;
             return IsEnemyUnit(candidate);
         }
@@ -1169,8 +1356,9 @@ namespace Alterverse.UI
         {
             Health bestHero = null;
             Health bestOther = null;
-            float bestHeroSqr = AttackRange * AttackRange;
-            float bestOtherSqr = AttackRange * AttackRange;
+            float range=mobile?AttackRange+7f:AttackRange;
+            float bestHeroSqr = range * range;
+            float bestOtherSqr = range * range;
             var activeHealth = Health.Active;
             for (int i = 0; i < activeHealth.Count; i++)
             {
@@ -1194,6 +1382,57 @@ namespace Alterverse.UI
                 }
             }
             return bestHero != null ? bestHero : bestOther;
+        }
+
+        private void AdvanceWithTeam()
+        {
+            if(Time.time>=nextSupportScan)
+            {
+                nextSupportScan=Time.time+.42f;
+                if(!TeamSupportGroup.TryGetMonsterAnchor(team,transform.position,out supportLeader,out supportAnchor))supportLeader=null;
+            }
+            if(supportLeader!=null&&!supportLeader.IsDead)
+                MoveToward(supportAnchor,3f);
+            else
+                MoveToward(new Vector3(team==0?ArenaLayout.MovementHalfWidth-3f:-ArenaLayout.MovementHalfWidth+3f,0f,0f),3f);
+        }
+
+        private void MoveToward(Vector3 destination,float stopDistance)
+        {
+            Vector3 delta=destination-transform.position;delta.y=0f;
+            if(locomotion==null||delta.sqrMagnitude<=stopDistance*stopDistance){blockedTime=0f;return;}
+            Vector3 direction=Time.time<detourUntil?detourDirection:delta.normalized;
+            Vector3 requested=direction*1.8f*Time.deltaTime;
+            Vector3 moved=locomotion.Move(requested,ArenaLayout.MovementHalfWidth-1.5f,ArenaLayout.MovementHalfHeight-1.5f);
+            if(moved.sqrMagnitude>.00001f)
+            {
+                Vector3 position=transform.position;
+                position.y=LunarSurfaceField.WorldSurface(position.x,position.z).y;
+                transform.position=position;
+                locomotion.FaceMovement(moved);
+                for(int i=0;i<wheels.Length;i++)if(wheels[i]!=null)wheels[i].Rotate(Vector3.up,120f*moved.magnitude,Space.Self);
+            }
+            bool blocked=requested.sqrMagnitude>.00001f&&moved.sqrMagnitude<requested.sqrMagnitude*.30f;
+            if(blocked)blockedTime+=Time.deltaTime;
+            else
+            {
+                blockedTime=0f;
+                if(moved.sqrMagnitude>requested.sqrMagnitude*.65f)movementRecoveryAttempt=0;
+            }
+            if(blockedTime>.24f&&Time.time>=detourUntil)
+            {
+                movementRecoveryAttempt++;
+                int side=((team+movementRecoveryAttempt)&1)==0?1:-1;
+                Vector3 desired=delta.normalized;
+                if(!locomotion.TryFindClearDirection(desired,1.35f,side,out detourDirection))
+                {
+                    detourDirection=Vector3.Cross(Vector3.up,desired)*side;
+                    if(detourDirection.sqrMagnitude<.01f)detourDirection=team==0?Vector3.right:Vector3.left;
+                    detourDirection.Normalize();
+                }
+                detourUntil=Time.time+Mathf.Min(1f,.62f+movementRecoveryAttempt*.10f);
+                blockedTime=0f;
+            }
         }
 
         private static Mesh GetSharedMesh(PrimitiveType type)
@@ -1247,6 +1486,17 @@ namespace Alterverse.UI
             Transform root = new GameObject("DF_BoltTurretVisual").transform;
             root.SetParent(transform, false);
 
+            if(mobile)
+            {
+                Part("MobileChassis",PrimitiveType.Cube,root,new Vector3(0f,.13f,0f),new Vector3(.88f,.16f,1.1f),darkMetalMat,Quaternion.identity,true);
+                for(int i=0;i<4;i++)
+                {
+                    float side=i%2==0?-.48f:.48f,front=i<2?-.38f:.38f;
+                    wheels[i]=Part("Wheel_"+i,PrimitiveType.Cylinder,root,new Vector3(side,.15f,front),
+                        new Vector3(.30f,.10f,.30f),darkMetalMat,Quaternion.Euler(0f,0f,90f),false);
+                }
+            }
+
             // Armored base ring & tripod stabilizers
             Part("BasePlinth", PrimitiveType.Cylinder, root, new Vector3(0f, 0.08f, 0f), new Vector3(0.78f, 0.08f, 0.78f), darkMetalMat, Quaternion.identity, false);
             Part("BaseCoreRing", PrimitiveType.Cylinder, root, new Vector3(0f, 0.18f, 0f), new Vector3(0.56f, 0.06f, 0.56f), glowMat, Quaternion.identity, false);
@@ -1293,7 +1543,7 @@ namespace Alterverse.UI
             muzzleActor.transform.localPosition = new Vector3(0f, -0.02f, 0.92f);
         }
 
-        private static void Part(string name, PrimitiveType type, Transform parent, Vector3 localPos, Vector3 localScale, Material mat, Quaternion localRot, bool castShadows)
+        private static Transform Part(string name, PrimitiveType type, Transform parent, Vector3 localPos, Vector3 localScale, Material mat, Quaternion localRot, bool castShadows)
         {
             Mesh mesh = GetSharedMesh(type);
             GameObject go = new GameObject("DF_BoltTurret_" + name);
@@ -1309,6 +1559,7 @@ namespace Alterverse.UI
                 mr.shadowCastingMode = castShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
                 mr.receiveShadows = true;
             }
+            return go.transform;
         }
     }
 }

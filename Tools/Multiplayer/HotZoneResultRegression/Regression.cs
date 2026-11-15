@@ -13,14 +13,14 @@ namespace UnityEngine {
  public enum PrimitiveType{Capsule}public enum FindObjectsInactive{Exclude}
  public class Object {
   public static T[] FindObjectsByType<T>(FindObjectsInactive mode)where T:class=>GameObject.All.Where(g=>g.active).Select(g=>g.GetComponent<T>()).Where(x=>x!=null).ToArray();
-  public static void Destroy(Object o){if(o is GameObject g){g.active=false;var h=g.GetComponent<Health>();if(h!=null)Health.Active.Remove(h);}}
+  public static void Destroy(Object o){if(o is GameObject g){g.active=false;var h=g.GetComponent<Health>();if(h!=null){Health.Active.Remove(h);Health.RegistryVersion++;}}}
  }
  public class Component:Object {public GameObject gameObject;public Transform transform=>gameObject.transform;public T GetComponent<T>()where T:class=>gameObject.GetComponent<T>();}
  public class MonoBehaviour:Component {}
  public class GameObject:Object {
   public static List<GameObject> All=new();public string name;public bool active=true;public Transform transform=new();Dictionary<Type,Component> components=new();
   public GameObject(string name="actor"){this.name=name;All.Add(this);}
-  public T AddComponent<T>()where T:Component,new(){var c=new T{gameObject=this};components[typeof(T)]=c;if(c is Health h)Health.Active.Add(h);if(c is HotZoneTank tank)HotZoneTank.Register(tank);return c;}
+  public T AddComponent<T>()where T:Component,new(){var c=new T{gameObject=this};components[typeof(T)]=c;if(c is Health h){Health.Active.Add(h);Health.RegistryVersion++;}if(c is HotZoneTank tank)HotZoneTank.Register(tank);return c;}
   public T GetComponent<T>()where T:class=>components.Values.OfType<T>().FirstOrDefault();
   public static GameObject CreatePrimitive(PrimitiveType type){var g=new GameObject();g.AddComponent<Renderer>();return g;}
   public static GameObject Find(string name)=>All.FirstOrDefault(g=>g.active&&g.name==name);
@@ -29,7 +29,7 @@ namespace UnityEngine {
  public class Renderer:Component{public bool enabled=true;}
  public struct Vector3 {public float x,y,z;public Vector3(float x,float y,float z){this.x=x;this.y=y;this.z=z;}public float sqrMagnitude=>x*x+y*y+z*z;public static Vector3 operator-(Vector3 a,Vector3 b)=>new(a.x-b.x,a.y-b.y,a.z-b.z);}
  public static class Mathf {public static int Clamp(int x,int min,int max)=>Math.Clamp(x,min,max);public static float Max(float a,float b)=>Math.Max(a,b);public static int Max(int a,int b)=>Math.Max(a,b);}
- public static class Time {public static int frameCount;}
+ public static class Time {public static int frameCount;public static float unscaledTime;}
 }
 namespace Unity.Collections {public readonly struct FixedString128Bytes {readonly string value;public FixedString128Bytes(string value){this.value=value;}public override string ToString()=>value;}}
 namespace Unity.Netcode {
@@ -38,7 +38,7 @@ namespace Unity.Netcode {
 }
 namespace Alterverse.Characters {public class HeroIdentity:Component{}}
 namespace Alterverse.Combat {
- public class Health:Component {public static List<Health> Active=new();public float Current=476,Shield;public bool IsDead,isActiveAndEnabled=true;public void Configure(float hp,bool b){Current=hp;}public void ApplyNetworkSnapshot(float hp,float shield,bool dead){Current=hp;Shield=shield;IsDead=dead;}}
+ public class Health:Component {public static List<Health> Active=new();public static uint RegistryVersion;public float Current=476,Shield;public bool IsDead,isActiveAndEnabled=true;public void Configure(float hp,bool b){Current=hp;}public void ApplyNetworkSnapshot(float hp,float shield,bool dead){Current=hp;Shield=shield;IsDead=dead;}}
  public class TeamMember:Component {public int Team;public void Initialize(int team){Team=team;}}
  public class DimensionPlanet:Component {public void ApplyNetworkAvailability(bool alive){}}
  public sealed partial class HotZoneTank:MonoBehaviour {
@@ -64,15 +64,26 @@ namespace Alterverse.Match {
   public void Seed(Health health,int k,int d,int a){entries[health]=new(){Kills=k,Deaths=d,Assists=a};}
  }
 }
+namespace Alterverse.UI {
+ public class KillstreakBoltTurret:MonoBehaviour {
+  public static int Spawns;
+  public static KillstreakBoltTurret EnsureNetworkReplica(string key,Vector3 position){
+   if(!key.StartsWith("KST:"))return null;
+   Spawns++;var actor=new GameObject("turret");actor.transform.position=position;
+   actor.AddComponent<Health>();actor.AddComponent<CoopWorldEntityKey>().Configure(key);
+   return actor.AddComponent<KillstreakBoltTurret>();
+  }
+ }
+}
 namespace Alterverse.Multiplayer {
  public class CoopMatchPlan {public string MatchId="round";}
  public static class CoopAuthority {public static bool Active=true,LocalHasServerAuthority;public static bool CanSimulateHostGameplay=>LocalHasServerAuthority;public static CoopMatchPlan ActivePlan=new();}
- public class CoopWorldEntityKey:Component {public string Key;public bool Hidden;public void Configure(string key=null){if(key!=null)Key=key;if(Key==null)Key=gameObject.name;}public void ApplyTarget(Vector3 position,float yaw,bool immediate,float sampledAt=float.NaN){transform.position=position;}public void ApplyAlivePresentation(bool alive){Hidden=!alive;}}
+ public class CoopWorldEntityKey:Component {public static uint IdentityVersion;public string Key;public bool Hidden;public void Configure(string key=null){string previous=Key;if(key!=null)Key=key;if(Key==null)Key=gameObject.name;if(previous!=Key)IdentityVersion++;}public void ApplyTarget(Vector3 position,float yaw,bool immediate,float sampledAt=float.NaN){transform.position=position;}public void ApplyAlivePresentation(bool alive){Hidden=!alive;}}
  public class CoopHeroSlot:Component {public int Slot;}
  public static class MatchSession {public const int MaxPlayers=10;}
  public static class MatchNetworkProtocol {public static bool ReadRound(ref FastBufferReader reader){reader.ReadValueSafe(out string round);return round==CoopAuthority.ActivePlan.MatchId;}public static bool Finite(float x)=>!float.IsNaN(x)&&!float.IsInfinity(x);}
  public sealed partial class CoopWorldStateSync:MonoBehaviour {
-  readonly Dictionary<string,CoopWorldEntityKey> entities=new();readonly HashSet<string> removedKeys=new();CoopMatchPlan replicaPlan;int lastRefreshFrame=-1,lastHealthCount=-1;
+  readonly Dictionary<string,CoopWorldEntityKey> entities=new();readonly HashSet<string> removedKeys=new();CoopMatchPlan replicaPlan,entityPlan;uint entityHealthVersion=uint.MaxValue,entityKeyVersion=uint.MaxValue;float nextEntityAudit;
   public void Receive(object[] data,ulong sender=0)=>OnState(sender,new FastBufferReader(data));
   public CoopWorldEntityKey Find(string key)=>entities.TryGetValue(key,out var entity)?entity:null;
  }
@@ -83,7 +94,7 @@ namespace Alterverse.Multiplayer {
 }
 class Regression {
  static int checks;static void Check(bool value,string message){checks++;if(!value)throw new Exception(message);}
- static void Reset(){GameObject.All.Clear();Health.Active.Clear();HotZoneTank.Reset();Time.frameCount++;CoopAuthority.ActivePlan=new();CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;}
+ static void Reset(){GameObject.All.Clear();Health.Active.Clear();Health.RegistryVersion++;HotZoneTank.Reset();Alterverse.UI.KillstreakBoltTurret.Spawns=0;Time.frameCount++;CoopAuthority.ActivePlan=new();CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;}
  static object[] Pose(string key,float hp=476,bool dead=false,float x=12)=>new object[]{"round",1,new FixedString128Bytes(key),x,1f,3f,45f,hp,0f,dead,1f,0};
  static void Main(){
   foreach(int team in new[]{0,1})foreach(int occurrence in new[]{0,1,2,20,int.MaxValue}){
@@ -98,12 +109,19 @@ class Regression {
   replica.Configure(HotZoneRewardKey.Create(50,0));
   sync.Receive(Pose(first,1,false,30));
   Check(replica.GetComponent<Health>().Current==120&&replica.transform.position.x==14,"late old-occurrence pose/health cannot mutate a reused actor");
-  replica.Configure(first);sync=new GameObject().AddComponent<CoopWorldStateSync>();sync.Receive(Pose(first,120,false,14));
+  // Start the remaining lifecycle checks with a clean registry. A re-keyed actor
+  // and a late snapshot can coexist until the host's removal message arrives.
+  Reset();sync=new GameObject().AddComponent<CoopWorldStateSync>();sync.Receive(Pose(first,120,false,14));replica=sync.Find(first);
   sync.Receive(Pose(first,0,true));Check(replica.GetComponent<Health>().IsDead&&replica.Hidden,"authoritative death hides replica");
   string second=HotZoneRewardKey.Create(1,1);sync.Receive(Pose(second));sync.Receive(Pose(HotZoneRewardKey.Create(2,0)));
   Check(sync.Find(second)?.GetComponent<TeamMember>().Team==1&&HotZoneTank.Active.Count==3,"client cache cap cannot suppress real host reward");
   sync.Receive(new object[]{"round",0,1,new FixedString128Bytes(second)});Check(sync.Find(second)==null,"host removal removes replica");
   sync.Receive(Pose(second));Check(sync.Find(second)==null,"late movement packet cannot resurrect tombstoned reward");
+  string turret="KST:0:1:33";sync.Receive(Pose(turret,250,false,8));
+  Check(sync.Find(turret)!=null&&Alterverse.UI.KillstreakBoltTurret.Spawns==1,"snapshot discovers a mobile turret");
+  sync.Receive(Pose(turret,120,false,9));Check(Alterverse.UI.KillstreakBoltTurret.Spawns==1&&sync.Find(turret).GetComponent<Health>().Current==120,"repeated turret state updates one replica");
+  sync.Receive(new object[]{"round",0,1,new FixedString128Bytes(turret)});sync.Receive(Pose(turret));
+  Check(sync.Find(turret)==null&&Alterverse.UI.KillstreakBoltTurret.Spawns==1,"removed turret cannot be recreated by a late packet");
   CoopAuthority.ActivePlan=new(){MatchId="round2"};var newRound=Pose(second);newRound[0]="round2";sync.Receive(newRound);Check(sync.Find(second)!=null,"new round clears tombstone history");
   Reset();sync=new GameObject().AddComponent<CoopWorldStateSync>();sync.Receive(Pose(first),55);Check(HotZoneTank.Active.Count==0,"reject nonserver spawn");sync.Receive(Pose(first,476,false,float.NaN));Check(HotZoneTank.Active.Count==0,"reject malformed spawn position");
   Reset();CoopAuthority.LocalHasServerAuthority=true;Check(HotZoneTank.Spawn(0,0)&&HotZoneTank.Spawn(1,1)&&!HotZoneTank.Spawn(0,2),"host retains two living rewards cap");Check(HotZoneTank.EnsureNetworkReplica(first)==null,"host cannot consume replica spawn path");

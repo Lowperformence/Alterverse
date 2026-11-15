@@ -115,6 +115,7 @@ namespace Alterverse.Combat
  public sealed class HotZoneTank:Component {public static readonly List<HotZoneTank> Active=new();public Health TankHealth;}
  public sealed class Health:Component
  {
+  public static readonly List<Health> Active=new();
   public float Current=100,Shield,TemporaryShield,Max=100;public bool IsDead;private bool hasPresence,presence;
   public float Normalized=>Current/Max;public bool HasTemporaryShieldForPresentation=>hasPresence?presence:TemporaryShield>0;
   public void Heal(float value){Current=Math.Min(Max,Current+value);}
@@ -215,6 +216,14 @@ namespace Alterverse.Combat
  }
 }
 namespace Alterverse.Characters {public sealed class TeamMember:Component {}}
+namespace Alterverse.UI
+{
+ public sealed class KillstreakBoltTurret:Component
+ {
+  public static readonly List<KillstreakBoltTurret> Active=new();
+  public bool IsMobile;public Alterverse.Combat.Health TurretHealth;
+ }
+}
 namespace Alterverse.Multiplayer
 {
  public sealed class CoopWorldEntityKey:Component {public string Key;}
