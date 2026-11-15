@@ -11,6 +11,7 @@ namespace Alterverse.Performance
     public static class MobilePerformanceProfile
     {
         private const string Key = "DF_MobileQuality";
+        private const string AutoKey = "DF_MobileQualityAuto_v1";
         private static UniversalRenderPipelineAsset runtimePipeline;
         private static RenderPipelineAsset sourcePipeline;
         private static int cachedFrame = -1;
@@ -19,7 +20,6 @@ namespace Alterverse.Performance
         private static bool hardwareDetected;
         private static MobileQuality recommendedQuality = MobileQuality.Balanced;
         private static string hardwareSummary = string.Empty;
-        private static bool autoModeEnabled = true;
 
         public static MobileQuality RecommendedQuality
         {
@@ -43,15 +43,17 @@ namespace Alterverse.Performance
         {
             get
             {
-                EnsureHardwareDetected();
-                return autoModeEnabled;
+                return Alterverse.Profile.AccountProfilePrefs.GetInt(AutoKey, 1) != 0;
             }
             set
             {
-                EnsureHardwareDetected();
-                autoModeEnabled = value;
-                if (value)
-                    Current = recommendedQuality;
+                if (value) EnableAutoHardwareProfile();
+                else
+                {
+                    Alterverse.Profile.AccountProfilePrefs.SetInt(AutoKey, 0);
+                    Alterverse.Profile.AccountProfilePrefs.Save();
+                    cachedFrame = -1;
+                }
             }
         }
 
@@ -63,7 +65,7 @@ namespace Alterverse.Performance
                 string account = Alterverse.Profile.AccountProfilePrefs.Account;
                 if (cachedFrame != Time.frameCount || cachedAccount != account)
                 {
-                    cachedQuality = (MobileQuality)Mathf.Clamp(
+                    cachedQuality = AutoModeEnabled ? recommendedQuality : (MobileQuality)Mathf.Clamp(
                         Alterverse.Profile.AccountProfilePrefs.GetInt(Key, (int)recommendedQuality), 0, 2);
                     cachedAccount = account;
                     cachedFrame = Time.frameCount;
@@ -73,7 +75,7 @@ namespace Alterverse.Performance
             set
             {
                 value = (MobileQuality)Mathf.Clamp((int)value, 0, 2);
-                autoModeEnabled = value == recommendedQuality && autoModeEnabled;
+                Alterverse.Profile.AccountProfilePrefs.SetInt(AutoKey, 0);
                 Alterverse.Profile.AccountProfilePrefs.SetInt(Key, (int)value);
                 Alterverse.Profile.AccountProfilePrefs.Save();
                 cachedFrame = -1;
@@ -84,7 +86,7 @@ namespace Alterverse.Performance
         public static void EnableAutoHardwareProfile()
         {
             EnsureHardwareDetected();
-            autoModeEnabled = true;
+            Alterverse.Profile.AccountProfilePrefs.SetInt(AutoKey, 1);
             Alterverse.Profile.AccountProfilePrefs.SetInt(Key, (int)recommendedQuality);
             Alterverse.Profile.AccountProfilePrefs.Save();
             cachedFrame = -1;
@@ -142,13 +144,6 @@ namespace Alterverse.Performance
             catch { }
         }
 
-        private static bool IsUnderBudget()
-        {
-            var monitorType = Type.GetType("Alterverse.Performance.RuntimePerformanceMonitor");
-            var prop = monitorType?.GetProperty("UnderBudget", BindingFlags.Public | BindingFlags.Static);
-            return prop != null && prop.PropertyType == typeof(bool) && (bool)prop.GetValue(null);
-        }
-
         private static void EnsureHardwareDetected()
         {
             if (hardwareDetected) return;
@@ -164,9 +159,7 @@ namespace Alterverse.Performance
             }
 
             int ramMb = Mathf.Max(0, ReadSystemInt(sysInfo, "systemMemorySize", 0));
-            int vramMb = Mathf.Max(0, ReadSystemInt(sysInfo, "graphicsMemorySize", 0));
             int cores = Mathf.Max(1, ReadSystemInt(sysInfo, "processorCount", 4));
-            int freqMhz = Mathf.Max(0, ReadSystemInt(sysInfo, "processorFrequency", 0));
             string gpu = ReadSystemString(sysInfo, "graphicsDeviceName").Trim();
             string gpuUpper = gpu.ToUpperInvariant();
 
@@ -212,15 +205,15 @@ namespace Alterverse.Performance
                 gpuUpper.Contains("APPLE A18") ||
                 gpuUpper.Contains("APPLE M");
 
-            if (lowGpu ||
-                (ramMb > 0 && ramMb <= 4600) ||
-                (vramMb > 0 && vramMb <= 1536) ||
-                cores <= 4 ||
-                (freqMhz > 0 && freqMhz < 2050))
+            // GPU names overlap (for example G710 contains G71). Shared GPU-memory
+            // reports and mobile CPU frequencies are not reliable performance scores.
+            if ((lowGpu && !highGpu) ||
+                (ramMb > 0 && ramMb <= 3000) ||
+                cores <= 4)
             {
                 recommendedQuality = MobileQuality.Battery;
             }
-            else if (highGpu && ramMb >= 7200 && cores >= 6 && (freqMhz == 0 || freqMhz >= 2500))
+            else if (highGpu && ramMb >= 5000 && cores >= 6)
             {
                 recommendedQuality = MobileQuality.Performance;
             }
@@ -244,7 +237,6 @@ namespace Alterverse.Performance
             cachedFrame = -1;
             cachedAccount = null;
             hardwareDetected = false;
-            autoModeEnabled = true;
             if (runtimePipeline != null)
             {
                 if (QualitySettings.renderPipeline == runtimePipeline)
@@ -267,14 +259,13 @@ namespace Alterverse.Performance
             // Desktop uses its own quality level; opening mobile settings must not overwrite it.
             if (!Application.isMobilePlatform) return;
             quality = (MobileQuality)Mathf.Clamp((int)quality, 0, 2);
-            bool underBudget = IsUnderBudget();
 
             Application.targetFrameRate = quality == MobileQuality.Battery ? 30 : 60;
             QualitySettings.vSyncCount = 0;
             QualitySettings.lodBias = quality == MobileQuality.Battery ? .55f :
                 quality == MobileQuality.Balanced ? .82f : 1f;
             float distance = quality == MobileQuality.Battery ? 0f :
-                quality == MobileQuality.Balanced ? (underBudget ? 18f : 26f) : (underBudget ? 28f : 38f);
+                quality == MobileQuality.Balanced ? 26f : 38f;
             QualitySettings.shadowDistance = distance;
             QualitySettings.streamingMipmapsActive = true;
             QualitySettings.streamingMipmapsMemoryBudget = quality == MobileQuality.Battery ? 128f :
@@ -303,16 +294,14 @@ namespace Alterverse.Performance
             }
             runtimePipeline.shadowDistance = distance;
             runtimePipeline.shadowCascadeCount = quality == MobileQuality.Battery ? 1 : 2;
-            runtimePipeline.msaaSampleCount = quality != MobileQuality.Battery && !underBudget ? 2 : 1;
+            runtimePipeline.msaaSampleCount = quality != MobileQuality.Battery ? 2 : 1;
 
-            // Preserve automatic performance adaptation, but avoid the very soft / blocky
-            // low-resolution image previously used across every arena.
+            // Frame rate alone cannot identify a GPU bottleneck. Preserve image
+            // sharpness, shadows and HDR during transient CPU or network stalls.
             float baseScale = quality == MobileQuality.Battery ? .80f :
                 quality == MobileQuality.Balanced ? .90f : 1f;
-            if (underBudget)
-                baseScale = Mathf.Max(.65f, baseScale - .15f);
             SetInstanceProperty(runtimePipeline, "renderScale", baseScale);
-            SetInstanceProperty(runtimePipeline, "supportsHDR", quality == MobileQuality.Performance && !underBudget);
+            SetInstanceProperty(runtimePipeline, "supportsHDR", quality == MobileQuality.Performance);
         }
     }
 }
