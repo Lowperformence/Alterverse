@@ -86,7 +86,7 @@ namespace Alterverse.Profile
     public static class PlayerExperience{public static long TotalXp=>0;public const int MaxLevel=100;public static long XpForLevel(int level)=>100000;public static int CalculateMatchXp(bool w,int k,int a,int o)=>10;}
     public static class PlayerWallet{public static int EarnedBalance=>0;}
     public static class BattlePassProgress{public static void GrantMatchXp(int n,string id){}}
-    public static class DailyQuestProgress{public static ProfileTransaction.Write[] MatchWrites(int a,int b,int c,bool won,int arena)=>Array.Empty<ProfileTransaction.Write>();}
+    public static class DailyQuestProgress{public static ProfileTransaction.Write[] MatchWrites(int a,int b,int c,bool won,int arena,bool invitedFriend=false,int turrets=0,bool mvp=false)=>Array.Empty<ProfileTransaction.Write>();}
 }
 namespace Alterverse.UI
 {

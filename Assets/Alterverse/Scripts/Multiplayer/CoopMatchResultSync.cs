@@ -18,11 +18,12 @@ namespace Alterverse.Multiplayer
         {
             public readonly int Slot,Kills,Deaths,Assists,Objectives;
             public readonly int QuestKills,HotZoneCaptures,SoldierKills;
-            public readonly bool HasQuestStats;
+            public readonly int TurretsDeployed;
+            public readonly bool HasQuestStats,HasTurretStats;
             public readonly float DamageDealt,DamageTaken,Healing,FrontContribution;
             public SlotResult(int slot,int kills,int deaths,int assists,int objectives,
                 float damageDealt,float damageTaken,float healing,float frontContribution,
-                int questKills=-1,int hotZoneCaptures=0,int soldierKills=0)
+                int questKills=-1,int hotZoneCaptures=0,int soldierKills=0,int turretsDeployed=-1)
             {
                 Slot=slot;Kills=kills;Deaths=deaths;Assists=assists;Objectives=objectives;
                 DamageDealt=damageDealt;DamageTaken=damageTaken;Healing=healing;FrontContribution=frontContribution;
@@ -31,6 +32,7 @@ namespace Alterverse.Multiplayer
                 QuestKills=Mathf.Max(0,questKills);
                 HotZoneCaptures=Mathf.Max(0,hotZoneCaptures);
                 SoldierKills=Mathf.Max(0,soldierKills);
+                HasTurretStats=turretsDeployed>=0;TurretsDeployed=Mathf.Max(0,turretsDeployed);
             }
         }
 
@@ -39,6 +41,7 @@ namespace Alterverse.Multiplayer
         // Append quest counters after the unchanged V1 result payload: old clients ignore
         // the tail, and new clients can still accept results from an older server.
         private const int QuestStatsExtensionVersion=0x44515131;
+        private const int TurretStatsExtensionVersion=0x44515431;
 
         public static CoopMatchResultSync Instance { get; private set; }
 
@@ -141,7 +144,8 @@ namespace Alterverse.Multiplayer
                     stats?.FrontContribution??0,
                     stats?.Kills??0,
                     stats?.HotZoneCaptures??0,
-                    stats?.SoldierKills??0);
+                    stats?.SoldierKills??0,
+                    stats?.TurretsDeployed??0);
             }
             resultReady=true;
         }
@@ -176,6 +180,14 @@ namespace Alterverse.Multiplayer
                 writer.WriteValueSafe(s.QuestKills);
                 writer.WriteValueSafe(s.HotZoneCaptures);
                 writer.WriteValueSafe(s.SoldierKills);
+            }
+
+            writer.WriteValueSafe(TurretStatsExtensionVersion);
+            writer.WriteValueSafe(results.Count);
+            foreach(KeyValuePair<int,SlotResult> pair in results)
+            {
+                writer.WriteValueSafe(pair.Key);
+                writer.WriteValueSafe(pair.Value.TurretsDeployed);
             }
 
             for(int i=0;i<manager.ConnectedClientsIds.Count;i++)
@@ -231,6 +243,18 @@ namespace Alterverse.Multiplayer
                             questKills,hotZoneCaptures,soldierKills);
                     }
                 }
+            }
+
+            if(reader.TryBeginRead(sizeof(int)*2))
+            {
+                reader.ReadValueSafe(out int turretVersion);reader.ReadValueSafe(out int turretCount);
+                if(turretVersion==TurretStatsExtensionVersion && turretCount>=0 && turretCount<=MatchSession.MaxPlayers && reader.TryBeginRead(turretCount*sizeof(int)*2))
+                    for(int i=0;i<turretCount;i++)
+                    {
+                        reader.ReadValueSafe(out int slot);reader.ReadValueSafe(out int turrets);
+                        if(!results.TryGetValue(slot,out SlotResult old))continue;
+                        results[slot]=new SlotResult(old.Slot,old.Kills,old.Deaths,old.Assists,old.Objectives,old.DamageDealt,old.DamageTaken,old.Healing,old.FrontContribution,old.HasQuestStats?old.QuestKills:-1,old.HotZoneCaptures,old.SoldierKills,turrets);
+                    }
             }
 
             winningTeam=Mathf.Clamp(winner,0,1);

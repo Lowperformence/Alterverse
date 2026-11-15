@@ -291,6 +291,7 @@ namespace Alterverse.UI
             if(rewards==null||!rewards.HasReward)return false;
             bool mobile=rewards.NextIsMobile;
             if(KillstreakBoltTurret.Spawn(team, worldPoint, localHero, mobile)==null)return false;
+            MatchTelemetry.Instance?.RecordTurretDeployment(localHero.GetComponent<Health>());
             rewards.Consume();CopyLocalRewards(rewards);
             placingTurret = false;
 
@@ -360,6 +361,7 @@ namespace Alterverse.UI
             position=GameplayCollision.ClampToRoundedArena(position,ArenaLayout.MovementHalfWidth-1.25f,ArenaLayout.MovementHalfHeight-1.25f,1f);
             position.y=LunarSurfaceField.WorldSurface(position.x,position.z).y;
             if(KillstreakBoltTurret.Spawn(member.Team,position,actor,state.NextIsMobile)==null)return false;
+            MatchTelemetry.Instance?.RecordTurretDeployment(hp);
             state.Consume();
             if(actor==LocalHeroContext.Find())instance.CopyLocalRewards(state);
             return true;

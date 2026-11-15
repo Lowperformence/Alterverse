@@ -52,7 +52,7 @@ namespace Alterverse.Profile
         public static int LifetimeAssists=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(AssistsKey,0));
         public static int LifetimeObjectives=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(ObjectivesKey,0));
 
-        public static MatchRewardResult GrantMatchReward(bool won,int kills,int assists,int objectives,string matchId=null,int enemyKills=-1,int hotZoneCaptures=0,int soldierKills=0,bool adaptiveDifficulty=true,int deaths=0)
+        public static MatchRewardResult GrantMatchReward(bool won,int kills,int assists,int objectives,string matchId=null,int enemyKills=-1,int hotZoneCaptures=0,int soldierKills=0,bool adaptiveDifficulty=true,int deaths=0,bool invitedFriend=false,int deployedTurrets=0,bool matchMvp=false)
         {
             ProfileTransaction.Recover();
             matchId=matchId??Guid.NewGuid().ToString("N");
@@ -129,7 +129,7 @@ namespace Alterverse.Profile
             int completedMatches=ProfileTransaction.Add(MatchesCompleted,1);
             if(ReviewPromptProgress.ShouldQueue(completedMatches))
                 writes.Add(new ProfileTransaction.Write(ReviewPromptProgress.PendingMatchKey,completedMatches));
-            writes.AddRange(DailyQuestProgress.MatchWrites(enemyKills<0?kills:enemyKills,hotZoneCaptures,soldierKills,won,ArenaVariantRuntime.Current));
+            writes.AddRange(DailyQuestProgress.MatchWrites(enemyKills<0?kills:enemyKills,hotZoneCaptures,soldierKills,won,ArenaVariantRuntime.Current,invitedFriend,deployedTurrets,matchMvp));
             ProfileTransaction.Commit(writes.ToArray());
 
             // Persist the win before reporting it. Co-op can stay on its own result/lobby

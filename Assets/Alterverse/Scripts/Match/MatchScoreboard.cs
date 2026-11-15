@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;using Alterverse.AI;using Alterverse.Audio;using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Multiplayer;using Alterverse.Profile;using Alterverse.Shop;using Alterverse.UI;using UnityEngine;
+using System.Collections.Generic;using Alterverse.AI;using Alterverse.Audio;using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Multiplayer;using Alterverse.Profile;using Alterverse.Shop;using Alterverse.UI;using UnityEngine;
 namespace Alterverse.Match
 {
 public sealed class MatchScoreboard:MonoBehaviour
@@ -18,6 +18,7 @@ private int respawnCountdownSecond=-1;
 public bool ResultCommitted => matchEnded && rewardGranted;private bool manualBoardOpen;
 private bool resultSnapshotReady,resultSnapshotWarning;
 private int battlePassXpBefore;
+private bool invitedFriendAtStart;
 private BotDifficulty resultDifficulty;
 private string rewardId=System.Guid.NewGuid().ToString("N");private float nextRewardAttempt;private bool saveWarningShown;
 private sealed class Entry{public Health Health;public TeamMember Member;public HeroIdentity Identity;public CoopHeroSlot Slot;public string Name;public int Kills,Deaths,Assists;public int Score=>Kills*100+Assists*75-Deaths*15;
@@ -25,8 +26,24 @@ public float BoardPerformance;public bool BoardOwn;
 public string BoardName,BoardKills,BoardDeaths,BoardAssists,BoardScore;
 }public static MatchScoreboard Instance{get;private set;}[SerializeField]private float refreshInterval=.5f,assistWindow=8f;private readonly Dictionary<Health,Entry> entries=new();private readonly Dictionary<Health,Dictionary<TeamMember,float>> damageCredit=new();private readonly Dictionary<TeamMember,Dictionary<TeamMember,float>> supportCredit=new();private float nextRefresh;private HeroRespawn playerRespawn;private CoopRespawnReplica coopRespawn;private DimensionsFront front;private bool matchEnded,rewardGranted,rewardPending;private int winningTeam,matchReward,matchXp,matchBaseReward,matchShardBonus,matchBaseXp,matchXpBonus,playerKills,playerDeaths,playerAssists,playerObjectives,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,battlePassLevelBefore=1;private float matchBonusPercent;private float playerDamageDealt,playerDamageTaken,playerHealing,playerFrontContribution;private UniversalHeroCosmetic matchBonusCosmetic=UniversalHeroCosmetic.Original;private BattleItemType matchItemDrop;
 private void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;rewardGranted=false;matchEnded=false;MatchClock.Set(PauseReason.Result,false);}
-private void Start(){RefreshRoster();RefreshLocalRespawn();front=Object.FindAnyObjectByType<DimensionsFront>();if(front!=null)front.MatchEnded+=OnMatchEnded;}
+private void Start(){invitedFriendAtStart=HasInvitedFriend();RefreshRoster();RefreshLocalRespawn();front=Object.FindAnyObjectByType<DimensionsFront>();if(front!=null)front.MatchEnded+=OnMatchEnded;}
 private void Update(){if(Time.unscaledTime>=nextRefresh){nextRefresh=Time.unscaledTime+refreshInterval;RefreshRoster();RefreshLocalRespawn();if(front==null){front=Object.FindAnyObjectByType<DimensionsFront>();if(front!=null)front.MatchEnded+=OnMatchEnded;}}if(matchEnded)RefreshResultPresentation();else UpdateRespawnBoard();}
+private bool HasInvitedFriend()
+{
+    CoopMatchPlan plan=CoopAuthority.ActivePlan;
+    if(!CoopAuthority.Active||plan?.Session?.Slots==null)return false;
+    int local=CoopRosterBuilder.FindLocalHumanSlot(plan);
+    if(local<0||local>=plan.Session.Slots.Length||plan.Session.Slots[local]==null)return false;
+    int allies=0;int team=plan.Session.Slots[local].Team;
+    foreach(var slot in plan.Session.Slots)if(slot!=null&&!slot.IsBot&&slot.Team==team)allies++;
+    if(allies<2)return false;
+    if(plan.Session.Mode==SessionMode.Private)return true;
+    OnlinePartyService party=OnlinePartyService.Instance;
+    if(party==null||!party.InParty)return false;
+    bool localInParty=false;int members=0;
+    foreach(var member in party.Members)if(member!=null&&member.IsPartyMember){members++;if(member.IsLocal)localInParty=true;}
+    return localInParty&&members>=2;
+}
 private void RefreshLocalRespawn()
 {
 if(!CoopAuthority.Active)
@@ -96,6 +113,7 @@ private static string DisplayName(string raw)=>raw.Replace("AV_","").Replace("Bo
 if(!rewardPending||rewardGranted||Time.unscaledTime<nextRewardAttempt)return;
 rewardPending=false;RefreshRoster();
 TeamMember player=LocalPlayerMember();bool won=player!=null&&player.Team==winningTeam;Entry playerEntry=player!=null?FindEntry(player):null;
+int deployedTurrets=0;
 
 if(CoopAuthority.Active)
 {
@@ -109,6 +127,7 @@ MatchTelemetry.HeroStats localTelemetry=playerEntry!=null?MatchTelemetry.Instanc
 playerQuestKills=networkResult.HasQuestStats?networkResult.QuestKills:networkResult.Kills;
 playerHotZoneCaptures=networkResult.HasQuestStats?networkResult.HotZoneCaptures:(localTelemetry?.HotZoneCaptures??0);
 playerSoldierKills=networkResult.HasQuestStats?networkResult.SoldierKills:(localTelemetry?.SoldierKills??0);
+deployedTurrets=networkResult.HasTurretStats?networkResult.TurretsDeployed:0;
 playerDamageDealt=networkResult.DamageDealt;playerDamageTaken=networkResult.DamageTaken;playerHealing=networkResult.Healing;playerFrontContribution=networkResult.FrontContribution;
 ApplyNetworkResultsToEntries();
 }
@@ -116,11 +135,12 @@ else
 {
 playerKills=playerEntry?.Kills??0;playerDeaths=playerEntry?.Deaths??0;playerAssists=playerEntry?.Assists??0;
 MatchTelemetry.HeroStats telemetry=playerEntry!=null?MatchTelemetry.Instance?.GetStats(playerEntry.Health):null;
+deployedTurrets=telemetry?.TurretsDeployed??0;
 playerObjectives=telemetry?.Objectives??0;playerQuestKills=telemetry?.Kills??playerKills;playerHotZoneCaptures=telemetry?.HotZoneCaptures??0;playerSoldierKills=telemetry?.SoldierKills??0;playerDamageDealt=telemetry?.DamageDealt??0;playerDamageTaken=telemetry?.DamageTaken??0;playerHealing=telemetry?.Healing??0;playerFrontContribution=telemetry?.FrontContribution??0;
 }
 
 int rewardAssists=playerAssists+Mathf.FloorToInt(playerHealing/220f);
-try{MatchRewardResult reward=MatchRewardService.GrantMatchReward(won,playerKills,rewardAssists,playerObjectives,rewardId,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,deaths:playerDeaths);matchReward=reward.Shards;matchXp=reward.Xp;matchBaseReward=reward.BaseShards;matchShardBonus=reward.ShardBonus;matchBaseXp=reward.BaseXp;matchXpBonus=reward.XpBonus;matchBonusCosmetic=reward.BonusCosmetic;matchBonusPercent=reward.BonusPercent;matchItemDrop=won?BattleItemInventory.RollVictoryDrop(rewardId):BattleItemType.None;rewardGranted=true;}catch(System.Exception){rewardPending=true;nextRewardAttempt=Time.unscaledTime+2;if(!saveWarningShown){saveWarningShown=true;Debug.LogWarning("DIMENSIONS FRONT: reward save pending; retrying the same receipt.");}}
+try{MatchRewardResult reward=MatchRewardService.GrantMatchReward(won,playerKills,rewardAssists,playerObjectives,rewardId,playerQuestKills,playerHotZoneCaptures,playerSoldierKills,deaths:playerDeaths,invitedFriend:invitedFriendAtStart,deployedTurrets:deployedTurrets,matchMvp:playerEntry!=null&&Mvp()==playerEntry);matchReward=reward.Shards;matchXp=reward.Xp;matchBaseReward=reward.BaseShards;matchShardBonus=reward.ShardBonus;matchBaseXp=reward.BaseXp;matchXpBonus=reward.XpBonus;matchBonusCosmetic=reward.BonusCosmetic;matchBonusPercent=reward.BonusPercent;matchItemDrop=won?BattleItemInventory.RollVictoryDrop(rewardId):BattleItemType.None;rewardGranted=true;}catch(System.Exception){rewardPending=true;nextRewardAttempt=Time.unscaledTime+2;if(!saveWarningShown){saveWarningShown=true;Debug.LogWarning("DIMENSIONS FRONT: reward save pending; retrying the same receipt.");}}
 }
 private void ApplyNetworkResultsToEntries(){foreach(Entry e in entries.Values){CoopHeroSlot slot=e.Slot!=null?e.Slot:(e.Member!=null?e.Member.GetComponent<CoopHeroSlot>():null);if(slot==null||!CoopMatchResultSync.TryGetSlotResult(slot.Slot,out CoopMatchResultSync.SlotResult s))continue;e.Kills=s.Kills;e.Deaths=s.Deaths;e.Assists=s.Assists;}}
 private float Performance(Entry e)

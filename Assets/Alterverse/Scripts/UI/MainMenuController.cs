@@ -36,7 +36,7 @@ namespace Alterverse.UI
         private Page page = Page.Home;
         private bool visible = true, launching, coopLaunching, nameRerollBusy, suspended;
         private bool choosingMatchMode;
-        private Vector2 heroRosterScroll;
+        private Vector2 heroRosterScroll, dailyQuestScroll;
         private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1, weaponSkinVariant;
         private int playArenaBrowseIndex=-1,mapShopPageStart;
         private bool battlePassPreviewPremium;
@@ -1379,10 +1379,17 @@ namespace Alterverse.UI
                 else
                     theme.Center(new Rect(cell.x,cell.y+25,cell.width,20),current?"RECEIVED":day<currentDay?"DONE":"LOCKED");
             }
+            Rect questViewport=new Rect(x,322,width,MenuHeight-330);
+            float rowWidth=width-18;
+            dailyQuestScroll=GUI.BeginScrollView(questViewport,dailyQuestScroll,
+                new Rect(0,0,rowWidth,PlayerChallengeContent.Daily.Length*74),false,true);
+            try
+            {
+            x=0;width=rowWidth;
             for(int i=0;i<PlayerChallengeContent.Daily.Length;i++)
             {
                 ChallengeDef quest=PlayerChallengeContent.Daily[i];
-                float y=322+i*74;
+                float y=i*74;
                 theme.Panel(new Rect(x,y,width,68));
                 theme.Label(new Rect(x+18,y+8,width-252,40),quest.Description,theme.Heading);
                 int progress=DailyQuestProgress.Progress(i),target=DailyQuestProgress.Target(i);
@@ -1392,6 +1399,8 @@ namespace Alterverse.UI
                 if(theme.Action(new Rect(x+width-205,y+26,180,36),claimed?"CLAIMED":"CLAIM",true,enabled:!claimed&&target>0&&progress>=target))
                     DailyQuestProgress.Claim(i);
             }
+            }
+            finally { GUI.EndScrollView(); }
         }
 
         private void Stat(float x,float y,float w,string label,string value)

@@ -16,7 +16,10 @@ namespace Alterverse.Content
             new ChallengeDef("HOT ZONE","Capture 20 Hot Zones",15),
             new ChallengeDef("SOLDIER BREAKER","Kill 60 enemy soldiers",10),
             new ChallengeDef("MAP EXPLORER","Win on 5 different maps",15),
-            new ChallengeDef("STORE ADS","Watch 5 ads in the Store",20)
+            new ChallengeDef("STORE ADS","Watch 5 ads in the Store",20),
+            new ChallengeDef("FRIEND SQUAD","Complete 2 matches with an invited friend",40),
+            new ChallengeDef("TURRET COMMANDER","Deploy 3 turrets",10),
+            new ChallengeDef("MATCH MVP","Become match MVP 3 times",20)
         };
         public static readonly ChallengeDef[] Weekly =
         {
