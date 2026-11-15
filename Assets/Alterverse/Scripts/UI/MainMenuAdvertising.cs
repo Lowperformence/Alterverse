@@ -5,12 +5,18 @@ namespace Alterverse.UI
 {
     public sealed partial class MainMenuController
     {
-        public static bool AllowsHomeBanner => IsVisible && instance.page == Page.Home &&
+        public const string BannerBlockedPrefKey = "DF_HomeBannerBlocked_v1";
+        public const int BannerBlockPrice = 700;
+
+        public static bool IsHomeBannerBlocked => PlayerPrefs.GetString(BannerBlockedPrefKey, "") == "1";
+
+        public static bool AllowsHomeBanner => IsVisible && !IsHomeBannerBlocked && instance.page == Page.Home &&
             !instance.launching && !ReviewPromptVisible && !instance.languagePicker.IsOpen &&
             !OnlinePartyOverlay.IsOpen && !RankedPanel.Visible && !OnlineMatchLoadingScreen.IsVisible;
+
         private MenuBannerLayout HomeAdvertisingLayout => MenuBannerLayout.Calculate(Screen.safeArea,
             Screen.height, MenuBannerAds.DeviceScale);
-        private bool HomeAdvertisingActive => HomeAdvertisingLayout.Valid;
+        private bool HomeAdvertisingActive => !IsHomeBannerBlocked && HomeAdvertisingLayout.Valid;
         private Rect HomeBannerMenuRect => HomeAdvertisingLayout.InMenuCoordinates(Screen.safeArea, Screen.height);
 
         void DrawHomeAdvertising()

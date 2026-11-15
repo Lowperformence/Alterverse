@@ -406,8 +406,11 @@ namespace Alterverse.UI
 
             DrawHomeHeroSpotlightCaption(heroAccent);
 
+            SyncHomeBannerBlockState();
+            const float blockerW=148f;
+            const float blockerGap=8f;
             float footerWidth=ContentWidth*.66f;
-            if (HomeAdvertisingActive) footerWidth=Mathf.Min(footerWidth,HomeBannerMenuRect.x-Left-16f);
+            if (HomeAdvertisingActive) footerWidth=Mathf.Min(footerWidth,HomeBannerMenuRect.x-blockerW-blockerGap-Left-14f);
             float cardWidth=Mathf.Min(232,(footerWidth-24)/3f);
             DrawHomeCard(new Rect(Left,542,cardWidth,126),"01  /  DEPLOYMENT","ENTER THE FRONT",Page.Play);
             DrawHomeCard(new Rect(Left+cardWidth+12,542,cardWidth,126),"02  /  SEASON REWARDS","BATTLE PASS",Page.BattlePass);
@@ -417,6 +420,67 @@ namespace Alterverse.UI
             if(theme.Navigation(new Rect(Left+(cardWidth+12)*2,672,cardWidth,44),GameLanguage.Text("CLANS"),NavigationIcon(Page.Clans)))SetPage(Page.Clans);
             DrawHomeNews();
             DrawHomeAdvertising();
+            if (HomeAdvertisingActive)
+                DrawHomeBannerBlocker(blockerW,blockerGap);
+        }
+
+        private static void SyncHomeBannerBlockState()
+        {
+            bool profileBlocked=AccountProfilePrefs.GetInt(BannerBlockedPrefKey,0)==1;
+            bool localBlocked=PlayerPrefs.GetString(BannerBlockedPrefKey,"")=="1";
+            if(profileBlocked&&!localBlocked)
+            {
+                PlayerPrefs.SetString(BannerBlockedPrefKey,"1");
+                PlayerPrefs.Save();
+            }
+            else if(localBlocked&&!profileBlocked)
+            {
+                AccountProfilePrefs.SetInt(BannerBlockedPrefKey,1);
+                AccountProfilePrefs.Save();
+            }
+        }
+
+        private void DrawHomeBannerBlocker(float blockerW,float blockerGap)
+        {
+            Rect bannerRect=HomeBannerMenuRect;
+            float cardH=Mathf.Max(96f,bannerRect.height);
+            Rect card=new Rect(bannerRect.x-blockerW-blockerGap,bannerRect.yMax-cardH,blockerW,cardH);
+            Color goldAccent=new Color(1f,.78f,.22f,1f);
+            theme.Panel(card);
+            FrontEndTheme.Fill(new Rect(card.x+10f,card.y+1f,card.width-20f,2f),goldAccent);
+            DimensionUiMotif.DrawCornerCuts(card,Texture2D.whiteTexture,goldAccent);
+            theme.FitLabel(new Rect(card.x+10f,card.y+7f,card.width-20f,16f),"AD BLOCKER",theme.Small,true);
+            theme.FitLabel(new Rect(card.x+10f,card.y+23f,card.width-20f,24f),"BLOCK BANNER",theme.Heading);
+            theme.FitLabel(new Rect(card.x+10f,card.y+46f,card.width-20f,16f),"PERMANENT  •  HOME",theme.Small,true);
+            bool affordable=PlayerWallet.CanAfford(BannerBlockPrice);
+            string actionLabel=affordable?$"{BannerBlockPrice} SHARDS":$"NEED {BannerBlockPrice} SHARDS";
+            Rect btnRect=new Rect(card.x+8f,card.yMax-34f,card.width-16f,26f);
+            if(ShardPurchaseAction(btnRect,actionLabel,BannerBlockPrice,primary:true,enabled:!PaidShardCommerce.Spending))
+                PurchaseHomeBannerBlock();
+        }
+
+        private static void PurchaseHomeBannerBlock()
+        {
+            if(IsHomeBannerBlocked||!PlayerWallet.CanAfford(BannerBlockPrice)) return;
+            ProfileTransaction.Recover();
+            if(PlayerWallet.EarnedBalance>=BannerBlockPrice)
+            {
+                ProfileTransaction.Commit(
+                    new ProfileTransaction.Write("DF_Shards",PlayerWallet.EarnedBalance-BannerBlockPrice),
+                    new ProfileTransaction.Write(BannerBlockedPrefKey,1));
+            }
+            else if(PlayerWallet.TrySpend(BannerBlockPrice))
+            {
+                AccountProfilePrefs.SetInt(BannerBlockedPrefKey,1);
+                AccountProfilePrefs.Save();
+            }
+            else
+            {
+                return;
+            }
+            PlayerPrefs.SetString(BannerBlockedPrefKey,"1");
+            PlayerPrefs.Save();
+            Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.72f);
         }
 
         private void DrawHomeHeroSpotlightCaption(Color heroAccent)
