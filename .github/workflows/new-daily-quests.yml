@@ -8,6 +8,8 @@ on:
       - 'Tools/Shop/RewardedAdsRegression/**'
       - 'Assets/Alterverse/Scripts/Performance/MobilePerformanceProfile.cs'
       - 'Tools/Graphics/AutoProfileRegression/**'
+      - 'Assets/Alterverse/Scripts/Match/MatchRewardService.cs'
+      - 'Tools/Profile/MatchRewardForwardRegression/**'
       - '.github/workflows/new-daily-quests.yml'
 jobs:
   regression:
@@ -23,3 +25,4 @@ jobs:
       - run: python Tools/Shop/RewardedAdsRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Multiplayer/HotZoneResultRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Graphics/AutoProfileRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Profile/MatchRewardForwardRegression/run.py --dotnet-root "$DOTNET_ROOT"
