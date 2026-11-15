@@ -296,7 +296,16 @@ namespace Alterverse.UI
         }
         private static void CosmeticIcon(Rect rect,CosmeticDefinition definition,bool owned)
         {
-            if(definition.Headwear){HeadwearIconRenderer.Draw(rect,definition.Id);return;}
+            if(definition.Headwear)
+            {
+                if((int)definition.Id>=(int)UniversalHeroCosmetic.TvHead)
+                {
+                    DrawProceduralHeadwearIcon(rect,definition,owned);
+                    return;
+                }
+                HeadwearIconRenderer.Draw(rect,definition.Id);
+                return;
+            }
             Texture2D icon=WingPreviewIcons.Load(definition.Id);
             if(icon!=null)
             {
@@ -319,7 +328,86 @@ namespace Alterverse.UI
                 }
             FrontEndTheme.Fill(new Rect(c.x-3,c.y-8,6,26),Color.white);
         }
+
+        private static void DrawProceduralHeadwearIcon(Rect rect,CosmeticDefinition definition,bool owned)
+        {
+            float alpha=owned?1f:.68f;
+            Color accent=definition.Accent;accent.a=alpha;
+            Vector2 c=rect.center;
+            float s=Mathf.Min(rect.width,rect.height)*.78f;
+            switch(definition.Id)
+            {
+                case UniversalHeroCosmetic.TvHead:
+                    FrontEndTheme.Fill(new Rect(c.x-s*.26f,c.y-s*.54f,3f,s*.24f),new Color(.82f,.88f,.96f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x+s*.22f,c.y-s*.54f,3f,s*.24f),new Color(.82f,.88f,.96f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x-s*.44f,c.y-s*.30f,s*.88f,s*.72f),new Color(.16f,.24f,.38f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x-s*.36f,c.y-s*.22f,s*.64f,s*.56f),new Color(.06f,.16f,.26f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x-s*.24f,c.y-s*.10f,s*.12f,s*.14f),accent);
+                    FrontEndTheme.Fill(new Rect(c.x+s*.04f,c.y-s*.10f,s*.12f,s*.14f),accent);
+                    FrontEndTheme.Fill(new Rect(c.x-s*.20f,c.y+s*.14f,s*.32f,s*.07f),accent);
+                    break;
+                case UniversalHeroCosmetic.SharkHeadMask:
+                    FrontEndTheme.Fill(new Rect(c.x-s*.08f,c.y-s*.54f,s*.16f,s*.24f),accent);
+                    FrontEndTheme.Fill(new Rect(c.x-s*.44f,c.y-s*.30f,s*.88f,s*.72f),accent);
+                    FrontEndTheme.Fill(new Rect(c.x-s*.32f,c.y+s*.02f,s*.64f,s*.32f),new Color(.06f,.10f,.18f,alpha));
+                    for(int t=-2;t<=2;t++)
+                    {
+                        FrontEndTheme.Fill(new Rect(c.x+t*s*.11f-3f,c.y+s*.02f,6f,s*.10f),new Color(.96f,.98f,1f,alpha));
+                        FrontEndTheme.Fill(new Rect(c.x+t*s*.11f-3f,c.y+s*.24f,6f,s*.10f),new Color(.96f,.98f,1f,alpha));
+                    }
+                    FrontEndTheme.Fill(new Rect(c.x-s*.32f,c.y-s*.14f,s*.10f,s*.08f),new Color(1f,.82f,.18f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x+s*.22f,c.y-s*.14f,s*.10f,s*.08f),new Color(1f,.82f,.18f,alpha));
+                    break;
+                case UniversalHeroCosmetic.CyberPumpkinHead:
+                    FrontEndTheme.Fill(new Rect(c.x-s*.07f,c.y-s*.52f,s*.14f,s*.22f),new Color(.28f,.44f,.18f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x-s*.46f,c.y-s*.30f,s*.92f,s*.72f),accent);
+                    Color neon=new Color(.48f,1f,.18f,alpha);
+                    FrontEndTheme.Fill(new Rect(c.x-s*.28f,c.y-s*.12f,s*.16f,s*.14f),neon);
+                    FrontEndTheme.Fill(new Rect(c.x+s*.12f,c.y-s*.12f,s*.16f,s*.14f),neon);
+                    FrontEndTheme.Fill(new Rect(c.x-s*.28f,c.y+s*.16f,s*.56f,s*.10f),neon);
+                    break;
+                case UniversalHeroCosmetic.CardboardRobotHead:
+                    FrontEndTheme.Fill(new Rect(c.x-s*.16f,c.y-s*.52f,s*.32f,s*.10f),new Color(.82f,.88f,.94f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x-2f,c.y-s*.42f,4f,s*.14f),new Color(.82f,.88f,.94f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x-s*.42f,c.y-s*.28f,s*.84f,s*.70f),accent);
+                    Color visor=new Color(1f,.22f,.28f,alpha);
+                    FrontEndTheme.Fill(new Rect(c.x-s*.28f,c.y-s*.10f,s*.20f,s*.10f),visor);
+                    FrontEndTheme.Fill(new Rect(c.x+s*.08f,c.y-s*.10f,s*.20f,s*.10f),visor);
+                    FrontEndTheme.Fill(new Rect(c.x-s*.22f,c.y+s*.16f,s*.44f,s*.08f),new Color(.18f,.14f,.10f,alpha));
+                    break;
+                case UniversalHeroCosmetic.GoldenCrown:
+                    FrontEndTheme.Fill(new Rect(c.x-s*.34f,c.y-s*.18f,s*.68f,s*.38f),new Color(.78f,.14f,.24f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x-s*.44f,c.y+s*.04f,s*.88f,s*.26f),accent);
+                    for(int k=-2;k<=2;k++)
+                    {
+                        FrontEndTheme.Fill(new Rect(c.x+k*s*.18f-s*.06f,c.y-s*.34f,s*.12f,s*.40f),accent);
+                        FrontEndTheme.Fill(new Rect(c.x+k*s*.18f-3f,c.y+s*.12f,6f,6f),new Color(.16f,.94f,.92f,alpha));
+                    }
+                    break;
+                case UniversalHeroCosmetic.VikingHelm:
+                    FrontEndTheme.Fill(new Rect(c.x-s*.54f,c.y-s*.38f,s*.18f,s*.44f),new Color(.95f,.90f,.78f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x+s*.36f,c.y-s*.38f,s*.18f,s*.44f),new Color(.95f,.90f,.78f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x-s*.36f,c.y-s*.20f,s*.72f,s*.46f),accent);
+                    FrontEndTheme.Fill(new Rect(c.x-s*.38f,c.y+s*.12f,s*.76f,s*.12f),new Color(.95f,.76f,.24f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x-s*.05f,c.y+s*.12f,s*.10f,s*.26f),accent);
+                    break;
+                case UniversalHeroCosmetic.ChefHat:
+                    FrontEndTheme.Fill(new Rect(c.x-s*.42f,c.y-s*.42f,s*.84f,s*.36f),accent);
+                    FrontEndTheme.Fill(new Rect(c.x-s*.30f,c.y-s*.12f,s*.60f,s*.44f),accent);
+                    FrontEndTheme.Fill(new Rect(c.x-s*.31f,c.y+s*.18f,s*.62f,s*.12f),new Color(.88f,.18f,.26f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x-s*.06f,c.y+s*.18f,s*.12f,s*.12f),new Color(1f,.82f,.22f,alpha));
+                    break;
+                default:
+                    FrontEndTheme.Fill(new Rect(c.x-s*.32f,c.y-s*.44f,s*.14f,s*.36f),new Color(.92f,.20f,.28f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x-s*.50f,c.y-s*.12f,s*1.00f,s*.34f),new Color(.14f,.16f,.22f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x-s*.50f,c.y-s*.14f,s*1.00f,4f),new Color(1f,.82f,.24f,alpha));
+                    FrontEndTheme.Fill(new Rect(c.x-s*.32f,c.y+s*.18f,s*.64f,s*.10f),accent);
+                    FrontEndTheme.Fill(new Rect(c.x-s*.09f,c.y-s*.04f,s*.18f,s*.18f),new Color(.96f,.96f,.98f,alpha));
+                    break;
+            }
+        }
     }
+
     // The same geometry is used for real collections and large-count regression fixtures.
     internal static class CollectionGridLayout
     {

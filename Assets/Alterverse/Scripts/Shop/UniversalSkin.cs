@@ -16,7 +16,15 @@ namespace Alterverse.Shop
         UfoTestHat=8,
         WizardHat=9,
         PropellerCap=10,
-        MushroomHat=11
+        MushroomHat=11,
+        TvHead=12,
+        SharkHeadMask=13,
+        CyberPumpkinHead=14,
+        CardboardRobotHead=15,
+        GoldenCrown=16,
+        VikingHelm=17,
+        ChefHat=18,
+        PirateHat=19
     }
 
     /// <summary>Account ownership, one exclusive cosmetic slot per hero. Legacy keys are retained.</summary>

@@ -20,10 +20,7 @@ namespace Alterverse.Shop
         }
         public static bool IsSerializedResource(string resource)
         {
-            if(string.IsNullOrEmpty(resource))return false;
-            foreach(var definition in CosmeticCatalog.All)
-                if(definition.Headwear&&definition.Id!=UniversalHeroCosmetic.BetaCap&&definition.HeadwearResource==resource)return true;
-            return false;
+            return resource=="UfoTestHat"||resource=="WizardHat"||resource=="PropellerCap"||resource=="MushroomHat";
         }
         public static string HeroKey(HeroId hero) => "DF_HeadwearEquipped_" + (int)hero;
         public static bool IsHeadwear(UniversalHeroCosmetic value) =>

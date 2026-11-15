@@ -120,7 +120,7 @@ namespace Alterverse.UI
         {
             if (MainMenuController.IsVisible || Time.timeScale <= 0f)
             {
-                if (MainMenuController.IsVisible && (numbers.Count > 0 || streakByHero.Count > 0 || localTurretCharges > 0 || localMobileTurretCharges > 0 || placingTurret))
+                if (MainMenuController.IsVisible && (numbers.Count > 0 || streakByHero.Count > 0 || localTurretCharges > 0 || localMobileTurretCharges > 0 || placingTurret || KillstreakBoltTurret.Active.Count > 0))
                 {
                     numbers.Clear();
                     feed.Clear();
@@ -132,6 +132,7 @@ namespace Alterverse.UI
                     localMobileTurretCharges = 0;localUpgradeEligible = false;networkLocalStreak = 0;
                     offlineRewards.Reset();
                     placingTurret = false;
+                    KillstreakBoltTurret.ClearAll();
                 }
                 return;
             }
@@ -977,6 +978,34 @@ namespace Alterverse.UI
             float scale = Mathf.Clamp(Screen.height / 900f, 0.75f, 1.25f);
             float now = Time.unscaledTime;
 
+            // Active Turret World-Space Health Bars (250 HP + Damage Trail)
+            var activeTurrets = KillstreakBoltTurret.Active;
+            for (int i = 0; i < activeTurrets.Count; i++)
+            {
+                KillstreakBoltTurret turret = activeTurrets[i];
+                if (turret == null || turret.TurretHealth == null || turret.TurretHealth.IsDead) continue;
+                Vector3 tsp = cam.WorldToScreenPoint(turret.transform.position + Vector3.up * (turret.IsMobile ? 3.1f : 1.55f));
+                if (tsp.z <= 0f) continue;
+                float hpNorm = Mathf.Clamp01(turret.TurretHealth.Normalized);
+                if (hpNorm >= turret.TrailingHp) turret.TrailingHp = hpNorm;
+                else turret.TrailingHp = Mathf.MoveTowards(turret.TrailingHp, hpNorm, Time.unscaledDeltaTime * 0.55f);
+
+                float bw = 64f * scale;
+                float bh = 7f * scale;
+                Rect barRect = new Rect(tsp.x - bw * 0.5f, Screen.height - tsp.y - bh * 0.5f, bw, bh);
+                FrontEndTheme.Fill(new Rect(barRect.x - 1f, barRect.y - 1f, barRect.width + 2f, barRect.height + 2f), new Color(0.02f, 0.04f, 0.08f, 0.90f));
+                if (turret.TrailingHp > hpNorm + 0.005f)
+                {
+                    FrontEndTheme.Fill(new Rect(barRect.x + barRect.width * hpNorm, barRect.y, barRect.width * (turret.TrailingHp - hpNorm), barRect.height),
+                        new Color(1f, 0.78f, 0.25f, 0.92f));
+                }
+                Color teamCol = turret.Team == 0 ? FrontEndTheme.Zero : FrontEndTheme.Accent;
+                FrontEndTheme.Fill(new Rect(barRect.x, barRect.y, barRect.width * hpNorm, barRect.height), teamCol);
+                turretBtnSubStyle.normal.textColor = new Color(0.92f, 0.96f, 1f, 0.92f);
+                GUI.Label(new Rect(barRect.x - 18f, barRect.y - 14f * scale, barRect.width + 36f, 14f),
+                    $"{Mathf.CeilToInt(hpNorm * KillstreakBoltTurret.MaxHp)} HP", turretBtnSubStyle);
+            }
+
             // Active Tactical Ping Marker in world space
             if (now < activePingUntil && !string.IsNullOrEmpty(activePingLabel))
             {
@@ -1072,6 +1101,7 @@ namespace Alterverse.UI
         public int Team => team;
         public Health TurretHealth=>health;
         public bool IsMobile=>mobile;
+        public float TrailingHp { get; set; } = 1f;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStaticState()
@@ -1181,11 +1211,24 @@ namespace Alterverse.UI
             Bolt7Vfx.Warm();
         }
 
+        public static void ClearAll()
+        {
+            for (int i = active.Count - 1; i >= 0; i--)
+            {
+                if (active[i] != null && active[i].gameObject != null)
+                    Destroy(active[i].gameObject);
+            }
+            active.Clear();
+        }
+
         private void OnTurretDied()
         {
             Color teamColor = team == 0 ? StylizedArtDirection.ZeroEnergy : StylizedArtDirection.LumenEnergy;
             PrototypeVfx.RadialBurst(transform.position, teamColor, 1.65f);
             PrototypeVfx.Burst(transform.position + Vector3.up * 0.5f, teamColor, 0.65f, 6);
+            Collider col = GetComponent<Collider>();
+            if (col != null) col.enabled = false;
+            Destroy(gameObject, 0.06f);
         }
 
         private void Update()

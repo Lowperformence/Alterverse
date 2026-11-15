@@ -70,9 +70,28 @@ namespace Alterverse.Visuals
             public bool CombinedBody;
         }
 
+        private static readonly UniversalHeroCosmetic[] BotHatPool =
+        {
+            UniversalHeroCosmetic.UfoTestHat,
+            UniversalHeroCosmetic.WizardHat,
+            UniversalHeroCosmetic.PropellerCap,
+            UniversalHeroCosmetic.MushroomHat,
+            UniversalHeroCosmetic.TvHead,
+            UniversalHeroCosmetic.SharkHeadMask,
+            UniversalHeroCosmetic.CyberPumpkinHead,
+            UniversalHeroCosmetic.CardboardRobotHead,
+            UniversalHeroCosmetic.GoldenCrown,
+            UniversalHeroCosmetic.VikingHelm,
+            UniversalHeroCosmetic.ChefHat,
+            UniversalHeroCosmetic.PirateHat
+        };
+
         private readonly List<RendererState> baseRenderers=new();
         private Transform visualRoot;
         private int appliedVariant=int.MinValue;
+        private bool botCosmeticsRolled;
+        private int rolledBotWeaponVariant=-1;
+        private UniversalHeroCosmetic rolledBotHat=UniversalHeroCosmetic.Original;
 
         public void Sync(HeroIdentity identity)
         {
@@ -104,7 +123,7 @@ namespace Alterverse.Visuals
                 ?preview.WeaponSkinVariant
                 :LocalHeroContext.IsLocal(identity.gameObject)
                     ?WeaponSkinInventory.EquippedVariant(identity.Hero)
-                    :-1;
+                    :BotWeaponVariant(identity);
             if(preview!=null&&preview.WeaponOverdrive&&variant<0)variant=0;
 
             if(variant==appliedVariant)return;
@@ -115,6 +134,25 @@ namespace Alterverse.Visuals
                 ApplyColorway(identity.Hero,variant);
         }
 
+        private int BotWeaponVariant(HeroIdentity identity)
+        {
+            if(identity==null||identity.GetComponent<Alterverse.AI.MobaBotBrain>()==null)return -1;
+            if(!botCosmeticsRolled)
+            {
+                botCosmeticsRolled=true;
+                // Exactly 10% chance for a bot to equip a weapon skin, and 10% chance to wear a hat/helmet.
+                rolledBotWeaponVariant=Random.value<0.10f?Random.Range(0,2):-1;
+                rolledBotHat=Random.value<0.10f
+                    ?BotHatPool[Random.Range(0,BotHatPool.Length)]
+                    :UniversalHeroCosmetic.Original;
+                if(rolledBotHat!=UniversalHeroCosmetic.Original)
+                {
+                    HeadwearPresentation headwear=identity.GetComponent<HeadwearPresentation>();
+                    if(headwear!=null)headwear.Apply(rolledBotHat);
+                }
+            }
+            return rolledBotWeaponVariant;
+        }
         private void CaptureOriginalWeaponRenderers()
         {
             baseRenderers.Clear();
