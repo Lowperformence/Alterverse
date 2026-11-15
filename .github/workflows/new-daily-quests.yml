@@ -10,6 +10,9 @@ on:
       - 'Tools/Graphics/AutoProfileRegression/**'
       - 'Assets/Alterverse/Scripts/Match/MatchRewardService.cs'
       - 'Tools/Profile/MatchRewardForwardRegression/**'
+      - 'Assets/Alterverse/Scripts/UI/MainMenuController.cs'
+      - 'Assets/Alterverse/Scripts/UI/MainMenuAdvertising.cs'
+      - 'Tools/UI/DiscordAdBlockRegression/**'
       - '.github/workflows/new-daily-quests.yml'
 jobs:
   regression:
@@ -26,3 +29,4 @@ jobs:
       - run: python Tools/Multiplayer/HotZoneResultRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Graphics/AutoProfileRegression/run.py --dotnet-root "$DOTNET_ROOT"
       - run: python Tools/Profile/MatchRewardForwardRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/UI/DiscordAdBlockRegression/run.py --dotnet-root "$DOTNET_ROOT"

@@ -274,8 +274,9 @@ namespace Alterverse.UI
             for(int i=0;i<NavigationLabels.Length;i++)
                 if(theme.Navigation(new Rect(rail,162+i*48,202,42),GameLanguage.Text(NavigationLabels[i]),NavigationIcon(NavigationPages[i]),
                     primary:i==0,selected:page==NavigationPages[i]))SetPage(NavigationPages[i]);
-            theme.FitLabel(new Rect(Left,25,ContentWidth-448,30),"COMMAND DECK  /  "+page.ToString().ToUpperInvariant(),theme.Heading);
-            theme.Label(new Rect(Left,57,ContentWidth-448,22),$"LEVEL {PlayerExperience.Level}",theme.Small,true);
+            float headerWidth=ContentWidth-448-(DiscordClickReward.Claimed?0:224);
+            theme.FitLabel(new Rect(Left,25,headerWidth,30),"COMMAND DECK  /  "+page.ToString().ToUpperInvariant(),theme.Heading);
+            theme.Label(new Rect(Left,57,headerWidth,22),$"LEVEL {PlayerExperience.Level}",theme.Small,true);
             DrawDiscordButton(new Rect(Right-432f,29f,140f,38f));
             DrawShardWallet(new Rect(Right-280,20,280,56));
             FrontEndTheme.Fill(new Rect(Left,85,ContentWidth,1),new Color(.75f,.65f,.47f,.50f));
@@ -284,12 +285,18 @@ namespace Alterverse.UI
         private void DrawDiscordButton(Rect rect)
         {
             bool hovered=rect.Contains(Event.current.mousePosition);
-            string label=DiscordClickReward.Claimed?"DISCORD":"DISCORD +5";
-            if(theme.Navigation(rect,label,11))
+            if(theme.Navigation(rect,"DISCORD",11))
             {
                 try { DiscordClickReward.TryGrant(); }
                 catch (Exception ex) { Debug.LogWarning("DIMENSIONS FRONT: Discord click reward could not be saved: "+ex.Message); }
                 Application.OpenURL(DiscordInviteUrl);
+            }
+            if(!DiscordClickReward.Claimed)
+            {
+                Rect offer=new Rect(rect.x-224f,rect.y,216f,rect.height);
+                theme.Panel(offer);
+                theme.FitLabel(new Rect(offer.x+8f,offer.y,offer.width-16f,offer.height),
+                    "JOIN AND EARN 5 SHARDS",theme.Small);
             }
             Color blurple=new Color(.35f,.40f,.95f,hovered?.95f:.72f);
             FrontEndTheme.Fill(new Rect(rect.x+1f,rect.y+8f,2f,rect.height-16f),blurple);
@@ -431,18 +438,14 @@ namespace Alterverse.UI
 
         private static void SyncHomeBannerBlockState()
         {
-            bool profileBlocked=AccountProfilePrefs.GetInt(BannerBlockedPrefKey,0)==1;
-            bool localBlocked=PlayerPrefs.GetString(BannerBlockedPrefKey,"")=="1";
-            if(profileBlocked&&!localBlocked)
-            {
-                PlayerPrefs.SetString(BannerBlockedPrefKey,"1");
-                PlayerPrefs.Save();
-            }
-            else if(localBlocked&&!profileBlocked)
-            {
+            // Migrate the old string flag once. The profile value is an integer;
+            // writing a string under the same PlayerPrefs key erased it offline.
+            bool legacyBlocked=PlayerPrefs.GetString(BannerBlockedPrefKey,"")=="1";
+            if(!legacyBlocked)return;
+            if(AccountProfilePrefs.GetInt(BannerBlockedPrefKey,0)!=1)
                 AccountProfilePrefs.SetInt(BannerBlockedPrefKey,1);
-                AccountProfilePrefs.Save();
-            }
+            if(AccountProfilePrefs.Attached)PlayerPrefs.DeleteKey(BannerBlockedPrefKey);
+            AccountProfilePrefs.Save();
         }
 
         private void DrawHomeBannerBlocker(float blockerW,float blockerGap)
@@ -468,6 +471,7 @@ namespace Alterverse.UI
         {
             if(IsHomeBannerBlocked||!PlayerWallet.CanAfford(BannerBlockPrice)) return;
             ProfileTransaction.Recover();
+            if(IsHomeBannerBlocked||!PlayerWallet.CanAfford(BannerBlockPrice)) return;
             if(PlayerWallet.EarnedBalance>=BannerBlockPrice)
             {
                 ProfileTransaction.Commit(
@@ -483,8 +487,6 @@ namespace Alterverse.UI
             {
                 return;
             }
-            PlayerPrefs.SetString(BannerBlockedPrefKey,"1");
-            PlayerPrefs.Save();
             Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.72f);
         }
 

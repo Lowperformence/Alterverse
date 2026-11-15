@@ -8,7 +8,9 @@ namespace Alterverse.UI
         public const string BannerBlockedPrefKey = "DF_HomeBannerBlocked_v1";
         public const int BannerBlockPrice = 700;
 
-        public static bool IsHomeBannerBlocked => PlayerPrefs.GetString(BannerBlockedPrefKey, "") == "1";
+        public static bool IsHomeBannerBlocked =>
+            Alterverse.Profile.AccountProfilePrefs.GetInt(BannerBlockedPrefKey, 0) == 1 ||
+            PlayerPrefs.GetString(BannerBlockedPrefKey, "") == "1";
 
         public static bool AllowsHomeBanner => IsVisible && !IsHomeBannerBlocked && instance.page == Page.Home &&
             !instance.launching && !ReviewPromptVisible && !instance.languagePicker.IsOpen &&
