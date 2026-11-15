@@ -1,5 +1,6 @@
 using System;
 using Alterverse.Content;
+using Alterverse.Characters;
 using Alterverse.Match;
 using UnityEngine;
 
@@ -17,6 +18,7 @@ namespace Alterverse.Profile
         private const string FriendMatchesKey = "DF_DailyQuestFriendMatches_v1";
         private const string TurretsKey = "DF_DailyQuestTurrets_v1";
         private const string MvpKey = "DF_DailyQuestMvp_v1";
+        private const string HeroesKey = "DF_DailyQuestPlayedHeroes_v1";
         private const string ClaimedKey = "DF_DailyQuestClaimed_v2";
 
         private const string MapsKey = "DF_DailyQuestWonMaps_v1";
@@ -34,6 +36,7 @@ namespace Alterverse.Profile
             5 => 2,
             6 => 3,
             7 => 3,
+            8 => 2,
             _ => 0
         };
 
@@ -43,6 +46,7 @@ namespace Alterverse.Profile
                 return 0;
 
             if (index == 3) return Mathf.Min(5, CountWonMaps(Alterverse.Profile.AccountProfilePrefs.GetInt(MapsKey, 0)));
+            if (index == 8) return Mathf.Min(Target(8), CountPlayedHeroes(AccountProfilePrefs.GetInt(HeroesKey, 0)));
 
             string key = index switch
             {
@@ -64,8 +68,8 @@ namespace Alterverse.Profile
         public static int ShardReward(int index) => index >= 0 && index < PlayerChallengeContent.Daily.Length
             ? WingMatchRewardBonus.DailyShardReward(PlayerChallengeContent.Daily[index].Shards) : 0;
 
-        public static ProfileTransaction.Write[] MatchWrites(int kills, int hotZoneCaptures, int soldierKills, bool won = false, ArenaVariant arena = ArenaVariant.Moon, bool invitedFriend = false, int turrets = 0, bool mvp = false)
-            => ProgressWrites(Today, kills, hotZoneCaptures, soldierKills, 0, won, arena, invitedFriend, turrets, mvp);
+        public static ProfileTransaction.Write[] MatchWrites(int kills, int hotZoneCaptures, int soldierKills, bool won = false, ArenaVariant arena = ArenaVariant.Moon, bool invitedFriend = false, int turrets = 0, bool mvp = false, int playedHero = -1)
+            => ProgressWrites(Today, kills, hotZoneCaptures, soldierKills, 0, won, arena, invitedFriend, turrets, mvp, playedHero);
 
         // Receipt day is recorded on the earned callback, so collecting an old saved
         // reward after midnight never advances today's ad quest.
@@ -77,7 +81,7 @@ namespace Alterverse.Profile
                 : Array.Empty<ProfileTransaction.Write>();
         }
 
-        private static ProfileTransaction.Write[] ProgressWrites(int today, int kills, int hotZoneCaptures, int soldierKills, int rewardedAds, bool won, ArenaVariant arena, bool invitedFriend = false, int turrets = 0, bool mvp = false)
+        private static ProfileTransaction.Write[] ProgressWrites(int today, int kills, int hotZoneCaptures, int soldierKills, int rewardedAds, bool won, ArenaVariant arena, bool invitedFriend = false, int turrets = 0, bool mvp = false, int playedHero = -1)
         {
             int stored = Alterverse.Profile.AccountProfilePrefs.GetInt(DayKey, 0);
             if (stored > today)
@@ -91,6 +95,7 @@ namespace Alterverse.Profile
             int priorFriendMatches = sameDay ? AccountProfilePrefs.GetInt(FriendMatchesKey, 0) : 0;
             int priorTurrets = sameDay ? AccountProfilePrefs.GetInt(TurretsKey, 0) : 0;
             int priorMvp = sameDay ? AccountProfilePrefs.GetInt(MvpKey, 0) : 0;
+            int heroes = AddPlayedHero(sameDay ? AccountProfilePrefs.GetInt(HeroesKey, 0) : 0, playedHero);
             int claimed = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(ClaimedKey, 0) : 0;
 
             int maps = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(MapsKey, 0) : 0;
@@ -106,9 +111,29 @@ namespace Alterverse.Profile
                 new ProfileTransaction.Write(FriendMatchesKey, Mathf.Min(Target(5), ProfileTransaction.Add(priorFriendMatches, invitedFriend ? 1 : 0))),
                 new ProfileTransaction.Write(TurretsKey, Mathf.Min(Target(6), ProfileTransaction.Add(priorTurrets, Mathf.Max(0, turrets)))),
                 new ProfileTransaction.Write(MvpKey, Mathf.Min(Target(7), ProfileTransaction.Add(priorMvp, mvp ? 1 : 0))),
+                new ProfileTransaction.Write(HeroesKey, heroes),
                 new ProfileTransaction.Write(ClaimedKey, claimed),
                 new ProfileTransaction.Write(MapsKey, maps)
             };
+        }
+
+        private static int AddPlayedHero(int mask, int hero)
+        {
+            int valid = 0;
+            foreach (HeroId value in Enum.GetValues(typeof(HeroId)))
+                if ((int)value >= 0 && (int)value < 31) valid |= 1 << (int)value;
+            mask &= valid;
+            if (hero >= 0 && hero < 31 && Enum.IsDefined(typeof(HeroId), hero))
+                mask |= 1 << hero;
+            return mask;
+        }
+
+        private static int CountPlayedHeroes(int mask)
+        {
+            mask = AddPlayedHero(mask, -1);
+            int count = 0;
+            while (mask != 0) { mask &= mask - 1; count++; }
+            return count;
         }
 
         public static int AddWonMap(int mask, bool won, ArenaVariant arena)

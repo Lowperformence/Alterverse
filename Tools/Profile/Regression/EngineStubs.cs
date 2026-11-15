@@ -59,7 +59,7 @@ namespace Alterverse.Profile
     public static class BattlePassProgress { public static void GrantMatchXp(int xp,string receipt) { } }
     public static class DailyQuestProgress
     {
-        public static IEnumerable<ProfileTransaction.Write> MatchWrites(int kills,int captures,int soldiers,bool won,int arena,bool invitedFriend=false,int turrets=0,bool mvp=false)
+        public static IEnumerable<ProfileTransaction.Write> MatchWrites(int kills,int captures,int soldiers,bool won,int arena,bool invitedFriend=false,int turrets=0,bool mvp=false,int playedHero=-1)
         { return new ProfileTransaction.Write[0]; }
     }
 }
