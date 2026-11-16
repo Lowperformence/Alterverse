@@ -200,16 +200,19 @@ namespace Alterverse.Visuals
                 HeroId.Kaelon => new Color(.19f,.21f,.15f),
                 HeroId.Nyra => new Color(.095f,.12f,.14f),
                 HeroId.Elyra => new Color(.20f,.21f,.25f),
-                HeroId.Mira => new Color(.18f,.26f,.22f),
+                HeroId.Mira => new Color(.88f,.91f,.87f),
                 HeroId.Rook => new Color(.22f,.18f,.12f),
                 HeroId.Traveler => new Color(.13f,.12f,.19f),
                 HeroId.Nerok => new Color(.17f,.22f,.25f),
                 _ => new Color(.13f,.15f,.18f)
             };
-            Color trim = Color.Lerp(StylizedArtDirection.HeroAccent(hero), new Color(.42f,.43f,.45f), .55f);
-            ownedMaterials.Add(RuntimeShaderLibrary.Create(body, false, .12f, .30f));
-            ownedMaterials.Add(RuntimeShaderLibrary.Create(new Color(.035f,.04f,.045f), false, 0f, .18f));
-            ownedMaterials.Add(RuntimeShaderLibrary.Create(trim, false, .42f, .36f));
+            Color trim = hero == HeroId.Mira
+                ? new Color(.80f, .59f, .22f)
+                : Color.Lerp(StylizedArtDirection.HeroAccent(hero), new Color(.42f,.43f,.45f), .55f);
+            Color sole = hero == HeroId.Mira ? new Color(.075f, .18f, .15f) : new Color(.035f,.04f,.045f);
+            ownedMaterials.Add(RuntimeShaderLibrary.Create(body, false, hero == HeroId.Mira ? .28f : .12f, hero == HeroId.Mira ? .70f : .30f));
+            ownedMaterials.Add(RuntimeShaderLibrary.Create(sole, false, hero == HeroId.Mira ? .42f : 0f, hero == HeroId.Mira ? .55f : .18f));
+            ownedMaterials.Add(RuntimeShaderLibrary.Create(trim, false, hero == HeroId.Mira ? .84f : .42f, hero == HeroId.Mira ? .74f : .36f));
             for (int i = 0; i < ownedMaterials.Count; i++)
             {
                 if (ownedMaterials[i] == null) return false;

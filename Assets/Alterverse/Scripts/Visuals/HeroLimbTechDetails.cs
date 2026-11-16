@@ -24,6 +24,7 @@ namespace Alterverse.Visuals
             if(hero==HeroId.Rook||model==null)return;
             // The reinforced Traveler payload already carries fitted, articulated limb armor.
             if(hero==HeroId.Traveler&&model.GetComponent<ChronoTravelerAppearance>()!=null)return;
+            if(hero==HeroId.Mira&&model.GetComponent<HealerLegArmorAppearance>()!=null)return;
             if(model.GetComponent<HeroLimbTechDetails>()!=null)return;
             SkinnedMeshRenderer anatomy=null;
             foreach(var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))

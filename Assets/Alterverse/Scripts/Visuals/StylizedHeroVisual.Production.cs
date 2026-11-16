@@ -98,15 +98,15 @@ namespace Alterverse.Visuals
         }
         private void BuildTahlaAscendantHealer()
         {
-            // Reference-driven ascendant healer: luminous white/silver robe, cyan holy energy,
-            // elegant proportions, a halo language and a long ceremonial healing staff.
-            Color white=new(.80f,.74f,.64f,1f);
-            Color pearl=new(.48f,.35f,.30f,1f);
-            Color silver=new(.41f,.28f,.27f,1f);
-            Color cyan=new(1f,.68f,.22f,1f);
-            Color cyanHot=new(1f,.91f,.58f,1f);
-            Color gold=new(.90f,.60f,.21f,1f);
-            Color shadow=new(.12f,.085f,.11f,1f);
+            // Royal Sanctuary Valkyrie healer: pearl-ivory enamel, burnished imperial gold,
+            // deep sanctuary jade underplates, and radiant emerald aether crystals.
+            Color white=new(.89f,.92f,.88f,1f);
+            Color pearl=new(.76f,.81f,.76f,1f);
+            Color silver=new(.09f,.22f,.18f,1f);
+            Color cyan=new(.12f,.95f,.42f,1f);
+            Color cyanHot=new(.32f,1f,.62f,1f);
+            Color gold=new(.82f,.61f,.23f,1f);
+            Color shadow=new(.06f,.13f,.11f,1f);
             Color hair=new(.36f,.19f,.15f,1f);
             Color skin=new(.73f,.55f,.48f,1f);
             Color skinShade=new(.58f,.39f,.37f,1f);
