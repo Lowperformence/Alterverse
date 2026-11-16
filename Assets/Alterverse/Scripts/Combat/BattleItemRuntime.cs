@@ -190,7 +190,7 @@ namespace Alterverse.Combat
                 if(t<1)return;
                 airborne=false;
                 if(parachute!=null){Destroy(parachute.gameObject);parachute=null;}
-                Alterverse.Audio.UiSoundRouter.Confirm();
+                if(!DedicatedServerNetworkRuntime.Requested)Alterverse.Audio.UiSoundRouter.Confirm();
             }
             if(visual!=null)
             {
@@ -221,15 +221,16 @@ namespace Alterverse.Combat
                 Destroy(gameObject);
                 return;
             }
+            bool showVfx=!DedicatedServerNetworkRuntime.Requested;
             switch(type)
             {
                 case BattleItemType.Heal:
                     hero.Heal(hero.Max*.20f,false);
-                    HeroSkillVfx.Support(hero.gameObject,hero,false,.45f);
+                    if(showVfx)HeroSkillVfx.Support(hero.gameObject,hero,false,.45f);
                     break;
                 case BattleItemType.Shield:
                     hero.AddShield(hero.Max*.20f,5f,false);
-                    HeroSkillVfx.Support(hero.gameObject,hero,true,5f);
+                    if(showVfx)HeroSkillVfx.Support(hero.gameObject,hero,true,5f);
                     break;
                 case BattleItemType.TeamHeal:
                     for(int i=0;i<Health.Active.Count;i++)
@@ -239,15 +240,15 @@ namespace Alterverse.Combat
                         TeamMember allyMember=ally.GetComponent<TeamMember>();
                         if(allyMember==null||allyMember.Team!=team)continue;
                         ally.Heal(20f,false);
-                        HeroSkillVfx.Support(ally.gameObject,ally,false,.45f);
+                        if(showVfx)HeroSkillVfx.Support(ally.gameObject,ally,false,.45f);
                     }
                     break;
                 case BattleItemType.Speed:
                     (hero.GetComponent<HeroCombatStatus>()??hero.gameObject.AddComponent<HeroCombatStatus>()).BoostSpeed(1.10f,5f);
-                    PrototypeVfx.Ring(hero.transform.position,new Color(1f,.72f,.18f),1.1f,.3f);
+                    if(showVfx)PrototypeVfx.Ring(hero.transform.position,new Color(1f,.72f,.18f),1.1f,.3f);
                     break;
             }
-            PrototypeVfx.Burst(hero.transform.position,energyMat!=null?energyMat.color:Color.white,.6f,5);
+            if(showVfx)PrototypeVfx.Burst(hero.transform.position,energyMat!=null?energyMat.color:Color.white,.6f,5);
             Destroy(gameObject);
         }
 
