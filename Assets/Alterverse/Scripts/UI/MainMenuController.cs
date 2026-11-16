@@ -274,7 +274,7 @@ namespace Alterverse.UI
             for(int i=0;i<NavigationLabels.Length;i++)
                 if(theme.Navigation(new Rect(rail,162+i*48,202,42),GameLanguage.Text(NavigationLabels[i]),NavigationIcon(NavigationPages[i]),
                     primary:i==0,selected:page==NavigationPages[i]))SetPage(NavigationPages[i]);
-            float headerWidth=ContentWidth-448-(DiscordClickReward.Claimed?0:224);
+            float headerWidth=ContentWidth-448-(DiscordClickReward.Claimed?0:252);
             theme.FitLabel(new Rect(Left,25,headerWidth,30),"COMMAND DECK  /  "+page.ToString().ToUpperInvariant(),theme.Heading);
             theme.Label(new Rect(Left,57,headerWidth,22),$"LEVEL {PlayerExperience.Level}",theme.Small,true);
             DrawDiscordButton(new Rect(Right-432f,29f,140f,38f));
@@ -293,10 +293,19 @@ namespace Alterverse.UI
             }
             if(!DiscordClickReward.Claimed)
             {
-                Rect offer=new Rect(rect.x-224f,rect.y,216f,rect.height);
+                Rect offer=new Rect(rect.x-252f,rect.y,244f,rect.height);
                 theme.Panel(offer);
-                theme.FitLabel(new Rect(offer.x+8f,offer.y,offer.width-16f,offer.height),
+                theme.FitLabel(new Rect(offer.x+8f,offer.y,offer.width-36f,offer.height),
                     "JOIN AND EARN 5 SHARDS",theme.Small);
+                // Draw the arrow as geometry so it works with every localized font.
+                Color arrow=new Color(.49f,.60f,1f,1f);
+                float tip=offer.xMax-9f,mid=offer.center.y;
+                FrontEndTheme.Fill(new Rect(tip-15f,mid-1f,14f,2f),arrow);
+                for(int step=0;step<5;step++)
+                {
+                    FrontEndTheme.Fill(new Rect(tip-step,mid-step,2f,2f),arrow);
+                    FrontEndTheme.Fill(new Rect(tip-step,mid+step-1f,2f,2f),arrow);
+                }
             }
             Color blurple=new Color(.35f,.40f,.95f,hovered?.95f:.72f);
             FrontEndTheme.Fill(new Rect(rect.x+1f,rect.y+8f,2f,rect.height-16f),blurple);

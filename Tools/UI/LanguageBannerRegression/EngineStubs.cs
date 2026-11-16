@@ -175,3 +175,12 @@ namespace GoogleMobileAds.Api
         public void Fail()=>OnBannerAdLoadFailed?.Invoke(new LoadAdError());
     }
 }
+
+namespace Alterverse.Profile
+{
+    public static class AccountProfilePrefs
+    {
+        public static int GetInt(string key,int fallback=0)
+            => int.TryParse(UnityEngine.PlayerPrefs.GetString(key,""),out int value)?value:fallback;
+    }
+}

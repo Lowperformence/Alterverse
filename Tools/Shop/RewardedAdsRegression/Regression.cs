@@ -152,6 +152,7 @@ static class Regression
 #endif
         CheckDailyWingRewards();
         CheckNewDailyQuests();
+        CheckTwoHeroDailyQuest();
         CheckDiscordClickReward();
     }
 
@@ -275,11 +276,33 @@ static class Regression
         ProfileTransaction.Commit(DailyQuestProgress.RewardedAdWrites(DailyCalendar.Today));
         Check(DailyQuestProgress.Claimed(5) && DailyQuestProgress.Progress(7)==2, "Ad transaction preserves other quests");
         ProfileTransaction.Commit(DailyQuestProgress.MatchWrites(0, 0, 0, mvp:true));
-        Check(DailyQuestProgress.Claim(7) && !DailyQuestProgress.Claim(7) && PlayerWallet.EarnedBalance==70, "MVP pays 20 once");
+        Check(DailyQuestProgress.Claim(7) && !DailyQuestProgress.Claim(7) && PlayerWallet.EarnedBalance==65, "MVP pays 15 once");
         AccountProfilePrefs.SetInt("DF_DailyQuestDay_v2", DailyCalendar.Yesterday);
         ProfileTransaction.Commit(DailyQuestProgress.MatchWrites(0, 0, 0));
         Check(DailyQuestProgress.Progress(5)==0 && DailyQuestProgress.Progress(6)==0 && DailyQuestProgress.Progress(7)==0 && !DailyQuestProgress.Claimed(5), "Daily reset clears all new quests");
         Console.WriteLine("PASS: new daily targets, rewards, claim once, preservation and reset.");
+    }
+
+    static void CheckTwoHeroDailyQuest()
+    {
+        AccountProfilePrefs.Attach("two-hero-daily", 1, Profile(0));
+        Check(DailyQuestProgress.Target(8)==2 && DailyQuestProgress.ShardReward(8)==5 &&
+              DailyQuestProgress.ShardReward(2)==15 && DailyQuestProgress.ShardReward(7)==15,
+              "Two-hero, soldier and MVP quest amounts");
+        ProfileTransaction.Commit(DailyQuestProgress.MatchWrites(0, 0, 0, playedHero:(int)HeroId.Veyr));
+        ProfileTransaction.Commit(DailyQuestProgress.MatchWrites(0, 0, 0, playedHero:(int)HeroId.Veyr));
+        Check(DailyQuestProgress.Progress(8)==1 && !DailyQuestProgress.Claim(8), "Repeated hero counts only once");
+        ProfileTransaction.Commit(DailyQuestProgress.RewardedAdWrites(DailyCalendar.Today));
+        Check(DailyQuestProgress.Progress(8)==1, "Ad event preserves played heroes");
+        ProfileTransaction.Commit(DailyQuestProgress.MatchWrites(0, 0, 0, playedHero:999));
+        Check(DailyQuestProgress.Progress(8)==1, "Invalid hero does not count");
+        ProfileTransaction.Commit(DailyQuestProgress.MatchWrites(0, 0, 0, playedHero:(int)HeroId.Rook));
+        Check(DailyQuestProgress.Progress(8)==2 && DailyQuestProgress.Claim(8) &&
+              !DailyQuestProgress.Claim(8) && PlayerWallet.EarnedBalance==5, "Two different heroes pay five once");
+        AccountProfilePrefs.SetInt("DF_DailyQuestDay_v2", DailyCalendar.Yesterday);
+        ProfileTransaction.Commit(DailyQuestProgress.MatchWrites(0, 0, 0));
+        Check(DailyQuestProgress.Progress(8)==0 && !DailyQuestProgress.Claimed(8), "Hero quest resets daily");
+        Console.WriteLine("PASS: different heroes, duplicate and invalid heroes, reward and daily reset.");
     }
 
     static void CheckDiscordClickReward()

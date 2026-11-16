@@ -116,7 +116,7 @@ namespace Alterverse.Characters
                     new("Salvage Tide",0,12,0),
                     new("Anchor Recall",12,28,6.2f,0,.30f),
                     new("Pressure Hull",14,45,0),
-                    new("Breaker Wave",9,26,0,2.8f,.30f),
+                    new("Breaker Wave",9,45,0,2.8f,.30f),
                     new("Abyssal Maelstrom",58,60,6.0f,2.3f,.65f)),
                 _=>new HeroAbilityLoadout(
                     new("Unknown",0,0,0),new("Unknown",8,20,5f),new("Unknown",12,0,0),new("Unknown",12,20,5f),new("Unknown",55,50,5f))

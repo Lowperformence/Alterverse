@@ -189,7 +189,7 @@ class Regression
             var flank=Hero(HeroId.Kaelon,1,Vector3.left*2.7f);var outside=Hero(HeroId.Kaelon,1,Vector3.forward*2.81f);
             var ally=Hero(HeroId.Kaelon,0,Vector3.right*2);
             Check(actor.GetComponent<PlayerHeroAbilities>().CastE(),"breaker wave casts");Run(.1f,fps);Near(Hp(target),1000,"wave waits for warning");Run(.5f,fps);
-            Near(Hp(target),974,"wave includes 2.8m radius edge");Near(Hp(flank),974,"wave hits multiple enemies around caster");
+            Near(Hp(target),955,"wave includes 2.8m radius edge");Near(Hp(flank),955,"wave hits multiple enemies around caster");
             Near(Hp(outside),1000,"wave excludes outside radius");Near(Hp(ally),1000,"wave excludes allies");Near(HeroCombatStatus.Speed(target),.75f,"wave applies catalog slow");
 
             Reset();actor=Hero(HeroId.Nerok,0,Vector3.zero);Vector3 center=Vector3.forward*4;
@@ -219,6 +219,9 @@ class Regression
     }
     static void Main()
     {
+        var wave=HeroAttackCatalog.For(HeroId.Nerok)[3];
+        Check(HeroAbilityKit.LoadoutFor(HeroId.Nerok).E.Power==45 && wave.Stats.Contains("45 DMG") && wave.Effect.Contains("45 damage"),
+            "breaker wave game data and hero sheet agree on 45 damage");
         ConeBoundaries();GrazingContact();Preview();HookRules();RemainingAttacks();NetworkHook();
         Console.WriteLine("PASS "+checks+" Nerok checks; engine/network fixtures, not a Unity build.");
     }

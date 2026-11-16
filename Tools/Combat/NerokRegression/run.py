@@ -22,7 +22,7 @@ names = [
     'Characters/HeroAbilityExecution.cs', 'Characters/HeroAbilityExecution.CyberShark.cs',
     'Characters/HeroAbilityExecution.Timmy.cs', 'Characters/HeroAbilityExecution.VoidKnight.cs',
     'Characters/HeroAimPrediction.cs', 'Characters/PlayerHeroAbilities.cs',
-    'Combat/AimingSettings.cs', 'Combat/AimGeometry.cs', 'Combat/HeroAttackDelivery.cs',
+    'Combat/CombatVisibility.cs', 'Combat/AimingSettings.cs', 'Combat/AimGeometry.cs', 'Combat/HeroAttackDelivery.cs',
     'Combat/HeroCombatRules.cs', 'Combat/HeroCombatStatus.cs', 'Combat/BasicAttack.cs',
     'Combat/SoftTargeting.cs', 'Combat/ManualAiming.cs', 'Multiplayer/CoopGameplayCommands.cs',
     'Audio/HeroCombatAudio.cs', 'Audio/CombatSoundPalette.cs', 'UI/HeroAttackCatalog.cs',
