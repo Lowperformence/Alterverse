@@ -168,6 +168,12 @@ static class Regression
   Check(BattleItemPickup.Created==5,"host respawns only collected slot");packet=server.CustomMessagingManager.Last;
   CoopAuthority.LocalHasServerAuthority=false;CoopAuthority.ActivePlan=Plan(false);NetworkManager.Singleton=client;cf.ElapsedSeconds=360;Call(replica,"OnSnapshot",(ulong)0,new FastBufferReader(packet));
   Check(BattleItemPickup.Created==6&&clientDrops[0]!=null&&clientDrops[4]!=null&&BattleItemInventory.Consumes==1,"client receives new generation without extra charge");
+  CoopAuthority.LocalHasServerAuthority=true;CoopAuthority.ActivePlan=Plan(true);NetworkManager.Singleton=server;
+  hostDrops[0].gameObject.destroyed=true;hostDrops[4].gameObject.destroyed=true;
+  sf.ElapsedSeconds=361;Time.time=41;Time.unscaledTime=41;Call(host,"Update");packet=server.CustomMessagingManager.Last;
+  CoopAuthority.LocalHasServerAuthority=false;CoopAuthority.ActivePlan=Plan(false);NetworkManager.Singleton=client;cf.ElapsedSeconds=361;
+  Call(replica,"OnSnapshot",(ulong)0,new FastBufferReader(packet));
+  Check(clientDrops[0]==null&&clientDrops[4]==null&&replica.Status.Contains("119s"),"server pickup removes both replicas and preserves countdown");
  }
  static void Main(){Offline();Online();Console.WriteLine("PASS: two-minute supply recurrence, occupied slots, retry, one-time charge and authoritative snapshots.");}
 }
