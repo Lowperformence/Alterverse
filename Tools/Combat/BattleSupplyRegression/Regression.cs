@@ -165,7 +165,7 @@ static class Regression
   CoopAuthority.LocalHasServerAuthority=true;CoopAuthority.ActivePlan=Plan(true);NetworkManager.Singleton=server;sf.ElapsedSeconds=240;Time.time=30;Time.unscaledTime=30;Call(host,"Update");
   Check(BattleItemPickup.Created==4,"host skips occupied supplies on tick");
   hostDrops[0].gameObject.destroyed=true;sf.ElapsedSeconds=360;Time.time=40;Time.unscaledTime=40;Call(host,"Update");
-  Check(BattleItemPickup.Created==5,"host respawns only collected slot");packet=server.CustomMessagingManager.Last;
+  Check(BattleItemPickup.Created==5,"host respawns only collected slot");packet=server.CustomMessagingManager.Last;var activePacket=packet;
   CoopAuthority.LocalHasServerAuthority=false;CoopAuthority.ActivePlan=Plan(false);NetworkManager.Singleton=client;cf.ElapsedSeconds=360;Call(replica,"OnSnapshot",(ulong)0,new FastBufferReader(packet));
   Check(BattleItemPickup.Created==6&&clientDrops[0]!=null&&clientDrops[4]!=null&&BattleItemInventory.Consumes==1,"client receives new generation without extra charge");
   CoopAuthority.LocalHasServerAuthority=true;CoopAuthority.ActivePlan=Plan(true);NetworkManager.Singleton=server;
@@ -174,6 +174,8 @@ static class Regression
   CoopAuthority.LocalHasServerAuthority=false;CoopAuthority.ActivePlan=Plan(false);NetworkManager.Singleton=client;cf.ElapsedSeconds=361;
   Call(replica,"OnSnapshot",(ulong)0,new FastBufferReader(packet));
   Check(clientDrops[0]==null&&clientDrops[4]==null&&replica.Status.Contains("119s"),"server pickup removes both replicas and preserves countdown");
+  cf.HasEnded=true;Call(replica,"OnSnapshot",(ulong)0,new FastBufferReader(activePacket));
+  Check(clientDrops[0]==null&&clientDrops[4]==null&&BattleItemInventory.Consumes==1,"late packets after match end are ignored");
  }
  static void Main(){Offline();Online();Console.WriteLine("PASS: two-minute supply recurrence, occupied slots, retry, one-time charge and authoritative snapshots.");}
 }

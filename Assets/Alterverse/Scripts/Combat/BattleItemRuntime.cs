@@ -440,7 +440,7 @@ namespace Alterverse.Combat
         private void OnSnapshot(ulong sender,FastBufferReader reader)
         {
             NetworkManager manager=NetworkManager.Singleton;CoopMatchPlan plan=CoopAuthority.ActivePlan;
-            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsClient||
+            if(match==null||match.HasEnded||!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsClient||
                 sender!=NetworkManager.ServerClientId||plan?.Session?.Slots==null||
                 !MatchNetworkProtocol.ReadRound(ref reader)||!reader.TryBeginRead(MatchSession.MaxPlayers*(3*sizeof(int)+4*sizeof(float))))return;
             int active=0,configured=0;bool waiting=false;float next=float.MaxValue;
