@@ -30,7 +30,8 @@
     "MAIN MENU",
     "ATTACK",
     "RALLY",
-    "DEFEND"
+    "DEFEND",
+    "BOUNTY"
   ],
   "languages": [
     {
@@ -68,7 +69,8 @@
         "MAIN MENU",
         "ATTACK",
         "RALLY",
-        "DEFEND"
+        "DEFEND",
+        "BOUNTY"
       ]
     },
     {
@@ -106,7 +108,8 @@
         "HAUPTMENÜ",
         "ANGRIFF",
         "SAMMELN",
-        "SCHUTZ"
+        "SCHUTZ",
+        "KOPFGELD"
       ]
     },
     {
@@ -144,7 +147,8 @@
         "MENU PRINCIPAL",
         "ATTAQUE",
         "RALLIEMENT",
-        "DÉFENSE"
+        "DÉFENSE",
+        "PRIME"
       ]
     },
     {
@@ -182,7 +186,8 @@
         "MENÚ PRINCIPAL",
         "ATAQUE",
         "REUNIRSE",
-        "DEFENSA"
+        "DEFENSA",
+        "RECOMPENSA"
       ]
     },
     {
@@ -220,7 +225,8 @@
         "MENÚ PRINCIPAL",
         "ATAQUE",
         "REUNIRSE",
-        "DEFENSA"
+        "DEFENSA",
+        "RECOMPENSA"
       ]
     },
     {
@@ -258,7 +264,8 @@
         "MENU PRINCIPALE",
         "ATTACCO",
         "RADUNO",
-        "DIFESA"
+        "DIFESA",
+        "TAGLIA"
       ]
     },
     {
@@ -296,7 +303,8 @@
         "MENU PRINCIPAL",
         "ATAQUE",
         "REAGRUPAR",
-        "DEFESA"
+        "DEFESA",
+        "RECOMPENSA"
       ]
     },
     {
@@ -334,7 +342,8 @@
         "MENU PRINCIPAL",
         "ATAQUE",
         "REAGRUPAR",
-        "DEFESA"
+        "DEFESA",
+        "RECOMPENSA"
       ]
     },
     {
@@ -372,7 +381,8 @@
         "HOOFDMENU",
         "AANVALLEN",
         "VERZAMELEN",
-        "VERDEDIG"
+        "VERDEDIG",
+        "PREMIE"
       ]
     },
     {
@@ -410,7 +420,8 @@
         "MENU GŁÓWNE",
         "ATAK",
         "ZBIÓRKA",
-        "OBRONA"
+        "OBRONA",
+        "NAGRODA"
       ]
     },
     {
@@ -448,7 +459,8 @@
         "HLAVNÍ NABÍDKA",
         "ÚTOK",
         "SRAZ",
-        "OBRANA"
+        "OBRANA",
+        "ODMĚNA"
       ]
     },
     {
@@ -486,7 +498,8 @@
         "HLAVNÁ PONUKA",
         "ÚTOK",
         "ZRAZ",
-        "OBRANA"
+        "OBRANA",
+        "ODMENA"
       ]
     },
     {
@@ -524,7 +537,8 @@
         "FŐMENÜ",
         "TÁMADÁS",
         "GYÜLEKEZŐ",
-        "VÉDEKEZÉS"
+        "VÉDEKEZÉS",
+        "VÉRDÍJ"
       ]
     },
     {
@@ -562,7 +576,8 @@
         "MENIU PRINCIPAL",
         "ATAC",
         "ADUNARE",
-        "APĂRARE"
+        "APĂRARE",
+        "RECOMPENSĂ"
       ]
     },
     {
@@ -600,7 +615,8 @@
         "ГЛАВНО МЕНЮ",
         "АТАКА",
         "СБОР",
-        "ЗАЩИТА"
+        "ЗАЩИТА",
+        "НАГРАДА"
       ]
     },
     {
@@ -638,7 +654,8 @@
         "ΚΥΡΙΟ ΜΕΝΟΥ",
         "ΕΠΙΘΕΣΗ",
         "ΣΥΓΚΕΝΤΡΩΣΗ",
-        "ΑΜΥΝΑ"
+        "ΑΜΥΝΑ",
+        "ΕΠΙΚΗΡΥΞΗ"
       ]
     },
     {
@@ -676,7 +693,8 @@
         "ГЛАВНОЕ МЕНЮ",
         "АТАКА",
         "СБОР",
-        "ЗАЩИТА"
+        "ЗАЩИТА",
+        "НАГРАДА"
       ]
     },
     {
@@ -714,7 +732,8 @@
         "ГОЛОВНЕ МЕНЮ",
         "АТАКА",
         "ЗБІР",
-        "ЗАХИСТ"
+        "ЗАХИСТ",
+        "НАГОРОДА"
       ]
     },
     {
@@ -752,7 +771,8 @@
         "ANA MENÜ",
         "SALDIRI",
         "TOPLAN",
-        "SAVUN"
+        "SAVUN",
+        "ÖDÜL"
       ]
     },
     {
@@ -790,7 +810,8 @@
         "HUVUDMENY",
         "ANFALL",
         "SAMLING",
-        "FÖRSVAR"
+        "FÖRSVAR",
+        "PRISPENG"
       ]
     },
     {
@@ -828,7 +849,8 @@
         "HOVEDMENU",
         "ANGREB",
         "SAMLING",
-        "FORSVAR"
+        "FORSVAR",
+        "DUSØR"
       ]
     },
     {
@@ -866,7 +888,8 @@
         "HOVEDMENY",
         "ANGREP",
         "SAMLING",
-        "FORSVAR"
+        "FORSVAR",
+        "DUSØR"
       ]
     },
     {
@@ -904,7 +927,8 @@
         "PÄÄVALIKKO",
         "HYÖKKÄYS",
         "KOKOONTUKAA",
-        "PUOLUSTUS"
+        "PUOLUSTUS",
+        "PALKKIO"
       ]
     },
     {
@@ -942,7 +966,8 @@
         "GLAVNI IZBORNIK",
         "NAPAD",
         "OKUPLJANJE",
-        "OBRANA"
+        "OBRANA",
+        "NAGRADA"
       ]
     },
     {
@@ -980,7 +1005,8 @@
         "ГЛАВНИ МЕНИ",
         "НАПАД",
         "ОКУПЉАЊЕ",
-        "ОДБРАНА"
+        "ОДБРАНА",
+        "НАГРАДА"
       ]
     },
     {
@@ -1018,7 +1044,8 @@
         "GLAVNI MENI",
         "NAPAD",
         "ZBOR",
-        "OBRAMBA"
+        "OBRAMBA",
+        "NAGRADA"
       ]
     },
     {
@@ -1056,7 +1083,8 @@
         "PAGRINDINIS MENIU",
         "PUOLIMAS",
         "SUSIBŪRIMAS",
-        "GYNYBA"
+        "GYNYBA",
+        "ATLYGIS"
       ]
     },
     {
@@ -1094,7 +1122,8 @@
         "GALVENĀ IZVĒLNE",
         "UZBRUKUMS",
         "PULCĒTIES",
-        "AIZSARDZĪBA"
+        "AIZSARDZĪBA",
+        "ATLĪDZĪBA"
       ]
     },
     {
@@ -1132,7 +1161,8 @@
         "PEAMENÜÜ",
         "RÜNNAK",
         "KOGUNEMINE",
-        "KAITSE"
+        "KAITSE",
+        "PEARAHA"
       ]
     },
     {
@@ -1170,7 +1200,8 @@
         "القائمة الرئيسية",
         "هجوم",
         "تجمع",
-        "دفاع"
+        "دفاع",
+        "مكافأة"
       ]
     },
     {
@@ -1208,7 +1239,8 @@
         "תפריט ראשי",
         "התקפה",
         "התאספות",
-        "הגנה"
+        "הגנה",
+        "פרס"
       ]
     },
     {
@@ -1246,7 +1278,8 @@
         "मुख्य मेन्यू",
         "हमला",
         "एकत्र हों",
-        "रक्षा"
+        "रक्षा",
+        "इनाम"
       ]
     },
     {
@@ -1284,7 +1317,8 @@
         "主菜单",
         "进攻",
         "集合",
-        "防守"
+        "防守",
+        "悬赏"
       ]
     },
     {
@@ -1322,7 +1356,8 @@
         "主選單",
         "進攻",
         "集合",
-        "防守"
+        "防守",
+        "懸賞"
       ]
     },
     {
@@ -1360,7 +1395,8 @@
         "メインメニュー",
         "攻撃",
         "集合",
-        "防衛"
+        "防衛",
+        "懸賞金"
       ]
     },
     {
@@ -1398,7 +1434,8 @@
         "메인 메뉴",
         "공격",
         "집결",
-        "방어"
+        "방어",
+        "현상금"
       ]
     },
     {
@@ -1436,7 +1473,8 @@
         "MENU UTAMA",
         "SERANG",
         "BERKUMPUL",
-        "BERTAHAN"
+        "BERTAHAN",
+        "HADIAH"
       ]
     },
     {
@@ -1474,7 +1512,8 @@
         "MENU CHÍNH",
         "TẤN CÔNG",
         "TẬP HỢP",
-        "PHÒNG THỦ"
+        "PHÒNG THỦ",
+        "TIỀN THƯỞNG"
       ]
     },
     {
@@ -1512,7 +1551,8 @@
         "เมนูหลัก",
         "โจมตี",
         "รวมพล",
-        "ป้องกัน"
+        "ป้องกัน",
+        "ค่าหัว"
       ]
     },
     {
@@ -1550,7 +1590,8 @@
         "MENU UTAMA",
         "SERANG",
         "BERKUMPUL",
-        "BERTAHAN"
+        "BERTAHAN",
+        "GANJARAN"
       ]
     }
   ]
