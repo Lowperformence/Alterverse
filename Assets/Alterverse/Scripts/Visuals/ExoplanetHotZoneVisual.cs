@@ -20,7 +20,7 @@ namespace Alterverse.Visuals
         Transform body;
         Health health;
         Vector3 lastPosition;
-        float phase,stride;
+        float phase,stride,lastYaw,turnLean;
         bool built;
         public Transform Muzzle {get;private set;}
         public ArenaVariant Variant {get;private set;}
@@ -171,18 +171,31 @@ namespace Alterverse.Visuals
             Mesh mesh=new(){name="DF_ExoplanetSmoothBody",vertices=vertices,normals=normals,uv=uv,triangles=triangles.ToArray()};
             mesh.RecalculateBounds();mesh.RecalculateTangents();return mesh;
         }
-        void OnEnable(){lastPosition=transform.position;phase=stride=0f;}
+        void OnEnable(){lastPosition=transform.position;lastYaw=transform.eulerAngles.y;phase=stride=turnLean=0f;}
         void LateUpdate()
         {
             Vector3 delta=transform.position-lastPosition;delta.y=0;lastPosition=transform.position;
             if(!built||body==null||health!=null&&health.IsDead||Time.timeScale<=0)return;
+            float dt=Mathf.Max(.001f,Time.deltaTime);
             float distance=Mathf.Min(delta.magnitude,.30f);
-            phase+=distance*6f;
-            stride=Mathf.Lerp(stride,Mathf.Clamp01(distance/Mathf.Max(.001f,Time.deltaTime)*.5f),1f-Mathf.Exp(-12f*Time.deltaTime));
-            body.localPosition=new Vector3(0,-.10f+Mathf.Sin(Time.time*1.7f)*.009f+Mathf.Sin(phase*2)*.025f*stride,0);
-            body.localRotation=Quaternion.identity;
+            phase+=distance*6.8f;
+            stride=Mathf.Lerp(stride,Mathf.Clamp01(distance/dt*.52f),1f-Mathf.Exp(-12f*dt));
+            float yaw=transform.eulerAngles.y;
+            float yawSpeed=Mathf.Clamp(Mathf.DeltaAngle(lastYaw,yaw)/dt,-180f,180f);
+            lastYaw=yaw;
+            turnLean=Mathf.Lerp(turnLean,Mathf.Clamp(-yawSpeed*.038f,-6.5f,6.5f),1f-Mathf.Exp(-10f*dt));
+            float breathe=Mathf.Sin(Time.time*1.85f);
+            float gaitWave=Mathf.Sin(phase);
+            float gaitDouble=Mathf.Sin(phase*2f);
+            body.localPosition=new Vector3(gaitWave*.022f*stride,-.10f+breathe*.012f+gaitDouble*.032f*stride,0);
+            body.localRotation=Quaternion.Euler(2.5f+breathe*.8f+Mathf.Cos(phase*2f)*2.4f*stride,gaitWave*2.8f*stride,gaitWave*3.2f*stride+turnLean);
             for(int i=0;i<legs.Count;i++)
-                legs[i].localRotation=legRest[i]*Quaternion.Euler(Mathf.Sin(phase+i*Mathf.PI)*12f*stride,Mathf.Cos(phase+i*Mathf.PI)*9f*stride,0);
+            {
+                float legPhase=phase+i*Mathf.PI+(i%3)*.55f;
+                float swing=Mathf.Sin(legPhase);
+                float lift=Mathf.Max(0f,Mathf.Cos(legPhase));
+                legs[i].localRotation=legRest[i]*Quaternion.Euler(swing*17f*stride-lift*8f*stride,Mathf.Cos(legPhase)*12f*stride,lift*6f*stride);
+            }
         }
         void OnDestroy()
         {foreach(Mesh mesh in meshes)if(mesh!=null)Destroy(mesh);foreach(Material material in materials)if(material!=null)Destroy(material);}

@@ -608,6 +608,19 @@ namespace Alterverse.UI
             }
 
             bool localKiller = local != null && killerHealth.gameObject == local;
+            bool wasClanWarKill = ClanWarAndXpService.IsEnemyClanHero(victim.gameObject, killerTeam.Team, out string enemyClanTag);
+            if (wasClanWarKill && localKiller)
+            {
+                PlayerWallet.Grant(ClanWarAndXpService.EnemyClanKillShardReward);
+                string tagPrefix = !string.IsNullOrEmpty(enemyClanTag) ? $"[{enemyClanTag}] " : string.Empty;
+                SpawnFloating(
+                    victim.transform.position + Vector3.up * (wasShutdown ? 2.55f : 2.15f),
+                    $"☠ {tagPrefix}CLAN WAR +{ClanWarAndXpService.EnemyClanKillShardReward} SHARD!",
+                    new Color(1f, 0.30f, 0.36f, 1f),
+                    21,
+                    1.45f);
+                UiSoundRouter.Confirm();
+            }
             if (wasShutdown)
             {
                 if (CoopAuthority.CanSimulateHostGameplay && killerHealth != null && !killerHealth.IsDead)
@@ -683,7 +696,8 @@ namespace Alterverse.UI
                           ? (localKiller
                               ? "   •   " + GameLanguage.Text("BOUNTY") + " +2 SHARDS & +1.5% FRONT"
                               : "   •   +1.5% FRONT")
-                          : isComebackKill ? "   •   +0.75% FRONT" : string.Empty);
+                          : isComebackKill ? "   •   +0.75% FRONT" : string.Empty) +
+                      (wasClanWarKill && localKiller ? "   •   ☠ CLAN WAR +1 SHARD" : string.Empty);
                 activeBannerColor = killerTeam.Team == 0 ? FrontEndTheme.Zero : FrontEndTheme.Accent;
                 activeBannerUntil = now + (earnedTurret && localKiller ? 3.6f : 2.6f);
             }

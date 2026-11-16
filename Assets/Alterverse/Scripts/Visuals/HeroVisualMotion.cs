@@ -440,7 +440,7 @@ namespace Alterverse.Visuals
             displayedScale=Vector3.Lerp(displayedScale,targetScale,1-Mathf.Exp(-22f*dt));
             root.localScale=displayedScale;
             float idleShift=Mathf.Sin(t*.8f+phase*.12f)*(1-strideWeight);
-            float targetBank=hero==HeroId.Nyra?0f:Mathf.Clamp(-turnRate*.016f*strideWeight,-6f,6f);
+            float targetBank=hero==HeroId.Nyra?0f:Mathf.Clamp((-turnRate*.018f-localVelocity.x*.38f)*strideWeight,-7.5f,7.5f);
             smoothedBank=Mathf.Lerp(smoothedBank,targetBank,1-Mathf.Exp(-14f*dt));
             float sway=hero==HeroId.Nyra?0f:
                 Mathf.Sin(phase)*strideWeight*Mathf.Lerp(1.6f,3.2f,runBlend)*(heavy?.8f:1)+idleShift*.45f+smoothedBank;
@@ -785,18 +785,24 @@ namespace Alterverse.Visuals
 
         private void PoseVeyrBasic(float seconds)
         {
-            // Both weapons retain their fixed grip rotation. The shoulder pivots drive the
-            // entire hand/forearm/sword chain across the center line in opposite directions.
+            // Three distinct blade strike styles across consecutive combo swings.
+            int variant=attackSerial%3;
             float open=seconds<.14f?Mathf.SmoothStep(0f,1f,seconds/.14f):1f;
             float cut=Mathf.SmoothStep(0f,1f,Mathf.Clamp01((seconds-.14f)/.21f));
             float through=Mathf.SmoothStep(0f,1f,Mathf.Clamp01((seconds-.35f)/.11f));
             float recover=Mathf.SmoothStep(0f,1f,Mathf.Clamp01((seconds-.46f)/.24f));
-            Quaternion left=Quaternion.Slerp(Quaternion.Euler(VeyrGuardArm(false)),Quaternion.Euler(-44f,-30f,-72f),open);
-            Quaternion right=Quaternion.Slerp(Quaternion.Euler(VeyrGuardArm(true)),Quaternion.Euler(-44f,30f,72f),open);
-            left=Quaternion.Slerp(left,Quaternion.Euler(-68f,10f,42f),cut);
-            right=Quaternion.Slerp(right,Quaternion.Euler(-68f,-10f,-42f),cut);
-            left=Quaternion.Slerp(left,Quaternion.Euler(-61f,14f,54f),through);
-            right=Quaternion.Slerp(right,Quaternion.Euler(-61f,-14f,-54f),through);
+            Vector3 openL=variant==1?new Vector3(-24f,-38f,-82f):variant==2?new Vector3(-62f,-36f,-64f):new Vector3(-44f,-30f,-72f);
+            Vector3 openR=variant==1?new Vector3(-64f,36f,68f):variant==2?new Vector3(-62f,36f,64f):new Vector3(-44f,30f,72f);
+            Vector3 cutL=variant==1?new Vector3(-84f,18f,48f):variant==2?new Vector3(-76f,16f,52f):new Vector3(-68f,10f,42f);
+            Vector3 cutR=variant==1?new Vector3(-52f,-16f,-36f):variant==2?new Vector3(-76f,-16f,-52f):new Vector3(-68f,-10f,-42f);
+            Vector3 thrL=variant==1?new Vector3(-72f,24f,60f):variant==2?new Vector3(-66f,22f,62f):new Vector3(-61f,14f,54f);
+            Vector3 thrR=variant==1?new Vector3(-46f,-20f,-46f):variant==2?new Vector3(-66f,-22f,-62f):new Vector3(-61f,-14f,-54f);
+            Quaternion left=Quaternion.Slerp(Quaternion.Euler(VeyrGuardArm(false)),Quaternion.Euler(openL),open);
+            Quaternion right=Quaternion.Slerp(Quaternion.Euler(VeyrGuardArm(true)),Quaternion.Euler(openR),open);
+            left=Quaternion.Slerp(left,Quaternion.Euler(cutL),cut);
+            right=Quaternion.Slerp(right,Quaternion.Euler(cutR),cut);
+            left=Quaternion.Slerp(left,Quaternion.Euler(thrL),through);
+            right=Quaternion.Slerp(right,Quaternion.Euler(thrR),through);
             left=Quaternion.Slerp(left,Quaternion.Euler(VeyrGuardArm(false)),recover);
             right=Quaternion.Slerp(right,Quaternion.Euler(VeyrGuardArm(true)),recover);
             if(armL!=null)armL.localRotation=armRestL*left;

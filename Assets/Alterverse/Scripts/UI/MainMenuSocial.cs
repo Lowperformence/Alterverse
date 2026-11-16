@@ -18,6 +18,7 @@ namespace Alterverse.UI
         int clanDetailTab,clanIconIndex,clanDescriptionIndex;
         string clanQuery="";
         string confirmRoute,confirmPlayer,confirmLabel;
+        string clanWarStatusMessage="";
         static readonly SocialService.Player[] NoPlayers=Array.Empty<SocialService.Player>();
         static readonly SocialService.Clan[] NoClans=Array.Empty<SocialService.Clan>();
 
@@ -146,14 +147,26 @@ namespace Alterverse.UI
             else
             {
                 var rows=result.clans??NoClans;count=rows.Length;
+                string myClanId=service.State?.clan?.clanId;
                 for(int i=0;i<rows.Length;i++)
                 {
                     var c=rows[i];float y=322+i*37;
+                    bool atWar=ClanWarAndXpService.IsAtWarWithClan(c.clanId);
+                    int bonusLvl=ClanWarAndXpService.GetClanBonusLevel(c.clanId);
                     theme.RankingPanel(new Rect(Left,y,ContentWidth,34),c.rank);
                     theme.RankingBadge(new Rect(Left+10,y+4,96,26),c.rank);
                     AvatarBadgeRenderer.Draw(new Rect(Left+118,y+2,30,30),Mathf.Max(0,c.avatar),Texture2D.whiteTexture,Time.unscaledTime);
-                    theme.FitLabel(new Rect(Left+160,y,ContentWidth-526,34),$"[{c.tag}] {c.name}",theme.Body);
-                    theme.FitLabel(new Rect(Right-350,y,330,34),$"TOTAL {c.totalLevel:N0}  /  {c.memberCount}/50 MEMBERS",theme.Small);
+                    theme.FitLabel(new Rect(Left+160,y,ContentWidth-640,34),(atWar?"☠ ":"")+$"[{c.tag}] {c.name}",theme.Body);
+                    theme.FitLabel(new Rect(Right-470,y,310,34),$"TOTAL {(c.totalLevel+bonusLvl):N0}  /  {c.memberCount}/50 MEMBERS",theme.Small);
+                    if(!string.IsNullOrEmpty(myClanId)&&c.clanId!=myClanId)
+                    {
+                        bool canDeclare=atWar||ClanWarAndXpService.ActiveWarCount<ClanWarAndXpService.MaxEnemyClans;
+                        if(theme.Action(new Rect(Right-152,y+2,144,30),atWar?"END WAR":"☠ WAR",selected:atWar,enabled:canDeclare))
+                        {
+                            if(atWar)ClanWarAndXpService.EndWar(c.clanId,out clanWarStatusMessage);
+                            else ClanWarAndXpService.DeclareWar(c.clanId,c.name,c.tag,out clanWarStatusMessage);
+                        }
+                    }
                 }
             }
             int visibleTotal=rankingTab==1?Mathf.Min(result.total,PlayerRankingLimit):result.total;
@@ -187,20 +200,39 @@ namespace Alterverse.UI
         }
         void DrawClanBrowser(SocialService service,SocialService.Snapshot state)
         {
-            theme.Label(new Rect(Left,270,ContentWidth,40),"Browse clans below. Names are assigned automatically.",theme.Small,true);
+            string browserInfo=!string.IsNullOrEmpty(clanWarStatusMessage)?clanWarStatusMessage:
+                state.clan!=null?$"ACTIVE CLAN WARS: {ClanWarAndXpService.ActiveWarCount} / {ClanWarAndXpService.MaxEnemyClans}  •  ☠ ENEMY CLAN KILLS IN ONLINE MATCHES GRANT +1 SHARD":
+                "Browse clans below. Names are assigned automatically.";
+            theme.Label(new Rect(Left,270,ContentWidth,40),browserInfo,theme.Small,true);
             var rows=service.Clans?.clans??NoClans;
             int count=Mathf.Min(6,rows.Length);
             for(int i=0;i<count;i++)
             {
                 var c=rows[i];float y=326+i*48;
+                bool isOwnClan=state.clan!=null&&state.clan.clanId==c.clanId;
+                bool atWar=ClanWarAndXpService.IsAtWarWithClan(c.clanId);
+                int bonusLvl=ClanWarAndXpService.GetClanBonusLevel(c.clanId);
                 theme.Panel(new Rect(Left,y,ContentWidth,44));
                 AvatarBadgeRenderer.Draw(new Rect(Left+10,y+6,32,32),Mathf.Max(0,c.avatar),Texture2D.whiteTexture,Time.unscaledTime);
-                theme.FitLabel(new Rect(Left+56,y+2,ContentWidth-442,24),$"[{c.tag}] {c.name}",theme.Body);
-                theme.FitLabel(new Rect(Left+56,y+25,ContentWidth-442,17),$"{c.memberCount} / 50 MEMBERS  •  TOTAL LEVEL {c.totalLevel:N0}",theme.Small,true);
-                theme.StatusBadge(new Rect(Right-276,y+9,104,26),c.open?"OPEN":"APPLY",c.open?FrontEndTheme.Positive:FrontEndTheme.Accent);
-                bool pending=Array.IndexOf(state.pendingClans??Array.Empty<string>(),c.clanId)>=0;
-                SocialButton(new Rect(Right-160,y+4,156,36),pending?"CANCEL REQUEST":c.open?"JOIN":"APPLY",
-                    pending?"/social/clan/cancel":"/social/clan/join",clanId:c.clanId,enabled:state.clan==null&&(pending||c.memberCount<50));
+                theme.FitLabel(new Rect(Left+56,y+2,ContentWidth-442,24),(atWar?"☠ ":"")+$"[{c.tag}] {c.name}",theme.Body);
+                theme.FitLabel(new Rect(Left+56,y+25,ContentWidth-442,17),$"{c.memberCount} / 50 MEMBERS  •  TOTAL LEVEL {(c.totalLevel+bonusLvl):N0}"+(atWar?"  •  ☠ AT WAR":""),theme.Small,true);
+                theme.StatusBadge(new Rect(Right-276,y+9,104,26),atWar?"☠ WAR":c.open?"OPEN":"APPLY",atWar?FrontEndTheme.Danger:c.open?FrontEndTheme.Positive:FrontEndTheme.Accent);
+                if(state.clan!=null&&!isOwnClan)
+                {
+                    bool canDeclare=atWar||ClanWarAndXpService.ActiveWarCount<ClanWarAndXpService.MaxEnemyClans;
+                    string warBtnLabel=atWar?"END WAR":canDeclare?"☠ DECLARE WAR":"MAX 5 WARS";
+                    if(theme.Action(new Rect(Right-160,y+4,156,36),warBtnLabel,selected:atWar,enabled:canDeclare))
+                    {
+                        if(atWar)ClanWarAndXpService.EndWar(c.clanId,out clanWarStatusMessage);
+                        else ClanWarAndXpService.DeclareWar(c.clanId,c.name,c.tag,out clanWarStatusMessage);
+                    }
+                }
+                else
+                {
+                    bool pending=Array.IndexOf(state.pendingClans??Array.Empty<string>(),c.clanId)>=0;
+                    SocialButton(new Rect(Right-160,y+4,156,36),isOwnClan?"YOUR CLAN":pending?"CANCEL REQUEST":c.open?"JOIN":"APPLY",
+                        pending?"/social/clan/cancel":"/social/clan/join",clanId:c.clanId,enabled:state.clan==null&&(pending||c.memberCount<50));
+                }
             }
             if(count==0)theme.EmptyState(new Rect(Left,336,ContentWidth,134),"Find your crew","Browse the clan directory or create your own.");
             DrawSocialPager(service.Clans?.offset??0,count,offset=>{service.Load("/social/clans",new SocialService.Request{query=clanQuery,offset=offset});},pageSize:6);
@@ -255,23 +287,37 @@ namespace Alterverse.UI
             if(clan==null){theme.EmptyState(new Rect(Left,272,ContentWidth,154),"Your clan starts here","Join a crew from FIND CLANS, or create a clan for 500 Shards.");return;}
             if(clanDetailTab==2&&state.chatEnabled&&(!state.chatAccepted||showLeaderTerms||state.role=="leader"&&!state.leaderAccepted))
             {DrawChatConsent(service,state,state.chatAccepted&&(showLeaderTerms||state.role=="leader"&&!state.leaderAccepted));return;}
+            ClanWarAndXpService.GetClanXpProgress(clan.clanId,out int totalClanXp,out int clanBonusLvl,out int xpIntoLvl,out int xpNeedLvl);
+            int remainingDonations=ClanWarAndXpService.RemainingDonationsToday();
             theme.Panel(new Rect(Left-8,262,ContentWidth+16,78));
             AvatarBadgeRenderer.Draw(new Rect(Left,268,66,66),Mathf.Max(0,clan.avatar),Texture2D.whiteTexture,Time.unscaledTime);
-            theme.FitLabel(new Rect(Left+80,268,ContentWidth-270,30),$"[{clan.tag}] {clan.name}",theme.Heading);
+            theme.FitLabel(new Rect(Left+80,268,ContentWidth-518,30),$"[{clan.tag}] {clan.name}",theme.Heading);
+            if(ShardPurchaseAction(new Rect(Right-436,270,250,38),
+                remainingDonations>0?$"BUY CLAN XP / {ClanWarAndXpService.DonationShardCost} SHARDS":"CLAN XP LIMIT REACHED",
+                ClanWarAndXpService.DonationShardCost,true,
+                enabled:!service.Busy&&remainingDonations>0&&clanBonusLvl<ClanWarAndXpService.MaxClanBonusLevel))
+            {
+                ClanWarAndXpService.TryDonateShardsForClanXp(clan.clanId,out clanWarStatusMessage);
+            }
             if(theme.Action(new Rect(Right-178,270,178,38),"LEAVE CLAN",enabled:!service.Busy))
                 ConfirmAction("/social/clan/leave",null,clan.memberCount==1?"Leave and delete your empty clan?":"Leave this clan? Leaders must transfer leadership first.");
-            theme.FitLabel(new Rect(Left+80,299,ContentWidth-270,18),$"{clan.memberCount} / 50 MEMBERS  •  TOTAL LEVEL {clan.totalLevel:N0}  •  {state.role?.ToUpperInvariant()}",theme.Small,true);
-            theme.FitLabel(new Rect(Left+80,317,ContentWidth-80,20),clan.description,theme.Small,true);
+            theme.FitLabel(new Rect(Left+80,299,ContentWidth-270,18),
+                $"{clan.memberCount} / 50 MEMBERS  •  TOTAL LEVEL {(clan.totalLevel+clanBonusLvl):N0} (BONUS +{clanBonusLvl})  •  CLAN XP {xpIntoLvl}/{xpNeedLvl}  •  {state.role?.ToUpperInvariant()}",theme.Small,true);
+            theme.FitLabel(new Rect(Left+80,317,ContentWidth-80,20),
+                !string.IsNullOrEmpty(clanWarStatusMessage)?clanWarStatusMessage:
+                $"{clan.description}  •  +{ClanWarAndXpService.DonationClanXpGain} CLAN XP / {ClanWarAndXpService.DonationShardCost} SHARDS ({ClanWarAndXpService.DonationsUsedToday()}/{ClanWarAndXpService.MaxDailyDonations} TODAY)",theme.Small,true);
             bool manages=state.role=="leader"||state.role=="officer";
             if(!manages)clanApplications=false;
             if(state.role!="leader"&&clanDetailTab==3)clanDetailTab=0;
-            if(theme.Action(new Rect(Left,346,170,34),"MEMBERS",selected:clanDetailTab==0)){clanDetailTab=0;clanApplications=false;memberOffset=0;}
-            if(manages&&theme.Action(new Rect(Left+180,346,220,34),"APPLICATIONS",selected:clanDetailTab==1)){clanDetailTab=1;clanApplications=true;memberOffset=0;}
-            if(state.role=="leader"&&theme.Action(new Rect(Left+410,346,190,34),"CLAN IMAGE",selected:clanDetailTab==3))
+            if(theme.Action(new Rect(Left,346,150,34),"MEMBERS",selected:clanDetailTab==0)){clanDetailTab=0;clanApplications=false;memberOffset=0;}
+            if(manages&&theme.Action(new Rect(Left+158,346,190,34),"APPLICATIONS",selected:clanDetailTab==1)){clanDetailTab=1;clanApplications=true;memberOffset=0;}
+            if(state.role=="leader"&&theme.Action(new Rect(Left+356,346,166,34),"CLAN IMAGE",selected:clanDetailTab==3))
             {clanDetailTab=3;clanIconIndex=0;}
-            if(state.chatEnabled&&theme.Action(new Rect(Left+610,346,130,34),"CHAT",selected:clanDetailTab==2))clanDetailTab=2;
+            if(state.chatEnabled&&theme.Action(new Rect(Left+530,346,118,34),"CHAT",selected:clanDetailTab==2))clanDetailTab=2;
+            if(theme.Action(new Rect(Left+656,346,184,34),$"☠ WARS ({ClanWarAndXpService.ActiveWarCount}/{ClanWarAndXpService.MaxEnemyClans})",selected:clanDetailTab==4))clanDetailTab=4;
             if(clanDetailTab==2){DrawClanChat(service,state);return;}
             if(clanDetailTab==3){DrawClanImage(service,state);return;}
+            if(clanDetailTab==4){DrawClanWars(service);return;}
             if(selectedChatPlayer!=null){DrawChatMemberActions(service,state);return;}
             var rows=(clanApplications?state.applications:clan.members)??NoPlayers;
             memberOffset=Mathf.Min(memberOffset,Mathf.Max(0,rows.Length-1)/5*5);
@@ -325,6 +371,37 @@ namespace Alterverse.UI
             if(theme.Action(new Rect(Left,590,300,48),state.clan.avatar==id?"SELECTED":"SET CLAN IMAGE",true,enabled:!service.Busy&&state.clan.avatar!=id))
                 service.Load("/social/clan/icon",new SocialService.Request{avatar=id});
             if(theme.Action(new Rect(Left+316,590,260,48),"BROWSE AVATARS"))OpenAvatarStore();
+        }
+
+        void DrawClanWars(SocialService service)
+        {
+            var wars=ClanWarAndXpService.GetEnemyClans();
+            theme.Label(new Rect(Left,390,ContentWidth,28),
+                $"ACTIVE CLAN WARS ({wars.Count} / {ClanWarAndXpService.MaxEnemyClans})  •  ☠ ENEMY CLAN PLAYERS SHOW A SKULL & GRANT +1 SHARD PER KILL IN ONLINE MATCHES",
+                theme.Small,true);
+            for(int i=0;i<wars.Count;i++)
+            {
+                var enemy=wars[i];
+                float y=424+i*42;
+                theme.Panel(new Rect(Left,y,ContentWidth,38));
+                theme.FitLabel(new Rect(Left+14,y+6,ContentWidth-210,26),$"☠ [{enemy.tag}] {enemy.name}",theme.Body);
+                if(theme.Action(new Rect(Right-176,y+3,168,32),"END WAR",true))
+                {
+                    ClanWarAndXpService.EndWar(enemy.clanId,out clanWarStatusMessage);
+                    break;
+                }
+            }
+            if(wars.Count==0)
+            {
+                theme.EmptyState(new Rect(Left,428,ContentWidth,130),
+                    "No active clan wars",
+                    "Declare war on up to 5 clans in FIND CLANS or CLAN LEVELS. Enemy clan players are marked with a skull in online matches and grant +1 Shard per kill.");
+            }
+            if(theme.Action(new Rect(Left,640,260,36),"FIND CLANS TO DECLARE WAR",true))
+            {
+                clanTab=0;
+                service?.Load("/social/clans");
+            }
         }
     }
 }

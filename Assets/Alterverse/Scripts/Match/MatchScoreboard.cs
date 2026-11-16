@@ -188,7 +188,8 @@ private void RefreshRespawnBoard()
     {
         if(e.Member==null)continue;
         e.BoardPerformance=Performance(e);e.BoardOwn=e.Member==local;
-        e.BoardName=(e.BoardOwn&&FounderEntitlement.Owned?"◆ ":"")+e.Name;
+        bool warEnemy=local!=null&&e.Health!=null&&ClanWarAndXpService.IsEnemyClanHero(e.Health.gameObject,local.Team,out string warTag);
+        e.BoardName=(e.BoardOwn&&FounderEntitlement.Owned?"◆ ":warEnemy?$"☠ [{warTag}] ":"")+e.Name;
         e.BoardKills=e.Kills.ToString();e.BoardDeaths=e.Deaths.ToString();
         e.BoardAssists=e.Assists.ToString();e.BoardScore=e.BoardPerformance.ToString("0");
         (e.Member.Team==0?respawnZero:respawnLumen).Add(e);

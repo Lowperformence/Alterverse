@@ -614,16 +614,17 @@ namespace Alterverse.Combat
         private void AnimateMoonGuard()
         {
             if(moonBodyRoot==null)return;
-            float t=Time.time;
+            float idle=Mathf.Sin(Time.time*1.75f);
             float stride=Mathf.Sin(moonGaitPhase)*moonMoveBlend;
-            float bob=(1f-Mathf.Cos(moonGaitPhase*2f))*.032f*moonMoveBlend;
-            moonBodyRoot.localPosition=moonBodyRest+Vector3.up*bob;
-            moonBodyRoot.localRotation=Quaternion.Euler(-3f+Mathf.Cos(moonGaitPhase*2f)*1.4f*moonMoveBlend,0,stride*2f);
+            float bob=(1f-Mathf.Cos(moonGaitPhase*2f))*.038f*moonMoveBlend+idle*.008f;
+            float windup=shotPending?Mathf.Clamp01(1f-(shotAt-Time.time)/ShotWindup):0f;
+            moonBodyRoot.localPosition=moonBodyRest+new Vector3(stride*.022f,bob,windup*-.03f);
+            moonBodyRoot.localRotation=Quaternion.Euler(3.5f+Mathf.Cos(moonGaitPhase*2f)*2.1f*moonMoveBlend-windup*5f,-stride*3.5f,stride*2.8f);
 
-            if(moonLeftLeg!=null)moonLeftLeg.localRotation=moonLeftLegBase*Quaternion.Euler(stride*34f,0,0);
-            if(moonRightLeg!=null)moonRightLeg.localRotation=moonRightLegBase*Quaternion.Euler(-stride*34f,0,0);
-            if(moonLeftArm!=null)moonLeftArm.localRotation=moonLeftArmBase*Quaternion.Euler(-stride*27f,0,0);
-            if(moonRightArm!=null)moonRightArm.localRotation=moonRightArmBase*Quaternion.Euler(stride*(machineGun!=null?5f:27f),0,0);
+            if(moonLeftLeg!=null)moonLeftLeg.localRotation=moonLeftLegBase*Quaternion.Euler(stride*36f,0,-2.5f);
+            if(moonRightLeg!=null)moonRightLeg.localRotation=moonRightLegBase*Quaternion.Euler(-stride*36f,0,2.5f);
+            if(moonLeftArm!=null)moonLeftArm.localRotation=moonLeftArmBase*Quaternion.Euler(-12f-stride*28f+idle*1.8f,6f,-6f);
+            if(moonRightArm!=null)moonRightArm.localRotation=moonRightArmBase*Quaternion.Euler((machineGun!=null?-8f:-14f)+stride*(machineGun!=null?6f:28f)-windup*16f,-6f,6f);
         }
 
         private void BuildSkeletonVisuals()
@@ -689,13 +690,14 @@ namespace Alterverse.Combat
         private void AnimateSkeleton()
         {
             skeletonAttackKick=Mathf.MoveTowards(skeletonAttackKick,0f,Time.deltaTime*7f);
-            float idle=Mathf.Sin(Time.time*1.65f),stride=Mathf.Sin(skeletonGaitPhase)*skeletonMoveBlend;
-            if(skeletonLeftArm!=null)skeletonLeftArm.localRotation=skeletonLeftArmBase*Quaternion.Euler(stride*30f,0,idle*1.5f);
-            if(skeletonRightArm!=null)skeletonRightArm.localRotation=skeletonRightArmBase*Quaternion.Euler(-stride*30f-(shotPending?18f:0f)+skeletonAttackKick*24f,0,-idle*1.5f);
-            if(skeletonLeftLeg!=null)skeletonLeftLeg.localRotation=skeletonLeftLegBase*Quaternion.Euler(-stride*32f,0,0);
-            if(skeletonRightLeg!=null)skeletonRightLeg.localRotation=skeletonRightLegBase*Quaternion.Euler(stride*32f,0,0);
-            if(skeletonSkull!=null)skeletonSkull.localRotation=skeletonSkullBase*Quaternion.Euler(idle*1.2f,idle*2.4f,0);
-            if(skeletonPelvis!=null)skeletonPelvis.localScale=new Vector3(skeletonPelvisBaseScale.x,skeletonPelvisBaseScale.y*(1f+Mathf.Abs(stride)*.018f),skeletonPelvisBaseScale.z);
+            float idle=Mathf.Sin(Time.time*1.75f),stride=Mathf.Sin(skeletonGaitPhase)*skeletonMoveBlend;
+            float windup=shotPending?Mathf.Clamp01(1f-(shotAt-Time.time)/ShotWindup):0f;
+            if(skeletonLeftArm!=null)skeletonLeftArm.localRotation=skeletonLeftArmBase*Quaternion.Euler(-14f+stride*32f-windup*12f+skeletonAttackKick*14f,8f,-6f+idle*1.8f);
+            if(skeletonRightArm!=null)skeletonRightArm.localRotation=skeletonRightArmBase*Quaternion.Euler(-18f-stride*32f-windup*26f+skeletonAttackKick*34f,-10f,7f-idle*1.8f);
+            if(skeletonLeftLeg!=null)skeletonLeftLeg.localRotation=skeletonLeftLegBase*Quaternion.Euler(-stride*35f,0,-2.5f);
+            if(skeletonRightLeg!=null)skeletonRightLeg.localRotation=skeletonRightLegBase*Quaternion.Euler(stride*35f,0,2.5f);
+            if(skeletonSkull!=null)skeletonSkull.localRotation=skeletonSkullBase*Quaternion.Euler(-4f+idle*1.6f-windup*6f+skeletonAttackKick*8f,idle*3.2f-stride*3f,stride*1.8f);
+            if(skeletonPelvis!=null)skeletonPelvis.localScale=new Vector3(skeletonPelvisBaseScale.x,skeletonPelvisBaseScale.y*(1f+Mathf.Abs(stride)*.024f),skeletonPelvisBaseScale.z);
         }
 
         private void BuildNoxaraSpiderVisuals()

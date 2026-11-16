@@ -343,58 +343,115 @@ namespace Alterverse.Visuals
         private void ApplyTorsoStrikeMomentum(float age, bool heavy, bool punch)
         {
             if (duration <= .001f) return;
+            int variant = serial % 3;
             float side = punch ? (clip != null && clip.name == "jab" ? -1f : 1f) : (mirror ? -1f : 1f);
+            if (heavy && variant == 1) side = -1f;
             float load = contact * .62f, follow = contact + (duration - contact) * .30f;
-            float twist = age < load ? Mathf.Lerp(0f, -.42f, CombatMotion.Ease(age / Mathf.Max(.001f, load))) :
-                age < follow ? Mathf.Lerp(-.42f, 1f, CombatMotion.Ease((age - load) / Mathf.Max(.001f, follow - load))) :
+            float twist = age < load ? Mathf.Lerp(0f, -.46f, CombatMotion.Ease(age / Mathf.Max(.001f, load))) :
+                age < follow ? Mathf.Lerp(-.46f, 1f, CombatMotion.Ease((age - load) / Mathf.Max(.001f, follow - load))) :
                 Mathf.Lerp(1f, 0f, CombatMotion.Ease((age - follow) / Mathf.Max(.001f, duration - follow)));
-            float yaw = -side * twist * (heavy ? 10.5f : punch ? 9f : 8f);
-            float pitch = twist * (heavy ? 5f : punch ? 4.2f : 3.6f);
+            float yawScale = variant == 2 ? (heavy ? 12.5f : punch ? 10.5f : 9.5f) : (heavy ? 10.5f : punch ? 9f : 8f);
+            float pitchScale = variant == 2 ? (heavy ? 7.2f : punch ? 5.8f : 5.2f) :
+                variant == 1 ? (heavy ? 3.2f : punch ? 2.8f : 2.2f) : (heavy ? 5f : punch ? 4.2f : 3.6f);
+            float rollScale = variant == 1 ? side * twist * 3.2f : variant == 2 ? -side * twist * 2.4f : 0f;
+            float yaw = -side * twist * yawScale;
+            float pitch = twist * pitchScale;
             bones[1].Transform.rotation = Quaternion.AngleAxis(yaw * .45f, transform.up) *
-                Quaternion.AngleAxis(pitch * .45f, transform.right) * bones[1].Transform.rotation;
+                Quaternion.AngleAxis(pitch * .45f, transform.right) *
+                Quaternion.AngleAxis(rollScale * .45f, transform.forward) * bones[1].Transform.rotation;
             bones[2].Transform.rotation = Quaternion.AngleAxis(yaw * .55f, transform.up) *
-                Quaternion.AngleAxis(pitch * .55f, transform.right) * bones[2].Transform.rotation;
+                Quaternion.AngleAxis(pitch * .55f, transform.right) *
+                Quaternion.AngleAxis(rollScale * .55f, transform.forward) * bones[2].Transform.rotation;
             bones[3].Transform.rotation = Quaternion.AngleAxis(-yaw * .65f, transform.up) *
                 Quaternion.AngleAxis(-pitch * .50f, transform.right) * bones[3].Transform.rotation;
         }
         private void ApplyForwardSlash(float age)
         {
+            int variant = serial % 3;
             int upper = mirror ? 4 : 7, hand = upper + 2, off = mirror ? 7 : 4;
             float side = mirror ? -1f : 1f, length = Reach(upper);
             Vector3 shoulder = bones[upper].Transform.position;
-            Vector3 draw = shoulder + transform.TransformDirection(new Vector3(side * .82f, -.10f, -.34f)) * length;
-            Vector3 hit = shoulder + transform.TransformDirection(new Vector3(-side * .04f, -.12f, .96f)) * length;
-            Vector3 through = shoulder + transform.TransformDirection(new Vector3(-side * .78f, -.12f, .60f)) * length;
-            // Raise into the side windup, then cut forward on one level through the contact
-            // frame. SmoothSweep shares velocity at contact and returns to this frame's guard.
+            Vector3 draw, hit, through;
+            if (variant == 1)
+            {
+                draw = shoulder + transform.TransformDirection(new Vector3(side * .74f, -.34f, -.28f)) * length;
+                hit = shoulder + transform.TransformDirection(new Vector3(-side * .02f, -.02f, .96f)) * length;
+                through = shoulder + transform.TransformDirection(new Vector3(-side * .66f, .24f, .64f)) * length;
+            }
+            else if (variant == 2)
+            {
+                draw = shoulder + transform.TransformDirection(new Vector3(side * .64f, .26f, -.26f)) * length;
+                hit = shoulder + transform.TransformDirection(new Vector3(-side * .08f, -.10f, .97f)) * length;
+                through = shoulder + transform.TransformDirection(new Vector3(-side * .72f, -.26f, .62f)) * length;
+            }
+            else
+            {
+                draw = shoulder + transform.TransformDirection(new Vector3(side * .82f, -.10f, -.34f)) * length;
+                hit = shoulder + transform.TransformDirection(new Vector3(-side * .04f, -.12f, .96f)) * length;
+                through = shoulder + transform.TransformDirection(new Vector3(-side * .78f, -.12f, .60f)) * length;
+            }
             SolveArm(upper, SmoothSweep(age, bones[hand].GuardPosition, draw, hit, through), .99f);
-            float offPulse = Mathf.Sin(Mathf.Clamp01(age / Mathf.Max(.001f, duration)) * Mathf.PI);
-            Vector3 offPoint = bones[off + 2].GuardPosition +
-                transform.TransformDirection(new Vector3(-side * .09f, .04f, -.13f)) * (Reach(off) * offPulse);
-            SolveArm(off, offPoint);
-            bones[off + 2].Transform.rotation = bones[off + 2].GuardWorld;
-            // Calibrate from the imported hand rather than assuming an FBX wrist axis.
-            // Rotate the whole fitted grip with the cut; never replay the source uppercut.
-            OrientStrikeWrist(hand, age, transform.right * (side * .90f) - transform.forward * .44f,
-                transform.forward, -transform.right * (side * .94f) + transform.forward * .34f);
+            if (variant == 2)
+            {
+                float offLength = Reach(off);
+                Vector3 offShoulder = bones[off].Transform.position;
+                Vector3 offDraw = offShoulder + transform.TransformDirection(new Vector3(-side * .58f, .20f, -.22f)) * offLength;
+                Vector3 offHit = offShoulder + transform.TransformDirection(new Vector3(side * .06f, -.14f, .92f)) * offLength;
+                Vector3 offThrough = offShoulder + transform.TransformDirection(new Vector3(side * .62f, -.24f, .58f)) * offLength;
+                SolveArm(off, SmoothSweep(age, bones[off + 2].GuardPosition, offDraw, offHit, offThrough), .98f);
+                OrientStrikeWrist(off + 2, age, -transform.right * (side * .84f) - transform.forward * .38f,
+                    transform.forward, transform.right * (side * .88f) + transform.forward * .32f);
+            }
+            else
+            {
+                float offPulse = Mathf.Sin(Mathf.Clamp01(age / Mathf.Max(.001f, duration)) * Mathf.PI);
+                Vector3 offPoint = bones[off + 2].GuardPosition +
+                    transform.TransformDirection(new Vector3(-side * .09f, .04f, -.13f)) * (Reach(off) * offPulse);
+                SolveArm(off, offPoint);
+                bones[off + 2].Transform.rotation = bones[off + 2].GuardWorld;
+            }
+            Vector3 wristDraw = variant == 1
+                ? (transform.right * (side * .82f) - transform.up * .34f - transform.forward * .38f).normalized
+                : (transform.right * (side * .90f) - transform.forward * .44f).normalized;
+            Vector3 wristThrough = variant == 1
+                ? (-transform.right * (side * .84f) + transform.up * .32f + transform.forward * .34f).normalized
+                : (-transform.right * (side * .94f) + transform.forward * .34f).normalized;
+            OrientStrikeWrist(hand, age, wristDraw, transform.forward, wristThrough);
         }
         private void ApplyPunch(float age)
         {
+            int variant = serial % 3;
             int upper = clip.name == "jab" ? 4 : 7, hand = upper + 2, off = upper == 4 ? 7 : 4;
             float side = upper == 4 ? -1f : 1f, length = Reach(upper);
             Vector3 shoulder = bones[upper].Transform.position;
-            Vector3 draw = shoulder + transform.TransformDirection(new Vector3(side * .30f, -.16f, -.22f)) * length;
-            Vector3 hit = shoulder + transform.TransformDirection(new Vector3(-side * .04f, -.09f, .96f)) * length;
-            Vector3 through = shoulder + transform.TransformDirection(new Vector3(-side * .12f, -.09f, .98f)) * length;
-            // Chamber beside the chest, then extend the fist almost to its natural reach.
-            // Solve rotations only: neither arm length nor the gameplay hit volume changes.
+            Vector3 draw, hit, through;
+            if (variant == 1)
+            {
+                draw = shoulder + transform.TransformDirection(new Vector3(side * .56f, -.12f, -.28f)) * length;
+                hit = shoulder + transform.TransformDirection(new Vector3(-side * .08f, -.06f, .95f)) * length;
+                through = shoulder + transform.TransformDirection(new Vector3(-side * .42f, -.08f, .82f)) * length;
+            }
+            else if (variant == 2)
+            {
+                draw = shoulder + transform.TransformDirection(new Vector3(side * .28f, -.38f, -.18f)) * length;
+                hit = shoulder + transform.TransformDirection(new Vector3(-side * .04f, .06f, .96f)) * length;
+                through = shoulder + transform.TransformDirection(new Vector3(-side * .16f, .22f, .90f)) * length;
+            }
+            else
+            {
+                draw = shoulder + transform.TransformDirection(new Vector3(side * .30f, -.16f, -.22f)) * length;
+                hit = shoulder + transform.TransformDirection(new Vector3(-side * .04f, -.09f, .96f)) * length;
+                through = shoulder + transform.TransformDirection(new Vector3(-side * .12f, -.09f, .98f)) * length;
+            }
             SolveArm(upper, SmoothSweep(age, bones[hand].GuardPosition, draw, hit, through), .99f);
             float offPulse = Mathf.Sin(Mathf.Clamp01(age / Mathf.Max(.001f, duration)) * Mathf.PI);
             Vector3 offPoint = bones[off + 2].GuardPosition +
                 transform.TransformDirection(new Vector3(side * .07f, .08f, -.14f)) * (Reach(off) * offPulse);
             SolveArm(off, offPoint);
             bones[off + 2].Transform.rotation = bones[off + 2].GuardWorld;
-            OrientStrikeWrist(hand, age, transform.forward, transform.forward, transform.forward);
+            Vector3 punchThroughAxis = variant == 2 ? (transform.forward + transform.up * .28f).normalized :
+                variant == 1 ? (transform.forward - transform.right * (side * .26f)).normalized : transform.forward;
+            OrientStrikeWrist(hand, age, transform.forward, transform.forward, punchThroughAxis);
         }
         private void OrientStrikeWrist(int hand, float age, Vector3 draw, Vector3 hit, Vector3 through)
         {
@@ -404,18 +461,40 @@ namespace Alterverse.Visuals
         }
         private void ApplyHeavySweep(float age)
         {
+            int variant = serial % 3;
             float length = Reach(7);
             Vector3 shoulder = bones[7].Transform.position, ready = bones[9].GuardPosition;
-            Vector3 draw = shoulder + transform.TransformDirection(new Vector3(.78f, -.16f, -.42f)) * length;
-            Vector3 hit = shoulder + transform.TransformDirection(new Vector3(-.04f, -.16f, .95f)) * length;
-            Vector3 through = shoulder + transform.TransformDirection(new Vector3(-.68f, -.16f, .68f)) * length;
+            Vector3 draw, hit, through;
+            Vector3 shaftDraw, shaftThrough;
+            if (variant == 1)
+            {
+                draw = shoulder + transform.TransformDirection(new Vector3(-.52f, -.30f, .24f)) * length;
+                hit = shoulder + transform.TransformDirection(new Vector3(.06f, -.12f, .95f)) * length;
+                through = shoulder + transform.TransformDirection(new Vector3(.74f, .08f, .58f)) * length;
+                shaftDraw = (-transform.right * .86f - transform.up * .24f + transform.forward * .38f).normalized;
+                shaftThrough = (transform.right * .92f + transform.up * .20f + transform.forward * .32f).normalized;
+            }
+            else if (variant == 2)
+            {
+                draw = shoulder + transform.TransformDirection(new Vector3(.48f, .34f, -.32f)) * length;
+                hit = shoulder + transform.TransformDirection(new Vector3(-.02f, -.16f, .96f)) * length;
+                through = shoulder + transform.TransformDirection(new Vector3(-.46f, -.34f, .70f)) * length;
+                shaftDraw = (transform.right * .52f + transform.up * .62f - transform.forward * .48f).normalized;
+                shaftThrough = (-transform.right * .64f - transform.up * .48f + transform.forward * .52f).normalized;
+            }
+            else
+            {
+                draw = shoulder + transform.TransformDirection(new Vector3(.78f, -.16f, -.42f)) * length;
+                hit = shoulder + transform.TransformDirection(new Vector3(-.04f, -.16f, .95f)) * length;
+                through = shoulder + transform.TransformDirection(new Vector3(-.68f, -.16f, .68f)) * length;
+                shaftDraw = (transform.right * .90f - transform.forward * .44f).normalized;
+                shaftThrough = (-transform.right * .94f + transform.forward * .34f).normalized;
+            }
             SolveArm(7, SmoothSweep(age, ready, draw, hit, through), .99f);
             SolveArm(4, bones[6].GuardPosition);
             bones[6].Transform.rotation = bones[6].GuardWorld;
-            // Shaft direction follows its own horizontal arc. The handle remains rigid in the palm.
             Vector3 restAxis = identity.Hero == HeroId.Kaelon ? SiegeTankAppearance.HammerGuardShaft(transform) : -transform.up;
-            Vector3 axis = SmoothSweep(age, restAxis, transform.right*.90f-transform.forward*.44f,
-                transform.forward, -transform.right*.94f+transform.forward*.34f).normalized;
+            Vector3 axis = SmoothSweep(age, restAxis, shaftDraw, transform.forward, shaftThrough).normalized;
             bones[9].Transform.rotation = Quaternion.FromToRotation(restAxis, axis) * bones[9].GuardWorld;
         }
         private Vector3 SmoothSweep(float age, Vector3 guard, Vector3 draw, Vector3 hit, Vector3 through)

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Combat;
 using UnityEngine;
@@ -8,6 +9,17 @@ namespace Alterverse.Visuals
     {
         // These are extra presentation layers inside the existing semantic cue. They
         // never publish packets, resolve hits, change windups, or replace danger bounds.
+        private static readonly Dictionary<int, int> actorComboCounter = new();
+
+        private static int NextAttackOpticVariant(GameObject actor)
+        {
+            if (actor == null) return 0;
+            int id = actor.GetEntityId().GetHashCode();
+            int next = (actorComboCounter.TryGetValue(id, out int cur) ? cur : 0) + 1;
+            actorComboCounter[id] = next;
+            return next % 3;
+        }
+
         private static Color AttackColour(GameObject actor,int slot)
         {
             HeroId hero=Hero(actor);
@@ -42,45 +54,75 @@ namespace Alterverse.Visuals
         private static void PolishRelease(GameObject actor,Vector3 point,int slot,float travel,Transform target)
         {
             HeroId hero=Hero(actor);Color tint=AttackColour(actor,slot);
+            int opticVariant=NextAttackOpticVariant(actor);
+            Color bright=Color.Lerp(tint,Color.white,opticVariant==2?.42f:.22f);
+            bright.a=tint.a;
             Vector3 from=Muzzle(actor),to=point+Vector3.up*.25f;
             if(hero==HeroId.Timmy&&slot==1)return; // The canister owns its flight and dust landing.
             if(!HeroAttackDelivery.IsRanged(hero)&&!(hero==HeroId.Kaelon&&(slot==0||slot==2))&&
                 !(hero==HeroId.Veyr&&slot==1))
             {
-                HeroFxSprite slash=hero==HeroId.VoidKnight?HeroFxSprite.SlashHeavy:
+                HeroFxSprite slash=opticVariant==2&&(hero==HeroId.Veyr||hero==HeroId.VoidKnight)?HeroFxSprite.SlashCross:
+                    hero==HeroId.VoidKnight?HeroFxSprite.SlashHeavy:
                     hero==HeroId.Timmy?HeroFxSprite.SlashClaw:hero==HeroId.Nerok?HeroFxSprite.SlashLunge:
-                    hero==HeroId.Rook||hero==HeroId.Bolt7?HeroFxSprite.Fireball:HeroFxSprite.SlashLight;
-                float size=hero==HeroId.VoidKnight?slot<0?1.55f:2.1f:hero==HeroId.Rook||hero==HeroId.Bolt7?.86f:1.18f;
+                    hero==HeroId.Rook||hero==HeroId.Bolt7?HeroFxSprite.Fireball:
+                    opticVariant==1?HeroFxSprite.SlashHeavy:HeroFxSprite.SlashLight;
+                float size=(hero==HeroId.VoidKnight?slot<0?1.55f:2.1f:hero==HeroId.Rook||hero==HeroId.Bolt7?.86f:1.18f)*(opticVariant==2?1.14f:1f);
                 Vector3 p=Vector3.Lerp(from,to,.60f);
-                Quaternion plane=Face(actor.transform.position,point)*Quaternion.Euler(90f,0f,0f);
-                HeroVfxPool.Sprite(slash,p,p,new Vector2(size,size),tint,
+                float tilt=opticVariant==1?-28f:opticVariant==2?24f:0f;
+                Quaternion plane=Face(actor.transform.position,point)*Quaternion.Euler(90f,0f,tilt);
+                HeroVfxPool.Sprite(slash,p,p,new Vector2(size,size),opticVariant==2?bright:tint,
                     hero==HeroId.VoidKnight?.26f:.20f,actor,rotation:plane,billboard:false);
+                if(opticVariant==1)
+                {
+                    Quaternion counterPlane=Face(actor.transform.position,point)*Quaternion.Euler(68f,0f,32f);
+                    HeroVfxPool.Sprite(HeroFxSprite.Flare,from,p,new Vector2(size*.45f,size*.45f),bright,.15f,
+                        actor,HeroFxMotion.Travel,rotation:counterPlane);
+                }
+                else if(opticVariant==2)
+                {
+                    HeroVfxPool.Sprite(HeroFxSprite.ShockRing,p,p,new Vector2(size*.92f,size*.92f),
+                        new Color(bright.r,bright.g,bright.b,.52f),.22f,actor,HeroFxMotion.Expand,
+                        Quaternion.Euler(90f,0f,0f),false);
+                }
                 return;
             }
             // A laser stays a beam: its only new release layer is a compact muzzle flash.
             if(travel<=0||hero==HeroId.Nyra&&slot==0)
             {
                 HeroVfxPool.Sprite(hero==HeroId.Nyra||hero==HeroId.Bolt7?HeroFxSprite.Muzzle:HeroFxSprite.Flare,
-                    from,from,new Vector2(.42f,.42f),tint,.10f,actor);
+                    from,from,new Vector2(.42f,.42f)*(opticVariant==2?1.18f:1f),opticVariant==2?bright:tint,.10f,actor);
                 return;
             }
             HeroFxSprite core=hero==HeroId.Elyra?HeroFxSprite.Fireball:hero==HeroId.Veyr?HeroFxSprite.SlashLunge:
-                hero==HeroId.Mira?HeroFxSprite.SoftStar:hero==HeroId.Kaelon?HeroFxSprite.Rune:HeroFxSprite.Glow;
-            float diameter=slot==3?.56f:slot<0?.29f:.40f;
-            HeroVfxPool.Sprite(core,from,to,new Vector2(diameter,diameter),tint,travel,actor,
-                motion:HeroFxMotion.Travel,endFollow:hero==HeroId.Kaelon?null:target);
+                hero==HeroId.Mira?HeroFxSprite.SoftStar:hero==HeroId.Kaelon?HeroFxSprite.Rune:
+                opticVariant==1?HeroFxSprite.Star:HeroFxSprite.Glow;
+            float diameter=(slot==3?.56f:slot<0?.29f:.40f)*(opticVariant==2?1.15f:1f);
+            HeroVfxPool.Sprite(core,from,to,new Vector2(diameter,diameter),opticVariant==2?bright:tint,travel,actor,
+                motion:HeroFxMotion.Travel,endFollow:hero==HeroId.Kaelon?null:target,roll:opticVariant*35f);
         }
 
         private static void PolishImpact(GameObject actor,Health target,int slot)
         {
             HeroId hero=Hero(actor);Vector3 p=target.transform.position+Vector3.up*.35f;
-            HeroFxSprite sprite=hero==HeroId.Rook||hero==HeroId.Bolt7?HeroFxSprite.Fireball:
+            int id=actor!=null?actor.GetEntityId().GetHashCode():0;
+            int opticVariant=(actorComboCounter.TryGetValue(id,out int cur)?cur:0)%3;
+            HeroFxSprite sprite=opticVariant==2&&(hero==HeroId.Rook||hero==HeroId.Kaelon||hero==HeroId.Nerok)?HeroFxSprite.ShockRing:
+                hero==HeroId.Rook||hero==HeroId.Bolt7?HeroFxSprite.Fireball:
                 hero==HeroId.Veyr||hero==HeroId.VoidKnight?HeroFxSprite.SlashCross:
                 hero==HeroId.Timmy?HeroFxSprite.ClawMark:
                 hero==HeroId.Mira?HeroFxSprite.Star:HeroFxSprite.Burst;
-            float size=slot<0?.48f:slot==3?1.08f:.76f;
-            HeroVfxPool.Sprite(sprite,p,p,new Vector2(size,size),AttackColour(actor,slot),
-                hero==HeroId.Rook||hero==HeroId.Bolt7?.26f:.19f,actor,roll:hero==HeroId.Timmy?-25f:0);
+            float size=(slot<0?.48f:slot==3?1.08f:.76f)*(opticVariant==2?1.16f:1f);
+            float rollAngle=hero==HeroId.Timmy?(opticVariant==1?28f:-25f):(opticVariant==1?32f:opticVariant==2?-28f:0f);
+            Color tint=AttackColour(actor,slot);
+            HeroVfxPool.Sprite(sprite,p,p,new Vector2(size,size),tint,
+                hero==HeroId.Rook||hero==HeroId.Bolt7?.26f:.19f,actor,roll:rollAngle);
+            if(opticVariant==2)
+            {
+                Color accent=Color.Lerp(tint,Color.white,.45f);accent.a=.62f;
+                HeroVfxPool.Sprite(HeroFxSprite.Star,p,p,new Vector2(size*.72f,size*.72f),accent,.16f,
+                    actor,HeroFxMotion.Expand,roll:45f);
+            }
         }
 
         private static void PolishArea(GameObject actor,Vector3 center,float radius,int slot,bool beneficial)

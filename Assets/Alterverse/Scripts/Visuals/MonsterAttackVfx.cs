@@ -10,10 +10,19 @@ namespace Alterverse.Visuals
     // Presentation only. Health, attack range, cooldowns and hit validation stay with combat.
     public static class MonsterAttackVfx
     {
+        static readonly System.Collections.Generic.Dictionary<int,int> AttackVariantCounters=new();
         public static event System.Action<GameObject,Vector3,Vector3> Resolved;
         public static event System.Action<GameObject,Health,float> LaserChanged;
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void Reset(){Resolved=null;LaserChanged=null;}
+        static void Reset(){Resolved=null;LaserChanged=null;AttackVariantCounters.Clear();}
+        static int NextAttackVariant(GameObject actor)
+        {
+            if(actor==null)return 0;
+            int id=actor.GetEntityId().GetHashCode();
+            AttackVariantCounters.TryGetValue(id,out int count);
+            AttackVariantCounters[id]=count+1;
+            return count%3;
+        }
 
         public static MonsterAttackStyle StyleFor(GameObject actor)
         {
@@ -80,24 +89,34 @@ namespace Alterverse.Visuals
             MonsterAttackStyle style=StyleFor(actor);Color color=Tint(actor,style);
             Vector3 delta=to-from;Quaternion heading=delta.sqrMagnitude>.0001f?Quaternion.LookRotation(delta):actor.transform.rotation;
             if(style==MonsterAttackStyle.Mech){MachineGun(actor,from,to,duration,elapsed,target);return;}
+            int variant=NextAttackVariant(actor);
             if(Melee(style))
             {
                 Vector3 center=Vector3.Lerp(from,to,.38f);
-                float reach=Mathf.Clamp(delta.magnitude*.52f,.8f,2.1f);
+                float reach=Mathf.Clamp(delta.magnitude*.52f,.8f,2.1f)*(variant==2?1.12f:1f);
                 Quaternion flat=Quaternion.Euler(0,heading.eulerAngles.y,0);
-                HeroVfxPool.Sprite(style==MonsterAttackStyle.Frost?HeroFxSprite.SlashClaw:
-                    style==MonsterAttackStyle.Tentacle?HeroFxSprite.SlashLunge:HeroFxSprite.SlashHeavy,
+                float tilt=variant==0?0f:variant==1?-24f:26f;
+                HeroFxSprite slashSprite=style==MonsterAttackStyle.Frost?HeroFxSprite.SlashClaw:
+                    style==MonsterAttackStyle.Tentacle?HeroFxSprite.SlashLunge:
+                    variant==2?HeroFxSprite.SlashCross:variant==1?HeroFxSprite.SlashLight:HeroFxSprite.SlashHeavy;
+                HeroVfxPool.Sprite(slashSprite,
                     center,center,new Vector2(reach,reach),color,duration,actor,
-                    rotation:flat*Quaternion.Euler(90,0,0),billboard:false,elapsed:elapsed);
-                int cuts=style==MonsterAttackStyle.Frost?3:style==MonsterAttackStyle.Tentacle||style==MonsterAttackStyle.Scorpion?2:1;
+                    rotation:flat*Quaternion.Euler(90,0,tilt),billboard:false,elapsed:elapsed);
+                int cuts=style==MonsterAttackStyle.Frost?3:style==MonsterAttackStyle.Tentacle||style==MonsterAttackStyle.Scorpion||variant==2?2:1;
                 for(int i=0;i<cuts;i++)
                 {
                     Vector3 offset=actor.transform.right*(i-(cuts-1)*.5f)*.16f;
                     HeroFxShape shape=style==MonsterAttackStyle.Tentacle?HeroFxShape.ArcRibbon:HeroFxShape.Slash;
+                    float bank=style==MonsterAttackStyle.Skeleton?18f:0f;
+                    if(variant==1)bank+=22f;
+                    else if(variant==2)bank+=(i==0?-28f:28f);
                     HeroVfxPool.Emit(shape,center+offset,center+offset,new Vector3(reach,.25f,reach),color,duration,
-                        HeroFxMotion.Sweep,flat*Quaternion.Euler(0,(i-(cuts-1)*.5f)*16f,style==MonsterAttackStyle.Skeleton?18f:0),
+                        HeroFxMotion.Sweep,flat*Quaternion.Euler(0,(i-(cuts-1)*.5f)*16f,bank),
                         actor,elapsed:elapsed,cancelOnOwnerDeath:true);
                 }
+                if(variant==2)
+                    HeroVfxPool.Emit(HeroFxShape.ShockRing,center,center,new Vector3(reach*.72f,.14f,reach*.72f),Color.Lerp(color,Color.white,.28f),duration*.85f,
+                        HeroFxMotion.Expand,flat,actor,decorative:true,elapsed:elapsed,cancelOnOwnerDeath:true);
                 return;
             }
             HeroFxShape core;Vector3 size;HeroFxMotion motion=HeroFxMotion.Travel;
