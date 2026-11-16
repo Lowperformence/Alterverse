@@ -6,10 +6,8 @@ using UnityEngine.Rendering;
 namespace Alterverse.Visuals
 {
     /// <summary>
-    /// Replaces Tahla Venn's rigid hanging vestments with a full, multi-layered Royal Sanctuary
-    /// Valkyrie armor suite (sculpted elliptical cuirass, high gorget, dorsal aether wings,
-    /// abdominal chevron lames, waist cincture, 3-tier hip tassets, lotus pauldrons, ornate vambraces,
-    /// chevron cuisses, winged knee poleyns, and fluted greaves) fitted to her exact anatomy contours.
+    /// Replaces Tahla Venn's rigid hanging vestments with a slim, form-fitting Royal Sanctuary
+    /// armor suite covering both the front and back of her torso, waist, arms, thighs, knees, and calves.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class HealerLegArmorAppearance : MonoBehaviour
@@ -44,11 +42,11 @@ namespace Alterverse.Visuals
             owner.RemoveVestments(anatomy, hips, model);
             owner.UpgradeBaseSuitMaterials(anatomy);
 
-            Material ivory = RuntimeShaderLibrary.Create(new Color(0.89f, 0.92f, 0.88f, 1f), false, 0.30f, 0.74f, Color.black);
-            Material gold = RuntimeShaderLibrary.Create(new Color(0.80f, 0.59f, 0.22f, 1f), false, 0.85f, 0.76f, Color.black);
-            Material jade = RuntimeShaderLibrary.Create(new Color(0.075f, 0.18f, 0.15f, 1f), false, 0.46f, 0.60f, Color.black);
+            Material ivory = RuntimeShaderLibrary.Create(new Color(0.89f, 0.92f, 0.88f, 1f), false, 0.28f, 0.72f, Color.black);
+            Material gold = RuntimeShaderLibrary.Create(new Color(0.80f, 0.59f, 0.22f, 1f), false, 0.84f, 0.75f, Color.black);
+            Material jade = RuntimeShaderLibrary.Create(new Color(0.075f, 0.18f, 0.15f, 1f), false, 0.45f, 0.58f, Color.black);
             Color emeraldColor = new Color(0.12f, 0.98f, 0.38f, 1f);
-            Material emerald = RuntimeShaderLibrary.Create(emeraldColor, false, 0.16f, 0.80f, emeraldColor * 2.6f);
+            Material emerald = RuntimeShaderLibrary.Create(emeraldColor, false, 0.16f, 0.80f, emeraldColor * 2.4f);
             if (ivory == null || gold == null || jade == null || emerald == null) return;
 
             ivory.name = "DF_Tahla_PearlIvoryEnamel";
@@ -65,14 +63,14 @@ namespace Alterverse.Visuals
 
             Transform spine = Array.Find(bones, b => b.name == "Spine");
             Transform chest = Array.Find(bones, b => b.name == "Chest");
-            Transform head = Array.Find(bones, b => b.name == "Head");
 
-            if (chest != null && head != null)
-                owner.BuildChestCuirass(anatomy, chest, head.position, model.forward, model.right);
-            if (spine != null && chest != null)
-                owner.BuildSpineCorset(anatomy, spine, chest.position, model.forward);
+            // Chest bone is at upper sternum; ribcage runs from Chest down toward Spine.
+            if (chest != null && spine != null)
+                owner.BuildChestCuirass(anatomy, chest, spine.position - chest.position, model.forward);
+            if (spine != null && hips != null)
+                owner.BuildSpineCorset(anatomy, spine, hips.position - spine.position, model.forward);
             if (hips != null && spine != null)
-                owner.BuildWaistAndTassets(anatomy, hips, spine.position, model.forward);
+                owner.BuildWaistAndTassets(anatomy, hips, hips.position - spine.position, model.forward);
 
             foreach (string side in new[] { "L", "R" })
             {
@@ -88,9 +86,9 @@ namespace Alterverse.Visuals
                 Transform thigh = Array.Find(bones, b => b.name == "Thigh" + side);
                 Transform shin = Array.Find(bones, b => b.name == "Shin" + side);
                 Transform foot = Array.Find(bones, b => b.name == "Foot" + side);
-                owner.BuildThighCuisse(anatomy, "DF_HealerThighPlate" + side, thigh, shin.position, model.forward, sign);
-                owner.BuildKneePoleyn(anatomy, "DF_HealerKneeGuard" + side, shin, foot.position, model.forward, sign);
-                owner.BuildShinGreave(anatomy, "DF_HealerShinPlate" + side, shin, foot.position, model.forward, sign);
+                owner.BuildThighCuisse(anatomy, "DF_HealerThighPlate" + side, thigh, shin.position, model.forward);
+                owner.BuildKneePoleyn(anatomy, "DF_HealerKneeGuard" + side, shin, foot.position, model.forward);
+                owner.BuildShinGreave(anatomy, "DF_HealerShinPlate" + side, shin, foot.position, model.forward);
             }
         }
 
@@ -215,80 +213,48 @@ namespace Alterverse.Visuals
             renderer.sharedMesh = copy;
         }
 
-        private void BuildChestCuirass(SkinnedMeshRenderer anatomy, Transform chest, Vector3 headPos, Vector3 modelForward, Vector3 modelRight)
+        private void BuildChestCuirass(SkinnedMeshRenderer anatomy, Transform chest, Vector3 downRibcageAxis, Vector3 modelForward)
         {
-            var b = new ArmorBuilder(anatomy, chest, headPos - chest.position, modelForward, 0.44f, 0.38f, 0.52f);
-            // 1. Sanctuary-jade structural under-chassis wrapping torso
-            b.CurvedPlate(0.05f, 0.75f, -2.05f, 2.05f, -1.92f, 1.92f, 1.03f, 1.07f, 0.045f, 0.035f, SubJade, -1, 14);
-            // 2. Sculpted V-tapered pearl-ivory Valkyrie breastplate with gold border trim
-            b.CurvedPlate(0.10f, 0.71f, -1.24f, 1.24f, -1.56f, 1.56f, 1.07f, 1.13f, 0.055f, 0.075f, SubIvory, SubGold, 12);
-            // 3. Diagonal golden pectoral filigree arches
-            b.CurvedPlate(0.45f, 0.61f, -1.46f, -0.18f, -1.52f, -0.32f, 1.14f, 1.17f, 0.040f, 0.020f, SubGold, -1, 8);
-            b.CurvedPlate(0.45f, 0.61f, 0.18f, 1.46f, 0.32f, 1.52f, 1.14f, 1.17f, 0.040f, 0.020f, SubGold, -1, 8);
-            // 4. High Royal Gorget / Collar in ivory & burnished gold
-            b.CurvedPlate(0.72f, 0.92f, -2.35f, 2.35f, -2.20f, 2.20f, 0.76f, 0.84f, 0.048f, 0.030f, SubIvory, SubGold, 14);
-            // 5. Central Sanctuary Heart Emerald Crystal in a golden diamond bezel
-            b.FacetedGem(0.42f, 0f, 1.18f, 0.12f, 0.17f, 0.048f, SubGold, SubEmerald);
-            // 6. Sculpted Dorsal Backplate with 3 golden spinal chevrons
-            b.CurvedPlate(0.12f, 0.73f, 2.15f, 4.13f, 2.02f, 4.26f, 1.06f, 1.11f, 0.050f, 0.055f, SubIvory, SubGold, 10);
-            for (int i = 0; i < 3; i++)
-            {
-                float t = 0.24f + i * 0.17f;
-                b.FacetedGem(t, Mathf.PI, 1.14f, 0.09f, 0.075f, 0.032f, SubGold, SubEmerald);
-            }
-            // 7. Twin Dorsal Valkyrie Aether Wings
-            for (int s = -1; s <= 1; s += 2)
-                b.DorsalWing(s, modelRight);
+            var b = new ArmorBuilder(anatomy, chest, downRibcageAxis, modelForward, 0.36f, 0.32f, 0.44f);
+            // 1. Sleek Front Sternum Breastplate & Sanctuary Heart Crystal (fitted flush to ribcage)
+            b.CurvedPlate(0.05f, 0.78f, -0.92f, 0.92f, -0.72f, 0.72f, 1.015f, 1.012f, 0.018f, 0.016f, SubIvory, SubGold, 10);
+            b.FacetedGem(0.36f, 0f, 1.032f, 0.085f, 0.125f, 0.022f, SubGold, SubEmerald);
+
+            // 2. Contoured Dorsal Backplate & Spinal Aether Nodes (fitted flush to upper back)
+            b.CurvedPlate(0.02f, 0.85f, 2.32f, 3.96f, 2.46f, 3.82f, 1.015f, 1.012f, 0.018f, 0.018f, SubIvory, SubGold, 10);
+            // Left & right scapula gold trim plates on upper back
+            b.CurvedPlate(0.08f, 0.56f, 2.12f, 2.68f, 2.24f, 2.62f, 1.022f, 1.018f, 0.015f, 0.010f, SubGold, SubJade, 6);
+            b.CurvedPlate(0.08f, 0.56f, 3.60f, 4.16f, 3.66f, 4.04f, 1.022f, 1.018f, 0.015f, 0.010f, SubGold, SubJade, 6);
+            b.FacetedGem(0.32f, Mathf.PI, 1.034f, 0.080f, 0.110f, 0.020f, SubGold, SubEmerald);
+            b.FacetedGem(0.64f, Mathf.PI, 1.030f, 0.068f, 0.090f, 0.018f, SubGold, SubEmerald);
 
             Attach("DF_TahlaRoyalCuirass", chest, b);
         }
 
-        private void BuildSpineCorset(SkinnedMeshRenderer anatomy, Transform spine, Vector3 chestPos, Vector3 modelForward)
+        private void BuildSpineCorset(SkinnedMeshRenderer anatomy, Transform spine, Vector3 downWaistAxis, Vector3 modelForward)
         {
-            var b = new ArmorBuilder(anatomy, spine, chestPos - spine.position, modelForward, 0.56f, 0.48f, 0.64f);
-            for (int i = 0; i < 3; i++)
-            {
-                float t0 = 0.08f + i * 0.27f;
-                float t1 = t0 + 0.28f;
-                float s0 = 1.04f + i * 0.03f;
-                float s1 = s0 + 0.03f;
-                int mat = i % 2 == 0 ? SubJade : SubIvory;
-                b.CurvedPlate(t0, t1, -1.55f, 1.55f, -1.68f, 1.68f, s0, s1, 0.050f, 0.055f, mat, SubGold, 10);
-            }
-            b.FacetedGem(0.50f, 0f, 1.15f, 0.09f, 0.15f, 0.038f, SubGold, SubEmerald);
+            var b = new ArmorBuilder(anatomy, spine, downWaistAxis, modelForward, 0.34f, 0.30f, 0.40f);
+            // Sleek front abdominal chevron plate
+            b.CurvedPlate(0.10f, 0.85f, -0.82f, 0.82f, -0.64f, 0.64f, 1.014f, 1.012f, 0.016f, 0.014f, SubJade, SubGold, 8);
+            // Sleek rear lumbar spine plate + emerald node
+            b.CurvedPlate(0.08f, 0.88f, 2.40f, 3.88f, 2.50f, 3.78f, 1.015f, 1.012f, 0.018f, 0.016f, SubIvory, SubGold, 8);
+            b.FacetedGem(0.48f, Mathf.PI, 1.032f, 0.072f, 0.105f, 0.020f, SubGold, SubEmerald);
             Attach("DF_TahlaCorsetArmor", spine, b);
         }
 
-        private void BuildWaistAndTassets(SkinnedMeshRenderer anatomy, Transform hips, Vector3 spinePos, Vector3 modelForward)
+        private void BuildWaistAndTassets(SkinnedMeshRenderer anatomy, Transform hips, Vector3 downPelvisAxis, Vector3 modelForward)
         {
-            Vector3 downAxis = hips.position - spinePos;
-            var b = new ArmorBuilder(anatomy, hips, downAxis, modelForward, 0.68f, 0.62f, 0.82f);
+            var b = new ArmorBuilder(anatomy, hips, downPelvisAxis, modelForward, 0.38f, 0.36f, 0.48f);
+            // Sleek Rear Pelvis Guard Plate with gold border and emerald clasp
+            b.CurvedPlate(0.04f, 0.72f, 2.38f, 3.90f, 2.52f, 3.76f, 1.016f, 1.012f, 0.018f, 0.016f, SubIvory, SubGold, 8);
+            b.FacetedGem(0.28f, Mathf.PI, 1.034f, 0.085f, 0.105f, 0.022f, SubGold, SubEmerald);
 
-            // 1. 360-degree Imperial Gold Waist Cincture Belt around the pelvis
-            b.CurvedPlate(-0.22f, 0.16f, -3.14159f, 3.14159f, -3.14159f, 3.14159f, 1.04f, 1.08f, 0.055f, 0.035f, SubGold, SubJade, 20);
-            b.FacetedGem(-0.03f, 0f, 1.12f, 0.16f, 0.19f, 0.048f, SubGold, SubEmerald);
-            b.FacetedGem(-0.03f, Mathf.PI, 1.12f, 0.15f, 0.16f, 0.042f, SubGold, SubEmerald);
-
-            // 2. Left & Right 3-Tier Articulated Valkyrie Hip Tassets / Faulds
+            // Slim Left & Right Hip Faulds (tightly hugging the outer hips)
             for (int side = -1; side <= 1; side += 2)
             {
-                float centerAngle = side * 1.32f;
-                for (int tier = 0; tier < 3; tier++)
-                {
-                    float t0 = 0.14f + tier * 0.28f;
-                    float t1 = t0 + 0.30f;
-                    float halfSpan0 = 0.76f - tier * 0.11f;
-                    float halfSpan1 = halfSpan0 - 0.08f;
-                    float s0 = 1.08f + tier * 0.04f;
-                    float s1 = s0 + 0.03f;
-                    b.CurvedPlate(
-                        t0, t1,
-                        centerAngle - halfSpan0, centerAngle + halfSpan0,
-                        centerAngle - halfSpan1, centerAngle + halfSpan1,
-                        s0, s1, 0.050f, 0.045f,
-                        tier == 1 ? SubJade : SubIvory, SubGold, 8);
-                }
-                b.FacetedGem(0.32f, centerAngle, 1.16f, 0.11f, 0.15f, 0.040f, SubGold, SubEmerald);
+                float c = side * 1.48f;
+                b.CurvedPlate(0.08f, 0.68f, c - 0.52f, c + 0.52f, c - 0.38f, c + 0.38f, 1.018f, 1.014f, 0.018f, 0.015f, SubIvory, SubGold, 8);
+                b.FacetedGem(0.32f, c, 1.034f, 0.065f, 0.095f, 0.018f, SubGold, SubEmerald);
             }
             Attach("DF_TahlaWaistAndTassets", hips, b);
         }
@@ -298,18 +264,13 @@ namespace Alterverse.Visuals
             Vector3 axis = forearmPos - upperArm.position;
             Vector3 centerDir = (Vector3.ProjectOnPlane(outwardDir, axis.normalized).normalized * 0.85f +
                                  Vector3.ProjectOnPlane(modelForward, axis.normalized).normalized * 0.52f).normalized;
-            var b = new ArmorBuilder(anatomy, upperArm, axis, centerDir, 0.22f, 0.22f, 0.22f);
+            var b = new ArmorBuilder(anatomy, upperArm, axis, centerDir, 0.155f, 0.155f, 0.155f);
 
-            // 1. Sanctuary-jade inner shoulder base pad
-            b.CurvedPlate(-0.10f, 0.48f, -1.42f, 1.42f, -1.18f, 1.18f, 1.16f, 1.06f, 0.075f, 0.065f, SubJade, -1, 10);
-            // 2. Sculpted Pearl-Ivory Lotus Pauldron Dome with Imperial Gold border
-            b.CurvedPlate(-0.08f, 0.42f, -1.32f, 1.32f, -1.04f, 1.04f, 1.24f, 1.12f, 0.090f, 0.110f, SubIvory, SubGold, 10);
-            // 3. Flared Golden Valkyrie Upper Shoulder Crest
-            b.CurvedPlate(-0.16f, 0.18f, -0.96f, 0.96f, -0.78f, 0.78f, 1.38f, 1.28f, 0.095f, 0.135f, SubGold, SubIvory, 8);
-            // 4. Lower Overlapping Bicep Guard Lame
-            b.CurvedPlate(0.40f, 0.72f, -1.12f, 1.12f, -0.95f, 0.95f, 1.08f, 1.02f, 0.070f, 0.065f, SubIvory, SubGold, 8);
-            // 5. Faceted Emerald Shoulder Cabochon Gem
-            b.FacetedGem(0.14f, 0f, 1.38f, 0.11f, 0.15f, 0.038f, SubGold, SubEmerald);
+            // Slim, contoured outer-shoulder cap + rear tricep guard plate
+            b.CurvedPlate(0.02f, 0.44f, -0.92f, 0.92f, -0.72f, 0.72f, 1.022f, 1.015f, 0.020f, 0.018f, SubIvory, SubGold, 8);
+            b.FacetedGem(0.18f, 0f, 1.042f, 0.068f, 0.095f, 0.018f, SubGold, SubEmerald);
+            // Rear tricep armor plate
+            b.CurvedPlate(0.28f, 0.72f, 2.48f, 3.80f, 2.58f, 3.70f, 1.018f, 1.012f, 0.018f, 0.014f, SubIvory, SubGold, 6);
 
             Attach(name, upperArm, b);
         }
@@ -319,71 +280,49 @@ namespace Alterverse.Visuals
             Vector3 axis = handPos - forearm.position;
             Vector3 centerDir = (Vector3.ProjectOnPlane(outwardDir, axis.normalized).normalized * 0.78f +
                                  Vector3.ProjectOnPlane(modelForward, axis.normalized).normalized * 0.62f).normalized;
-            var b = new ArmorBuilder(anatomy, forearm, axis, centerDir, 0.17f, 0.17f, 0.17f);
+            var b = new ArmorBuilder(anatomy, forearm, axis, centerDir, 0.125f, 0.125f, 0.125f);
 
-            // 1. Sanctuary-jade under-bracer
-            b.CurvedPlate(0.08f, 0.86f, -1.48f, 1.48f, -1.35f, 1.35f, 1.08f, 0.96f, 0.070f, 0.050f, SubJade, -1, 10);
-            // 2. Sculpted Pearl-Ivory Vambrace with raised Burnished Gold border
-            b.CurvedPlate(0.12f, 0.80f, -1.26f, 1.26f, -1.10f, 1.10f, 1.15f, 1.02f, 0.085f, 0.095f, SubIvory, SubGold, 10);
-            // 3. Swept Golden Elbow Guard Peak
-            b.CurvedPlate(-0.04f, 0.22f, -0.72f, 0.72f, -0.48f, 0.48f, 1.24f, 1.18f, 0.090f, 0.120f, SubGold, -1, 6);
-            // 4. Royal Golden Wrist Cuff Ring
-            b.CurvedPlate(0.78f, 0.92f, -2.50f, 2.50f, -2.50f, 2.50f, 1.04f, 1.00f, 0.075f, 0.040f, SubGold, SubJade, 12);
-            // 5. Forearm Emerald Aether Channel
-            b.FacetedGem(0.46f, 0f, 1.20f, 0.070f, 0.28f, 0.026f, SubGold, SubEmerald);
+            // Slim outer vambrace + inner/rear forearm bracer plate
+            b.CurvedPlate(0.14f, 0.78f, -0.88f, 0.88f, -0.74f, 0.74f, 1.020f, 1.014f, 0.018f, 0.016f, SubIvory, SubGold, 8);
+            b.FacetedGem(0.44f, 0f, 1.038f, 0.048f, 0.18f, 0.015f, SubGold, SubEmerald);
+            b.CurvedPlate(0.18f, 0.74f, 2.50f, 3.78f, 2.60f, 3.68f, 1.016f, 1.012f, 0.016f, 0.012f, SubJade, SubGold, 6);
 
             Attach(name, forearm, b);
         }
 
-        private void BuildThighCuisse(SkinnedMeshRenderer anatomy, string name, Transform thigh, Vector3 shinPos, Vector3 modelForward, float sideSign)
+        private void BuildThighCuisse(SkinnedMeshRenderer anatomy, string name, Transform thigh, Vector3 shinPos, Vector3 modelForward)
         {
-            var b = new ArmorBuilder(anatomy, thigh, shinPos - thigh.position, modelForward, 0.185f, 0.185f, 0.185f);
-            // 1. Deep Sanctuary-Jade structural under-cuisse
-            b.CurvedPlate(0.06f, 0.84f, -1.42f, 1.42f, -1.24f, 1.24f, 1.05f, 0.94f, 0.075f, 0.065f, SubJade, -1, 10);
-            // 2. Sculpted Pearl-Ivory Chevron Cuisse with Burnished Gold perimeter border
-            b.CurvedPlate(0.10f, 0.80f, -1.24f, 1.24f, -1.02f, 1.02f, 1.11f, 0.99f, 0.095f, 0.115f, SubIvory, SubGold, 10);
-            // 3. Upper Overlapping Articulation Lame
-            b.CurvedPlate(0.08f, 0.26f, -1.32f, 1.32f, -1.26f, 1.26f, 1.16f, 1.12f, 0.085f, 0.090f, SubIvory, SubGold, 8);
-            // 4. Outer Thigh Golden Filigree Flange
-            float flangeCenter = sideSign * 0.88f;
-            b.CurvedPlate(0.20f, 0.72f, flangeCenter - 0.35f, flangeCenter + 0.35f, flangeCenter - 0.28f, flangeCenter + 0.28f, 1.15f, 1.04f, 0.075f, 0.075f, SubGold, -1, 6);
-            // 5. Central Golden Spine & Emerald Energy Inlay
-            b.FacetedGem(0.46f, 0f, 1.18f, 0.062f, 0.32f, 0.025f, SubGold, SubEmerald);
+            var b = new ArmorBuilder(anatomy, thigh, shinPos - thigh.position, modelForward, 0.145f, 0.145f, 0.145f);
+            // 1. Slim, form-fitting Pearl-Ivory Front Cuisse with fine Gold border & Emerald seam
+            b.CurvedPlate(0.12f, 0.78f, -0.86f, 0.86f, -0.70f, 0.70f, 1.018f, 1.012f, 0.018f, 0.016f, SubIvory, SubGold, 8);
+            b.FacetedGem(0.45f, 0f, 1.036f, 0.042f, 0.22f, 0.014f, SubGold, SubEmerald);
+            // 2. Slim Contoured Rear Hamstring Plate (so the back of the thigh is armored too!)
+            b.CurvedPlate(0.16f, 0.76f, 2.46f, 3.82f, 2.56f, 3.72f, 1.016f, 1.012f, 0.016f, 0.014f, SubIvory, SubGold, 8);
+            b.FacetedGem(0.46f, Mathf.PI, 1.032f, 0.040f, 0.18f, 0.012f, SubGold, SubEmerald);
 
             Attach(name, thigh, b);
         }
 
-        private void BuildKneePoleyn(SkinnedMeshRenderer anatomy, string name, Transform shin, Vector3 footPos, Vector3 modelForward, float sideSign)
+        private void BuildKneePoleyn(SkinnedMeshRenderer anatomy, string name, Transform shin, Vector3 footPos, Vector3 modelForward)
         {
-            var b = new ArmorBuilder(anatomy, shin, footPos - shin.position, modelForward, 0.155f, 0.155f, 0.155f);
-            // 1. Sanctuary-jade knee backing pad
-            b.CurvedPlate(-0.10f, 0.20f, -1.30f, 1.30f, -1.16f, 1.16f, 1.08f, 1.02f, 0.085f, 0.080f, SubJade, -1, 10);
-            // 2. Diamond-crowned Burnished Gold Poleyn Knee Shell with Ivory inner face
-            b.CurvedPlate(-0.08f, 0.18f, -1.12f, 1.12f, -0.94f, 0.94f, 1.16f, 1.10f, 0.105f, 0.135f, SubGold, SubIvory, 10);
-            // 3. Swept Outer Knee Wing-Fin
-            float wingAngle = sideSign * 0.96f;
-            b.CurvedPlate(-0.11f, 0.14f, wingAngle - 0.32f, wingAngle + 0.32f, wingAngle - 0.22f, wingAngle + 0.22f, 1.26f, 1.18f, 0.090f, 0.110f, SubGold, -1, 6);
-            // 4. Central Faceted Emerald Knee Jewel
-            b.FacetedGem(0.04f, 0f, 1.28f, 0.076f, 0.115f, 0.030f, SubGold, SubEmerald);
+            var b = new ArmorBuilder(anatomy, shin, footPos - shin.position, modelForward, 0.122f, 0.122f, 0.122f);
+            // Sleek, low-profile Golden Poleyn Knee Cap + Rear Knee-Joint Guard
+            b.CurvedPlate(-0.06f, 0.14f, -0.76f, 0.76f, -0.64f, 0.64f, 1.024f, 1.018f, 0.020f, 0.022f, SubGold, SubIvory, 8);
+            b.FacetedGem(0.04f, 0f, 1.048f, 0.052f, 0.080f, 0.016f, SubGold, SubEmerald);
+            b.CurvedPlate(-0.04f, 0.12f, 2.56f, 3.72f, 2.62f, 3.66f, 1.018f, 1.014f, 0.016f, 0.012f, SubJade, SubGold, 6);
 
             Attach(name, shin, b);
         }
 
-        private void BuildShinGreave(SkinnedMeshRenderer anatomy, string name, Transform shin, Vector3 footPos, Vector3 modelForward, float sideSign)
+        private void BuildShinGreave(SkinnedMeshRenderer anatomy, string name, Transform shin, Vector3 footPos, Vector3 modelForward)
         {
-            var b = new ArmorBuilder(anatomy, shin, footPos - shin.position, modelForward, 0.148f, 0.148f, 0.148f);
-            // 1. Sanctuary-jade structural greave liner + calf guard
-            b.CurvedPlate(0.18f, 0.92f, -1.48f, 1.48f, -1.32f, 1.32f, 1.05f, 0.88f, 0.075f, 0.065f, SubJade, -1, 10);
-            b.CurvedPlate(0.24f, 0.82f, 2.25f, 4.03f, 2.35f, 3.93f, 1.02f, 0.86f, 0.075f, 0.060f, SubIvory, SubGold, 8);
-            // 2. Fluted Pearl-Ivory Front Greave with raised Imperial Gold perimeter border
-            b.CurvedPlate(0.20f, 0.90f, -1.26f, 1.26f, -1.08f, 1.08f, 1.12f, 0.95f, 0.095f, 0.125f, SubIvory, SubGold, 10);
-            // 3. Two Golden Calf-Strap Rings
-            b.CurvedPlate(0.34f, 0.40f, -3.14159f, 3.14159f, -3.14159f, 3.14159f, 1.07f, 1.04f, 0.070f, 0.030f, SubGold, -1, 14);
-            b.CurvedPlate(0.66f, 0.72f, -3.14159f, 3.14159f, -3.14159f, 3.14159f, 0.98f, 0.95f, 0.070f, 0.030f, SubGold, -1, 14);
-            // 4. Armored Golden Ankle Cuff Ring
-            b.CurvedPlate(0.85f, 0.95f, -2.20f, 2.20f, -2.20f, 2.20f, 0.98f, 0.94f, 0.085f, 0.065f, SubGold, SubJade, 12);
-            // 5. Central Shin Crest Emerald Seam
-            b.FacetedGem(0.52f, 0f, 1.18f, 0.052f, 0.34f, 0.022f, SubGold, SubEmerald);
+            var b = new ArmorBuilder(anatomy, shin, footPos - shin.position, modelForward, 0.115f, 0.115f, 0.115f);
+            // 1. Slim, tapered Pearl-Ivory Front Shin Greave with Gold border & Emerald seam
+            b.CurvedPlate(0.18f, 0.86f, -0.84f, 0.84f, -0.68f, 0.68f, 1.018f, 1.012f, 0.018f, 0.016f, SubIvory, SubGold, 8);
+            b.FacetedGem(0.50f, 0f, 1.036f, 0.038f, 0.24f, 0.014f, SubGold, SubEmerald);
+            // 2. Slim, tapered Rear Calf Greave Plate with Gold trim & Emerald node
+            b.CurvedPlate(0.20f, 0.80f, 2.44f, 3.84f, 2.58f, 3.70f, 1.016f, 1.012f, 0.016f, 0.014f, SubIvory, SubGold, 8);
+            b.FacetedGem(0.48f, Mathf.PI, 1.032f, 0.038f, 0.20f, 0.012f, SubGold, SubEmerald);
 
             Attach(name, shin, b);
         }
@@ -409,6 +348,13 @@ namespace Alterverse.Visuals
 
         private sealed class ArmorBuilder
         {
+            private struct SamplePt
+            {
+                public float t;
+                public float f;
+                public float s;
+            }
+
             private readonly Transform bone;
             private readonly Vector3 origin;
             private readonly Vector3 axis;
@@ -416,9 +362,10 @@ namespace Alterverse.Visuals
             private readonly Vector3 down;
             private readonly Vector3 front;
             private readonly Vector3 right;
-            private readonly float frontRadius;
-            private readonly float backRadius;
-            private readonly float sideRadius;
+            private readonly float fallbackFront;
+            private readonly float fallbackBack;
+            private readonly float fallbackSide;
+            private readonly List<SamplePt> samples = new List<SamplePt>();
             private readonly List<Vector3> vertices = new List<Vector3>();
             private readonly List<int>[] submeshes = { new List<int>(), new List<int>(), new List<int>(), new List<int>() };
 
@@ -440,9 +387,9 @@ namespace Alterverse.Visuals
                 if (front.sqrMagnitude < 0.001f) front = Vector3.ProjectOnPlane(Vector3.forward, down).normalized;
                 right = Vector3.Cross(down, front).normalized;
 
-                frontRadius = length * defaultFrontRatio;
-                backRadius = length * defaultBackRatio;
-                sideRadius = length * defaultSideRatio;
+                fallbackFront = length * defaultFrontRatio;
+                fallbackBack = length * defaultBackRatio;
+                fallbackSide = length * defaultSideRatio;
 
                 if (anatomy != null && anatomy.sharedMesh != null && anatomy.sharedMesh.isReadable)
                 {
@@ -453,8 +400,6 @@ namespace Alterverse.Visuals
                         Matrix4x4 bind = src.bindposes[idx];
                         Vector3[] pts = src.vertices;
                         BoneWeight[] bw = src.boneWeights;
-                        float maxF = 0f, maxB = 0f, maxS = 0f;
-                        int count = 0;
                         for (int i = 0; i < pts.Length; i++)
                         {
                             BoneWeight w = bw[i];
@@ -465,20 +410,46 @@ namespace Alterverse.Visuals
                             if (inf < 0.45f) continue;
                             Vector3 worldPt = bone.TransformPoint(bind.MultiplyPoint3x4(pts[i]));
                             Vector3 rel = worldPt - origin;
-                            float f = Vector3.Dot(rel, front);
-                            float s = Mathf.Abs(Vector3.Dot(rel, right));
-                            if (f > maxF) maxF = f;
-                            if (-f > maxB) maxB = -f;
-                            if (s > maxS) maxS = s;
-                            count++;
-                        }
-                        if (count >= 8)
-                        {
-                            frontRadius = Mathf.Clamp(maxF, length * defaultFrontRatio * 0.72f, length * defaultFrontRatio * 1.45f);
-                            backRadius = Mathf.Clamp(maxB, length * defaultBackRatio * 0.72f, length * defaultBackRatio * 1.45f);
-                            sideRadius = Mathf.Clamp(maxS, length * defaultSideRatio * 0.72f, length * defaultSideRatio * 1.45f);
+                            samples.Add(new SamplePt
+                            {
+                                t = Vector3.Dot(rel, down) / length,
+                                f = Vector3.Dot(rel, front),
+                                s = Mathf.Abs(Vector3.Dot(rel, right))
+                            });
                         }
                     }
+                }
+            }
+
+            private void GetSliceRadii(float t, out float rFront, out float rBack, out float rSide)
+            {
+                rFront = fallbackFront * Mathf.Lerp(1.0f, 0.82f, Mathf.Clamp01(t));
+                rBack = fallbackBack * Mathf.Lerp(1.0f, 0.82f, Mathf.Clamp01(t));
+                rSide = fallbackSide * Mathf.Lerp(1.0f, 0.82f, Mathf.Clamp01(t));
+                if (samples.Count < 6) return;
+
+                float maxF = 0f, maxB = 0f, maxS = 0f;
+                int hits = 0;
+                for (int pass = 0; pass < 2 && hits < 4; pass++)
+                {
+                    float window = pass == 0 ? 0.18f : 0.45f;
+                    maxF = maxB = maxS = 0f;
+                    hits = 0;
+                    for (int i = 0; i < samples.Count; i++)
+                    {
+                        SamplePt sp = samples[i];
+                        if (Mathf.Abs(sp.t - t) > window) continue;
+                        if (sp.f > maxF) maxF = sp.f;
+                        if (-sp.f > maxB) maxB = -sp.f;
+                        if (sp.s > maxS) maxS = sp.s;
+                        hits++;
+                    }
+                }
+                if (hits >= 4)
+                {
+                    if (maxF > 0.01f) rFront = Mathf.Clamp(maxF, fallbackFront * 0.55f, fallbackFront * 1.15f);
+                    if (maxB > 0.01f) rBack = Mathf.Clamp(maxB, fallbackBack * 0.55f, fallbackBack * 1.15f);
+                    if (maxS > 0.01f) rSide = Mathf.Clamp(maxS, fallbackSide * 0.55f, fallbackSide * 1.15f);
                 }
             }
 
@@ -510,10 +481,11 @@ namespace Alterverse.Visuals
 
             private Vector3 EllipticalPoint(float t, float angle, float scale, float crestBoost)
             {
+                GetSliceRadii(t, out float rf, out float rb, out float rs);
                 float ca = Mathf.Cos(angle);
                 float sa = Mathf.Sin(angle);
-                float rz = (ca >= 0f ? frontRadius : backRadius) * (scale + crestBoost);
-                float rx = sideRadius * (scale + crestBoost * 0.5f);
+                float rz = (ca >= 0f ? rf : rb) * (scale + crestBoost);
+                float rx = rs * (scale + crestBoost * 0.5f);
                 return origin + axis * t + front * (ca * rz) + right * (sa * rx);
             }
 
@@ -527,7 +499,7 @@ namespace Alterverse.Visuals
                 float thicknessScale, float crestBoost,
                 int mainSub, int rimSub, int columns)
             {
-                const int rows = 4;
+                const int rows = 5;
                 int ringCols = columns + 1;
                 var outer = new int[rows, ringCols];
                 var inner = new int[rows, ringCols];
@@ -543,10 +515,10 @@ namespace Alterverse.Visuals
                         float u = c / (float)columns;
                         float ang = Mathf.Lerp(a0, a1, u);
                         float centerFactor = 1f - Mathf.Abs(u * 2f - 1f);
-                        float chevronT = Mathf.Lerp(tStart, tEnd, v) + (v > 0.5f ? (v - 0.5f) * 0.06f * centerFactor : 0f);
+                        float chevronT = Mathf.Lerp(tStart, tEnd, v) + (v > 0.5f ? (v - 0.5f) * 0.04f * centerFactor : 0f);
                         float crest = crestBoost * centerFactor * centerFactor;
                         outer[r, c] = AddLocal(EllipticalPoint(chevronT, ang, sc, crest));
-                        inner[r, c] = AddLocal(EllipticalPoint(chevronT, ang, Mathf.Max(0.25f, sc - thicknessScale), crest * 0.7f));
+                        inner[r, c] = AddLocal(EllipticalPoint(chevronT, ang, Mathf.Max(0.85f, sc - thicknessScale), crest * 0.6f));
                     }
                 }
 
@@ -606,11 +578,11 @@ namespace Alterverse.Visuals
                 for (int i = 0; i < 8; i++)
                 {
                     Vector3 offset = tangent * (dirs[i].x * hw) + down * (dirs[i].y * hh);
-                    baseRing[i] = AddLocal(center + offset * 1.18f - normal * (d * 0.25f));
-                    bezelRing[i] = AddLocal(center + offset * 0.96f + normal * (d * 0.45f));
-                    crownRing[i] = AddLocal(center + offset * 0.58f + normal * (d * 0.88f));
+                    baseRing[i] = AddLocal(center + offset * 1.15f - normal * (d * 0.25f));
+                    bezelRing[i] = AddLocal(center + offset * 0.94f + normal * (d * 0.42f));
+                    crownRing[i] = AddLocal(center + offset * 0.56f + normal * (d * 0.85f));
                 }
-                int apex = AddLocal(center + normal * (d * 1.18f));
+                int apex = AddLocal(center + normal * (d * 1.12f));
 
                 for (int i = 0; i < 8; i++)
                 {
@@ -619,29 +591,6 @@ namespace Alterverse.Visuals
                     Quad(baseRing[i], baseRing[next], bezelRing[next], bezelRing[i], bezelSub, nSide);
                     Quad(bezelRing[i], bezelRing[next], crownRing[next], crownRing[i], gemSub, nSide);
                     Tri(crownRing[i], crownRing[next], apex, gemSub, normal);
-                }
-            }
-
-            public void DorsalWing(int side, Vector3 modelRight)
-            {
-                Vector3 back = -front;
-                Vector3 lat = (modelRight * side).normalized;
-                Vector3 rootPos = origin + axis * 0.50f + back * (backRadius * 1.08f) + lat * (sideRadius * 0.48f);
-                Vector3 tipPos = rootPos + axis * 0.42f + back * (length * 0.34f) + lat * (sideRadius * 0.85f);
-                Vector3 lowPos = rootPos - axis * 0.26f + back * (length * 0.24f) + lat * (sideRadius * 0.46f);
-                Vector3 midPos = (rootPos + tipPos + lowPos) / 3f + back * (length * 0.08f);
-                Vector3 thick = Vector3.Cross(tipPos - rootPos, lowPos - rootPos).normalized * (length * 0.028f);
-
-                for (int s = -1; s <= 1; s += 2)
-                {
-                    Vector3 n = thick.normalized * s;
-                    int r = AddLocal(rootPos + thick * (0.4f * s));
-                    int t = AddLocal(tipPos + thick * (0.25f * s));
-                    int l = AddLocal(lowPos + thick * (0.3f * s));
-                    int m = AddLocal(midPos + thick * (1.15f * s));
-                    Tri(r, t, m, SubGold, n);
-                    Tri(t, l, m, SubIvory, n);
-                    Tri(l, r, m, SubEmerald, n);
                 }
             }
 

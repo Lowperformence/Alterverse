@@ -116,7 +116,7 @@ namespace Alterverse.Visuals
             bool componentModelApplied =
                 (hero == HeroId.Nyra && instance.GetComponent<CyberRangerAppearance>() != null) ||
                 (hero == HeroId.Elyra && instance.GetComponent<UmbralMageAppearance>() != null)||hero==HeroId.VoidKnight;
-            if (hero != HeroId.Timmy && !componentModelApplied)
+            if (hero != HeroId.Timmy && hero != HeroId.VoidKnight)
                 HeroLimbTechDetails.Apply(instance.transform, hero);
             SkinOrnamentPresentation.Apply(instance.transform,
                 hero == HeroId.Mira ? (Color?)new Color(.52f, .80f, .67f, 1f) : null);

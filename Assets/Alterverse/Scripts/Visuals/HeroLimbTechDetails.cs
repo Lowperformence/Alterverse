@@ -6,7 +6,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Small fitted limb panels, with one renderer and no gameplay components.</summary>
+    /// <summary>Fitted front and rear limb & dorsal armor panels, with one renderer and no gameplay components.</summary>
     [DisallowMultipleComponent]
     public sealed class HeroLimbTechDetails : MonoBehaviour
     {
@@ -22,8 +22,7 @@ namespace Alterverse.Visuals
         {
             // Brakk now keeps smooth arms and legs; his equipment has separate authored parts.
             if(hero==HeroId.Rook||model==null)return;
-            // The reinforced Traveler payload already carries fitted, articulated limb armor.
-            if(hero==HeroId.Traveler&&model.GetComponent<ChronoTravelerAppearance>()!=null)return;
+            // Tahla Venn has her own full front-and-back Royal Sanctuary armor suite.
             if(hero==HeroId.Mira&&model.GetComponent<HealerLegArmorAppearance>()!=null)return;
             if(model.GetComponent<HeroLimbTechDetails>()!=null)return;
             SkinnedMeshRenderer anatomy=null;
@@ -31,46 +30,73 @@ namespace Alterverse.Visuals
                 if(skin.name=="DF_Anatomy"){anatomy=skin;break;}
             if(anatomy==null||anatomy.sharedMesh==null||!anatomy.sharedMesh.isReadable)return;
             var detail=model.gameObject.AddComponent<HeroLimbTechDetails>();
-            detail.Build(anatomy,hero);
+            detail.Build(model,anatomy,hero);
         }
 
-        void Build(SkinnedMeshRenderer anatomy,HeroId hero)
+        void Build(Transform model,SkinnedMeshRenderer anatomy,HeroId hero)
         {
             Mesh source=anatomy.sharedMesh;
             Vector3[] points=source.vertices;
             BoneWeight[] skinWeights=source.boneWeights;
             Matrix4x4[] bind=source.bindposes;
+            Matrix4x4 modelToMesh=anatomy.transform.worldToLocalMatrix*model.localToWorldMatrix;
+            Vector3 meshForward=modelToMesh.MultiplyVector(Vector3.forward).normalized;
+            if(meshForward.sqrMagnitude<.01f)meshForward=Vector3.forward;
+
+            bool hasComponentFront=
+                (hero==HeroId.Nyra&&model.GetComponent<CyberRangerAppearance>()!=null)||
+                (hero==HeroId.Elyra&&model.GetComponent<UmbralMageAppearance>()!=null)||
+                (hero==HeroId.Traveler&&model.GetComponent<ChronoTravelerAppearance>()!=null);
+
+            // Dorsal Torso & Lumbar Back Armor Plates (so no hero has an empty back)
+            Panel("Chest","Spine",.38f,.42f,-1f,.54f);
+            Panel("Spine","Hips",.48f,.44f,-1f,.46f);
+            Panel("Hips","Spine",.18f,.32f,-1f,.42f);
+
             foreach(string side in new[]{"L","R"})
             {
-                // Nerok shares the imported asset, but retains his own limb details.
+                if(!hasComponentFront)
+                {
+                    if(hero!=HeroId.Rook)
+                    {
+                        Panel("UpperArm"+side,"Forearm"+side,.64f,.16f,1f,.38f);
+                        Panel("Forearm"+side,"Hand"+side,.52f,.32f,1f,.38f);
+                    }
+                    Panel("Thigh"+side,"Shin"+side,.58f,.20f,1f,.38f);
+                    Panel("Shin"+side,"Foot"+side,.54f,.36f,1f,.38f);
+                }
+
+                // Contoured Rear Limb Armor (Tricep, Rear Forearm, Hamstring, and Calf plates)
                 if(hero!=HeroId.Rook)
                 {
-                    Panel("UpperArm"+side,"Forearm"+side,.64f,.16f);
-                    Panel("Forearm"+side,"Hand"+side,.52f,.32f);
+                    Panel("UpperArm"+side,"Forearm"+side,.52f,.26f,-1f,.44f);
+                    Panel("Forearm"+side,"Hand"+side,.48f,.34f,-1f,.42f);
                 }
-                Panel("Thigh"+side,"Shin"+side,.58f,.20f);
-                Panel("Shin"+side,"Foot"+side,.54f,.36f);
+                Panel("Thigh"+side,"Shin"+side,.38f,.24f,-1f,.48f);
+                Panel("Thigh"+side,"Shin"+side,.68f,.22f,-1f,.44f);
+                Panel("Shin"+side,"Foot"+side,.36f,.26f,-1f,.46f);
+                Panel("Shin"+side,"Foot"+side,.66f,.24f,-1f,.42f);
             }
             if(vertices.Count==0)return;
-            Color accent=StylizedArtDirection.HeroAccent(hero);
-            // Keep each small service plate in its hero's concept palette. Brakk retains
-            // its established finish so his separate gold suit pass remains authoritative.
+            Color accent= hero == HeroId.Nyra ? new Color(.025f,.72f,.40f) : StylizedArtDirection.HeroAccent(hero);
             Color plateColor = hero switch
             {
-                HeroId.Elyra => new Color(.82f,.84f,.87f),
+                HeroId.Elyra => new Color(.22f,.19f,.29f),
                 HeroId.Kaelon => new Color(.38f,.35f,.22f),
                 HeroId.Mira => new Color(.19f,.30f,.25f),
                 HeroId.Nerok => new Color(.43f,.47f,.49f),
-                HeroId.Nyra => new Color(.10f,.13f,.15f),
+                HeroId.Nyra => new Color(.085f,.120f,.125f),
                 HeroId.Traveler => new Color(.23f,.26f,.29f),
                 HeroId.Veyr => new Color(.055f,.050f,.075f),
                 _ => new Color(.095f,.115f,.135f)
             };
-            Material metal=RuntimeShaderLibrary.Create(plateColor,false,hero==HeroId.Rook?.55f:.48f,hero==HeroId.Rook?.32f:.40f);
-            Material circuits=RuntimeShaderLibrary.Create(Color.Lerp(accent,Color.white,.15f),false,.15f,.4f,accent*.8f);
+            Material metal=RuntimeShaderLibrary.Create(plateColor,false,hero==HeroId.Nyra?.68f:hero==HeroId.Rook?.55f:.52f,hero==HeroId.Nyra?.56f:hero==HeroId.Rook?.32f:.44f);
+            Material circuits=RuntimeShaderLibrary.Create(Color.Lerp(accent,Color.white,.15f),false,.15f,.45f,accent*.85f);
             Color fastenerColor = hero == HeroId.Rook || hero == HeroId.Kaelon || hero == HeroId.Mira
-                ? new Color(.36f,.30f,.20f) : new Color(.42f,.45f,.49f);
-            Material screws=RuntimeShaderLibrary.Create(fastenerColor,false,.65f,.35f);
+                ? new Color(.36f,.30f,.20f)
+                : hero == HeroId.Nyra ? new Color(.46f,.57f,.57f)
+                : new Color(.42f,.45f,.49f);
+            Material screws=RuntimeShaderLibrary.Create(fastenerColor,false,.72f,.46f);
             materials.Add(metal);materials.Add(circuits);materials.Add(screws);
             if(metal==null||circuits==null||screws==null)return;
             metal.name="DF_LimbMicroArmor";circuits.name="DF_LimbCircuitAccents";screws.name="DF_LimbFasteners";
@@ -88,10 +114,9 @@ namespace Alterverse.Visuals
             Bounds bounds=anatomy.localBounds;bounds.Encapsulate(mesh.bounds);renderer.localBounds=bounds;
             renderer.quality=anatomy.quality;renderer.updateWhenOffscreen=anatomy.updateWhenOffscreen;
             renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=true;
-            // CPU construction buffers are no longer needed once the mesh owns its data.
             vertices.Clear();normals.Clear();uvs.Clear();weights.Clear();foreach(var list in triangles)list.Clear();
 
-            void Panel(string boneName,string nextName,float fraction,float span)
+            void Panel(string boneName,string nextName,float fraction,float span,float facingSign,float widthFactor)
             {
                 int bone=Array.FindIndex(anatomy.bones,b=>b!=null&&b.name==boneName);
                 int next=Array.FindIndex(anatomy.bones,b=>b!=null&&b.name==nextName);
@@ -100,55 +125,52 @@ namespace Alterverse.Visuals
                 Vector3 end=toBone.MultiplyPoint3x4(bind[next].inverse.MultiplyPoint3x4(Vector3.zero));
                 float length=end.magnitude;if(length<.01f)return;
                 Vector3 axis=end/length;
-                Vector3 front=Vector3.ProjectOnPlane(toBone.MultiplyVector(Vector3.forward),axis).normalized;
-                if(front.sqrMagnitude<.01f)front=Vector3.ProjectOnPlane(toBone.MultiplyVector(Vector3.right),axis).normalized;
+                Vector3 front=Vector3.ProjectOnPlane(toBone.MultiplyVector(meshForward*facingSign),axis).normalized;
+                if(front.sqrMagnitude<.01f)front=Vector3.ProjectOnPlane(toBone.MultiplyVector(Vector3.forward*facingSign),axis).normalized;
+                if(front.sqrMagnitude<.01f)front=Vector3.ProjectOnPlane(toBone.MultiplyVector(Vector3.right*facingSign),axis).normalized;
                 Vector3 across=Vector3.Cross(axis,front).normalized;
                 float along=length*fraction;
                 float face=float.NegativeInfinity,left=float.PositiveInfinity,right=float.NegativeInfinity;
                 int samples=0;
-                // Coarse imported meshes may have no ring at the panel midpoint.
                 for(int pass=0;pass<2&&samples<3;pass++)
                 {
                     face=float.NegativeInfinity;left=float.PositiveInfinity;right=float.NegativeInfinity;samples=0;
-                for(int i=0;i<points.Length&&i<skinWeights.Length;i++)
-                {
-                    var w=skinWeights[i];
-                    float influence=(w.boneIndex0==bone?w.weight0:0)+(w.boneIndex1==bone?w.weight1:0)
-                        +(w.boneIndex2==bone?w.weight2:0)+(w.boneIndex3==bone?w.weight3:0);
-                    if(influence<.5f)continue;
-                    Vector3 p=toBone.MultiplyPoint3x4(points[i]);
-                    if(Mathf.Abs(Vector3.Dot(p,axis)-along)>length*(pass==0?.19f:.55f))continue;
-                    face=Mathf.Max(face,Vector3.Dot(p,front));
-                    float horizontal=Vector3.Dot(p,across);left=Mathf.Min(left,horizontal);right=Mathf.Max(right,horizontal);samples++;
+                    for(int i=0;i<points.Length&&i<skinWeights.Length;i++)
+                    {
+                        var w=skinWeights[i];
+                        float influence=(w.boneIndex0==bone?w.weight0:0)+(w.boneIndex1==bone?w.weight1:0)
+                            +(w.boneIndex2==bone?w.weight2:0)+(w.boneIndex3==bone?w.weight3:0);
+                        if(influence<.45f)continue;
+                        Vector3 p=toBone.MultiplyPoint3x4(points[i]);
+                        if(Mathf.Abs(Vector3.Dot(p,axis)-along)>length*(pass==0?.19f:.55f))continue;
+                        face=Mathf.Max(face,Vector3.Dot(p,front));
+                        float horizontal=Vector3.Dot(p,across);left=Mathf.Min(left,horizontal);right=Mathf.Max(right,horizontal);samples++;
+                    }
                 }
-                }
-                if(samples<3||right-left<.005f)return;
-                float width=Mathf.Clamp((right-left)*.38f,length*.12f,length*.32f);
-                float height=length*span,depth=length*.022f;
-                Vector3 center=axis*along+across*((left+right)*.5f)+front*(face+depth*.55f);
+                if(samples<3||right-left<.005f||face<=0f)return;
+                float width=Mathf.Clamp((right-left)*widthFactor,length*.11f,length*.42f);
+                float height=length*span,depth=length*.018f;
+                Vector3 center=axis*along+across*((left+right)*.5f)+front*(face+depth*.45f);
                 Matrix4x4 toMesh=bind[bone].inverse;
-                // A slim dark plate, a short circuit and three tiny raised contact pads.
+                Matrix4x4 normalMatrix=toMesh.inverse.transpose;
                 Box(center,new Vector3(width,height,depth),0);
+                Box(center+front*depth*.52f,new Vector3(width*.76f,height*.76f,depth*.32f),2);
                 for(int j=0;j<3;j++)
                 {
                     float y=(j-1)*height*.24f;
-                    Box(center+axis*y+front*depth*.72f,new Vector3(width*.45f,height*.025f,depth*.35f),1);
-                    Box(center+axis*y+across*width*.31f+front*depth*.72f,
+                    Box(center+axis*y+front*depth*.74f,new Vector3(width*.45f,height*.032f,depth*.35f),1);
+                    Box(center+axis*y+across*width*.31f+front*depth*.74f,
                         new Vector3(width*.11f,height*.09f,depth*.42f),1);
                 }
                 foreach(int x in new[]{-1,1})foreach(int y in new[]{-1,1})
-                    Box(center+across*(x*width*.39f)+axis*(y*height*.39f)+front*depth*.65f,
+                    Box(center+across*(x*width*.39f)+axis*(y*height*.39f)+front*depth*.68f,
                         new Vector3(width*.07f,width*.07f,depth*.3f),2);
 
                 void Box(Vector3 c,Vector3 size,int material)
                 {
-                    // Rounded corners and a curved front lip catch light without changing panel size.
-                    int cornerSteps=material==0?3:2,contourCount=cornerSteps*4;
-                    float radius=Mathf.Min(size.x,size.y)*.22f;
-                    float bevel=Mathf.Min(size.z*.36f,radius*.45f);
+                    const int cornerSteps=3,contourCount=cornerSteps*4;
+                    float radius=Mathf.Min(size.x,size.y)*.22f,bevel=Mathf.Min(radius*.45f,size.z*.38f);
                     int start=vertices.Count;
-                    Matrix4x4 normalMatrix=toMesh.inverse.transpose;
-                    // Back edge, straight side, half-rounded lip, front face.
                     for(int ring=0;ring<4;ring++)
                     {
                         float angle=ring<2?0f:(ring==2?Mathf.PI*.25f:Mathf.PI*.5f);
@@ -174,7 +196,6 @@ namespace Alterverse.Visuals
                         int d=a+contourCount,e=b+contourCount;
                         triangles[material].AddRange(new[]{a,b,d,b,e,d});
                     }
-                    // Flat caps use separate vertices so normals do not shade across the face.
                     Cap(3,1);Cap(0,-1);
                     void Cap(int ring,int direction)
                     {
@@ -198,6 +219,7 @@ namespace Alterverse.Visuals
                 }
             }
         }
+
         void OnDestroy()
         {
             if(mesh!=null)Destroy(mesh);
@@ -205,6 +227,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
-
-
