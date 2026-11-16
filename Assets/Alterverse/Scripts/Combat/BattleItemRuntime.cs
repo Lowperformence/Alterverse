@@ -431,6 +431,7 @@ namespace Alterverse.Combat
             {
                 writer.WriteValueSafe(networkGeneration[i]);writer.WriteValueSafe(networkDrops[i]!=null?1:0);
                 writer.WriteValueSafe(networkPosition[i].x);writer.WriteValueSafe(networkPosition[i].z);writer.WriteValueSafe(networkSpawnAt[i]);
+                writer.WriteValueSafe(networkNextDrop[i]);writer.WriteValueSafe(networkPending[i]?1:0);
             }
             foreach(ulong client in manager.ConnectedClientsIds)
                 if(client!=NetworkManager.ServerClientId)messaging.SendNamedMessage(SnapshotMessage,client,writer,NetworkDelivery.ReliableSequenced);
@@ -440,16 +441,19 @@ namespace Alterverse.Combat
             NetworkManager manager=NetworkManager.Singleton;CoopMatchPlan plan=CoopAuthority.ActivePlan;
             if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsClient||
                 sender!=NetworkManager.ServerClientId||plan?.Session?.Slots==null||
-                !MatchNetworkProtocol.ReadRound(ref reader)||!reader.TryBeginRead(MatchSession.MaxPlayers*(2*sizeof(int)+3*sizeof(float))))return;
-            int active=0;
+                !MatchNetworkProtocol.ReadRound(ref reader)||!reader.TryBeginRead(MatchSession.MaxPlayers*(3*sizeof(int)+4*sizeof(float))))return;
+            int active=0,configured=0;bool waiting=false;float next=float.MaxValue;
             for(int i=0;i<MatchSession.MaxPlayers;i++)
             {
                 reader.ReadValueSafe(out int generation);reader.ReadValueSafe(out int present);
                 reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float z);reader.ReadValueSafe(out float spawnedAt);
+                reader.ReadValueSafe(out float nextAt);reader.ReadValueSafe(out int pendingFlag);
                 MatchPlayerSlot player=plan.Session.Slots[i];
-                if(generation<0||(present!=0&&present!=1)||!MatchNetworkProtocol.Finite(x)||!MatchNetworkProtocol.Finite(z)||
-                    !MatchNetworkProtocol.Finite(spawnedAt)||player==null||player.IsBot||player.BattleItem==BattleItemType.None)continue;
+                if(generation<0||(present!=0&&present!=1)||(pendingFlag!=0&&pendingFlag!=1)||
+                    !MatchNetworkProtocol.Finite(x)||!MatchNetworkProtocol.Finite(z)||!MatchNetworkProtocol.Finite(spawnedAt)||
+                    !MatchNetworkProtocol.Finite(nextAt)||player==null||player.IsBot||player.BattleItem==BattleItemType.None)continue;
                 if(generation<networkGeneration[i])continue;
+                configured++;waiting|=pendingFlag==1;next=Mathf.Min(next,nextAt);
                 if(generation>0&&!networkCharged[i]&&player.IsLocal)
                 {
                     BattleItemInventory.TryConsumeEquipped(player.BattleItem);
@@ -470,7 +474,9 @@ namespace Alterverse.Combat
                 networkGeneration[i]=generation;
                 if(networkDrops[i]!=null)active++;
             }
-            Status=active>0?$"TEAM SUPPLIES  •  {active} ACTIVE":null;
+            Status=active>0?$"TEAM SUPPLIES  •  {active} ACTIVE":
+                configured==0?null:waiting?"TEAM SUPPLIES WAITING FOR CLEAR LANDING":
+                $"TEAM SUPPLIES  {Mathf.CeilToInt(Mathf.Max(0,next-match.ElapsedSeconds))}s";
         }
 
         private static bool MainMenuVisible()=>Alterverse.UI.MainMenuController.IsVisible;
