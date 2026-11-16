@@ -115,7 +115,7 @@ namespace Alterverse.Visuals
                         actor,elapsed:elapsed,cancelOnOwnerDeath:true);
                 }
                 if(variant==2)
-                    HeroVfxPool.Emit(HeroFxShape.ShockRing,center,center,new Vector3(reach*.72f,.14f,reach*.72f),Color.Lerp(color,Color.white,.28f),duration*.85f,
+                    HeroVfxPool.Emit(HeroFxShape.Ring,center,center,new Vector3(reach*.72f,.14f,reach*.72f),Color.Lerp(color,Color.white,.28f),duration*.85f,
                         HeroFxMotion.Expand,flat,actor,decorative:true,elapsed:elapsed,cancelOnOwnerDeath:true);
                 return;
             }

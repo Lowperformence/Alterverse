@@ -114,7 +114,8 @@ namespace Alterverse.UI
                 if (p.x < -80f || p.x > screenW + 80f || p.y < -80f || p.y > screenH + 80f) continue;
 
                 bool enemy = m.Team.Team != player.Team;
-                bool clanWarEnemy = enemy && ClanWarAndXpService.IsEnemyClanHero(m.Transform.gameObject, player.Team, out string enemyClanTag);
+                string enemyClanTag = string.Empty;
+                bool clanWarEnemy = enemy && ClanWarAndXpService.IsEnemyClanHero(m.Transform.gameObject, player.Team, out enemyClanTag);
                 float w = (enemy ? 60f : 46f) * scale, h = 8f * scale;
                 Color team = enemy ? EnemyColor : AllyColor;
                 Rect frame = new Rect(p.x - w * .5f, p.y, w, h);

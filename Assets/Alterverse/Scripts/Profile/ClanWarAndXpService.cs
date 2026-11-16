@@ -45,6 +45,9 @@ namespace Alterverse.Profile
             public List<EnemyClanEntry> enemies = new List<EnemyClanEntry>();
         }
 
+        private static bool IsGerman =>
+            string.Equals(GameLanguage.Current?.Code, "de", StringComparison.OrdinalIgnoreCase);
+
         private static string cachedScope;
         private static List<EnemyClanEntry> cachedEnemies;
 
@@ -153,28 +156,28 @@ namespace Alterverse.Profile
             string ownClanId = SocialService.Instance?.State?.clan?.clanId;
             if (string.IsNullOrEmpty(ownClanId))
             {
-                reason = GameLanguage.Current == GameLanguage.Language.German
+                reason = IsGerman
                     ? "Tritt zuerst einem Clan bei, um Kriege zu erklären."
                     : "Join a clan first to declare clan wars.";
                 return false;
             }
             if (string.IsNullOrEmpty(clanId) || string.Equals(clanId, ownClanId, StringComparison.Ordinal))
             {
-                reason = GameLanguage.Current == GameLanguage.Language.German
+                reason = IsGerman
                     ? "Du kannst deinem eigenen Clan nicht den Krieg erklären."
                     : "You cannot declare war on your own clan.";
                 return false;
             }
             if (IsAtWarWithClan(clanId))
             {
-                reason = GameLanguage.Current == GameLanguage.Language.German
+                reason = IsGerman
                     ? "Dein Clan befindet sich bereits im Krieg mit diesem Clan."
                     : "Your clan is already at war with this clan.";
                 return false;
             }
             if (cachedEnemies.Count >= MaxEnemyClans)
             {
-                reason = GameLanguage.Current == GameLanguage.Language.German
+                reason = IsGerman
                     ? $"Maximal {MaxEnemyClans} Feind-Clans gleichzeitig möglich. Beende zuerst einen Krieg."
                     : $"Maximum of {MaxEnemyClans} enemy clans reached. End an active war first.";
                 return false;
@@ -194,7 +197,7 @@ namespace Alterverse.Profile
                 declaredAtUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             });
             SaveWars();
-            statusMessage = GameLanguage.Current == GameLanguage.Language.German
+            statusMessage = IsGerman
                 ? $"☠ Krieg erklärt gegen [{clanTag}] {clanName}! ({cachedEnemies.Count}/{MaxEnemyClans})"
                 : $"☠ Declared war on [{clanTag}] {clanName}! ({cachedEnemies.Count}/{MaxEnemyClans})";
             return true;
@@ -210,13 +213,13 @@ namespace Alterverse.Profile
                     EnemyClanEntry removed = cachedEnemies[i];
                     cachedEnemies.RemoveAt(i);
                     SaveWars();
-                    statusMessage = GameLanguage.Current == GameLanguage.Language.German
+                    statusMessage = IsGerman
                         ? $"Krieg mit [{removed.tag}] {removed.name} beendet. ({cachedEnemies.Count}/{MaxEnemyClans})"
                         : $"Ended war with [{removed.tag}] {removed.name}. ({cachedEnemies.Count}/{MaxEnemyClans})";
                     return true;
                 }
             }
-            statusMessage = GameLanguage.Current == GameLanguage.Language.German
+            statusMessage = IsGerman
                 ? "Kein aktiver Krieg mit diesem Clan."
                 : "No active war with this clan.";
             return false;
@@ -357,7 +360,7 @@ namespace Alterverse.Profile
         {
             if (string.IsNullOrEmpty(clanId))
             {
-                statusMessage = GameLanguage.Current == GameLanguage.Language.German
+                statusMessage = IsGerman
                     ? "Kein aktiver Clan ausgewählt."
                     : "No active clan selected.";
                 return false;
@@ -365,28 +368,28 @@ namespace Alterverse.Profile
             int bonusLevel = GetClanBonusLevel(clanId);
             if (bonusLevel >= MaxClanBonusLevel)
             {
-                statusMessage = GameLanguage.Current == GameLanguage.Language.German
+                statusMessage = IsGerman
                     ? "Maximales Clan-XP-Bonuslevel erreicht!"
                     : "Maximum Clan XP bonus level reached!";
                 return false;
             }
             if (RemainingDonationsToday() <= 0)
             {
-                statusMessage = GameLanguage.Current == GameLanguage.Language.German
+                statusMessage = IsGerman
                     ? $"Tägliches Limit erreicht ({MaxDailyDonations}/{MaxDailyDonations} Spenden heute)."
                     : $"Daily donation limit reached ({MaxDailyDonations}/{MaxDailyDonations} today).";
                 return false;
             }
             if (!PlayerWallet.CanAfford(DonationShardCost))
             {
-                statusMessage = GameLanguage.Current == GameLanguage.Language.German
+                statusMessage = IsGerman
                     ? $"Nicht genug Shards ({DonationShardCost} Shards benötigt)."
                     : $"Not enough Shards ({DonationShardCost} Shards required).";
                 return false;
             }
             if (!PlayerWallet.TrySpend(DonationShardCost))
             {
-                statusMessage = GameLanguage.Current == GameLanguage.Language.German
+                statusMessage = IsGerman
                     ? $"Verwende erspielte Shards für Clan-XP ({DonationShardCost} Shards)."
                     : $"Use earned Shards for Clan XP donations ({DonationShardCost} Shards).";
                 return false;
@@ -411,7 +414,7 @@ namespace Alterverse.Profile
             AccountProfilePrefs.Save();
 
             int newBonusLevel = GetClanBonusLevel(clanId);
-            statusMessage = GameLanguage.Current == GameLanguage.Language.German
+            statusMessage = IsGerman
                 ? $"+{DonationClanXpGain} CLAN-XP gespendet! (Bonus-Lvl +{newBonusLevel}  •  Heute {used}/{MaxDailyDonations})"
                 : $"Donated +{DonationClanXpGain} CLAN XP! (Bonus Lvl +{newBonusLevel}  •  Today {used}/{MaxDailyDonations})";
             return true;
