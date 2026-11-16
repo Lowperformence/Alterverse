@@ -331,6 +331,17 @@ namespace Alterverse.UI
         public static void ApplyNetworkReward(int slot,int standard,int mobile,bool eligible,int streak)
         {
             if(instance==null||!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority)return;
+            // The host sends every hero's streak. Keep remote bounty markers in sync
+            // before handling the local player's turret reward UI.
+            foreach(Health hp in Health.Active)
+            {
+                CoopHeroSlot remote=hp!=null?hp.GetComponent<CoopHeroSlot>():null;
+                if(remote!=null&&remote.Slot==slot)
+                {
+                    instance.streakByHero[hp]=Mathf.Max(0,streak);
+                    break;
+                }
+            }
             GameObject player=LocalHeroContext.Find();
             CoopHeroSlot hero=player!=null?player.GetComponent<CoopHeroSlot>():null;
             if(hero==null||!hero.IsLocalHuman||hero.Slot!=slot)return;
@@ -1014,17 +1025,22 @@ namespace Alterverse.UI
                 Vector3 bsp = cam.WorldToScreenPoint(h.transform.position + Vector3.up * 2.72f);
                 if (bsp.z <= 0f) continue;
 
-                float pulse = 0.86f + 0.14f * Mathf.Sin(now * 5.2f);
-                float badgeW = 148f * scale;
+                float badgeW = 126f * scale;
                 float badgeH = 19f * scale;
                 Rect bountyRect = new Rect(bsp.x - badgeW * 0.5f, Screen.height - bsp.y - badgeH * 0.5f, badgeW, badgeH);
-                FrontEndTheme.Fill(new Rect(bountyRect.x - 1f, bountyRect.y - 1f, bountyRect.width + 2f, bountyRect.height + 2f),
-                    new Color(1f, 0.82f, 0.20f, 0.90f * pulse));
                 FrontEndTheme.Fill(bountyRect, new Color(0.08f, 0.05f, 0.01f, 0.92f));
-                turretBtnSubStyle.normal.textColor = new Color(1f, 0.88f, 0.28f, 0.98f);
-                GUI.Label(bountyRect,
-                    "★ " + GameLanguage.Text("BOUNTY") + $" ({hStreak}x) +2 SHARDS",
-                    turretBtnSubStyle);
+                Color gold = new Color(1f, 0.82f, 0.20f, 0.95f);
+                float crownX=bountyRect.x+5f*scale, crownY=bountyRect.y+3f*scale;
+                // Three small prongs and a base form a crown without requiring a font glyph.
+                FrontEndTheme.Fill(new Rect(crownX,crownY+9f*scale,14f*scale,3f*scale),gold);
+                FrontEndTheme.Fill(new Rect(crownX,crownY+3f*scale,3f*scale,7f*scale),gold);
+                FrontEndTheme.Fill(new Rect(crownX+5.5f*scale,crownY,3f*scale,10f*scale),gold);
+                FrontEndTheme.Fill(new Rect(crownX+11f*scale,crownY+3f*scale,3f*scale,7f*scale),gold);
+                turretBtnSubStyle.normal.textColor = gold;
+                Rect textRect=new Rect(bountyRect.x+22f*scale,bountyRect.y,bountyRect.width-25f*scale,bountyRect.height);
+                string bountyText=GameLanguage.Text("BOUNTY");
+                if(!LocalizedText.Draw(textRect,bountyText,turretBtnSubStyle))
+                    GUI.Label(textRect,bountyText,turretBtnSubStyle);
             }
 
             // Active Turret World-Space Health Bars (250 HP + Damage Trail)

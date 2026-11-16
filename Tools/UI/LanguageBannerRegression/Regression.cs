@@ -25,6 +25,9 @@ static class Regression
         {
             Check(GameLanguage.Select(language.Code),"Can select "+language.Code);
             Check(GameLanguage.Current.Code==language.Code,"Selection applies immediately: "+language.Code);
+            string bounty=GameLanguage.Text("BOUNTY");
+            Check(!string.IsNullOrWhiteSpace(bounty) && (language.Code=="en" || bounty!="BOUNTY"),
+                "Bounty translated for "+language.Code);
             string expected=GameLanguage.Text("Settings");
             Check(!string.IsNullOrWhiteSpace(expected),"Settings label exists: "+language.Code);
             Check(GameLanguage.Text("SETTINGS")==expected,"Uppercase menu label resolves to the same translation");

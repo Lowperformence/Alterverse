@@ -1,4 +1,7 @@
 using Alterverse.Characters;
+using Alterverse.Multiplayer;
+using Unity.Collections;
+using Unity.Netcode;
 using Alterverse.Profile;
 using Alterverse.Visuals;
 using UnityEngine;
@@ -52,8 +55,13 @@ namespace Alterverse.Combat
             pickup.landing=ground;pickup.airborne=airdrop;
             pickup.match=Object.FindAnyObjectByType<Alterverse.Match.DimensionsFront>();
             go.transform.position=ground+(airdrop?Vector3.up*DropHeight:Vector3.zero);
-            if(!pickup.Build()){Object.Destroy(go);return null;}
-            if(airdrop)pickup.BuildParachute();
+            // Headless servers still need the authoritative pickup even when render shaders
+            // are stripped from the server build.
+            if(!DedicatedServerNetworkRuntime.Requested)
+            {
+                if(!pickup.Build()){Object.Destroy(go);return null;}
+                if(airdrop)pickup.BuildParachute();
+            }
             return pickup;
         }
 
@@ -102,6 +110,11 @@ namespace Alterverse.Combat
                 Part("TeamHealAllyR",PrimitiveType.Sphere,visual,new Vector3(.28f,.18f,.29f),new Vector3(.10f,.10f,.055f),energyMat);
             }
             return true;
+        }
+
+        internal void SetReplicaAge(float seconds)
+        {
+            spawned=Time.time-Mathf.Max(0f,seconds);
         }
 
         private void BuildParachute()
@@ -177,7 +190,7 @@ namespace Alterverse.Combat
                 if(t<1)return;
                 airborne=false;
                 if(parachute!=null){Destroy(parachute.gameObject);parachute=null;}
-                Alterverse.Audio.UiSoundRouter.Confirm();
+                if(!DedicatedServerNetworkRuntime.Requested)Alterverse.Audio.UiSoundRouter.Confirm();
             }
             if(visual!=null)
             {
@@ -185,6 +198,8 @@ namespace Alterverse.Combat
                 visual.localScale=Vector3.one*(1f+Mathf.Sin(Time.time*4.4f)*.05f);
                 orbit?.Rotate(Vector3.up,70f*Time.deltaTime,Space.Self);
             }
+            // Clients display a server snapshot; only the host may collect or destroy it.
+            if(!authoritative)return;
             if(age<PickupDelay||Time.time<nextScan)return;
             nextScan=Time.time+.08f;
             float radiusSqr=Radius*Radius;
@@ -206,15 +221,16 @@ namespace Alterverse.Combat
                 Destroy(gameObject);
                 return;
             }
+            bool showVfx=!DedicatedServerNetworkRuntime.Requested;
             switch(type)
             {
                 case BattleItemType.Heal:
                     hero.Heal(hero.Max*.20f,false);
-                    HeroSkillVfx.Support(hero.gameObject,hero,false,.45f);
+                    if(showVfx)HeroSkillVfx.Support(hero.gameObject,hero,false,.45f);
                     break;
                 case BattleItemType.Shield:
                     hero.AddShield(hero.Max*.20f,5f,false);
-                    HeroSkillVfx.Support(hero.gameObject,hero,true,5f);
+                    if(showVfx)HeroSkillVfx.Support(hero.gameObject,hero,true,5f);
                     break;
                 case BattleItemType.TeamHeal:
                     for(int i=0;i<Health.Active.Count;i++)
@@ -224,15 +240,15 @@ namespace Alterverse.Combat
                         TeamMember allyMember=ally.GetComponent<TeamMember>();
                         if(allyMember==null||allyMember.Team!=team)continue;
                         ally.Heal(20f,false);
-                        HeroSkillVfx.Support(ally.gameObject,ally,false,.45f);
+                        if(showVfx)HeroSkillVfx.Support(ally.gameObject,ally,false,.45f);
                     }
                     break;
                 case BattleItemType.Speed:
                     (hero.GetComponent<HeroCombatStatus>()??hero.gameObject.AddComponent<HeroCombatStatus>()).BoostSpeed(1.10f,5f);
-                    PrototypeVfx.Ring(hero.transform.position,new Color(1f,.72f,.18f),1.1f,.3f);
+                    if(showVfx)PrototypeVfx.Ring(hero.transform.position,new Color(1f,.72f,.18f),1.1f,.3f);
                     break;
             }
-            PrototypeVfx.Burst(hero.transform.position,energyMat!=null?energyMat.color:Color.white,.6f,5);
+            if(showVfx)PrototypeVfx.Burst(hero.transform.position,energyMat!=null?energyMat.color:Color.white,.6f,5);
             Destroy(gameObject);
         }
 
@@ -247,49 +263,79 @@ namespace Alterverse.Combat
     }
 
     /// <summary>
-    /// One supply per equipped human-player item. Offline keeps the local single-drop path.
-    /// Network matches use the verified eight-slot match plan and reserve four distinct landing
-    /// positions per team, so a full team can receive four simultaneous supplies without overlap.
+    /// Equipped human-player supplies recur every two match minutes. An uncollected
+    /// crate occupies its slot; failed landings retry until a crate can be created.
+    /// The host owns online crates and publishes snapshots to all clients.
     /// </summary>
     public sealed class BattleItemAirdropSchedule:MonoBehaviour
     {
         public const float DropAtSeconds=120f;
+        private const string SnapshotMessage="DF_BATTLE_SUPPLY_SNAPSHOT_V1";
         private Alterverse.Match.DimensionsFront match;
-
-        // Offline/local-bot path.
         private BattleItemType item;
         private int team;
-        private bool captured,issued;
+        private bool captured,issued,pending;
+        private float nextDropAt=DropAtSeconds;
         private BattleItemPickup drop;
-
-        // Network path. One deterministic entry per roster slot.
-        private readonly bool[] networkIssued=new bool[Alterverse.Multiplayer.MatchSession.MaxPlayers];
-        private readonly BattleItemPickup[] networkDrops=new BattleItemPickup[Alterverse.Multiplayer.MatchSession.MaxPlayers];
-        private float nextResolve;
+        private readonly bool[] networkIssued=new bool[MatchSession.MaxPlayers];
+        private readonly bool[] networkPending=new bool[MatchSession.MaxPlayers];
+        private readonly bool[] networkCharged=new bool[MatchSession.MaxPlayers];
+        private readonly float[] networkNextDrop=new float[MatchSession.MaxPlayers];
+        private readonly BattleItemPickup[] networkDrops=new BattleItemPickup[MatchSession.MaxPlayers];
+        private readonly int[] networkGeneration=new int[MatchSession.MaxPlayers];
+        private readonly float[] networkSpawnAt=new float[MatchSession.MaxPlayers];
+        private readonly Vector3[] networkPosition=new Vector3[MatchSession.MaxPlayers];
+        private float nextResolve,nextSnapshot;
+        private CustomMessagingManager messaging;
+        private bool attached;
         public string Status { get; private set; }
 
-        private void Awake(){match=GetComponent<Alterverse.Match.DimensionsFront>();}
+        private void Awake(){match=GetComponent<Alterverse.Match.DimensionsFront>();ResetSchedule();}
 
         public void ResetSchedule()
         {
             if(drop!=null)Destroy(drop.gameObject);
-            drop=null;captured=issued=false;item=BattleItemType.None;Status=null;nextResolve=0;
+            drop=null;captured=issued=pending=false;item=BattleItemType.None;
+            nextDropAt=DropAtSeconds;Status=null;nextResolve=nextSnapshot=0;
             for(int i=0;i<networkDrops.Length;i++)
             {
                 if(networkDrops[i]!=null)Destroy(networkDrops[i].gameObject);
-                networkDrops[i]=null;networkIssued[i]=false;
+                networkDrops[i]=null;networkIssued[i]=networkPending[i]=networkCharged[i]=false;
+                networkGeneration[i]=0;networkNextDrop[i]=DropAtSeconds;
+                networkSpawnAt[i]=0;networkPosition[i]=default;
             }
+        }
+
+        // Scheduled ticks stay aligned to the match clock. Occupied ticks are skipped;
+        // a blocked landing remains pending and is retried without waiting two minutes.
+        internal static bool QueueDue(float elapsed,ref float next,bool occupied,ref bool waiting)
+        {
+            if(elapsed>=next)
+            {
+                int intervals=Mathf.FloorToInt((elapsed-next)/DropAtSeconds)+1;
+                next+=intervals*DropAtSeconds;
+                if(!occupied)waiting=true;
+            }
+            if(occupied)waiting=false;
+            return waiting;
         }
 
         private void Update()
         {
             if(match==null||match.HasEnded||Time.timeScale<=0||MainMenuVisible())return;
-            if(Alterverse.Multiplayer.CoopAuthority.Active)
+            if(CoopAuthority.Active)
             {
-                UpdateNetworkSupplies();
+                NetworkManager manager=NetworkManager.Singleton;
+                if(manager==null||!manager.IsListening){Detach();return;}
+                Attach(manager.CustomMessagingManager);
+                if(manager.IsServer&&CoopAuthority.LocalHasServerAuthority)
+                {
+                    UpdateNetworkSupplies();
+                    if(Time.unscaledTime>=nextSnapshot){nextSnapshot=Time.unscaledTime+.5f;SendSnapshot(manager);}
+                }
                 return;
             }
-            UpdateOfflineSupply();
+            Detach();UpdateOfflineSupply();
         }
 
         private void UpdateOfflineSupply()
@@ -302,87 +348,136 @@ namespace Alterverse.Combat
                 if(member==null)return;
                 item=BattleItemInventory.Equipped;team=member.Team;captured=true;
             }
-            if(issued)
-            {
-                Status=drop==null?null:drop.IsAirborne?"TEAM SUPPLY INCOMING":"TEAM SUPPLY READY";
-                return;
-            }
             if(item==BattleItemType.None){Status=null;return;}
-            if(match.ElapsedSeconds<DropAtSeconds)
+            if(!QueueDue(match.ElapsedSeconds,ref nextDropAt,drop!=null,ref pending))
             {
-                Status="SUPPLY DROP  "+Mathf.CeilToInt(DropAtSeconds-match.ElapsedSeconds)+"s";
+                Status=drop!=null?(drop.IsAirborne?"TEAM SUPPLY INCOMING":"TEAM SUPPLY READY"):
+                    "SUPPLY DROP  "+Mathf.CeilToInt(Mathf.Max(0,nextDropAt-match.ElapsedSeconds))+"s";
                 return;
             }
             if(Time.time<nextResolve)return;nextResolve=Time.time+1f;
             if(!TryLandingPosition(team,out Vector3 position)){Status="SUPPLY WAITING FOR CLEAR LANDING";return;}
-            if(BattleItemInventory.Equipped!=item)
+            if(!issued)
             {
-                issued=true;Status="SUPPLY CANCELLED: ITEM NOT EQUIPPED";return;
+                if(BattleItemInventory.Equipped!=item){pending=false;item=BattleItemType.None;Status="SUPPLY CANCELLED: ITEM NOT EQUIPPED";return;}
+                if(!BattleItemRuntime.TryDropEquipped(item,team,position,out drop)){Status="SUPPLY RETRYING";return;}
+                issued=true;
             }
-            if(!BattleItemRuntime.TryDropEquipped(item,team,position,out drop))
+            else
             {
-                Status="SUPPLY RETRYING";return;
+                drop=BattleItemPickup.Create(item,team,position,true);
+                if(drop==null){Status="SUPPLY RETRYING";return;}
             }
-            issued=true;Status="TEAM SUPPLY DELIVERED";
+            pending=false;Status="TEAM SUPPLY DELIVERED";
         }
 
         private void UpdateNetworkSupplies()
         {
-            Alterverse.Multiplayer.CoopMatchPlan plan=Alterverse.Multiplayer.CoopAuthority.ActivePlan;
+            CoopMatchPlan plan=CoopAuthority.ActivePlan;
             if(plan?.Session?.Slots==null){Status="TEAM SUPPLIES WAITING FOR ROSTER";return;}
-
-            int configured=0,issuedCount=0,airborneCount=0;
-            for(int slot=0;slot<Alterverse.Multiplayer.MatchSession.MaxPlayers;slot++)
+            int configured=0,active=0,airborne=0;
+            bool canResolve=Time.time>=nextResolve;
+            if(canResolve)nextResolve=Time.time+.5f;
+            for(int slot=0;slot<MatchSession.MaxPlayers;slot++)
             {
-                Alterverse.Multiplayer.MatchPlayerSlot player=plan.Session.Slots[slot];
+                MatchPlayerSlot player=plan.Session.Slots[slot];
                 if(player==null||player.IsBot||player.BattleItem==BattleItemType.None)continue;
                 configured++;
-                if(networkIssued[slot])
+                bool due=QueueDue(match.ElapsedSeconds,ref networkNextDrop[slot],networkDrops[slot]!=null,ref networkPending[slot]);
+                if(due&&canResolve&&TryLandingPosition(player.Team,slot%MatchSession.TeamSize,out Vector3 position))
                 {
-                    issuedCount++;
-                    if(networkDrops[slot]!=null&&networkDrops[slot].IsAirborne)airborneCount++;
+                    BattleItemPickup created=BattleItemPickup.Create(player.BattleItem,player.Team,position,true,true);
+                    if(created!=null)
+                    {
+                        networkDrops[slot]=created;networkPosition[slot]=position;networkSpawnAt[slot]=match.ElapsedSeconds;
+                        networkGeneration[slot]=networkGeneration[slot]==int.MaxValue?1:networkGeneration[slot]+1;
+                        networkPending[slot]=false;
+                        if(!networkIssued[slot]&&player.IsLocal)BattleItemInventory.TryConsumeEquipped(player.BattleItem);
+                        networkIssued[slot]=true;
+                    }
                 }
+                if(networkDrops[slot]!=null){active++;if(networkDrops[slot].IsAirborne)airborne++;}
             }
-
             if(configured==0){Status=null;return;}
-            if(match.ElapsedSeconds<DropAtSeconds)
+            Status=airborne>0?$"TEAM SUPPLIES INCOMING  •  {airborne}/{configured}":
+                active>0?$"TEAM SUPPLIES READY  •  {active}/{configured}":
+                $"TEAM SUPPLIES  {Mathf.CeilToInt(Mathf.Max(0,NextNetworkDrop(plan)-match.ElapsedSeconds))}s";
+        }
+
+        private float NextNetworkDrop(CoopMatchPlan plan)
+        {
+            float next=float.MaxValue;
+            for(int i=0;i<MatchSession.MaxPlayers;i++)
+                if(plan.Session.Slots[i]!=null&&!plan.Session.Slots[i].IsBot&&plan.Session.Slots[i].BattleItem!=BattleItemType.None)
+                    next=Mathf.Min(next,networkPending[i]?match.ElapsedSeconds:networkNextDrop[i]);
+            return next==float.MaxValue?match.ElapsedSeconds:next;
+        }
+
+        private void Attach(CustomMessagingManager value)
+        {
+            if(value==null||attached&&messaging==value)return;
+            Detach();messaging=value;messaging.RegisterNamedMessageHandler(SnapshotMessage,OnSnapshot);attached=true;
+        }
+        private void Detach()
+        {
+            if(attached&&messaging!=null)messaging.UnregisterNamedMessageHandler(SnapshotMessage);
+            attached=false;messaging=null;
+        }
+        private void SendSnapshot(NetworkManager manager)
+        {
+            if(messaging==null||manager.ConnectedClientsIds==null)return;
+            using FastBufferWriter writer=new(256,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            for(int i=0;i<MatchSession.MaxPlayers;i++)
             {
-                Status=$"TEAM SUPPLIES  {Mathf.CeilToInt(DropAtSeconds-match.ElapsedSeconds)}s  •  {configured} READY";
-                return;
+                writer.WriteValueSafe(networkGeneration[i]);writer.WriteValueSafe(networkDrops[i]!=null?1:0);
+                writer.WriteValueSafe(networkPosition[i].x);writer.WriteValueSafe(networkPosition[i].z);writer.WriteValueSafe(networkSpawnAt[i]);
+                writer.WriteValueSafe(networkNextDrop[i]);writer.WriteValueSafe(networkPending[i]?1:0);
             }
-            if(Time.time<nextResolve)return;
-            nextResolve=Time.time+.5f;
-
-            bool authority=Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority;
-            for(int slot=0;slot<Alterverse.Multiplayer.MatchSession.MaxPlayers;slot++)
+            foreach(ulong client in manager.ConnectedClientsIds)
+                if(client!=NetworkManager.ServerClientId)messaging.SendNamedMessage(SnapshotMessage,client,writer,NetworkDelivery.ReliableSequenced);
+        }
+        private void OnSnapshot(ulong sender,FastBufferReader reader)
+        {
+            NetworkManager manager=NetworkManager.Singleton;CoopMatchPlan plan=CoopAuthority.ActivePlan;
+            if(match==null||match.HasEnded||!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsClient||
+                sender!=NetworkManager.ServerClientId||plan?.Session?.Slots==null||
+                !MatchNetworkProtocol.ReadRound(ref reader)||!reader.TryBeginRead(MatchSession.MaxPlayers*(3*sizeof(int)+4*sizeof(float))))return;
+            int active=0,configured=0;bool waiting=false;float next=float.MaxValue;
+            for(int i=0;i<MatchSession.MaxPlayers;i++)
             {
-                if(networkIssued[slot])continue;
-                Alterverse.Multiplayer.MatchPlayerSlot player=plan.Session.Slots[slot];
-                if(player==null||player.IsBot||player.BattleItem==BattleItemType.None)continue;
-
-                int teamSlot=slot%Alterverse.Multiplayer.MatchSession.TeamSize;
-                if(!TryLandingPosition(player.Team,teamSlot,out Vector3 position))continue;
-
-                BattleItemPickup created=BattleItemPickup.Create(player.BattleItem,player.Team,position,true,authority);
-                if(created==null)continue;
-
-                networkDrops[slot]=created;
-                networkIssued[slot]=true;
-                issuedCount++;
-
-                // Every real player pays for only their own planned supply on their own device.
-                // The authoritative host/dedicated server never consumes another player's wallet.
-                if(player.IsLocal)
+                reader.ReadValueSafe(out int generation);reader.ReadValueSafe(out int present);
+                reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float z);reader.ReadValueSafe(out float spawnedAt);
+                reader.ReadValueSafe(out float nextAt);reader.ReadValueSafe(out int pendingFlag);
+                MatchPlayerSlot player=plan.Session.Slots[i];
+                if(generation<0||(present!=0&&present!=1)||(pendingFlag!=0&&pendingFlag!=1)||
+                    !MatchNetworkProtocol.Finite(x)||!MatchNetworkProtocol.Finite(z)||!MatchNetworkProtocol.Finite(spawnedAt)||
+                    !MatchNetworkProtocol.Finite(nextAt)||player==null||player.IsBot||player.BattleItem==BattleItemType.None)continue;
+                if(generation<networkGeneration[i])continue;
+                configured++;waiting|=pendingFlag==1;next=Mathf.Min(next,nextAt);
+                if(generation>0&&!networkCharged[i]&&player.IsLocal)
+                {
                     BattleItemInventory.TryConsumeEquipped(player.BattleItem);
+                    networkCharged[i]=true;
+                }
+                if(present==0)
+                {
+                    if(networkDrops[i]!=null)Destroy(networkDrops[i].gameObject);
+                    networkDrops[i]=null;networkGeneration[i]=generation;continue;
+                }
+                if(generation==0)continue;
+                if(networkDrops[i]==null||networkGeneration[i]!=generation)
+                {
+                    if(networkDrops[i]!=null)Destroy(networkDrops[i].gameObject);
+                    networkDrops[i]=BattleItemPickup.Create(player.BattleItem,player.Team,new Vector3(x,0,z),true,false);
+                    if(networkDrops[i]!=null)networkDrops[i].SetReplicaAge(Mathf.Max(0,match.ElapsedSeconds-spawnedAt));
+                }
+                networkGeneration[i]=generation;
+                if(networkDrops[i]!=null)active++;
             }
-
-            airborneCount=0;
-            for(int i=0;i<networkDrops.Length;i++)
-                if(networkDrops[i]!=null&&networkDrops[i].IsAirborne)airborneCount++;
-
-            Status=issuedCount<=0?"TEAM SUPPLIES WAITING FOR CLEAR LANDING":
-                airborneCount>0?$"TEAM SUPPLIES INCOMING  •  {issuedCount}/{configured}":
-                $"TEAM SUPPLIES READY  •  {issuedCount}/{configured}";
+            Status=active>0?$"TEAM SUPPLIES  •  {active} ACTIVE":
+                configured==0?null:waiting?"TEAM SUPPLIES WAITING FOR CLEAR LANDING":
+                $"TEAM SUPPLIES  {Mathf.CeilToInt(Mathf.Max(0,next-match.ElapsedSeconds))}s";
         }
 
         private static bool MainMenuVisible()=>Alterverse.UI.MainMenuController.IsVisible;
@@ -423,6 +518,7 @@ namespace Alterverse.Combat
 
         private void OnDisable()
         {
+            Detach();
             if(drop!=null)Destroy(drop.gameObject);
             for(int i=0;i<networkDrops.Length;i++)if(networkDrops[i]!=null)Destroy(networkDrops[i].gameObject);
         }
