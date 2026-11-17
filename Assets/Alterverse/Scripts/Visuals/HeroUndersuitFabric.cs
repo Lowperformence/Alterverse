@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Sculpted carbon-weave finish for textile & tactical undersuits, never dark armor.</summary>
+    /// <summary>Matte woven finish for textile undersuits only, never dark armor.</summary>
     [DisallowMultipleComponent]
     public sealed class HeroUndersuitFabric : MonoBehaviour
     {
@@ -21,8 +21,7 @@ namespace Alterverse.Visuals
             return name == "Obsidian fabric" ||
                    name == "DF_Nyra_Cyber undersuit" ||
                    name == "DF_Traveler_Cyber undersuit" ||
-                   name == "DF_Nerok_Pirate leather" ||
-                   name == "DF_Elyra_Sealed black core";
+                   name == "DF_Nerok_Pirate leather";
         }
 
         public static void Apply(Transform model)
@@ -43,6 +42,7 @@ namespace Alterverse.Visuals
                     Debug.LogWarning("DF: undersuit mesh requires Read/Write: " + renderer.sharedMesh.name, renderer);
                     continue;
                 }
+
                 Mesh mesh = Instantiate(renderer.sharedMesh);
                 mesh.name = renderer.sharedMesh.name + "_WovenUndersuit";
                 Vector3[] vertices = mesh.vertices, normals = mesh.normals;
@@ -65,13 +65,13 @@ namespace Alterverse.Visuals
                 {
                     Material original = slots[i];
                     if (!IsUndersuit(original)) continue;
-                    // Rich titanium-anthracite tone so muscle contours and carbon-weave crests read clearly.
-                    Color color = new Color(.082f, .094f, .114f, 1f);
+                    // Use a clear anthracite so the fabric stays visible under dark lighting.
+                    Color color = new Color(.075f, .085f, .10f, 1f);
                     var copy = new Material(original) { shader = shader, name = original.name + "_MatteWeave" };
                     copy.SetColor("_BaseColor", color);
                     if (copy.HasProperty("_Color")) copy.SetColor("_Color", color);
-                    copy.SetFloat("_Metallic", .22f);
-                    copy.SetFloat("_Smoothness", .34f);
+                    copy.SetFloat("_Metallic", 0f);
+                    copy.SetFloat("_Smoothness", .06f);
                     copy.SetFloat("_BumpScale", 0f);
                     if (original.HasProperty("_BaseMap") && original.GetTexture("_BaseMap") != null)
                         copy.SetTexture("_BaseMap", original.GetTexture("_BaseMap"));

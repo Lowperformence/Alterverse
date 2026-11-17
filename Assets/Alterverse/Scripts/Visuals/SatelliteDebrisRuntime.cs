@@ -33,8 +33,9 @@ namespace Alterverse.Visuals
             // The arena is assembled at runtime, so probe cheaply and rebuild only when
             // a different ProductionLunarGround instance becomes active.
             if ((probeFrame++ % 30) != 0) return;
-            if ((Application.isMobilePlatform || !Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled) &&
-                Alterverse.Performance.MobilePerformanceProfile.Current == Alterverse.Performance.MobileQuality.Battery)
+            if (!Alterverse.Performance.AdaptiveVfxBudget.AllowDecorative ||
+                ((Application.isMobilePlatform || !Alterverse.Performance.MobilePerformanceProfile.AutoModeEnabled) &&
+                 Alterverse.Performance.MobilePerformanceProfile.Current == Alterverse.Performance.MobileQuality.Battery))
             {
                 ClearDebris();
                 currentGround = null;

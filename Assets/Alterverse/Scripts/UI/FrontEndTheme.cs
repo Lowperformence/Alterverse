@@ -37,24 +37,24 @@ namespace Alterverse.UI
         public void FitLabel(Rect rect, string text, GUIStyle style, bool muted = false)
         {
             text = Alterverse.Profile.GameLanguage.Text(text);
-            Color original = GUI.color;
-            bool originalWrap = style.wordWrap;
-            style.wordWrap = false;
-            if (muted) GUI.color *= Muted;
-            bool rendered = LocalizedText.Draw(rect, text, style);
-            GUI.color = original;
-            style.wordWrap = originalWrap;
-            if (rendered) return;
             int size = style.fontSize;
             bool wrap = style.wordWrap;
             TextClipping clip = style.clipping;
             style.wordWrap = false;
             style.clipping = TextClipping.Clip;
             measuredText.text = text;
+            float availW = Mathf.Max(1f, rect.width - 2f);
             float width = style.CalcSize(measuredText).x;
-            if (width > rect.width)
-                style.fontSize = Mathf.Max(14, Mathf.FloorToInt(size * rect.width / width));
-            Label(rect, text, style, muted);
+            if (width > availW)
+                style.fontSize = Mathf.Max(10, Mathf.FloorToInt(size * availW / width));
+            while (style.fontSize > 10 && style.CalcSize(measuredText).x > availW)
+                style.fontSize--;
+            Color original = GUI.color;
+            if (muted) GUI.color *= Muted;
+            bool rendered = LocalizedText.Draw(rect, text, style);
+            GUI.color = original;
+            if (!rendered)
+                Label(rect, text, style, muted);
             style.fontSize = size;
             style.wordWrap = wrap;
             style.clipping = clip;
@@ -371,7 +371,9 @@ namespace Alterverse.UI
             Rect textRect = locked ? new Rect(rect.x + 36, rect.y, rect.width - 42, rect.height) : rect;
             float availableTextWidth = Mathf.Max(1f, textRect.width - 14f);
             if (labelWidth > availableTextWidth)
-                Button.fontSize = Mathf.Max(12, Mathf.FloorToInt(originalFontSize * availableTextWidth / labelWidth));
+                Button.fontSize = Mathf.Max(10, Mathf.FloorToInt(originalFontSize * availableTextWidth / labelWidth));
+            while (Button.fontSize > 10 && Button.CalcSize(measuredText).x > availableTextWidth)
+                Button.fontSize--;
 
             GUI.color *= !enabled ? Muted : accent.HasValue ? new Color(.025f,.085f,.14f) : primary ? new Color(1f,.91f,.75f) : Text;
             if (!LocalizedText.Draw(textRect, text, Button)) GUI.Label(textRect, text, Button);

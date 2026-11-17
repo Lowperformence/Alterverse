@@ -428,7 +428,7 @@ namespace Alterverse.UI
             DrawHomeHeroSpotlightCaption(heroAccent);
 
             SyncHomeBannerBlockState();
-            const float blockerW=148f;
+            const float blockerW=176f;
             const float blockerGap=8f;
             float footerWidth=ContentWidth*.66f;
             if (HomeAdvertisingActive) footerWidth=Mathf.Min(footerWidth,HomeBannerMenuRect.x-blockerW-blockerGap-Left-14f);
@@ -460,18 +460,19 @@ namespace Alterverse.UI
         private void DrawHomeBannerBlocker(float blockerW,float blockerGap)
         {
             Rect bannerRect=HomeBannerMenuRect;
-            float cardH=Mathf.Max(96f,bannerRect.height);
-            Rect card=new Rect(bannerRect.x-blockerW-blockerGap,bannerRect.yMax-cardH,blockerW,cardH);
+            float cardH=Mathf.Max(104f,bannerRect.height);
+            float cardY=Mathf.Min(bannerRect.yMax-cardH,MenuHeight-cardH-6f);
+            Rect card=new Rect(bannerRect.x-blockerW-blockerGap,cardY,blockerW,cardH);
             Color goldAccent=new Color(1f,.78f,.22f,1f);
             theme.Panel(card);
-            FrontEndTheme.Fill(new Rect(card.x+10f,card.y+1f,card.width-20f,2f),goldAccent);
+            FrontEndTheme.Fill(new Rect(card.x+8f,card.y+1f,card.width-16f,2f),goldAccent);
             DimensionUiMotif.DrawCornerCuts(card,Texture2D.whiteTexture,goldAccent);
-            theme.FitLabel(new Rect(card.x+10f,card.y+7f,card.width-20f,16f),"AD BLOCKER",theme.Small,true);
-            theme.FitLabel(new Rect(card.x+10f,card.y+23f,card.width-20f,24f),"BLOCK BANNER",theme.Heading);
-            theme.FitLabel(new Rect(card.x+10f,card.y+46f,card.width-20f,16f),"PERMANENT  •  HOME",theme.Small,true);
+            theme.FitLabel(new Rect(card.x+8f,card.y+6f,card.width-16f,20f),"AD BLOCKER",theme.Small,true);
+            theme.FitLabel(new Rect(card.x+8f,card.y+24f,card.width-16f,26f),"BLOCK BANNER",theme.Heading);
+            theme.FitLabel(new Rect(card.x+8f,card.y+48f,card.width-16f,20f),"PERMANENT • HOME",theme.Small,true);
             bool affordable=PlayerWallet.CanAfford(BannerBlockPrice);
             string actionLabel=affordable?$"{BannerBlockPrice} SHARDS":$"NEED {BannerBlockPrice} SHARDS";
-            Rect btnRect=new Rect(card.x+8f,card.yMax-34f,card.width-16f,26f);
+            Rect btnRect=new Rect(card.x+6f,card.yMax-34f,card.width-12f,28f);
             if(ShardPurchaseAction(btnRect,actionLabel,BannerBlockPrice,primary:true,enabled:!PaidShardCommerce.Spending))
                 PurchaseHomeBannerBlock();
         }
