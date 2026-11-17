@@ -9,6 +9,7 @@ namespace Alterverse.Visuals
     {
         readonly List<Mesh> meshes = new List<Mesh>();
         Material material;
+
         public static void Apply(Transform model)
         {
             if (model.GetComponent<AssassinShoulderStripes>() != null) return;
@@ -17,12 +18,13 @@ namespace Alterverse.Visuals
                 if (candidate.name == "DF_Anatomy") { skin = candidate; break; }
             if (skin == null || skin.sharedMesh == null || !skin.sharedMesh.isReadable) return;
             var owner = model.gameObject.AddComponent<AssassinShoulderStripes>();
-            Color violet = new Color(.66f, .08f, 1f, 1f);
-            owner.material = RuntimeShaderLibrary.Create(violet, false, .15f, .45f, violet * 3f);
+            Color violet = new Color(.70f, .12f, 1f, 1f);
+            owner.material = RuntimeShaderLibrary.Create(violet, false, .28f, .68f, violet * 2.4f);
             if (owner.material == null) return;
             owner.material.name = "DF_ZhaevShoulderGlow";
             owner.material.EnableKeyword("_EMISSION");
-            // Measure the authored shoulder armor in bind space before adding either side.
+
+            // Measure the authored shoulder armor in bind space per angular sector so the energy inlays hug the pauldron contour.
             Mesh source = skin.sharedMesh;
             Vector3[] original = source.vertices;
             BoneWeight[] weights = source.boneWeights;
@@ -46,28 +48,74 @@ namespace Alterverse.Visuals
                     BoneWeight w = weights[i];
                     float weight = (w.boneIndex0 == index ? w.weight0 : 0) + (w.boneIndex1 == index ? w.weight1 : 0)
                         + (w.boneIndex2 == index ? w.weight2 : 0) + (w.boneIndex3 == index ? w.weight3 : 0);
-                    if (weight >= .5f) points.Add(toLocal.MultiplyPoint3x4(original[i]));
+                    if (weight >= .45f) points.Add(toLocal.MultiplyPoint3x4(original[i]));
                 }
-                var vertices = new List<Vector3>(); var triangles = new List<int>();
-                foreach (float position in new[] { .12f, .27f })
+
+                const int segments = 48;
+                var vertices = new List<Vector3>();
+                var triangles = new List<int>();
+                float[] rawRadii = new float[segments];
+                float[] smoothRadii = new float[segments];
+
+                foreach (float position in new[] { .13f, .26f })
                 {
-                    float along = length * position, radius = length * .20f;
-                    foreach (Vector3 p in points)
-                        if (Mathf.Abs(Vector3.Dot(p, axis) - along) < length * .15f)
-                            radius = Mathf.Max(radius, Vector3.ProjectOnPlane(p, axis).magnitude);
-                    radius += length * .014f;
-                    float halfWidth = length * .023f;
-                    const int segments = 48;
+                    float along = length * position;
+                    float fallbackRadius = length * .17f;
+                    for (int s = 0; s < segments; s++)
+                    {
+                        float angle = s * Mathf.PI * 2f / segments;
+                        Vector3 dir = (across * Mathf.Cos(angle) + around * Mathf.Sin(angle)).normalized;
+                        float r = fallbackRadius;
+                        foreach (Vector3 p in points)
+                        {
+                            float axial = Vector3.Dot(p, axis);
+                            if (Mathf.Abs(axial - along) > length * .11f) continue;
+                            Vector3 radial = p - axis * axial;
+                            float rm = radial.magnitude;
+                            if (rm > .001f && Vector3.Dot(radial / rm, dir) > .82f)
+                                r = Mathf.Max(r, rm);
+                        }
+                        rawRadii[s] = r;
+                    }
+                    // Smooth angular contour so the energy channel follows the pauldron silhouette without spikes
+                    for (int s = 0; s < segments; s++)
+                    {
+                        float sum = 0f, wSum = 0f;
+                        for (int k = -3; k <= 3; k++)
+                        {
+                            float w = 4 - Mathf.Abs(k);
+                            sum += rawRadii[(s + k + segments) % segments] * w;
+                            wSum += w;
+                        }
+                        smoothRadii[s] = sum / wSum + length * .0035f;
+                    }
+
+                    float halfWidth = length * .0135f;
+                    float crestHeight = length * .0045f;
                     for (int i = 0; i < segments; i++)
                     {
-                        float a = i * Mathf.PI * 2f / segments, b = (i + 1) * Mathf.PI * 2f / segments;
-                        Vector3 ra = (across * Mathf.Cos(a) + around * Mathf.Sin(a)) * radius;
-                        Vector3 rb = (across * Mathf.Cos(b) + around * Mathf.Sin(b)) * radius;
+                        int next = (i + 1) % segments;
+                        float a = i * Mathf.PI * 2f / segments, b = next * Mathf.PI * 2f / segments;
+                        Vector3 dirA = across * Mathf.Cos(a) + around * Mathf.Sin(a);
+                        Vector3 dirB = across * Mathf.Cos(b) + around * Mathf.Sin(b);
+                        float rA = smoothRadii[i], rB = smoothRadii[next];
+                        // Subtle chevron dip on the outer shoulder crest
+                        float dipA = Mathf.Sin(a * 2f) * length * .008f;
+                        float dipB = Mathf.Sin(b * 2f) * length * .008f;
+
                         int start = vertices.Count;
-                        vertices.Add(axis * (along - halfWidth) + ra); vertices.Add(axis * (along - halfWidth) + rb);
-                        vertices.Add(axis * (along + halfWidth) + rb); vertices.Add(axis * (along + halfWidth) + ra);
-                        triangles.Add(start); triangles.Add(start + 1); triangles.Add(start + 2);
-                        triangles.Add(start); triangles.Add(start + 2); triangles.Add(start + 3);
+                        // 3-ring beveled cross-section (top edge, raised glowing crest, bottom edge)
+                        vertices.Add(axis * (along + dipA - halfWidth) + dirA * rA);
+                        vertices.Add(axis * (along + dipB - halfWidth) + dirB * rB);
+                        vertices.Add(axis * (along + dipB) + dirB * (rB + crestHeight));
+                        vertices.Add(axis * (along + dipA) + dirA * (rA + crestHeight));
+                        vertices.Add(axis * (along + dipA + halfWidth) + dirA * rA);
+                        vertices.Add(axis * (along + dipB + halfWidth) + dirB * rB);
+
+                        triangles.Add(start + 0); triangles.Add(start + 1); triangles.Add(start + 2);
+                        triangles.Add(start + 0); triangles.Add(start + 2); triangles.Add(start + 3);
+                        triangles.Add(start + 3); triangles.Add(start + 2); triangles.Add(start + 5);
+                        triangles.Add(start + 3); triangles.Add(start + 5); triangles.Add(start + 4);
                     }
                 }
                 var mesh = new Mesh { name = "DF_ZhaevShoulderStripes" + side };
@@ -80,6 +128,7 @@ namespace Alterverse.Visuals
                 part.AddComponent<MeshRenderer>().sharedMaterial = owner.material;
             }
         }
+
         void OnDestroy()
         {
             foreach (Mesh mesh in meshes) if (mesh != null) Destroy(mesh);
