@@ -18,7 +18,7 @@ namespace Alterverse.Combat
             var result=new Zone[4];
             for(int pair=0;pair<2;pair++)
             {
-                float x=14f+Next(ref state)*10f,z=(pair==0?1:-1)*(15f+Next(ref state)*9f);
+                float x=8f+Next(ref state)*6f,z=(pair==0?1:-1)*(8f+Next(ref state)*6f);
                 float radius=3.8f+Next(ref state)*.7f;
                 result[pair*2]=new Zone(x,z,radius);
                 result[pair*2+1]=new Zone(-x,-z,radius);
