@@ -25,6 +25,8 @@ namespace Alterverse.Multiplayer
         private const string CombatSoundMessage="DF_COOP_COMBAT_AUDIO_V2";
         private const string OwnerPoseMessage="DF_COOP_OWNER_POSE_V5";
         private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V8";
+        private const string MidMatchPerkRequestMessage="DF_COOP_MIDMATCH_PERK_REQ_V1";
+        private const string MidMatchPerkAckMessage="DF_COOP_MIDMATCH_PERK_ACK_V1";
         private const float OwnerSendInterval=1f/20f;
         private const float HostSnapshotInterval=1f/20f;
         private const float MinimumMovementSlack=.18f;
@@ -37,6 +39,9 @@ namespace Alterverse.Multiplayer
         private string localPlayerId="";
         private bool attached;
         private CoopMatchPlan slotPlan;
+        private int pendingLocalPerk;
+        private bool localPerkAcked;
+        private float nextLocalPerkSendAt;
 
         private void OnEnable()
         {
@@ -70,6 +75,7 @@ namespace Alterverse.Multiplayer
             {
                 SendOwnerPose(manager);
             }
+            TrySendLocalMidMatchPerk(manager);
         }
 
         private void RefreshSlots(bool immediate)
@@ -121,6 +127,8 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(TimmyEffectMessage,OnTimmyEffect);
             messaging.RegisterNamedMessageHandler(VoidKnightEffectMessage,OnVoidKnightEffect);
             messaging.RegisterNamedMessageHandler(OrunOverdriveMessage,OnOrunOverdrive);
+            messaging.RegisterNamedMessageHandler(MidMatchPerkRequestMessage,OnMidMatchPerkRequest);
+            messaging.RegisterNamedMessageHandler(MidMatchPerkAckMessage,OnMidMatchPerkAck);
             RegisterHeadwear();
             attached=true;
         }
@@ -138,6 +146,8 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(TimmyEffectMessage);
             messaging.UnregisterNamedMessageHandler(VoidKnightEffectMessage);
             messaging.UnregisterNamedMessageHandler(OrunOverdriveMessage);
+            messaging.UnregisterNamedMessageHandler(MidMatchPerkRequestMessage);
+            messaging.UnregisterNamedMessageHandler(MidMatchPerkAckMessage);
             UnregisterHeadwear();
             messaging=null;attached=false;
             senderOwners.Clear();
@@ -354,6 +364,77 @@ namespace Alterverse.Multiplayer
             Vector3 origin=new Vector3(x,y,z),direction=new Vector3(tx-x,ty-y,tz-z);
             HeroSkillVfx.VoidKnightField(actor,direction,radius,duration,kind!=1,kind==2,false,elapsed,origin);
         }
+        public static void NotifyLocalMidMatchPerk(GameObject actor,int perk)
+        {
+            if(actor==null||perk<=0||perk>3)return;
+            CoopHeroSlot slot=actor.GetComponent<CoopHeroSlot>();
+            if(slot==null||!slot.IsLocalHuman)return;
+            var service=audioRelay;
+            if(service==null)return;
+            service.pendingLocalPerk=perk;
+            service.localPerkAcked=false;
+            service.nextLocalPerkSendAt=0f;
+            service.TrySendLocalMidMatchPerk(NetworkManager.Singleton);
+        }
+
+        private void TrySendLocalMidMatchPerk(NetworkManager manager)
+        {
+            if(pendingLocalPerk<=0||localPerkAcked||manager==null||manager.IsServer||!manager.IsConnectedClient||messaging==null)return;
+            if(Time.unscaledTime<nextLocalPerkSendAt)return;
+            RefreshSlots(false);
+            if(localSlot<0||localSlot>=slots.Length)return;
+            CoopHeroSlot slot=slots[localSlot];
+            if(slot==null||!slot.IsLocalHuman)return;
+            nextLocalPerkSendAt=Time.unscaledTime+.25f;
+            using FastBufferWriter writer=new(64,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            writer.WriteValueSafe(slot.Slot);
+            writer.WriteValueSafe(new FixedString128Bytes(slot.PlayerId??""));
+            writer.WriteValueSafe((byte)pendingLocalPerk);
+            messaging.SendNamedMessage(MidMatchPerkRequestMessage,NetworkManager.ServerClientId,writer,NetworkDelivery.ReliableSequenced);
+        }
+
+        private void OnMidMatchPerkRequest(ulong sender,FastBufferReader reader)
+        {
+            NetworkManager manager=NetworkManager.Singleton;
+            if(manager==null||!manager.IsServer||!CoopAuthority.LocalHasServerAuthority||!MatchNetworkProtocol.ReadRound(ref reader))return;
+            if(!reader.TryBeginRead(sizeof(int)))return;
+            reader.ReadValueSafe(out int rosterSlot);
+            reader.ReadValueSafe(out FixedString128Bytes playerId);
+            if(!reader.TryBeginRead(sizeof(byte)))return;
+            reader.ReadValueSafe(out byte rawPerk);
+            if(rawPerk<1||rawPerk>3)return;
+            if(!ValidateOwner(sender,rosterSlot,playerId.ToString()))return;
+            RefreshSlots(false);
+            if(rosterSlot<0||rosterSlot>=slots.Length||slots[rosterSlot]==null)return;
+            GameObject actor=slots[rosterSlot].gameObject;
+            PlanetBuffReceiver receiver=actor.GetComponent<PlanetBuffReceiver>()??actor.AddComponent<PlanetBuffReceiver>();
+            if(!receiver.HasSelectedMidMatchPerk)
+                receiver.SelectMidMatchPerk((MidMatchPerkType)rawPerk);
+            if(messaging!=null)
+            {
+                using FastBufferWriter writer=new(16,Allocator.Temp);
+                writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+                writer.WriteValueSafe(rosterSlot);
+                writer.WriteValueSafe((byte)receiver.SelectedPerk);
+                messaging.SendNamedMessage(MidMatchPerkAckMessage,sender,writer,NetworkDelivery.ReliableSequenced);
+            }
+        }
+
+        private void OnMidMatchPerkAck(ulong sender,FastBufferReader reader)
+        {
+            NetworkManager manager=NetworkManager.Singleton;
+            if(manager==null||!manager.IsClient||CoopAuthority.LocalHasServerAuthority||sender!=NetworkManager.ServerClientId||!MatchNetworkProtocol.ReadRound(ref reader))return;
+            if(!reader.TryBeginRead(sizeof(int)+sizeof(byte)))return;
+            reader.ReadValueSafe(out int rosterSlot);
+            reader.ReadValueSafe(out byte rawPerk);
+            RefreshSlots(false);
+            if(rosterSlot<0||rosterSlot>=slots.Length||slots[rosterSlot]==null)return;
+            localPerkAcked=true;
+            PlanetBuffReceiver receiver=slots[rosterSlot].GetComponent<PlanetBuffReceiver>();
+            receiver?.ConfirmNetworkPerkSync();
+        }
+
         private static bool TimmyFxFinite(float v)=>!float.IsNaN(v)&&!float.IsInfinity(v);
 
     }

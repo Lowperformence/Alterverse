@@ -18,6 +18,7 @@ namespace Alterverse.Match
     {
         private float fluxUntil, guardUntil;
         private MidMatchPerkType selectedPerk;
+        private bool networkPerkSynced;
 
         public const float FluxDamageBonus = .15f, GuardDamageReduction = .20f;
         public const float MidMatchMoveBonus = .15f;
@@ -37,7 +38,11 @@ namespace Alterverse.Match
 
         // Read automatically by HeroMotor.MoveSpeed and MobaBotMover.MoveSpeed
         public float MoveSpeedMultiplier =>
-            selectedPerk == MidMatchPerkType.Movement ? 1f + MidMatchMoveBonus : 1f;
+            selectedPerk == MidMatchPerkType.Movement &&
+            (!Alterverse.Multiplayer.CoopAuthority.Active || Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority || networkPerkSynced)
+                ? 1f + MidMatchMoveBonus : 1f;
+
+        public void ConfirmNetworkPerkSync() => networkPerkSynced = true;
 
         // Read automatically by Health.TakeDamage for all basic attacks, skillshots & abilities
         public float OutgoingDamageMultiplier =>
@@ -72,6 +77,10 @@ namespace Alterverse.Match
                 return false;
 
             selectedPerk = perk;
+            if (Alterverse.Multiplayer.CoopAuthority.Active && !Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)
+                Alterverse.Multiplayer.CoopHeroStateSync.NotifyLocalMidMatchPerk(gameObject, (int)perk);
+            else
+                networkPerkSynced = true;
 
             if (perk == MidMatchPerkType.MaxHealth)
             {
@@ -89,6 +98,7 @@ namespace Alterverse.Match
         public void ResetMidMatchPerk()
         {
             selectedPerk = MidMatchPerkType.None;
+            networkPerkSynced = false;
         }
     }
 }

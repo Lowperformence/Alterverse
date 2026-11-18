@@ -1030,13 +1030,16 @@ namespace Alterverse.UI
             float now = Time.unscaledTime;
 
             // World-Space Kopfgeld / Bounty Badge above any hero on a 3+ Killstreak (+2 Shards reward)
+            GameObject localViewer = LocalHeroContext.Find();
             var activeHeroes = Health.Active;
             for (int i = 0; i < activeHeroes.Count; i++)
             {
                 Health h = activeHeroes[i];
                 if (h == null || h.IsDead || h.GetComponent<HeroIdentity>() == null) continue;
+                if (localViewer != null && CombatVisibility.HiddenFrom(localViewer, h)) continue;
                 if (!streakByHero.TryGetValue(h, out int hStreak) || hStreak < 3) continue;
-                Vector3 bsp = cam.WorldToScreenPoint(h.transform.position + Vector3.up * 2.72f);
+                Vector3 anchor = HeroPresentationAnchor.Position(h.transform);
+                Vector3 bsp = cam.WorldToScreenPoint(anchor + Vector3.up * 2.72f);
                 if (bsp.z <= 0f) continue;
 
                 float badgeW = 126f * scale;

@@ -95,7 +95,13 @@ namespace Alterverse.Match
 
             if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)
             {
-                if(telegraphing)UpdateTelegraphVisual();
+                if(!telegraphing)
+                {
+                    if(Time.time>=flashUntil)HideTelegraph();
+                    return;
+                }
+                if(UpdateTelegraphVisual()>=1f&&Time.time>=telegraphStart+telegraphDuration+.18f)
+                    HideTelegraph();
                 return;
             }
 
@@ -205,7 +211,7 @@ namespace Alterverse.Match
             }
         }
 
-        private void HideTelegraph()
+        public void HideTelegraph()
         {
             telegraphing=false;
             if(telegraphRenderer!=null)telegraphRenderer.enabled=false;

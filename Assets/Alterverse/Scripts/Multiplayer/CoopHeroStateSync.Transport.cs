@@ -34,6 +34,7 @@ namespace Alterverse.Multiplayer
         private void ResetPoseTransport()
         {
             poseRoundReady=false;
+            pendingLocalPerk=0;localPerkAcked=false;nextLocalPerkSendAt=0f;
             ownerPoseHistory.Clear(true);
             movementBudget.Clear();
             System.Array.Clear(ownerAcknowledgements,0,ownerAcknowledgements.Length);

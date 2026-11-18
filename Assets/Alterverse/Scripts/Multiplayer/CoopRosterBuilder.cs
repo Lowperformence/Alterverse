@@ -73,6 +73,8 @@ namespace Alterverse.Multiplayer
         private static void ConfigureHuman(GameObject hero,MatchPlayerSlot data,int slot,bool local,Vector3 spawn)
         {
             hero.name=local?"AV_Player":$"AV_CoopHuman_{slot}_{data.Hero}";
+            if(hero.GetComponent<Alterverse.Match.PlanetBuffReceiver>()==null)hero.AddComponent<Alterverse.Match.PlanetBuffReceiver>();
+            if(hero.GetComponent<Alterverse.Match.PlanetBuffReceiver>()==null)hero.AddComponent<Alterverse.Match.PlanetBuffReceiver>();
             hero.transform.position=spawn;
 
             CharacterController controller=hero.GetComponent<CharacterController>();

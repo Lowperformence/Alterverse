@@ -79,6 +79,8 @@ namespace Alterverse.Visuals
             foreach (HeroIdentity key in stale)
                 if (!ReferenceEquals(key, null)) rigs.Remove(key);
 
+            if (!Alterverse.UI.MainMenuController.IsVisible && Alterverse.Combat.Health.Active.Count > 0)
+                return;
             foreach (HeroIdentity identity in Object.FindObjectsByType<HeroIdentity>(FindObjectsInactive.Include,FindObjectsSortMode.None))
             {
                 if (identity == null || identity.Hero != HeroId.Veyr) continue;

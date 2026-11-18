@@ -36,11 +36,24 @@ namespace Alterverse.Visuals
             go.AddComponent<EarthForestPolish>();
         }
 
+        private GameObject cachedWorld;
+        private float nextWorldLookup;
+
         void Update()
         {
             bool earth=ArenaVariantRuntime.Current==ArenaVariant.Earth;
-            GameObject world=GameObject.Find("DF_MatchWorld");
-            if(!earth||world==null)
+            if(!earth)
+            {
+                if(forestRoot!=null)ClearForest();
+                return;
+            }
+            if(cachedWorld==null&&Time.unscaledTime>=nextWorldLookup)
+            {
+                nextWorldLookup=Time.unscaledTime+.25f;
+                cachedWorld=GameObject.Find("DF_MatchWorld");
+            }
+            GameObject world=cachedWorld;
+            if(world==null)
             {
                 if(forestRoot!=null)ClearForest();
                 return;

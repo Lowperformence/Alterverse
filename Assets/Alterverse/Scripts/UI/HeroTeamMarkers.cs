@@ -63,6 +63,54 @@ namespace Alterverse.UI
                 GameObject p = LocalHeroContext.Find();
                 if (p != null) player = p.GetComponent<TeamMember>();
             }
+            var activeHealth = Health.Active;
+            if (activeHealth.Count > 0)
+            {
+                int liveHeroes = 0;
+                bool matchesExisting = true;
+                for (int i = 0; i < activeHealth.Count; i++)
+                {
+                    Health hp = activeHealth[i];
+                    if (hp == null) continue;
+                    HeroIdentity hero = hp.GetComponent<HeroIdentity>();
+                    TeamMember tm = hp.GetComponent<TeamMember>();
+                    if (hero == null || tm == null) continue;
+                    if (liveHeroes >= markerCount || markers[liveHeroes].Health != hp)
+                        matchesExisting = false;
+                    liveHeroes++;
+                }
+                if (matchesExisting && liveHeroes == markerCount && markerCount > 0)
+                    return;
+
+                if (markers.Length < liveHeroes)
+                    markers = new CachedHeroMarker[Mathf.Max(12, liveHeroes)];
+                markerCount = 0;
+                for (int i = 0; i < activeHealth.Count; i++)
+                {
+                    Health hp = activeHealth[i];
+                    if (hp == null) continue;
+                    HeroIdentity hero = hp.GetComponent<HeroIdentity>();
+                    TeamMember tm = hp.GetComponent<TeamMember>();
+                    if (hero == null || tm == null) continue;
+                    markers[markerCount++] = new CachedHeroMarker
+                    {
+                        Identity = hero,
+                        Transform = hero.transform,
+                        Health = hp,
+                        Team = tm,
+                        Motion = hero.GetComponent<HeroVisualMotion>(),
+                        LastCurHp = -1,
+                        LastMaxHp = -1,
+                        LastShield = -1,
+                        TrailNormalized = hp.Normalized,
+                        TrailHoldUntil = 0f,
+                        HpLabel = string.Empty,
+                        ShieldLabel = string.Empty
+                    };
+                }
+                return;
+            }
+
             HeroIdentity[] found = FindObjectsByType<HeroIdentity>(FindObjectsInactive.Exclude);
             if (markers.Length < found.Length)
                 markers = new CachedHeroMarker[Mathf.Max(12, found.Length)];

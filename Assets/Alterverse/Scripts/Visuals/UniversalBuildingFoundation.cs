@@ -26,10 +26,10 @@ namespace Alterverse.Visuals
         {
             if(Time.unscaledTime<nextScan)return;
             nextScan=Time.unscaledTime+.5f;
-            var match=GameObject.Find("DF_MatchWorld");
-            if(match==null){if(root!=null||concrete!=null)Clear();return;}
-            if(world!=match.transform||root==null)
+            if(world==null)
             {
+                var match=GameObject.Find("DF_MatchWorld");
+                if(match==null){if(root!=null||concrete!=null)Clear();return;}
                 Clear();world=match.transform;
                 root=new GameObject("DF_BuildingFoundations").transform;
                 root.SetParent(world,false);
@@ -40,6 +40,7 @@ namespace Alterverse.Visuals
                     PlanetSceneryMaterials.Apply(concrete,Alterverse.Match.ArenaVariantRuntime.Current,SceneryFinish.Concrete);
                 }
             }
+            if(built.Count>=6)return;
             foreach(var bunker in world.GetComponentsInChildren<DefenseBunker>())Build(bunker.transform);
             foreach(var trench in world.GetComponentsInChildren<DefenseTrench>())Build(trench.transform);
             foreach(string name in new[]{"DF_ZeroRealityCore","DF_LumenRealityCore"})

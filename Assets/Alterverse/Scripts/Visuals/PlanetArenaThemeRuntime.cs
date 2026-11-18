@@ -31,9 +31,17 @@ namespace Alterverse.Visuals
             go.AddComponent<PlanetArenaThemeRuntime>();
         }
 
+        private GameObject cachedWorld;
+        private float nextWorldLookup;
+
         void Update()
         {
-            GameObject world=GameObject.Find("DF_MatchWorld");
+            if(cachedWorld==null&&Time.unscaledTime>=nextWorldLookup)
+            {
+                nextWorldLookup=Time.unscaledTime+.25f;
+                cachedWorld=GameObject.Find("DF_MatchWorld");
+            }
+            GameObject world=cachedWorld;
             ArenaVariant variant=ArenaVariantRuntime.Current;
             bool themed=variant==ArenaVariant.Earth||variant==ArenaVariant.Pyraxis||variant==ArenaVariant.Neptune;
 

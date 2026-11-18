@@ -461,7 +461,7 @@ namespace Alterverse.UI
         {
             Rect bannerRect=HomeBannerMenuRect;
             float cardH=Mathf.Max(104f,bannerRect.height);
-            float cardY=Mathf.Min(bannerRect.yMax-cardH,MenuHeight-cardH-6f);
+            float cardY=bannerRect.yMax-cardH;
             Rect card=new Rect(bannerRect.x-blockerW-blockerGap,cardY,blockerW,cardH);
             Color goldAccent=new Color(1f,.78f,.22f,1f);
             theme.Panel(card);

@@ -22,6 +22,6 @@ if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
 ApplyBuffToTeam(team,type,duration);
 }
 private static void ApplyBuffToTeam(int team,PlanetBuffType type,float duration){var activeHealth=Health.Active;for(int i=0;i<activeHealth.Count;i++){Health h=activeHealth[i];if(h==null||h.IsDead)continue;TeamMember member=h.GetComponent<TeamMember>();if(member==null||member.Team!=team)continue;PlanetBuffReceiver receiver=member.GetComponent<PlanetBuffReceiver>()??member.gameObject.AddComponent<PlanetBuffReceiver>();receiver.Apply(type,duration);}}
-private void SetVisible(bool value){RefreshVisualCache();foreach(Renderer r in visuals)if(r!=null)r.enabled=value;foreach(Collider c in colliders)if(c!=null)c.enabled=value;}private void OnDestroy(){if(health!=null)health.DiedWithSource-=OnDestroyed;}
+private void SetVisible(bool value){RefreshVisualCache();foreach(Renderer r in visuals)if(r!=null)r.enabled=value;foreach(Collider c in colliders)if(c!=null)c.enabled=value;if(!value)GetComponent<PlanetPulseAttack>()?.HideTelegraph();}private void OnDestroy(){if(health!=null)health.DiedWithSource-=OnDestroyed;}
 }
 }
