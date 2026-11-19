@@ -536,7 +536,7 @@ namespace Alterverse.UI
             var incoming=social?.Friends?.partyInvites??System.Array.Empty<SocialService.PartyInvitation>();
             int count=inviteInbox?incoming.Length:friends.Length;
             Rect viewport=new(left+20,240,width-40,275);
-            invitationScroll=GUI.BeginScrollView(viewport,invitationScroll,new Rect(0,0,viewport.width-20,Mathf.Max(275,count*66)));
+            invitationScroll=FrontEndTheme.BeginTouchScrollView(viewport,invitationScroll,new Rect(0,0,viewport.width-20,Mathf.Max(275,count*66)));
             if(count==0)theme.Label(new Rect(12,15,viewport.width-40,55),inviteInbox?"NO INVITATIONS":"NO ACCEPTED FRIENDS YET",theme.Body,true);
             for(int i=0;i<count;i++)
             {

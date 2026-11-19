@@ -30,6 +30,113 @@ namespace Alterverse.UI
         private const int SliceBorder = 15;
         private static GUIStyle roundedFillStyle, roundedOutlineStyle;
         private static Texture2D fieldBackground;
+        private static int activeTouchScrollId;
+        private static bool touchScrollPointerDown;
+        private static bool touchScrollDragging;
+        private static bool touchScrollTouchDriven;
+        private static Vector2 touchScrollPointerStart;
+        private static Vector2 touchScrollOrigin;
+
+        public static Vector2 BeginTouchScrollView(Rect viewport, Vector2 scroll, Rect contentRect, bool alwaysShowHorizontal = false, bool alwaysShowVertical = false)
+        {
+            Event e = Event.current;
+            int id = GUIUtility.GetControlID(FocusType.Passive);
+            float maxScrollX = Mathf.Max(0f, contentRect.width - viewport.width);
+            float maxScrollY = Mathf.Max(0f, contentRect.height - viewport.height);
+            bool hasVerticalBar = alwaysShowVertical || contentRect.height > viewport.height;
+            Rect dragArea = new Rect(viewport.x, viewport.y, Mathf.Max(0f, viewport.width - (hasVerticalBar ? 18f : 0f)), viewport.height);
+
+            var ts = UnityEngine.InputSystem.Touchscreen.current;
+            if (ts != null)
+            {
+                var touch = ts.primaryTouch;
+                bool pressed = touch.press.isPressed;
+                Vector2 screenPos = touch.position.ReadValue();
+                Vector3 local3 = GUI.matrix.inverse.MultiplyPoint3x4(new Vector3(screenPos.x, Screen.height - screenPos.y, 0f));
+                Vector2 touchGuiPos = new Vector2(local3.x, local3.y);
+
+                if (pressed)
+                {
+                    if (!touchScrollPointerDown && touch.press.wasPressedThisFrame && dragArea.Contains(touchGuiPos))
+                    {
+                        activeTouchScrollId = id;
+                        touchScrollPointerDown = true;
+                        touchScrollDragging = false;
+                        touchScrollTouchDriven = true;
+                        touchScrollPointerStart = touchGuiPos;
+                        touchScrollOrigin = scroll;
+                    }
+                    else if (touchScrollPointerDown && activeTouchScrollId == id)
+                    {
+                        float dy = touchGuiPos.y - touchScrollPointerStart.y;
+                        float dx = touchGuiPos.x - touchScrollPointerStart.x;
+                        if (touchScrollDragging || Mathf.Abs(dy) > 5f || (maxScrollX > 0f && Mathf.Abs(dx) > 5f))
+                        {
+                            touchScrollDragging = true;
+                            GUIUtility.hotControl = id;
+                            scroll.y = Mathf.Clamp(touchScrollOrigin.y - dy, 0f, maxScrollY);
+                            if (maxScrollX > 0f)
+                                scroll.x = Mathf.Clamp(touchScrollOrigin.x - dx, 0f, maxScrollX);
+                        }
+                    }
+                }
+                else if (touchScrollTouchDriven && touchScrollPointerDown && activeTouchScrollId == id && e != null && e.type == EventType.Repaint)
+                {
+                    touchScrollPointerDown = false;
+                    activeTouchScrollId = 0;
+                    touchScrollTouchDriven = false;
+                    if (touchScrollDragging)
+                    {
+                        if (GUIUtility.hotControl == id) GUIUtility.hotControl = 0;
+                        touchScrollDragging = false;
+                    }
+                }
+            }
+
+            if (e != null)
+            {
+                if (e.type == EventType.MouseDown && e.button == 0 && dragArea.Contains(e.mousePosition))
+                {
+                    activeTouchScrollId = id;
+                    touchScrollPointerDown = true;
+                    touchScrollDragging = false;
+                    touchScrollPointerStart = e.mousePosition;
+                    touchScrollOrigin = scroll;
+                }
+                else if (e.rawType == EventType.MouseDrag && touchScrollPointerDown && activeTouchScrollId == id)
+                {
+                    float dy = e.mousePosition.y - touchScrollPointerStart.y;
+                    float dx = e.mousePosition.x - touchScrollPointerStart.x;
+                    if (touchScrollDragging || Mathf.Abs(dy) > 5f || (maxScrollX > 0f && Mathf.Abs(dx) > 5f))
+                    {
+                        touchScrollDragging = true;
+                        GUIUtility.hotControl = id;
+                        scroll.y = Mathf.Clamp(touchScrollOrigin.y - dy, 0f, maxScrollY);
+                        if (maxScrollX > 0f)
+                            scroll.x = Mathf.Clamp(touchScrollOrigin.x - dx, 0f, maxScrollX);
+                        e.Use();
+                    }
+                }
+                else if (e.rawType == EventType.MouseUp && touchScrollPointerDown && activeTouchScrollId == id)
+                {
+                    touchScrollPointerDown = false;
+                    activeTouchScrollId = 0;
+                    touchScrollTouchDriven = false;
+                    if (touchScrollDragging)
+                    {
+                        if (GUIUtility.hotControl == id) GUIUtility.hotControl = 0;
+                        touchScrollDragging = false;
+                        e.Use();
+                    }
+                }
+            }
+
+            scroll.y = Mathf.Clamp(scroll.y, 0f, maxScrollY);
+            if (maxScrollX > 0f)
+                scroll.x = Mathf.Clamp(scroll.x, 0f, maxScrollX);
+
+            return GUI.BeginScrollView(viewport, scroll, contentRect, alwaysShowHorizontal, alwaysShowVertical);
+        }
 
         public readonly GUIStyle Title, Heading, Body, Small, Button, Field;
         private readonly GUIStyle centered, badge, monogram;
@@ -363,7 +470,7 @@ namespace Alterverse.UI
                 RoundedOutline(new Rect(rect.x + 2, rect.y + 2, rect.width - 4, rect.height - 4), inner);
             }
 
-            bool clicked = GUI.Button(rect, GUIContent.none, GUIStyle.none);
+            bool clicked = GUI.Button(rect, GUIContent.none, GUIStyle.none) && !touchScrollDragging;
             Color before = GUI.color;
             int originalFontSize = Button.fontSize;
             measuredText.text = text;

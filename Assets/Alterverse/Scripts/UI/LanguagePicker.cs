@@ -34,7 +34,7 @@ namespace Alterverse.UI
             Rect viewport = new Rect(panel.x + 24, panel.y + 140, width - 48, height - 198);
             int matches = 1;
             foreach (var option in GameLanguage.Languages) if (Matches(option, search)) matches++;
-            scroll = GUI.BeginScrollView(viewport, scroll, new Rect(0, 0, viewport.width - 24, matches * 54));
+            scroll = FrontEndTheme.BeginTouchScrollView(viewport, scroll, new Rect(0, 0, viewport.width - 24, matches * 54));
             try
             {
                 if (theme.Action(new Rect(0, 0, viewport.width - 28, 48), GameLanguage.Text("Use device language"),

@@ -62,7 +62,7 @@ namespace Alterverse.UI
             }
             lastChatHeight=height;
             float scrollHeight=Mathf.Max(156,height);
-            chatScroll=GUI.BeginScrollView(new Rect(Left,424,ContentWidth,162),chatScroll,new Rect(0,0,width,scrollHeight));
+            chatScroll=FrontEndTheme.BeginTouchScrollView(new Rect(Left,424,ContentWidth,162),chatScroll,new Rect(0,0,width,scrollHeight));
             float y=0;
             foreach(var message in messages)
             {
@@ -136,7 +136,7 @@ namespace Alterverse.UI
         {
             clanRulesText??=new GUIStyle(theme.Body){fontSize=24,wordWrap=true};
             float width=rect.width-28,height=Mathf.Max(rect.height,clanRulesText.CalcHeight(new GUIContent(text??""),width)+12);
-            scroll=GUI.BeginScrollView(rect,scroll,new Rect(0,0,width,height));
+            scroll=FrontEndTheme.BeginTouchScrollView(rect,scroll,new Rect(0,0,width,height));
             GUI.Label(new Rect(0,0,width,height),text??"",clanRulesText);
             GUI.EndScrollView();
         }
@@ -217,7 +217,7 @@ namespace Alterverse.UI
                 var report=selectedChatReport;
                 theme.FitLabel(new Rect(Left,278,ContentWidth,30),report.reason+"  /  "+report.status,theme.Heading);
                 theme.Label(new Rect(Left,316,ContentWidth,56),"Clan: "+report.clanId+"  /  Message: "+report.messageId+"\nReport: "+report.reportId+"  /  "+ChatTime(report.createdAt),theme.Small,true);
-                adminScroll=GUI.BeginScrollView(new Rect(Left,382,ContentWidth,132),adminScroll,new Rect(0,0,ContentWidth-28,Mathf.Max(132,theme.Body.CalcHeight(new GUIContent(report.evidence?.text??"Player report"),ContentWidth-40)+36)));
+                adminScroll=FrontEndTheme.BeginTouchScrollView(new Rect(Left,382,ContentWidth,132),adminScroll,new Rect(0,0,ContentWidth-28,Mathf.Max(132,theme.Body.CalcHeight(new GUIContent(report.evidence?.text??"Player report"),ContentWidth-40)+36)));
                 theme.Label(new Rect(10,0,ContentWidth-48,30),report.evidence?.name??"Player",theme.Small,true);
                 theme.Label(new Rect(10,34,ContentWidth-48,500),report.evidence?.text??"Player report",theme.Body);GUI.EndScrollView();
                 string[] actions={"remove","suspend","unsuspend","close","resolve"};

@@ -727,7 +727,7 @@ namespace Alterverse.UI
             Rect roster=new Rect(Left,112,rosterWidth,572);
             float listHeight=Mathf.Max(roster.height,HeroIdentity.HeroCount*rowStep-5f);
             float rowWidth=rosterWidth-(listHeight>roster.height?20f:0f);
-            heroRosterScroll=GUI.BeginScrollView(roster,heroRosterScroll,new Rect(0,0,rowWidth,listHeight),false,false);
+            heroRosterScroll=FrontEndTheme.BeginTouchScrollView(roster,heroRosterScroll,new Rect(0,0,rowWidth,listHeight),false,false);
             try
             {
                 for(int i=0;i<HeroIdentity.HeroCount;i++)
@@ -1398,7 +1398,7 @@ namespace Alterverse.UI
             }
             Rect questViewport=new Rect(x,322,width,MenuHeight-330);
             float rowWidth=width-18;
-            dailyQuestScroll=GUI.BeginScrollView(questViewport,dailyQuestScroll,
+            dailyQuestScroll=FrontEndTheme.BeginTouchScrollView(questViewport,dailyQuestScroll,
                 new Rect(0,0,rowWidth,PlayerChallengeContent.Daily.Length*74),false,true);
             try
             {

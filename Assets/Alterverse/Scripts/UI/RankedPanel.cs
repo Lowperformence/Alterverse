@@ -78,7 +78,7 @@ namespace Alterverse.UI
                     theme.Label(new Rect(420, 160, 480, 80), "Complete your placements to join the season leaderboard.", theme.Body, true);
                 else
                 {
-                    scroll = GUI.BeginScrollView(new Rect(420, 148, 492, 354), scroll, new Rect(0, 0, 470, leaders.Length * 42));
+                    scroll = FrontEndTheme.BeginTouchScrollView(new Rect(420, 148, 492, 354), scroll, new Rect(0, 0, 470, leaders.Length * 42));
                     for (int i = 0; i < leaders.Length; i++)
                     {
                         Rect row = new Rect(4, i * 42, 462, 36);
