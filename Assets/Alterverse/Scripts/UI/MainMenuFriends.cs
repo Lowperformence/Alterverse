@@ -244,10 +244,10 @@ namespace Alterverse.UI
 
                 Texture2D icon = FriendStickerService.GetStickerIcon(item.id);
                 if (icon != null)
-                    GUI.DrawTexture(new Rect(card.x + 12, card.y + 12, 54, 54), icon, ScaleMode.ScaleToFit, true);
+                    GUI.DrawTexture(new Rect(card.x + 8, card.y + 6, 66, 66), icon, ScaleMode.ScaleToFit, true);
 
-                theme.FitLabel(new Rect(card.x + 72, card.y + 12, card.width - 80, 24), item.name, theme.Body);
-                theme.FitLabel(new Rect(card.x + 72, card.y + 36, card.width - 80, 18), item.subtitle, theme.Small, true);
+                theme.FitLabel(new Rect(card.x + 78, card.y + 14, card.width - 86, 24), item.name, theme.Body);
+                theme.FitLabel(new Rect(card.x + 78, card.y + 38, card.width - 86, 18), item.subtitle, theme.Small, true);
 
                 theme.StatusBadge(new Rect(card.x + 12, card.y + 74, card.width - 24, 26),
                     $"FRIEND CONVERTS TO +{item.salvageShards:N0} SHARDS", FrontEndTheme.Positive);
@@ -284,9 +284,9 @@ namespace Alterverse.UI
                     theme.Panel(rowRect);
                     Texture2D icon = FriendStickerService.GetStickerIcon(sticker.id);
                     if (icon != null)
-                        GUI.DrawTexture(new Rect(rowRect.x + 10, rowRect.y + 10, 50, 50), icon, ScaleMode.ScaleToFit, true);
+                        GUI.DrawTexture(new Rect(rowRect.x + 8, rowRect.y + 5, 60, 60), icon, ScaleMode.ScaleToFit, true);
 
-                    theme.FitLabel(new Rect(rowRect.x + 68, rowRect.y + 8, rowRect.width - 210, 24), sticker.name, theme.Body);
+                    theme.FitLabel(new Rect(rowRect.x + 74, rowRect.y + 8, rowRect.width - 216, 24), sticker.name, theme.Body);
                     theme.FitLabel(new Rect(rowRect.x + 68, rowRect.y + 34, rowRect.width - 210, 20),
                         $"FROM {gift.senderName.ToUpperInvariant()}  ({sticker.priceShards:N0} SHARDS)", theme.Small, true);
 
