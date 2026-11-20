@@ -36,6 +36,26 @@ namespace Alterverse.Combat
             return -1;
         }
         // Shown to the owner and allies only while enemies outside the cloud cannot see this hero.
+        public static Vector3 AvoidZones(Vector3 point, float margin = 1.6f)
+        {
+            if (instance == null || instance.zones == null) return point;
+            for (int i = 0; i < instance.zones.Length; i++)
+            {
+                var z = instance.zones[i];
+                float dx = point.x - z.X, dz = point.z - z.Z;
+                float minR = z.Radius + margin;
+                float distSqr = dx * dx + dz * dz;
+                if (distSqr < minR * minR)
+                {
+                    float dist = Mathf.Sqrt(distSqr);
+                    if (dist < .01f) { dx = z.X >= 0f ? -1f : 1f; dz = 0f; dist = 1f; }
+                    point.x = z.X + (dx / dist) * minR;
+                    point.z = z.Z + (dz / dist) * minR;
+                }
+            }
+            return point;
+        }
+
         public static bool IsConcealed(Health target)
             =>instance!=null&&target!=null&&!target.IsDead&&instance.At(target.transform.position)>=0&&
               target.GetComponent<HeroIdentity>()!=null&&(target.GetComponent<CosmicNebulaState>()?.RevealRemaining??0)<=0;

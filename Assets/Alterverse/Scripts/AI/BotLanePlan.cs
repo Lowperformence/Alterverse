@@ -62,6 +62,7 @@ namespace Alterverse.AI
                 _=>new Vector3(2f*forward,0f,0f)
             };
 
+            point = Alterverse.Combat.CosmicNebulaField.AvoidZones(point);
             point.y=transform.position.y;
             roamTarget=point;
             // The match is under constant time pressure: do not spend too long on a low-value

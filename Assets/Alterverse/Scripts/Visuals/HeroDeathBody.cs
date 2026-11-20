@@ -32,6 +32,18 @@ namespace Alterverse.Visuals
         // Native Unity objects must be created on the main thread after AddComponent.
         private void Awake() => block = new MaterialPropertyBlock();
 
+        public static void ClearAll()
+        {
+            for (int i = bodies.Count - 1; i >= 0; i--)
+            {
+                HeroDeathBody body = bodies[i];
+                if (body == null) continue;
+                body.gameObject.SetActive(false);
+                Destroy(body.gameObject);
+            }
+            bodies.Clear();
+        }
+
         private sealed class BodyPart
         {
             public Transform Bone;
@@ -372,6 +384,12 @@ namespace Alterverse.Visuals
 
         private void LateUpdate()
         {
+            if (Alterverse.Match.MatchExit.Leaving || Alterverse.UI.MainMenuController.IsVisible)
+            {
+                gameObject.SetActive(false);
+                Destroy(gameObject);
+                return;
+            }
             elapsed += Time.deltaTime;
             if (elapsed >= CollapseSeconds + HoldSeconds + FadeSeconds) { Destroy(gameObject); return; }
             // Proxies run in a separate physics world. Copy their final world poses in

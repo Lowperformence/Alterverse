@@ -24,6 +24,7 @@ namespace Alterverse.Match
                 return;
             Leaving = true;
             OnlineMatchLoadingScreen.Cancel();
+            Alterverse.Visuals.HeroDeathBody.ClearAll();
             GameObject world = GameObject.Find("DF_MatchWorld");
             if (world != null) world.SetActive(false);
             try
@@ -62,6 +63,7 @@ namespace Alterverse.Match
                 CoopAuthority.EndMatch();
                 MatchClock.Set(PauseReason.Result, false); MatchClock.Set(PauseReason.Settings, false);
                 MatchClock.Set(PauseReason.Transition, false);
+                Alterverse.Visuals.HeroDeathBody.ClearAll();
                 if (world != null) Object.Destroy(world);
                 // Keep the old battlefield/skybox hidden while the menu poster and video warm up.
                 // Gameplay camera visibility is restored by the next arena build, not by menu exit.

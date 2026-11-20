@@ -48,7 +48,7 @@ namespace Alterverse.AI
         public bool IsHotZoneCall { get; private set; }
         public float ChangedAt { get; private set; }
         public int AliveHeroes=>allyCount;
-        public Health Focus=>Time.time<focusUntil?focus:null;
+        public Health Focus=>Time.time<focusUntil&&focus!=null&&!focus.IsDead&&!CosmicNebulaField.IsConcealed(focus)?focus:null;
         public float FocusAge=>Time.time-focusStarted;
         public Vector3 FocusPosition=>focusPosition;
         private Vector3 Home=>new(team==0?-ArenaLayout.HealingX:ArenaLayout.HealingX,0,0);
@@ -194,7 +194,7 @@ namespace Alterverse.AI
                 for(int i=0;i<sensor.ObservationCount;i++)
                 {
                     Observation sample=sensor.ObservationAt(i);
-                    if(sample.Target==null||Time.time-sample.SeenAt>.65f)continue;
+                    if(sample.Target==null||sample.Target.IsDead||CosmicNebulaField.IsConcealed(sample.Target)||Time.time-sample.SeenAt>.65f)continue;
                     int existing=-1;
                     for(int j=0;j<seenCount;j++)if(seen[j].Target==sample.Target){existing=j;break;}
                     if(existing>=0){if(sample.SeenAt>seen[existing].SeenAt)seen[existing]=sample;}
@@ -315,6 +315,7 @@ namespace Alterverse.AI
                 4=>new Vector3(-5f*forward,0,-7f),
                 _=>new Vector3(10f*forward,0,0)
             };
+            point = CosmicNebulaField.AvoidZones(point);
             point.y=centroid.y;
             return point;
         }

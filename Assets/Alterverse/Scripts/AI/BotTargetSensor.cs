@@ -134,6 +134,16 @@ namespace Alterverse.AI
             if (Time.timeScale <= 0f) return;
             if(brain==null)brain=GetComponent<MobaBotBrain>();
             if (selfHealth != null && selfHealth.IsDead) { ClearTarget(); return; }
+            if (currentTarget != null && CombatVisibility.HiddenFrom(gameObject, currentTarget))
+            {
+                // Target vanished into a Cosmic Nebula stealth zone or cloak: drop lock and memory
+                // immediately so bots do not walk into the cloud after the hidden player's transform.
+                currentTarget = null;
+                candidateTarget = null;
+                lastSeenTime = -100f;
+                ObservedTargetVelocity = Vector3.zero;
+                HasSteadyMotion = false;
+            }
             if (currentTarget != null && !currentTarget.IsDead && currentTarget.isActiveAndEnabled &&
                 Time.time - lastSeenTime <= .45f && InRadius(currentTarget))
             {

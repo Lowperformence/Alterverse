@@ -119,18 +119,32 @@ namespace Alterverse.Profile
         {
             if(!Supported||!string.IsNullOrEmpty(ConfigurationError)||!await AuthenticateAsync(interactive))return null;
 #if UNITY_ANDROID && !UNITY_EDITOR
-            var done=new TaskCompletionSource<string>();
             try
             {
-                // Codes are one-use credentials. Request a new code for every link/sign-in attempt.
-                PlayGamesPlatform.Instance.RequestServerSideAccess(true,code=>done.TrySetResult(code));
-                if(await Task.WhenAny(done.Task,Task.Delay(30000))!=done.Task)return null;
-                return await done.Task;
+                // Request a one-use OAuth server auth code without forcing refresh-token re-consent first;
+                // fall back to forceRefreshToken=true if the platform returns an empty code.
+                string code=await RequestCodeCoreAsync(false);
+                if(string.IsNullOrEmpty(code))code=await RequestCodeCoreAsync(true);
+                if(string.IsNullOrEmpty(code))
+                {
+                    SignInFailed("Google Play server authorization code unavailable. Check OAuth Web Client ID & SHA-1 setup.");
+                    return null;
+                }
+                return code;
             }
             catch(Exception){return null;}
 #else
             return null;
 #endif
         }
+#if UNITY_ANDROID && !UNITY_EDITOR
+        static async Task<string> RequestCodeCoreAsync(bool forceRefresh)
+        {
+            var done=new TaskCompletionSource<string>();
+            PlayGamesPlatform.Instance.RequestServerSideAccess(forceRefresh,code=>done.TrySetResult(code));
+            if(await Task.WhenAny(done.Task,Task.Delay(20000))!=done.Task)return null;
+            return await done.Task;
+        }
+#endif
     }
 }

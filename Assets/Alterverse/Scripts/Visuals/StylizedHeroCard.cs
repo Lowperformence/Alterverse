@@ -242,8 +242,10 @@ namespace Alterverse.Visuals
                 result.ReadPixels(new Rect(0, 0, PortraitWidth, PortraitHeight), 0, 0, false);
                 result.Apply(false, false);
                 cam.targetTexture = null;
-                // Never cache an empty render: it otherwise leaves only the backdrop forever.
-                bool visible=false;foreach(Color32 color in result.GetPixels32())if(color.a>16){visible=true;break;}
+                // Never cache an empty render: check raw texture data with zero heap allocation.
+                bool visible=false;
+                var rawPixels=result.GetRawTextureData<Color32>();
+                for(int idx=0;idx<rawPixels.Length;idx+=16)if(rawPixels[idx].a>16){visible=true;break;}
                 if(!visible){Object.Destroy(result);return null;}
                 return result;
             }

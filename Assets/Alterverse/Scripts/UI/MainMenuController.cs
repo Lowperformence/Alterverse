@@ -155,8 +155,9 @@ namespace Alterverse.UI
         private void Update()
         {
             if (!visible || suspended || OnlineMatchLoadingScreen.IsVisible) return;
-            // Warm the small lobby portraits while the player chooses a play mode.
-            if (!launching && (page == Page.Play || page == Page.Coop)) StylizedHeroCard.PrepareRoster();
+            // Warm the small lobby portraits only when a roster/party view needs them, and after tab transition settles.
+            if (!launching && (page == Page.Coop || choosingMatchMode || OnlinePartyOverlay.IsOpen) && Time.unscaledTime - pageChangedAt > .25f)
+                StylizedHeroCard.PrepareRoster();
             if (!PrepareAccountPresentation()) return;
             UpdateReviewPrompt();
             if (ReviewPromptVisible)
@@ -193,7 +194,7 @@ namespace Alterverse.UI
         private void SetPage(Page next)
         {
             if (page == next || launching) return;
-            FlushAudio(); languagePicker.Close(); collection?.Invalidate();showcase?.InvalidateLoadout(); page = next; pageChangedAt = Time.unscaledTime;
+            FlushAudio(); languagePicker.Close(); page = next; pageChangedAt = Time.unscaledTime;
             profileMessage = ""; shopMessage = ""; GUI.FocusControl(null);
             confirmRoute=confirmPlayer=confirmLabel=null;
             if(next==Page.Leaderboard)requestedRankingTab=-1;

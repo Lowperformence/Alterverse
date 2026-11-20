@@ -25,7 +25,7 @@ namespace Alterverse.Profile
         string endpoint,connectedPlayer;
         bool subscribed;
         Task<bool> authenticating;
-        string linkedUnityPlayer,linkedGooglePlayer;
+        string linkedUnityPlayer,linkedGooglePlayer,verifiedCodeUnityId,verifiedCodeGoogleId;
         public string GoogleStatus { get; private set; }="Connect Google Play Games to restore progress and purchases.";
         public bool GoogleRestoreAvailable { get; private set; }
         public bool GooglePlayAccountReady=>UnityServices.State==ServicesInitializationState.Initialized&&
@@ -120,7 +120,21 @@ namespace Alterverse.Profile
             bool firstGoogleAccount=!restore&&PlayerPrefs.GetInt(KnownAccountOnDeviceKey,0)==0;
             try
             {
-                await auth.SignInWithGooglePlayGamesAsync(code,new SignInOptions{CreateAccount=firstGoogleAccount});
+                try
+                {
+                    await auth.SignInWithGooglePlayGamesAsync(code,new SignInOptions{CreateAccount=firstGoogleAccount});
+                }
+                catch(Exception firstError) when (!firstGoogleAccount && !restore && !(firstError is InvalidOperationException))
+                {
+                    // Device had DF_KnownUnityAccountOnDevice_v1 set by an older pre-Google build,
+                    // or user switched to a Google account not yet registered in Unity Auth.
+                    string retryCode=await GooglePlayAccountSession.AuthorizationCodeAsync(interactive);
+                    if(string.IsNullOrEmpty(retryCode))throw;
+                    if(auth.IsSignedIn)auth.SignOut();
+                    await auth.SignInWithGooglePlayGamesAsync(retryCode,new SignInOptions{CreateAccount=true});
+                }
+                verifiedCodeUnityId=auth.PlayerId;
+                verifiedCodeGoogleId=GooglePlayAccountSession.PlayerId;
                 if(await VerifyGoogleLinkAsync())return true;
                 GoogleStatus="Google account could not be verified. Tap CONNECT GOOGLE to retry.";
             }
@@ -151,7 +165,7 @@ namespace Alterverse.Profile
             SocialService.Connect(endpoint,()=>AuthenticationService.Instance.IsAuthorized?AuthenticationService.Instance.AccessToken:null);
             Status="Account connected.";
         }
-        void OnSignedOut(){connectedPlayer=linkedUnityPlayer=linkedGooglePlayer=null;SocialService.Disconnect();PaidShardCommerce.Disconnect();Status="Signed out.";}
+        void OnSignedOut(){connectedPlayer=linkedUnityPlayer=linkedGooglePlayer=verifiedCodeUnityId=verifiedCodeGoogleId=null;SocialService.Disconnect();PaidShardCommerce.Disconnect();Status="Signed out.";}
         void OnExpired(){Status="Session expired. Sign in to synchronize.";PaidShardCommerce.Instance?.Refresh();}
         void OnCloudProfileChanged()
         {
@@ -265,9 +279,10 @@ namespace Alterverse.Profile
             string player=AuthenticationService.Instance.PlayerId,google=GooglePlayAccountSession.PlayerId;
             var info=await AuthenticationService.Instance.GetPlayerInfoAsync();
             string provider=info.GetGooglePlayGamesId();
-            if(string.IsNullOrEmpty(provider)||provider!=google||google!=GooglePlayAccountSession.PlayerId||
+            bool providerMatches=provider==google||(!string.IsNullOrEmpty(verifiedCodeGoogleId)&&verifiedCodeGoogleId==google&&verifiedCodeUnityId==player);
+            if(string.IsNullOrEmpty(provider)||!providerMatches||google!=GooglePlayAccountSession.PlayerId||
                 !AuthenticationService.Instance.IsAuthorized||player!=AuthenticationService.Instance.PlayerId)return false;
-            linkedUnityPlayer=player;linkedGooglePlayer=provider;
+            linkedUnityPlayer=player;linkedGooglePlayer=google;
             OnSignedIn(); // Only the verified identity may start profile, wallet and social sync.
             ApplyGooglePlayDisplayName();
             GoogleRestoreAvailable=false;
@@ -318,6 +333,8 @@ namespace Alterverse.Profile
                     {GoogleStatus="Finish purchases and leave the match or party before restoring accounts.";return false;}
                     auth.SignOut();
                     await auth.SignInWithGooglePlayGamesAsync(code,new SignInOptions{CreateAccount=false});
+                    verifiedCodeUnityId=auth.PlayerId;
+                    verifiedCodeGoogleId=GooglePlayAccountSession.PlayerId;
                     OnSignedIn();
                 }
                 if(!await VerifyGoogleLinkAsync())
