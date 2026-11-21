@@ -126,8 +126,10 @@ namespace Alterverse.UI
 
         private void DrawOverlay(float menuWidth, OnlinePartyService online, EdgegapOnlineFlow edgegap)
         {
-            // Soft translucent cosmic dim so the orbital universe backdrop remains visible behind the lobby
+            // Soft translucent cosmic dim + R35 dropship cabin interior framing & slipstream streaks
             FrontEndTheme.Fill(new Rect(0f, 0f, menuWidth, ReferenceHeight), new Color(0.012f, 0.020f, 0.036f, 0.68f));
+            bool searchingNow = edgegap != null && edgegap.IsSearching;
+            DimensionUiMotif.DrawDropshipBayAtmosphere(new Rect(0f, 0f, menuWidth, ReferenceHeight), FrontEndTheme.Pixel, FrontEndTheme.Accent, Time.unscaledTime, searchingNow);
 
             float width = Mathf.Min(1220f, menuWidth - 96f);
             float left = (menuWidth - width) * .5f;
@@ -135,9 +137,9 @@ namespace Alterverse.UI
             // Clean top header bar matching the main menu command deck
             Rect headerPanel = new(left, 36f, width, 84f);
             theme.Panel(headerPanel);
-            theme.Label(new Rect(left + 28f, 46f, width - 620f, 38f), "ONLINE MATCHMAKING", theme.Title);
+            theme.Label(new Rect(left + 28f, 46f, width - 620f, 38f), "R35 DROPSHIP  //  MATCHMAKING", theme.Title);
             theme.Label(new Rect(left + 28f, 84f, width - 620f, 22f),
-                "4v4 TACTICAL ARENA  •  DEDICATED SERVER DEPLOYMENT & SQUAD LINK",
+                "R35 TROOP TRANSPORT  •  4v4 TACTICAL AIRLIFT TO THE FRONT & SQUAD LINK",
                 theme.Small, true);
 
             var voice=PartyVoiceService.Instance;
@@ -146,7 +148,7 @@ namespace Alterverse.UI
             {if(voice.MicrophoneOn)voice.Mute();else voice.AskAgain();}
             bool searchingAny = edgegap != null && edgegap.IsSearching;
             theme.StatusBadge(new Rect(left + width - 368f, 59f, 200f, 38f),
-                searchingAny ? "QUEUE ACTIVE" : online.InParty ? "PARTY LINKED" : "4v4 ONLINE READY",
+                searchingAny ? "R35 IN FLIGHT" : online.InParty ? "SQUAD STRAPPED IN" : "R35 BAY READY",
                 searchingAny ? FrontEndTheme.Positive : online.InParty ? FrontEndTheme.Accent : FrontEndTheme.Zero);
 
             if (theme.Action(new Rect(left + width - 154f, 57f, 128f, 42f), "CLOSE"))
@@ -185,7 +187,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(quickCard.x + 24f, quickCard.y + 56f, quickCard.width - 48f, 34f),
                 "QUICK MATCH 4v4", theme.Heading);
             theme.Label(new Rect(quickCard.x + 24f, quickCard.y + 92f, quickCard.width - 48f, 24f),
-                "Deploy immediately into an automated 4v4 Hot Zone battle.",
+                "Board an R35 transport immediately and fly straight to an active 4v4 Hot Zone front.",
                 theme.Small, true);
 
             // Active Hero Loadout Preview Card
@@ -210,7 +212,7 @@ namespace Alterverse.UI
             Rect queueInfo = new(quickCard.x + 24f, quickCard.y + 320f, quickCard.width - 48f, 50f);
             theme.Panel(queueInfo);
             theme.Label(new Rect(queueInfo.x + 16f, queueInfo.y + 13f, queueInfo.width - 32f, 24f),
-                busy ? "SCANNING REGIONAL SERVERS & ASSEMBLING TEAMS..." : "DEDICATED SERVER  •  AUTO TEAM FILL ENABLED",
+                busy ? "R35 AIRBORNE  •  FLYING TO THE FRONT & LOCKING DROP ZONE..." : "R35 TRANSPORT STANDBY  •  TWIN TURBINES READY  •  AUTO SQUAD FILL",
                 theme.Small, true);
             if (busy || searching)
             {
@@ -353,7 +355,7 @@ namespace Alterverse.UI
 
                 if (slot >= members.Count)
                 {
-                    theme.Label(new Rect(x + 18f, 238f, playerW - 36f, 20f), $"SQUAD SLOT 0{slot + 1}", theme.Small, true);
+                    theme.Label(new Rect(x + 18f, 238f, playerW - 36f, 20f), $"R35 JUMP SEAT 0{slot + 1}", theme.Small, true);
                     Rect openBadge = new(x + 24f, 316f, playerW - 48f, 38f);
                     theme.StatusBadge(openBadge, edgegapSearching ? "RESERVED" : "OPEN SLOT",
                         edgegapSearching ? FrontEndTheme.Positive : FrontEndTheme.Muted);

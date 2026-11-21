@@ -228,6 +228,8 @@ namespace Alterverse.UI
                     Mathf.Clamp((pointerPos.x / Mathf.Max(1f, menuWidth)) * 2f - 1f + (showcase != null ? showcase.UserYawOffset / 90f : 0f), -1f, 1f),
                     Mathf.Clamp((pointerPos.y / MenuHeight) * 2f - 1f, -1f, 1f));
                 DimensionUiMotif.DrawCosmicParallaxOverlay(new Rect(0, 0, menuWidth, MenuHeight), Texture2D.whiteTexture, activeHeroAccent, Time.unscaledTime, pointerNorm);
+                if (page == Page.Play || page == Page.Coop)
+                    DimensionUiMotif.DrawDropshipBayAtmosphere(new Rect(0, 0, menuWidth, MenuHeight), Texture2D.whiteTexture, activeHeroAccent, Time.unscaledTime, page == Page.Coop);
                 if (!PrepareAccountPresentation()) { DrawAccountStartup(); return; }
                 if (ReviewPromptVisible) { DrawReviewPrompt(); return; }
                 if (launching) { DrawLaunch(); return; }
@@ -601,12 +603,13 @@ namespace Alterverse.UI
         }
         private void DrawPlay()
         {
-            Heading("Deployment","Choose your hero and arena before entering the Front.");
+            Heading("R35 Dropship Bay","Board the R35 troop transport, lock in your hero and target sector, and fly to the Front.");
             float w = ContentWidth*.52f;
             theme.Panel(new Rect(Left,214,w,394));
-            theme.StatusBadge(new Rect(Left+28,224,154,28),"READY TO PLAY",FrontEndTheme.Positive);
+            theme.StatusBadge(new Rect(Left+28,224,196,28),"R35 DROPSHIP  •  BOARDING",FrontEndTheme.Positive);
+            theme.StatusBadge(new Rect(Left+w-192,224,164,28),"AFT RAMP  •  SEALED",FrontEndTheme.Accent);
             theme.Label(new Rect(Left+28,252,w-56,42),"MATCH 4v4",theme.Title);
-            theme.Label(new Rect(Left+28,300,w-56,48),"Four versus four.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
+            theme.Label(new Rect(Left+28,300,w-56,48),"Aboard the R35 Insertion Transport.\nFour versus four. Two lanes. Fly out and break the enemy Reality Core.",theme.Body,true);
             float lobbyButtonWidth=w-56;
             if(theme.Action(new Rect(Left+28,354,lobbyButtonWidth,32),"INVITE TO GAME",true,enabled:!GameInviteShare.Busy))
                 _=GameInviteShare.ShareAsync();
@@ -615,7 +618,7 @@ namespace Alterverse.UI
             HeroId deploymentHero=(HeroId)selectedHero;
             theme.Label(new Rect(Left+28,418,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero,WeaponSkinInventory.EquippedVariant(deploymentHero)).Name}":deploymentHero==HeroId.Veyr?"WEAPON  /  SHADOW STEEL":deploymentHero==HeroId.Traveler?"WEAPON  /  PLANET FLUX":"WEAPON  /  ORIGINAL",theme.Small,true);
 
-            theme.Label(new Rect(Left+28,448,w-56,20),"READY FOR DEPLOYMENT",theme.Small,true);
+            theme.Label(new Rect(Left+28,448,w-56,20),"R35 FLIGHT DECK  /  TWIN TURBINES SPOOLING  •  READY FOR TAKEOFF",theme.Small,true);
             theme.Progress(new Rect(Left+28,482,w-56,3),1);
             theme.Label(new Rect(Left+28,520,w-230,20),"ARENA",theme.Small,true);
             bool arenaShuffle=ArenaVariantRuntime.ShuffleEnabled;
@@ -709,6 +712,7 @@ namespace Alterverse.UI
                 $"SELECTED ARENA  /  {ArenaShopCatalog.For(selectedArena).Name}",theme.Small,true);
 
             float x = Left+w+32, rw = ContentWidth-w-32;
+            theme.StatusBadge(new Rect(x+24,170,Mathf.Min(236f,rw-48f),24),"R35 TROOP BAY  •  JUMP SEAT 01",FrontEndTheme.Zero);
             DrawPortrait(new Rect(x,198,rw,330));
             theme.Label(new Rect(x+24,538,rw-48,40),HeroName,theme.Heading);
             theme.Label(new Rect(x+24,578,rw-48,24),Roles[selectedHero],theme.Small,true);

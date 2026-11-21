@@ -32,7 +32,7 @@ namespace Alterverse.UI
         private MenuHeroPedestal pedestal;
         // Keep only the active preview and its two most recent variants. Returning
         // to a hero reuses its model/materials instead of rebuilding everything.
-        private const int PreviewCacheCapacity=8;
+        private const int PreviewCacheCapacity=3;
         private sealed class CachedPreview
         {
             public HeroId Hero;

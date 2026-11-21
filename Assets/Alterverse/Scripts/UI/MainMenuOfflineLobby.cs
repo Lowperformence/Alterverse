@@ -24,7 +24,7 @@ namespace Alterverse.UI
         private void DrawOfflineLobby()
         {
             if(!OfflineLobbyRoster.Prepared){OfflineLobbyRoster.Begin((HeroId)selectedHero);offlinePortraitWaitAt=Time.unscaledTime;}
-            Heading("OFFLINE LOBBY","Choose your hero and both teams before starting a local 4v4 match.");
+            Heading("R35 DROPSHIP CABIN  //  SQUAD BRIEFING","Strap in your 4-player drop squad aboard the R35 transport before flying to the Front.");
             bool portraitsReady=StylizedHeroCard.RosterReady;
             if(!portraitsReady && Time.unscaledTime-offlinePortraitWaitAt<OfflinePortraitWaitLimit)
             {
@@ -42,13 +42,13 @@ namespace Alterverse.UI
             for(int team=0;team<2;team++)
             {
                 float y=218+team*139;
-                theme.Label(new Rect(Left,y,ContentWidth,22),team==0?"YOUR TEAM":"OPPONENT TEAM",theme.Small,true);
+                theme.Label(new Rect(Left,y,ContentWidth,22),team==0?"R35 PORT JUMP SEATS  //  YOUR DROP SQUAD":"INBOUND BOGEY TRANSPORT  //  OPPONENT DROP SQUAD",theme.Small,true);
                 for(int row=0;row<MatchSession.TeamSize;row++)
                 {
                     int slot=team*MatchSession.TeamSize+row;HeroId hero=OfflineLobbyRoster.At(slot);
                     Rect card=new(Left+row*(w+gap),y+27,w,98);theme.Panel(card);
                     StylizedHeroCard.Draw(new Rect(card.x+8,card.y+7,64,82),hero,FrontEndTheme.Pixel,0,portraitsReady);
-                    theme.FitLabel(new Rect(card.x+80,card.y+10,w-90,24),slot==0?"YOU":"AI BOT",theme.Small,true);
+                    theme.FitLabel(new Rect(card.x+80,card.y+10,w-90,24),slot==0?"JUMP SEAT 01  •  YOU":$"JUMP SEAT 0{row+1}  •  BOT",theme.Small,true);
                     theme.FitLabel(new Rect(card.x+80,card.y+36,w-90,42),HeroIdentity.NameFor(hero),theme.Body);
                     if(slot==offlineEditingSlot)theme.Frame(card,true);
                     if(GUI.Button(card,GUIContent.none,GUIStyle.none))offlineEditingSlot=slot;
