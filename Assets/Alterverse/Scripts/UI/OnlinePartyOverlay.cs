@@ -126,20 +126,26 @@ namespace Alterverse.UI
 
         private void DrawOverlay(float menuWidth, OnlinePartyService online, EdgegapOnlineFlow edgegap)
         {
-            // Soft translucent cosmic dim + R35 dropship cabin interior framing & slipstream streaks
-            FrontEndTheme.Fill(new Rect(0f, 0f, menuWidth, ReferenceHeight), new Color(0.012f, 0.020f, 0.036f, 0.68f));
+            Color iceBlue = DimensionUiMotif.FuiIceBlue;
+            Color thermalOrange = DimensionUiMotif.FuiThermalOrange;
+            Texture2D pixel = FrontEndTheme.Pixel;
+
+            // Deep obsidian FUI terminal backdrop + top compass heading tape
+            FrontEndTheme.Fill(new Rect(0f, 0f, menuWidth, ReferenceHeight), new Color(0.012f, 0.024f, 0.044f, 0.82f));
             bool searchingNow = edgegap != null && edgegap.IsSearching;
-            DimensionUiMotif.DrawDropshipBayAtmosphere(new Rect(0f, 0f, menuWidth, ReferenceHeight), FrontEndTheme.Pixel, FrontEndTheme.Accent, Time.unscaledTime, searchingNow);
+            DimensionUiMotif.DrawDropshipBayAtmosphere(new Rect(0f, 0f, menuWidth, ReferenceHeight), pixel, iceBlue, Time.unscaledTime, searchingNow);
 
             float width = Mathf.Min(1220f, menuWidth - 96f);
             float left = (menuWidth - width) * .5f;
 
-            // Clean top header bar matching the main menu command deck
+            // Stepped FUI top command header bar
             Rect headerPanel = new(left, 36f, width, 84f);
             theme.Panel(headerPanel);
-            theme.Label(new Rect(left + 28f, 46f, width - 620f, 38f), "R35 DROPSHIP  //  MATCHMAKING", theme.Title);
-            theme.Label(new Rect(left + 28f, 84f, width - 620f, 22f),
-                "R35 TROOP TRANSPORT  •  4v4 TACTICAL AIRLIFT TO THE FRONT & SQUAD LINK",
+            DimensionUiMotif.DrawFuiModuleFrame(headerPanel, pixel, iceBlue, 184f);
+            theme.Label(new Rect(left + 10f, 37f, 174f, 16f), "SYS // R35 TACTICAL FUI", theme.Small, false);
+            theme.Label(new Rect(left + 28f, 52f, width - 620f, 34f), "R35 DROPSHIP  //  MATCHMAKING", theme.Title);
+            theme.Label(new Rect(left + 28f, 86f, width - 620f, 20f),
+                "ULTRACENTER TELEMETRY  •  4v4 TACTICAL AIRLIFT TO THE FRONT & SQUAD LINK",
                 theme.Small, true);
 
             var voice=PartyVoiceService.Instance;
@@ -149,7 +155,7 @@ namespace Alterverse.UI
             bool searchingAny = edgegap != null && edgegap.IsSearching;
             theme.StatusBadge(new Rect(left + width - 368f, 59f, 200f, 38f),
                 searchingAny ? "R35 IN FLIGHT" : online.InParty ? "SQUAD STRAPPED IN" : "R35 BAY READY",
-                searchingAny ? FrontEndTheme.Accent : new Color(.38f, .66f, .88f, 1f));
+                searchingAny ? thermalOrange : iceBlue);
 
             if (theme.Action(new Rect(left + width - 154f, 57f, 128f, 42f), "CLOSE"))
             {
@@ -169,6 +175,8 @@ namespace Alterverse.UI
         private void DrawEntry(float left, float width, OnlinePartyService online, EdgegapOnlineFlow edgegap)
         {
             Texture2D pixel = FrontEndTheme.Pixel;
+            Color iceBlue = DimensionUiMotif.FuiIceBlue;
+            Color thermalOrange = DimensionUiMotif.FuiThermalOrange;
             bool busy = online.Busy || (edgegap != null && edgegap.Busy);
             bool searching = edgegap != null && edgegap.IsSearching;
             float gap = 20f;
@@ -179,33 +187,38 @@ namespace Alterverse.UI
             // LEFT CARD: 4v4 QUICK MATCH DEPLOYMENT
             Rect quickCard = new(left, cardY, colWidth, cardH);
             HeroId selectedHero = PlayerHeroSelection.Selected;
-            Color heroAccent = Alterverse.Visuals.StylizedArtDirection.HeroAccent(selectedHero);
             theme.Panel(quickCard);
+            DimensionUiMotif.DrawFuiModuleFrame(quickCard, pixel, iceBlue, 164f);
+            theme.Label(new Rect(quickCard.x + 10f, quickCard.y + 1f, 154f, 16f), "ULTRACENTER // QUEUE", theme.Small, false);
 
-            theme.StatusBadge(new Rect(quickCard.x + 24f, quickCard.y + 22f, 200f, 26f),
-                "SOLO / INSTANT QUEUE", new Color(.38f, .66f, .88f, 1f));
-            theme.Label(new Rect(quickCard.x + 24f, quickCard.y + 56f, quickCard.width - 48f, 34f),
+            theme.StatusBadge(new Rect(quickCard.x + 24f, quickCard.y + 26f, 200f, 24f),
+                "SOLO / INSTANT QUEUE", iceBlue);
+            theme.Label(new Rect(quickCard.x + 24f, quickCard.y + 56f, quickCard.width - 136f, 34f),
                 "QUICK MATCH 4v4", theme.Heading);
-            theme.Label(new Rect(quickCard.x + 24f, quickCard.y + 92f, quickCard.width - 48f, 24f),
+            theme.Label(new Rect(quickCard.x + 24f, quickCard.y + 92f, quickCard.width - 136f, 24f),
                 "Board an R35 transport immediately and fly straight to an active 4v4 Hot Zone front.",
                 theme.Small, true);
+
+            // Top-down spacecraft FUI radar scope in top-right corner of Quick Match card
+            DimensionUiMotif.DrawFuiRadarScope(new Rect(quickCard.xMax - 104f, quickCard.y + 28f, 80f, 80f), pixel, iceBlue, thermalOrange, Time.unscaledTime);
 
             // Active Hero Loadout Preview Card
             Rect heroBox = new(quickCard.x + 24f, quickCard.y + 132f, quickCard.width - 48f, 172f);
             theme.Panel(heroBox);
-            theme.Frame(heroBox, true);
+            DimensionUiMotif.DrawFuiModuleFrame(heroBox, pixel, iceBlue, 144f);
+            theme.Label(new Rect(heroBox.x + 8f, heroBox.y + 1f, 136f, 16f), "DECRYPTOR // UNIT", theme.Small, false);
             if(theme.Action(new Rect(heroBox.xMax-190f,heroBox.yMax-38f,174f,30f),"CHOOSE HERO",enabled:!busy))heroPickerOpen=true;
 
-            Rect portraitRect = new(heroBox.x + 16f, heroBox.y + 16f, 112f, 140f);
+            Rect portraitRect = new(heroBox.x + 16f, heroBox.y + 22f, 108f, 136f);
             StylizedHeroCard.Draw(portraitRect, selectedHero, pixel, Time.unscaledTime);
 
             float infoX = portraitRect.xMax + 20f;
             float infoW = heroBox.xMax - infoX - 18f;
-            theme.Label(new Rect(infoX, heroBox.y + 22f, infoW, 20f), "ACTIVE CHAMPION LOADOUT", theme.Small, true);
+            theme.Label(new Rect(infoX, heroBox.y + 24f, infoW, 20f), "ACTIVE CHAMPION LOADOUT", theme.Small, true);
             theme.FitLabel(new Rect(infoX, heroBox.y + 46f, infoW, 34f),
                 HeroIdentity.NameFor(selectedHero).ToUpperInvariant(), theme.Heading);
-            theme.StatusBadge(new Rect(infoX, heroBox.y + 88f, Mathf.Min(184f, infoW), 26f),
-                HeroIdentity.RoleFor(selectedHero).ToString().ToUpperInvariant(), heroAccent);
+            theme.StatusBadge(new Rect(infoX, heroBox.y + 88f, Mathf.Min(184f, infoW), 24f),
+                HeroIdentity.RoleFor(selectedHero).ToString().ToUpperInvariant(), thermalOrange);
 
 
             // Matchmaking status strip
@@ -228,9 +241,11 @@ namespace Alterverse.UI
             // RIGHT CARD: FRIEND SQUAD & INVITE CODE LINK
             Rect partyCard = new(left + colWidth + gap, cardY, colWidth, cardH);
             theme.Panel(partyCard);
+            DimensionUiMotif.DrawFuiModuleFrame(partyCard, pixel, iceBlue, 164f);
+            theme.Label(new Rect(partyCard.x + 10f, partyCard.y + 1f, 154f, 16f), "COMMS // SQUAD LINK", theme.Small, false);
 
-            theme.StatusBadge(new Rect(partyCard.x + 24f, partyCard.y + 22f, 200f, 26f),
-                "CO-OP SQUAD LINK", FrontEndTheme.Accent);
+            theme.StatusBadge(new Rect(partyCard.x + 24f, partyCard.y + 26f, 200f, 24f),
+                "CO-OP SQUAD LINK", thermalOrange);
             theme.Label(new Rect(partyCard.x + 24f, partyCard.y + 56f, partyCard.width - 48f, 34f),
                 "PLAY WITH FRIENDS", theme.Heading);
             theme.Label(new Rect(partyCard.x + 24f, partyCard.y + 92f, partyCard.width - 48f, 24f),
@@ -308,6 +323,8 @@ namespace Alterverse.UI
         private void DrawParty(float left, float width, OnlinePartyService online, EdgegapOnlineFlow edgegap)
         {
             Texture2D pixel = FrontEndTheme.Pixel;
+            Color iceBlue = DimensionUiMotif.FuiIceBlue;
+            Color thermalOrange = DimensionUiMotif.FuiThermalOrange;
             bool edgegapSearching = edgegap != null && edgegap.IsSearching;
             bool matchFound = edgegapSearching && EdgegapMatchmakerClient.Instance?.HasAssignment == true;
             bool busy = online.Busy || (edgegap != null && edgegap.Busy);
@@ -315,9 +332,10 @@ namespace Alterverse.UI
             // TOP SQUAD STATUS BAR
             Rect statusDeck = new(left, 132f, width, 78f);
             theme.Panel(statusDeck);
+            DimensionUiMotif.DrawFuiModuleFrame(statusDeck, pixel, iceBlue, 174f);
 
-            theme.Label(new Rect(left + 26f, 142f, 440f, 18f), "SQUAD LOBBY  •  4v4 HOT ZONE", theme.Small, true);
-            theme.Label(new Rect(left + 26f, 162f, 440f, 34f),
+            theme.Label(new Rect(left + 26f, 146f, 440f, 18f), "SQUAD LOBBY  •  4v4 HOT ZONE", theme.Small, true);
+            theme.Label(new Rect(left + 26f, 164f, 440f, 34f),
                 matchFound ? "CONNECTING TO MATCH" : edgegapSearching ? "SEARCHING FOR PLAYERS" : "PREPARE YOUR SQUAD", theme.Heading);
 
             theme.Label(new Rect(left + 490f, 146f, 240f, 24f),
@@ -326,7 +344,7 @@ namespace Alterverse.UI
                 "4v4  •  AUTO TEAM FILL", theme.Small, true);
             theme.StatusBadge(new Rect(left + width - 388f, 154f, 196f, 34f),
                 matchFound ? "MATCH FOUND" : edgegapSearching ? "FINDING MATCH" : "MATCH LOBBY",
-                matchFound ? FrontEndTheme.Accent : edgegapSearching ? FrontEndTheme.Positive : FrontEndTheme.Zero);
+                matchFound ? thermalOrange : iceBlue);
 
             if (theme.Action(new Rect(left + width - 178f, 149f, 154f, 44f),
                 "LEAVE PARTY", enabled: !online.Busy))
@@ -352,13 +370,14 @@ namespace Alterverse.UI
                 float x = left + slot * (playerW + playerGap);
                 Rect cardRect = new(x, 222f, playerW, 252f);
                 theme.Panel(cardRect);
+                DimensionUiMotif.DrawFuiModuleFrame(cardRect, pixel, iceBlue, 134f);
 
                 if (slot >= members.Count)
                 {
-                    theme.Label(new Rect(x + 18f, 238f, playerW - 36f, 20f), $"R35 JUMP SEAT 0{slot + 1}", theme.Small, true);
+                    theme.Label(new Rect(x + 18f, 242f, playerW - 36f, 20f), $"R35 JUMP SEAT 0{slot + 1}", theme.Small, true);
                     Rect openBadge = new(x + 24f, 316f, playerW - 48f, 38f);
                     theme.StatusBadge(openBadge, edgegapSearching ? "RESERVED" : "OPEN SLOT",
-                        edgegapSearching ? FrontEndTheme.Positive : FrontEndTheme.Muted);
+                        edgegapSearching ? iceBlue : FrontEndTheme.Muted);
                     theme.Center(new Rect(x + 14f, 368f, playerW - 28f, 24f),
                         edgegapSearching ? "FINDING A MATCH" : "WAITING FOR PLAYERS");
                     theme.Center(new Rect(x + 14f, 396f, playerW - 28f, 20f),
@@ -367,16 +386,15 @@ namespace Alterverse.UI
                 }
 
                 OnlinePartyService.MemberView member = members[slot];
-                Color heroColor = Alterverse.Visuals.StylizedArtDirection.HeroAccent(member.Hero);
                 if (member.IsLocal)
                     theme.Frame(cardRect, true);
 
                 string role = member.IsHost ? "PARTY LEADER" : $"SQUAD MEMBER 0{slot + 1}";
                 if (member.IsLocal) role += "  •  YOU";
-                theme.FitLabel(new Rect(x + 16f, 234f, playerW - 32f, 20f), role, theme.Small, true);
+                theme.FitLabel(new Rect(x + 16f, 240f, playerW - 32f, 20f), role, theme.Small, true);
 
                 // Large 3D Hero Mini-Portrait + Clean Player Identity Stack
-                Rect miniHero = new(x + 16f, 260f, 84f, 104f);
+                Rect miniHero = new(x + 16f, 262f, 84f, 102f);
                 StylizedHeroCard.Draw(miniHero, member.Hero, pixel, Time.unscaledTime + slot * .4f);
 
                 float textX = miniHero.xMax + 14f;
@@ -385,11 +403,11 @@ namespace Alterverse.UI
                 theme.FitLabel(new Rect(textX, 296f, textW, 24f),
                     HeroIdentity.NameFor(member.Hero).ToUpperInvariant(), theme.Body);
                 theme.StatusBadge(new Rect(textX, 326f, Mathf.Min(156f, textW), 24f),
-                    HeroIdentity.RoleFor(member.Hero).ToString().ToUpperInvariant(), heroColor);
+                    HeroIdentity.RoleFor(member.Hero).ToString().ToUpperInvariant(), thermalOrange);
 
                 theme.StatusBadge(new Rect(x + 16f, 376f, playerW - 32f, 28f),
                     member.Ready ? "READY" : "NOT READY",
-                    member.Ready ? FrontEndTheme.Positive : FrontEndTheme.Warning);
+                    member.Ready ? iceBlue : thermalOrange);
 
                 if (member.IsLocal)
                 {
@@ -412,6 +430,7 @@ namespace Alterverse.UI
             // MATCH LAUNCH & INVITE CODE COMMAND BAR
             Rect commandDeck = new(left, 488f, width, 102f);
             theme.Panel(commandDeck);
+            DimensionUiMotif.DrawFuiModuleFrame(commandDeck, pixel, iceBlue, 184f);
 
             string searchText;
             bool searchEnabled;

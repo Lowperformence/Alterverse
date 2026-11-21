@@ -76,6 +76,12 @@ namespace Alterverse.UI{
   public static List<float> PlanetRotations=new();
   public static void DrawCosmicParallaxOverlay(UnityEngine.Rect r,UnityEngine.Texture2D p,UnityEngine.Color c,float t,UnityEngine.Vector2 v){}
   public static void DrawLoadingPlanet(UnityEngine.Rect r,UnityEngine.Color c,float rotation){PlanetRotations.Add(rotation);}
+  public static void DrawFuiModuleFrame(UnityEngine.Rect r,UnityEngine.Texture2D p,UnityEngine.Color c,float tw=118f){}
+  public static void DrawFuiCompassTape(UnityEngine.Rect r,UnityEngine.Texture2D p,UnityEngine.Color c1,UnityEngine.Color c2,float t){}
+  public static void DrawFuiRadarScope(UnityEngine.Rect r,UnityEngine.Texture2D p,UnityEngine.Color c1,UnityEngine.Color c2,float t){}
+  public static void DrawFuiTacticalViewportHud(UnityEngine.Rect r,UnityEngine.Texture2D p,UnityEngine.Color c1,UnityEngine.Color c2,float t){}
+  public static void DrawFuiWaveform(UnityEngine.Rect r,UnityEngine.Color c){}
+  public static void DrawFuiCircleGauge(UnityEngine.Rect r,UnityEngine.Color c,float rot=0f){}
  }
  public static class StylizedHeroCard{public static void Draw(UnityEngine.Rect r,Alterverse.Characters.HeroId h,UnityEngine.Texture2D t,float time){}}
 }

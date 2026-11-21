@@ -603,13 +603,28 @@ namespace Alterverse.UI
         }
         private void DrawPlay()
         {
+            Color iceBlue=DimensionUiMotif.FuiIceBlue;
+            Color thermalOrange=DimensionUiMotif.FuiThermalOrange;
+            Texture2D pixel=FrontEndTheme.Pixel;
+            float now=Time.unscaledTime;
+
             Heading("R35 Dropship Bay","Board the R35 troop transport, lock in your hero and target sector, and fly to the Front.");
+            DimensionUiMotif.DrawFuiCompassTape(new Rect(Left+ContentWidth*.32f,118f,ContentWidth*.36f,14f),pixel,iceBlue,thermalOrange,now);
+
             float w = ContentWidth*.52f;
-            theme.Panel(new Rect(Left,214,w,394));
-            theme.StatusBadge(new Rect(Left+28,224,196,28),"R35 BRIDGE  •  READY",FrontEndTheme.Accent);
-            theme.StatusBadge(new Rect(Left+w-192,224,164,28),"ORBITAL DECK",new Color(.38f,.66f,.88f,1f));
-            theme.Label(new Rect(Left+28,252,w-56,42),"MATCH 4v4",theme.Title);
-            theme.Label(new Rect(Left+28,300,w-56,48),"Aboard the R35 Insertion Transport.\nFour versus four. Two lanes. Fly out and break the enemy Reality Core.",theme.Body,true);
+            Rect playCard = new Rect(Left,214,w,394);
+            theme.Panel(playCard);
+            DimensionUiMotif.DrawFuiModuleFrame(playCard,pixel,iceBlue,176f);
+            theme.Label(new Rect(Left+10,215,168,16),"SYS // R35 FLIGHT DECK",theme.Small,false);
+
+            theme.StatusBadge(new Rect(Left+28,236,196,24),"ULTRACENTER  •  READY",iceBlue);
+            theme.StatusBadge(new Rect(Left+w-192,236,164,24),"TARGET: FRONT",thermalOrange);
+            theme.Label(new Rect(Left+28,262,w-140,42),"MATCH 4v4",theme.Title);
+            theme.Label(new Rect(Left+28,304,w-140,44),"Aboard the R35 Insertion Transport.\nFour versus four. Two lanes. Fly out and break the enemy Reality Core.",theme.Body,true);
+
+            // Embedded Top-Down Spacecraft FUI Radar Scope on top-right of the command card
+            DimensionUiMotif.DrawFuiRadarScope(new Rect(Left+w-102f,264f,74f,74f),pixel,iceBlue,thermalOrange,now);
+
             float lobbyButtonWidth=w-56;
             if(theme.Action(new Rect(Left+28,354,lobbyButtonWidth,32),"INVITE TO GAME",true,enabled:!GameInviteShare.Busy))
                 _=GameInviteShare.ShareAsync();
@@ -618,9 +633,10 @@ namespace Alterverse.UI
             HeroId deploymentHero=(HeroId)selectedHero;
             theme.Label(new Rect(Left+28,418,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero,WeaponSkinInventory.EquippedVariant(deploymentHero)).Name}":deploymentHero==HeroId.Veyr?"WEAPON  /  SHADOW STEEL":deploymentHero==HeroId.Traveler?"WEAPON  /  PLANET FLUX":"WEAPON  /  ORIGINAL",theme.Small,true);
 
-            theme.Label(new Rect(Left+28,448,w-56,20),"R35 FLIGHT DECK  /  TWIN TURBINES SPOOLING  •  READY FOR TAKEOFF",theme.Small,true);
+            theme.Label(new Rect(Left+28,448,w-200,20),"TELEMETRY  /  HDG 015° N  •  MACH 4.2 CRUISE",theme.Small,true);
+            DimensionUiMotif.DrawFuiWaveform(new Rect(Left+w-172f,442f,144f,32f),iceBlue);
             theme.Progress(new Rect(Left+28,482,w-56,3),1);
-            theme.Label(new Rect(Left+28,520,w-230,20),"ARENA",theme.Small,true);
+            theme.Label(new Rect(Left+28,520,w-230,20),"ARENA  //  TOPOGRAPHIC TARGET SECTOR",theme.Small,true);
             bool arenaShuffle=ArenaVariantRuntime.ShuffleEnabled;
             if(theme.Action(new Rect(Left+w-194,514,166,28),arenaShuffle?"SHUFFLE  ON":"SHUFFLE",selected:arenaShuffle))
             {
@@ -661,7 +677,7 @@ namespace Alterverse.UI
                     selectedArena=browsed.Variant;
                     launchMessage="";
                 }
-                FrontEndTheme.Fill(new Rect(centerX+16,584,centerW-32,3),new Color(browsed.Accent.r,browsed.Accent.g,browsed.Accent.b,.85f));
+                FrontEndTheme.Fill(new Rect(centerX+16,584,centerW-32,3),selectedNow?thermalOrange:iceBlue);
 
                 if(theme.Action(new Rect(selectorX+selectorW-arrowW,544,arrowW,44),">",enabled:arenaCount>1))
                 {
@@ -698,24 +714,28 @@ namespace Alterverse.UI
             if (theme.Action(onlineBtnRect,"Play Online",true,
                 enabled:matchButtonsEnabled,locked:heroReleaseLocked)) _ = BeginOnlineMatchmakingAsync();
             if (matchButtonsEnabled && !heroReleaseLocked)
-                DimensionUiMotif.DrawButtonShimmer(onlineBtnRect,Texture2D.whiteTexture,FrontEndTheme.Positive,Time.unscaledTime,onlineBtnRect.Contains(Event.current.mousePosition));
+                DimensionUiMotif.DrawButtonShimmer(onlineBtnRect,Texture2D.whiteTexture,iceBlue,Time.unscaledTime,onlineBtnRect.Contains(Event.current.mousePosition));
             if (theme.Action(rankedBtnRect,"Ranked",true,
                 enabled:matchButtonsEnabled && HeroUnlockInventory.Owned((HeroId)selectedHero),locked:heroReleaseLocked || !RankedAvailability.Enabled))
             { PlayerHeroSelection.Select((HeroId)selectedHero); RankedPanel.Show(); }
             if (theme.Action(offlineBtnRect,"Play Offline",primary:true,
                 enabled:matchButtonsEnabled,locked:heroReleaseLocked)) OpenOfflineLobby();
             if (matchButtonsEnabled && !heroReleaseLocked)
-                DimensionUiMotif.DrawButtonShimmer(offlineBtnRect,Texture2D.whiteTexture,FrontEndTheme.Accent,Time.unscaledTime+1.2f,offlineBtnRect.Contains(Event.current.mousePosition));
+                DimensionUiMotif.DrawButtonShimmer(offlineBtnRect,Texture2D.whiteTexture,thermalOrange,Time.unscaledTime+1.2f,offlineBtnRect.Contains(Event.current.mousePosition));
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:GameInviteShare.Status.Length>0?GameInviteShare.Status:
                 !AccountServerBootstrap.CloudProfileReady?"WAIT FOR CLOUD SYNC  /  PROFILE > GOOGLE ACCOUNT":
                 arenaShuffle?"ARENA SHUFFLE  /  RANDOM OWNED MAP":
                 $"SELECTED ARENA  /  {ArenaShopCatalog.For(selectedArena).Name}",theme.Small,true);
 
             float x = Left+w+32, rw = ContentWidth-w-32;
-            theme.StatusBadge(new Rect(x+24,170,Mathf.Min(236f,rw-48f),24),"R35 DROP BAY  •  CHAMPION",FrontEndTheme.Accent);
-            DrawPortrait(new Rect(x,198,rw,330));
-            theme.Label(new Rect(x+24,538,rw-48,40),HeroName,theme.Heading);
-            theme.Label(new Rect(x+24,578,rw-48,24),Roles[selectedHero],theme.Small,true);
+            theme.StatusBadge(new Rect(x+24,170,Mathf.Min(236f,rw-48f),24),"DECRYPTOR  //  UNIT 01",iceBlue);
+            Rect portraitFrame = new Rect(x,198,rw,330);
+            DrawPortrait(portraitFrame);
+            DimensionUiMotif.DrawFuiModuleFrame(portraitFrame,pixel,iceBlue,142f);
+            DimensionUiMotif.DrawFuiCircleGauge(new Rect(x+rw-78f,538f,52f,52f),thermalOrange,15f);
+            theme.FitLabel(new Rect(x+rw-68f,555f,34f,18f),"98%",theme.Small,false);
+            theme.Label(new Rect(x+24,538,rw-106,40),HeroName,theme.Heading);
+            theme.Label(new Rect(x+24,578,rw-106,24),Roles[selectedHero],theme.Small,true);
             if (theme.Action(new Rect(x+24,620,rw-48,54),"CHANGE HERO")) SetPage(Page.Heroes);
         }
         private void DrawCoop()=>DrawOfflineLobby();
