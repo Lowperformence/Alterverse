@@ -420,74 +420,37 @@ namespace Alterverse.UI
             GUI.color=old;
         }
         /// <summary>
-        /// Draws R35 transport aircraft cabin bulkhead ribs, cabin jump-light beacons,
-        /// aft ramp hydraulic guide strips, and high-altitude slipstream streaks for Lobby & Matchmaking views.
+        /// Draws subtle spaceship bridge viewport framing, steel-blue & champagne-gold trim lines,
+        /// and deep-space starlight drift for Lobby & Matchmaking views.
         /// </summary>
         public static void DrawDropshipBayAtmosphere(Rect canvas, Texture2D pixel, Color accent, float time, bool inFlight)
         {
             if (pixel == null || canvas.width <= 0f || canvas.height <= 0f) return;
             EnsureMotifTextures();
             Color old = GUI.color;
-            Color cyan = new Color(.24f, .88f, 1f, 1f);
-            Color amber = new Color(1f, .72f, .22f, 1f);
-            Color green = new Color(.22f, .96f, .62f, 1f);
-            float pulse = .5f + .5f * Mathf.Sin(time * (inFlight ? 4.2f : 2.1f));
+            Color steelBlue = new Color(.38f, .66f, .88f, 1f);
+            Color bridgeGold = new Color(.91f, .73f, .48f, 1f);
 
-            // 1. High-altitude slipstream wind streaks rushing outside the dropship bay viewports
-            int streakCount = inFlight ? 12 : 7;
-            float speed = inFlight ? 880f : 340f;
+            // Subtle starlight slipstream drift outside the bridge viewport
+            int streakCount = inFlight ? 8 : 5;
+            float speed = inFlight ? 520f : 220f;
             for (int i = 0; i < streakCount; i++)
             {
                 float seed = (i * 97 + 29) % 100 / 100f;
-                float sw = (inFlight ? 140f : 84f) + (i % 4) * 38f;
+                float sw = (inFlight ? 120f : 72f) + (i % 3) * 32f;
                 float travel = canvas.width + sw * 2f;
-                float sx = canvas.xMax + sw - ((time * (speed + (i % 3) * 140f) + seed * travel) % travel);
-                float sy = canvas.y + 42f + ((i * 67 + 19) % 86) / 86f * (canvas.height - 84f);
-                float alpha = (inFlight ? .13f : .07f) * (.5f + .5f * Mathf.Sin(time * 2.4f + i));
-                GUI.color = new Color(cyan.r, cyan.g, cyan.b, alpha * old.a);
+                float sx = canvas.xMax + sw - ((time * (speed + (i % 3) * 90f) + seed * travel) % travel);
+                float sy = canvas.y + 64f + ((i * 67 + 19) % 86) / 86f * (canvas.height - 128f);
+                float alpha = (inFlight ? .10f : .05f) * (.5f + .5f * Mathf.Sin(time * 1.8f + i));
+                GUI.color = new Color(steelBlue.r, steelBlue.g, steelBlue.b, alpha * old.a);
                 GUI.DrawTexture(new Rect(sx, sy, sw, 2f), softGlowTex);
             }
 
-            // 2. Overhead R35 troop bay fuselage structural ribs & cabin beacon light rail
-            Color hullFrame = new Color(.08f, .14f, .22f, .52f * old.a);
-            GUI.color = hullFrame;
-            GUI.DrawTexture(new Rect(canvas.x, canvas.y, canvas.width, 10f), pixel);
-            GUI.DrawTexture(new Rect(canvas.x, canvas.yMax - 10f, canvas.width, 10f), pixel);
-
-            // Overhead structural aircraft ribs spaced across the cabin ceiling
-            int ribCount = 7;
-            float ribStep = canvas.width / ribCount;
-            for (int r = 0; r <= ribCount; r++)
-            {
-                float rx = canvas.x + r * ribStep;
-                GUI.color = new Color(.22f, .34f, .48f, .24f * old.a);
-                GUI.DrawTexture(new Rect(rx - 14f, canvas.y, 28f, 7f), pixel);
-                GUI.DrawTexture(new Rect(rx - 10f, canvas.yMax - 7f, 20f, 7f), pixel);
-            }
-
-            // 3. Cabin jump-light beacon pods (Amber when in flight/searching, Green/Cyan when boarding)
-            Color beaconCol = inFlight ? Color.Lerp(amber, cyan, .25f) : Color.Lerp(green, cyan, .35f);
-            for (int b = 0; b < 6; b++)
-            {
-                float bx = canvas.x + 88f + b * ((canvas.width - 176f) / 5f);
-                float bPulse = .45f + .55f * Mathf.PingPong(time * (inFlight ? 2.6f : 1.1f) + b * .18f, 1f);
-                GUI.color = new Color(beaconCol.r, beaconCol.g, beaconCol.b, (.45f + .45f * bPulse) * old.a);
-                GUI.DrawTexture(new Rect(bx - 16f, canvas.y + 3f, 32f, 3f), pixel);
-                GUI.color = new Color(beaconCol.r, beaconCol.g, beaconCol.b, (.16f + .18f * bPulse) * old.a);
-                GUI.DrawTexture(new Rect(bx - 34f, canvas.y - 6f, 68f, 24f), softGlowTex);
-            }
-
-            // 4. Lower aft drop-ramp hazard guide ticks along the cabin floor deck
-            int tickCount = 24;
-            float tickPitch = (canvas.width - 120f) / tickCount;
-            for (int t = 0; t < tickCount; t++)
-            {
-                float tx = canvas.x + 60f + t * tickPitch;
-                bool activeTick = ((int)(time * (inFlight ? 8f : 3f)) + t) % 6 == 0;
-                Color tc = activeTick ? beaconCol : new Color(accent.r, accent.g, accent.b, .35f);
-                GUI.color = new Color(tc.r, tc.g, tc.b, (activeTick ? .65f : .22f) * old.a);
-                GUI.DrawTexture(new Rect(tx, canvas.yMax - 5f, tickPitch * .52f, 2f), pixel);
-            }
+            // Sleek upper and lower spaceship bridge console trim lines
+            Color trimCol = inFlight ? bridgeGold : steelBlue;
+            GUI.color = new Color(trimCol.r, trimCol.g, trimCol.b, .28f * old.a);
+            GUI.DrawTexture(new Rect(canvas.x + 48f, canvas.y + 4f, canvas.width - 96f, 2f), pixel);
+            GUI.DrawTexture(new Rect(canvas.x + 48f, canvas.yMax - 6f, canvas.width - 96f, 2f), pixel);
 
             GUI.color = old;
         }

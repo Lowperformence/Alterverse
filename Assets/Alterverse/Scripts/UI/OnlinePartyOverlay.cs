@@ -149,7 +149,7 @@ namespace Alterverse.UI
             bool searchingAny = edgegap != null && edgegap.IsSearching;
             theme.StatusBadge(new Rect(left + width - 368f, 59f, 200f, 38f),
                 searchingAny ? "R35 IN FLIGHT" : online.InParty ? "SQUAD STRAPPED IN" : "R35 BAY READY",
-                searchingAny ? FrontEndTheme.Positive : online.InParty ? FrontEndTheme.Accent : FrontEndTheme.Zero);
+                searchingAny ? FrontEndTheme.Accent : new Color(.38f, .66f, .88f, 1f));
 
             if (theme.Action(new Rect(left + width - 154f, 57f, 128f, 42f), "CLOSE"))
             {
@@ -183,7 +183,7 @@ namespace Alterverse.UI
             theme.Panel(quickCard);
 
             theme.StatusBadge(new Rect(quickCard.x + 24f, quickCard.y + 22f, 200f, 26f),
-                "SOLO / INSTANT QUEUE", FrontEndTheme.Zero);
+                "SOLO / INSTANT QUEUE", new Color(.38f, .66f, .88f, 1f));
             theme.Label(new Rect(quickCard.x + 24f, quickCard.y + 56f, quickCard.width - 48f, 34f),
                 "QUICK MATCH 4v4", theme.Heading);
             theme.Label(new Rect(quickCard.x + 24f, quickCard.y + 92f, quickCard.width - 48f, 24f),
@@ -230,7 +230,7 @@ namespace Alterverse.UI
             theme.Panel(partyCard);
 
             theme.StatusBadge(new Rect(partyCard.x + 24f, partyCard.y + 22f, 200f, 26f),
-                "CO-OP SQUAD LINK", FrontEndTheme.Positive);
+                "CO-OP SQUAD LINK", FrontEndTheme.Accent);
             theme.Label(new Rect(partyCard.x + 24f, partyCard.y + 56f, partyCard.width - 48f, 34f),
                 "PLAY WITH FRIENDS", theme.Heading);
             theme.Label(new Rect(partyCard.x + 24f, partyCard.y + 92f, partyCard.width - 48f, 24f),

@@ -606,8 +606,8 @@ namespace Alterverse.UI
             Heading("R35 Dropship Bay","Board the R35 troop transport, lock in your hero and target sector, and fly to the Front.");
             float w = ContentWidth*.52f;
             theme.Panel(new Rect(Left,214,w,394));
-            theme.StatusBadge(new Rect(Left+28,224,196,28),"R35 DROPSHIP  •  BOARDING",FrontEndTheme.Positive);
-            theme.StatusBadge(new Rect(Left+w-192,224,164,28),"AFT RAMP  •  SEALED",FrontEndTheme.Accent);
+            theme.StatusBadge(new Rect(Left+28,224,196,28),"R35 BRIDGE  •  READY",FrontEndTheme.Accent);
+            theme.StatusBadge(new Rect(Left+w-192,224,164,28),"ORBITAL DECK",new Color(.38f,.66f,.88f,1f));
             theme.Label(new Rect(Left+28,252,w-56,42),"MATCH 4v4",theme.Title);
             theme.Label(new Rect(Left+28,300,w-56,48),"Aboard the R35 Insertion Transport.\nFour versus four. Two lanes. Fly out and break the enemy Reality Core.",theme.Body,true);
             float lobbyButtonWidth=w-56;
@@ -712,7 +712,7 @@ namespace Alterverse.UI
                 $"SELECTED ARENA  /  {ArenaShopCatalog.For(selectedArena).Name}",theme.Small,true);
 
             float x = Left+w+32, rw = ContentWidth-w-32;
-            theme.StatusBadge(new Rect(x+24,170,Mathf.Min(236f,rw-48f),24),"R35 TROOP BAY  •  JUMP SEAT 01",FrontEndTheme.Zero);
+            theme.StatusBadge(new Rect(x+24,170,Mathf.Min(236f,rw-48f),24),"R35 DROP BAY  •  CHAMPION",FrontEndTheme.Accent);
             DrawPortrait(new Rect(x,198,rw,330));
             theme.Label(new Rect(x+24,538,rw-48,40),HeroName,theme.Heading);
             theme.Label(new Rect(x+24,578,rw-48,24),Roles[selectedHero],theme.Small,true);

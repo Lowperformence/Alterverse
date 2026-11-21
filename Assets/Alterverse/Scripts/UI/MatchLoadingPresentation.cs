@@ -7,8 +7,8 @@ using UnityEngine;
 namespace Alterverse.UI
 {
     /// <summary>
-    /// Modern AAA Sci-Fi MOBA R35 Dropship Cabin & Tactical Airlift Deck shared by offline, private co-op, and online match entry.
-    /// Immerses players inside the R35 troop transport flying at high speed toward the Front.
+    /// Cohesive Sci-Fi Spaceship Bridge & Orbital Drop Deck shared by offline, private co-op, and online match entry.
+    /// Uses the unified FrontEndTheme Gunmetal Glass, Steel Blue, and Warm Champagne Gold bridge palette.
     /// </summary>
     internal static class MatchLoadingPresentation
     {
@@ -40,24 +40,21 @@ namespace Alterverse.UI
                 GUI.matrix = Matrix4x4.identity;
                 GUI.color = new Color(1f, 1f, 1f, opacity);
 
-                // Full-bleed deep-space backdrop covering unsafe areas on mobile/ultrawide
+                // Full-bleed deep-space bridge backdrop covering unsafe areas on mobile/ultrawide
                 Rect full = new Rect(0f, 0f, Screen.width, Screen.height);
-                FrontEndTheme.Fill(full, new Color(.008f, .014f, .032f, .99f));
+                FrontEndTheme.Fill(full, new Color(.012f, .020f, .034f, .99f));
 
                 HeroId activeHero = hero ?? ResolveHero();
-                Color accent = Alterverse.Visuals.StylizedArtDirection.HeroAccent(activeHero);
-                Color cyan = new Color(.24f, .88f, 1f, 1f);
-                Color gold = new Color(1f, .78f, .32f, 1f);
-                Color crimson = new Color(1f, .30f, .44f, 1f);
+                // Unified Spaceship Bridge Palette: Warm Champagne Gold + Cool Steel Blue (no clashing neon purple/green)
+                Color bridgeGold = new Color(.91f, .73f, .48f, 1f);
+                Color steelBlue = new Color(.38f, .66f, .88f, 1f);
+                Color slateBlue = new Color(.28f, .46f, .64f, 1f);
+                Color hostileRed = new Color(.86f, .34f, .36f, 1f);
                 float now = Time.unscaledTime;
                 Texture2D pixel = FrontEndTheme.Pixel;
 
-                // Deep-space nebula & cosmic parallax dust across full screen
-                DimensionUiMotif.DrawCosmicParallaxOverlay(full, pixel, accent, now, Vector2.zero);
-
-                // Subtle top & bottom cabin letterbox atmosphere accents (width Screen.width - 2f to preserve Cover test; height 3f, never 6f)
-                FrontEndTheme.Fill(new Rect(1f, 0f, Screen.width - 2f, 3f), new Color(accent.r, accent.g, accent.b, .72f));
-                FrontEndTheme.Fill(new Rect(1f, Screen.height - 3f, Screen.width - 2f, 3f), new Color(cyan.r, cyan.g, cyan.b, .62f));
+                // Subtle deep-space parallax dust in warm bridge gold
+                DimensionUiMotif.DrawCosmicParallaxOverlay(full, pixel, steelBlue, now, Vector2.zero);
 
                 Rect safe = Screen.safeArea;
                 if (safe.width <= 0f || safe.height <= 0f) return false;
@@ -70,59 +67,53 @@ namespace Alterverse.UI
                     0f);
                 GUI.matrix = Matrix4x4.TRS(offset, Quaternion.identity, Vector3.one * scale);
 
-                // High-altitude slipstream wind streaks & R35 cabin structural ribs across the 1600x720 flight deck
-                DrawDropshipCabinBulkhead(theme, now, accent, cyan, gold);
-
-                // Master Widescreen Dropship Cabin Deck Canvas
+                // Master Widescreen Spaceship Bridge Console Canvas
                 float panelWidth = 1440f;
                 float left = (1600f - panelWidth) * .5f;
                 Rect card = new Rect(left, 34f, panelWidth, 652f);
                 theme.Panel(card);
                 theme.Frame(card, true);
 
-                // Dual neon energy header & footer trim lines on master cabin deck (height 3f, never 6f)
-                FrontEndTheme.Fill(new Rect(card.x + 20f, card.y + 2f, card.width - 40f, 3f),
-                    new Color(accent.r, accent.g, accent.b, .92f));
-                FrontEndTheme.Fill(new Rect(card.x + 20f, card.yMax - 5f, card.width - 40f, 2f),
-                    new Color(cyan.r, cyan.g, cyan.b, .58f));
-                DrawCornerBrackets(new Rect(card.x + 8f, card.y + 8f, card.width - 16f, card.height - 16f), cyan, 26f, 2f);
+                // Top & bottom bridge console trim lines (height 2f..3f, never 6f)
+                FrontEndTheme.Fill(new Rect(card.x + 24f, card.y + 2f, card.width - 48f, 2f),
+                    new Color(bridgeGold.r, bridgeGold.g, bridgeGold.b, .78f));
+                FrontEndTheme.Fill(new Rect(card.x + 24f, card.yMax - 4f, card.width - 48f, 2f),
+                    new Color(steelBlue.r, steelBlue.g, steelBlue.b, .48f));
+                DrawCornerBrackets(new Rect(card.x + 8f, card.y + 8f, card.width - 16f, card.height - 16f), bridgeGold, 24f, 2f);
 
                 // =========================================================================
-                // 1. LEFT COLUMN: R35 COCKPIT NOSE RADAR & FLIGHT TELEMETRY BAY
+                // 1. LEFT COLUMN: BRIDGE ORBITAL NAVIGATION & THRUSTER TELEMETRY
                 // =========================================================================
                 Rect radarBay = new Rect(card.x + 20f, card.y + 20f, 292f, card.height - 40f);
                 theme.Panel(radarBay);
                 theme.Frame(radarBay, false);
                 theme.StatusBadge(new Rect(radarBay.x + 14f, radarBay.y + 12f, radarBay.width - 28f, 24f),
-                    "R35 FLIGHT RADAR  •  FRONT", cyan);
+                    "ORBITAL NAVIGATION", steelBlue);
 
-                // Nose Orbital Approach Viewport Pod
+                // Clean Orbital Viewport Window (no blocky pixel plane!)
                 Rect planetViewport = new Rect(radarBay.x + 14f, radarBay.y + 44f, radarBay.width - 28f, 250f);
                 theme.Panel(planetViewport);
-                DrawCornerBrackets(new Rect(planetViewport.x + 6f, planetViewport.y + 6f, planetViewport.width - 12f, planetViewport.height - 12f), accent, 14f, 2f);
+                DrawCornerBrackets(new Rect(planetViewport.x + 8f, planetViewport.y + 8f, planetViewport.width - 16f, planetViewport.height - 16f), steelBlue, 14f, 2f);
 
-                // Primary Planetary Body & Counter-Rotating Orbital Moon (Preserves exact planet.py & LoadingRegression contract!)
+                // Primary Planetary Body & Counter-Rotating Orbital Moon
                 DimensionUiMotif.DrawLoadingPlanet(
                     new Rect(planetViewport.x + 30f, planetViewport.y + 22f, 204f, 204f),
-                    new Color(.42f, .76f, 1f, 1f),
+                    new Color(.42f, .72f, .96f, 1f),
                     now * 5.5f);
                 DimensionUiMotif.DrawLoadingPlanet(
                     new Rect(planetViewport.x + 188f, planetViewport.y + 14f, 56f, 56f),
-                    new Color(.96f, .74f, .44f, .88f),
+                    new Color(.91f, .73f, .48f, .88f),
                     -now * 8.2f);
 
-                // R35 Dropship Flight Silhouette & Pitch-Ladder Approach HUD overlaid inside the cockpit nose viewport
-                DrawDropshipApproachHud(theme, planetViewport, now, accent, cyan, gold);
-
                 theme.Label(new Rect(planetViewport.x + 14f, planetViewport.y + 222f, planetViewport.width - 28f, 20f),
-                    "R35 FLIGHT VECTOR  •  ALT 42.8 KM", theme.Small, true);
+                    "APPROACH VECTOR  •  ALT 42.8 KM", theme.Small, true);
 
-                // 3 Rounded Glass R35 Flight Sequence Nodes
+                // 3 Cohesive Bridge Flight Sequence Nodes
                 string[] phaseTitles =
                 {
-                    "01  //  R35 CABIN SEALED",
-                    "02  //  FLYING TO THE FRONT",
-                    "03  //  DROP RAMP STANDBY"
+                    "01  //  ORBITAL APPROACH",
+                    "02  //  SECTOR TELEMETRY",
+                    "03  //  DROP BAY STANDBY"
                 };
                 int activePhase = ((int)(now * 1.25f)) % 3;
                 for (int i = 0; i < 3; i++)
@@ -132,48 +123,48 @@ namespace Alterverse.UI
                     theme.Panel(phaseCard);
                     if (current) theme.Frame(phaseCard, true);
                     FrontEndTheme.Fill(new Rect(phaseCard.x + 4f, phaseCard.y + 8f, 3f, phaseCard.height - 16f),
-                        current ? accent : new Color(cyan.r, cyan.g, cyan.b, .45f));
+                        current ? bridgeGold : new Color(steelBlue.r, steelBlue.g, steelBlue.b, .42f));
                     theme.Label(new Rect(phaseCard.x + 16f, phaseCard.y + 6f, phaseCard.width - 96f, 18f),
                         phaseTitles[i], theme.Small, !current);
                     theme.Label(new Rect(phaseCard.x + 16f, phaseCard.y + 24f, phaseCard.width - 96f, 16f),
                         current ? "IN TRANSIT..." : "LOCKED", theme.Small, true);
                     theme.StatusBadge(new Rect(phaseCard.x + phaseCard.width - 78f, phaseCard.y + 11f, 66f, 24f),
-                        current ? "ACTIVE" : "READY", current ? accent : cyan);
+                        current ? "ACTIVE" : "READY", current ? bridgeGold : steelBlue);
                 }
 
-                // Bottom R35 Twin-Turbine Thrust Telemetry Card
+                // Bottom Thruster Telemetry Card (Harmonious Steel-Blue to Champagne-Gold bars, no rainbow!)
                 Rect spectrumPod = new Rect(radarBay.x + 14f, radarBay.y + 474f, radarBay.width - 28f, 124f);
                 theme.Panel(spectrumPod);
                 theme.Label(new Rect(spectrumPod.x + 14f, spectrumPod.y + 10f, spectrumPod.width - 28f, 18f),
-                    "R35 TWIN-TURBINE THRUST", theme.Small, true);
+                    "CARRIER THRUSTER TELEMETRY", theme.Small, true);
                 theme.Label(new Rect(spectrumPod.x + 14f, spectrumPod.y + 28f, spectrumPod.width - 28f, 16f),
-                    "AERO-THRUSTERS  •  MACH 4.2 CRUISE", theme.Small, true);
+                    "TWIN DRIVE CORES  •  99.8% STABLE", theme.Small, true);
 
                 float barStartX = spectrumPod.x + 14f;
                 float barStep = (spectrumPod.width - 28f) / 16f;
                 for (int b = 0; b < 16; b++)
                 {
-                    float wave = .25f + .75f * Mathf.PingPong(now * 2.2f + b * .21f, 1f);
-                    float bh = Mathf.Max(4f, 46f * wave);
+                    float wave = .25f + .75f * Mathf.PingPong(now * 1.8f + b * .18f, 1f);
+                    float bh = Mathf.Max(4f, 44f * wave);
                     if (bh > 5.2f && bh < 6.8f) bh = 7.6f; // Never equal 6f (reserved for progress rail test)
-                    Color barCol = b % 3 == 0 ? accent : b % 3 == 1 ? cyan : gold;
+                    Color barCol = b >= 12 ? bridgeGold : steelBlue;
                     FrontEndTheme.Fill(new Rect(barStartX + b * barStep, spectrumPod.y + 108f - bh, barStep - 4f, bh),
-                        new Color(barCol.r, barCol.g, barCol.b, .84f));
+                        new Color(barCol.r, barCol.g, barCol.b, .78f));
                 }
 
                 // =========================================================================
-                // 2. RIGHT COLUMN: R35 JUMP SEAT 01 CHAMPION HARNESS & DOSSIER CARD
+                // 2. RIGHT COLUMN: DEPLOYMENT BAY CHAMPION DOSSIER CARD
                 // =========================================================================
                 float heroCardWidth = 336f;
                 Rect heroCard = new Rect(card.x + card.width - heroCardWidth - 20f, card.y + 20f, heroCardWidth, card.height - 40f);
                 theme.Panel(heroCard);
                 theme.Frame(heroCard, true);
                 theme.StatusBadge(new Rect(heroCard.x + 14f, heroCard.y + 12f, heroCard.width - 28f, 24f),
-                    "R35 JUMP SEAT 01  //  LOCKED IN", accent);
+                    "DROP BAY 01  //  CHAMPION", bridgeGold);
 
                 Rect portrait = new Rect(heroCard.x + 14f, heroCard.y + 44f, heroCard.width - 28f, 326f);
                 StylizedHeroCard.Draw(portrait, activeHero, pixel, now);
-                DrawCornerBrackets(portrait, accent, 20f, 3f);
+                DrawCornerBrackets(portrait, bridgeGold, 18f, 2f);
 
                 string heroName = HeroIdentity.NameFor(activeHero);
                 string heroRole = HeroIdentity.RoleFor(activeHero).ToString().ToUpperInvariant();
@@ -183,60 +174,60 @@ namespace Alterverse.UI
                 theme.Panel(Plate);
                 theme.Label(new Rect(Plate.x + 14f, Plate.y + 8f, Plate.width - 28f, 18f), "DEPLOYING CHAMPION", theme.Small, true);
                 theme.FitLabel(new Rect(Plate.x + 14f, Plate.y + 26f, Plate.width - 28f, 34f), heroName, theme.Heading);
-                theme.StatusBadge(new Rect(Plate.x + 14f, Plate.y + 62f, Plate.width - 28f, 24f), heroRole, accent);
+                theme.StatusBadge(new Rect(Plate.x + 14f, Plate.y + 62f, Plate.width - 28f, 24f), heroRole, steelBlue);
 
-                // Rounded Glass Drop Suit & Harness Telemetry Ratings
+                // Cohesive Combat & Suit Telemetry Meters
                 Rect statsPod = new Rect(heroCard.x + 14f, heroCard.y + 484f, heroCard.width - 28f, 114f);
                 theme.Panel(statsPod);
                 theme.Label(new Rect(statsPod.x + 14f, statsPod.y + 8f, statsPod.width - 28f, 18f),
-                    "DROP HARNESS & SUIT TELEMETRY", theme.Small, true);
-                DrawStatMeter(theme, new Rect(statsPod.x + 14f, statsPod.y + 34f, statsPod.width - 28f, 20f), "WEAPON SYSTEMS", .92f, accent);
-                DrawStatMeter(theme, new Rect(statsPod.x + 14f, statsPod.y + 58f, statsPod.width - 28f, 20f), "HEAT SHIELDING", .86f, cyan);
-                DrawStatMeter(theme, new Rect(statsPod.x + 14f, statsPod.y + 82f, statsPod.width - 28f, 20f), "DROP THRUSTERS", .96f, gold);
+                    "SUIT & HARNESS TELEMETRY", theme.Small, true);
+                DrawStatMeter(theme, new Rect(statsPod.x + 14f, statsPod.y + 34f, statsPod.width - 28f, 20f), "WEAPON SYSTEMS", .90f, bridgeGold);
+                DrawStatMeter(theme, new Rect(statsPod.x + 14f, statsPod.y + 58f, statsPod.width - 28f, 20f), "HULL SHIELDING", .84f, steelBlue);
+                DrawStatMeter(theme, new Rect(statsPod.x + 14f, statsPod.y + 82f, statsPod.width - 28f, 20f), "DROP THRUSTERS", .94f, steelBlue);
 
                 // =========================================================================
-                // 3. CENTER COLUMN: R35 TROOP CABIN DECK, FLIGHT CORRIDOR & 4v4 DROP SQUAD
+                // 3. CENTER COLUMN: BRIDGE COMMAND HEADER, FLIGHT STREAM & 4v4 ROSTER
                 // =========================================================================
                 float textX = radarBay.x + radarBay.width + 18f;
                 float textWidth = heroCard.x - textX - 18f;
 
-                // Top R35 Troop Cabin Flight Header Card
+                // Top Spaceship Bridge Header Card
                 Rect headerPod = new Rect(textX, card.y + 20f, textWidth, 214f);
                 theme.Panel(headerPod);
                 theme.Frame(headerPod, true);
-                FrontEndTheme.Fill(new Rect(headerPod.x + 4f, headerPod.y + 14f, 4f, headerPod.height - 28f),
-                    new Color(accent.r, accent.g, accent.b, .95f));
+                FrontEndTheme.Fill(new Rect(headerPod.x + 4f, headerPod.y + 14f, 3f, headerPod.height - 28f),
+                    new Color(bridgeGold.r, bridgeGold.g, bridgeGold.b, .92f));
 
                 float innerX = headerPod.x + 22f;
                 float innerWidth = headerPod.width - 44f;
 
-                theme.StatusBadge(new Rect(innerX, headerPod.y + 14f, 214f, 24f), "R35 TROOP TRANSPORT", FrontEndTheme.Zero);
-                theme.StatusBadge(new Rect(innerX + 224f, headerPod.y + 14f, 178f, 24f), "EN ROUTE TO FRONT", cyan);
-                theme.StatusBadge(new Rect(innerX + 412f, headerPod.y + 14f, 152f, 24f), "JUMP LIGHT: AMBER", gold);
+                theme.StatusBadge(new Rect(innerX, headerPod.y + 14f, 214f, 24f), "R35 COMMAND BRIDGE", bridgeGold);
+                theme.StatusBadge(new Rect(innerX + 224f, headerPod.y + 14f, 178f, 24f), "ORBITAL TRANSIT", steelBlue);
+                theme.StatusBadge(new Rect(innerX + 412f, headerPod.y + 14f, 152f, 24f), "60HZ LOCKSTEP", slateBlue);
 
                 theme.Label(new Rect(innerX, headerPod.y + 44f, innerWidth, 50f), "ENTERING THE FRONT", theme.Title);
                 theme.Label(new Rect(innerX, headerPod.y + 96f, innerWidth, 32f), stage, theme.Heading);
 
-                // Rounded Glass Sub-Card for Arena Detail & Selected Hero Context
+                // Sub-Card for Arena Detail & Selected Hero Context
                 Rect detailCard = new Rect(innerX, headerPod.y + 134f, innerWidth, 66f);
                 theme.Panel(detailCard);
-                FrontEndTheme.Fill(new Rect(detailCard.x + 4f, detailCard.y + 8f, 3f, detailCard.height - 16f), cyan);
+                FrontEndTheme.Fill(new Rect(detailCard.x + 4f, detailCard.y + 8f, 3f, detailCard.height - 16f), steelBlue);
                 theme.FitLabel(new Rect(detailCard.x + 16f, detailCard.y + 8f, detailCard.width - 32f, 26f), detail, theme.Body, true);
                 if (!string.IsNullOrEmpty(context))
                     theme.FitLabel(new Rect(detailCard.x + 16f, detailCard.y + 34f, detailCard.width - 32f, 22f), context, theme.Small, true);
 
                 // =========================================================================
-                // 4. R35 FLIGHT CORRIDOR & DROP ZONE APPROACH STREAM (Preserves 6px rail!)
+                // 4. FLIGHT CORRIDOR PROGRESS STREAM (Preserves exact 6px rail contract!)
                 // =========================================================================
                 Rect progressPod = new Rect(textX, card.y + 244f, textWidth, 74f);
                 theme.Panel(progressPod);
                 theme.Frame(progressPod, false);
                 theme.Label(new Rect(progressPod.x + 18f, progressPod.y + 8f, progressPod.width - 196f, 18f),
-                    "R35 FLIGHT CORRIDOR  //  APPROACHING FRONT LINE DROP ZONE", theme.Small, true);
+                    "FLIGHT CORRIDOR  //  APPROACHING FRONT LINE DROP ZONE", theme.Small, true);
                 theme.Label(new Rect(progressPod.x + progressPod.width - 172f, progressPod.y + 8f, 154f, 18f),
-                    "AIRSPEED MACH 4.2", theme.Small, true);
+                    "VELOCITY MACH 4.2", theme.Small, true);
 
-                // 28 Segmented Flight Corridor Beacons above the main rail (height = 8f, NOT 6f)
+                // 28 Segmented Flight Corridor Cells above the main rail (height = 8f, NOT 6f)
                 int cellCount = 28;
                 float cellAreaW = progressPod.width - 36f;
                 float cellPitch = cellAreaW / cellCount;
@@ -246,22 +237,22 @@ namespace Alterverse.UI
                     int dist = c > litCell ? c - litCell : litCell - c;
                     bool hot = dist <= 3;
                     Color cellCol = hot
-                        ? new Color(accent.r, accent.g, accent.b, .90f - dist * .16f)
+                        ? new Color(bridgeGold.r, bridgeGold.g, bridgeGold.b, .90f - dist * .16f)
                         : new Color(.16f, .26f, .38f, .36f);
                     FrontEndTheme.Fill(new Rect(progressPod.x + 18f + c * cellPitch, progressPod.y + 32f, cellPitch - 4f, 8f), cellCol);
                 }
 
                 // Indeterminate activity indicator rail (MUST keep height == 6f for LoadingRegression!)
                 Rect rail = new Rect(progressPod.x + 18f, progressPod.y + 50f, progressPod.width - 36f, 6f);
-                FrontEndTheme.Fill(rail, new Color(.22f, .32f, .44f, .45f));
+                FrontEndTheme.Fill(rail, new Color(.18f, .28f, .40f, .45f));
                 float segmentWidth = Mathf.Min(138f, rail.width * .24f);
                 float travel = Mathf.Max(0f, rail.width - segmentWidth);
                 float segmentX = rail.x + travel * Mathf.PingPong(now * .55f, 1f);
                 FrontEndTheme.Fill(new Rect(segmentX, rail.y, segmentWidth, rail.height),
-                    new Color(accent.r, accent.g, accent.b, .94f));
+                    new Color(bridgeGold.r, bridgeGold.g, bridgeGold.b, .94f));
 
                 // =========================================================================
-                // 5. DROPSHIP CABIN INTERCOM & TACTICAL BRIEFING MODULE
+                // 5. BRIDGE INTERCOM & TACTICAL BRIEFING MODULE
                 // =========================================================================
                 string[] tips = LoadingTipContent.Tips;
                 if (tips.Length > 0)
@@ -270,24 +261,24 @@ namespace Alterverse.UI
                     Rect tip = new Rect(textX, card.y + 328f, textWidth, 86f);
                     theme.Panel(tip);
                     theme.Frame(tip, false);
-                    FrontEndTheme.Fill(new Rect(tip.x + 4f, tip.y + 10f, 3f, tip.height - 20f), gold);
-                    theme.StatusBadge(new Rect(tip.x + 16f, tip.y + 10f, 174f, 22f), "DROPSHIP INTERCOM", gold);
+                    FrontEndTheme.Fill(new Rect(tip.x + 4f, tip.y + 10f, 3f, tip.height - 20f), bridgeGold);
+                    theme.StatusBadge(new Rect(tip.x + 16f, tip.y + 10f, 168f, 22f), "BRIDGE INTERCOM", bridgeGold);
                     theme.Label(new Rect(tip.x + tip.width - 188f, tip.y + 12f, 172f, 18f),
-                        "FLIGHT BRIEFING #" + (tipIdx + 1), theme.Small, true);
+                        "TACTICAL BRIEFING #" + (tipIdx + 1), theme.Small, true);
                     theme.Label(new Rect(tip.x + 16f, tip.y + 38f, tip.width - 32f, 40f),
                         tips[tipIdx], theme.Small, true);
                 }
 
                 // =========================================================================
-                // 6. 4v4 TROOP BAY JUMP SEATS vs INBOUND HOSTILE DROPSHIP
+                // 6. 4v4 DROP BAY ROSTER SHOWDOWN & OPTIONAL RETURN ACTION
                 // =========================================================================
                 Rect squadPod = new Rect(textX, card.y + 424f, textWidth, 208f);
                 theme.Panel(squadPod);
                 theme.Frame(squadPod, false);
-                theme.StatusBadge(new Rect(squadPod.x + 14f, squadPod.y + 10f, 256f, 22f),
-                    "R35 TROOP BAY  //  YOUR SQUAD", FrontEndTheme.Zero);
-                theme.StatusBadge(new Rect(squadPod.x + squadPod.width - 270f, squadPod.y + 10f, 256f, 22f),
-                    "BOGEY DROPSHIP  //  HOSTILES", crimson);
+                theme.StatusBadge(new Rect(squadPod.x + 14f, squadPod.y + 10f, 248f, 22f),
+                    "ALLIED DROP SQUAD", steelBlue);
+                theme.StatusBadge(new Rect(squadPod.x + squadPod.width - 262f, squadPod.y + 10f, 248f, 22f),
+                    "HOSTILE DROP SQUAD", hostileRed);
 
                 float slotAreaY = squadPod.y + 40f;
                 float slotAreaH = canReturnToMenu ? 106f : 154f;
@@ -302,7 +293,7 @@ namespace Alterverse.UI
                     if (s == 0) theme.Frame(slotRect, true);
                     Rect miniPortrait = new Rect(slotRect.x + 4f, slotRect.y + 4f, slotRect.width - 8f, slotAreaH - 32f);
                     StylizedHeroCard.Draw(miniPortrait, slotHero, pixel, now + s * .35f);
-                    FrontEndTheme.Fill(new Rect(slotRect.x + 4f, slotRect.y + 4f, slotRect.width - 8f, 3f), s == 0 ? accent : cyan);
+                    FrontEndTheme.Fill(new Rect(slotRect.x + 4f, slotRect.y + 4f, slotRect.width - 8f, 3f), s == 0 ? bridgeGold : steelBlue);
                     theme.FitLabel(new Rect(slotRect.x + 6f, slotRect.y + slotAreaH - 24f, slotRect.width - 12f, 20f),
                         s == 0 ? "YOU" : HeroIdentity.NameFor(slotHero), theme.Small, s != 0);
                 }
@@ -321,7 +312,7 @@ namespace Alterverse.UI
                     theme.Panel(slotRect);
                     Rect miniPortrait = new Rect(slotRect.x + 4f, slotRect.y + 4f, slotRect.width - 8f, slotAreaH - 32f);
                     StylizedHeroCard.Draw(miniPortrait, enemyHero, pixel, now + 1.5f + s * .35f);
-                    FrontEndTheme.Fill(new Rect(slotRect.x + 4f, slotRect.y + 4f, slotRect.width - 8f, 3f), crimson);
+                    FrontEndTheme.Fill(new Rect(slotRect.x + 4f, slotRect.y + 4f, slotRect.width - 8f, 3f), hostileRed);
                     theme.FitLabel(new Rect(slotRect.x + 6f, slotRect.y + slotAreaH - 24f, slotRect.width - 12f, 20f),
                         HeroIdentity.NameFor(enemyHero), theme.Small, true);
                 }
@@ -335,76 +326,6 @@ namespace Alterverse.UI
                 GUI.enabled = oldEnabled;
                 GUI.depth = oldDepth;
             }
-        }
-
-        private static void DrawDropshipCabinBulkhead(FrontEndTheme theme, float now, Color accent, Color cyan, Color gold)
-        {
-            // Never use height == 6f or width == Screen.width here (reserved for LoadingRegression checks)
-            Color hullRib = new Color(.14f, .24f, .36f, .42f);
-            FrontEndTheme.Fill(new Rect(80f, 6f, 1440f, 4f), hullRib);
-            FrontEndTheme.Fill(new Rect(80f, 710f, 1440f, 4f), hullRib);
-
-            // Overhead cabin jump-light beacons & structural ribs
-            for (int i = 0; i < 6; i++)
-            {
-                float bx = 136f + i * 265f;
-                float pulse = .4f + .6f * Mathf.PingPong(now * 2.4f + i * .22f, 1f);
-                FrontEndTheme.Fill(new Rect(bx, 12f, 44f, 3f), new Color(gold.r, gold.g, gold.b, .45f + .45f * pulse));
-                FrontEndTheme.Fill(new Rect(bx + 8f, 703f, 28f, 3f), new Color(cyan.r, cyan.g, cyan.b, .35f + .35f * pulse));
-            }
-
-            // High-velocity slipstream wind streaks passing outside the transport cabin
-            for (int s = 0; s < 8; s++)
-            {
-                float sw = 96f + (s % 3) * 44f;
-                float progress = Mathf.PingPong(now * (.75f + (s % 4) * .18f) + s * .31f, 1f);
-                float sx = 40f + (1520f - sw) * (1f - progress);
-                float sy = 16f + s * 96f;
-                FrontEndTheme.Fill(new Rect(sx, sy, sw, 2f), new Color(cyan.r, cyan.g, cyan.b, .14f));
-            }
-        }
-
-        private static void DrawDropshipApproachHud(FrontEndTheme theme, Rect vp, float now, Color accent, Color cyan, Color gold)
-        {
-            // Pitch ladder bars along left & right edges of the cockpit orbital viewport (heights 2f..4f, never 6f)
-            Color ladderCol = new Color(cyan.r, cyan.g, cyan.b, .38f);
-            for (int p = 0; p < 5; p++)
-            {
-                float py = vp.y + 44f + p * 36f;
-                float w = (p == 2) ? 18f : 11f;
-                FrontEndTheme.Fill(new Rect(vp.x + 12f, py, w, 2f), ladderCol);
-                FrontEndTheme.Fill(new Rect(vp.x + vp.width - 12f - w, py, w, 2f), ladderCol);
-            }
-
-            // Dotted approach vector leading from R35 dropship silhouette toward the planet drop zone
-            float drift = 6f * Mathf.PingPong(now * 1.4f, 1f);
-            float shipX = vp.x + 34f + drift;
-            float shipY = vp.y + 168f - drift * .6f;
-            for (int d = 0; d < 6; d++)
-            {
-                float t = (d + 1) / 7f;
-                float dx = shipX + 26f + t * 88f;
-                float dy = shipY - 6f - t * 52f;
-                float pulse = .4f + .6f * Mathf.PingPong(now * 3.2f - d * .25f, 1f);
-                FrontEndTheme.Fill(new Rect(dx, dy, 5f, 2f), new Color(gold.r, gold.g, gold.b, .35f + .5f * pulse));
-            }
-
-            // Target Drop Zone Reticle on the planet surface
-            float lzX = shipX + 122f;
-            float lzY = shipY - 64f;
-            FrontEndTheme.Fill(new Rect(lzX - 8f, lzY, 16f, 2f), new Color(gold.r, gold.g, gold.b, .85f));
-            FrontEndTheme.Fill(new Rect(lzX - 1f, lzY - 7f, 2f, 16f), new Color(gold.r, gold.g, gold.b, .85f));
-
-            // Geometric R35 Dropship Silhouette (Twin-turbine swept-wing troop transport + thruster plumes)
-            float plumeW = 10f + 8f * Mathf.PingPong(now * 8f, 1f);
-            FrontEndTheme.Fill(new Rect(shipX - plumeW, shipY - 5f, plumeW, 3f), new Color(cyan.r, cyan.g, cyan.b, .85f));
-            FrontEndTheme.Fill(new Rect(shipX - plumeW * .85f, shipY + 3f, plumeW * .85f, 3f), new Color(accent.r, accent.g, accent.b, .85f));
-            // Fuselage & troop bay hull (heights 4f, 8f, 3f — never 6f)
-            FrontEndTheme.Fill(new Rect(shipX, shipY - 3f, 24f, 8f), new Color(.86f, .94f, 1f, .92f));
-            FrontEndTheme.Fill(new Rect(shipX + 18f, shipY - 1f, 10f, 4f), new Color(cyan.r, cyan.g, cyan.b, .95f));
-            // Upper & lower VTOL engine nacelles
-            FrontEndTheme.Fill(new Rect(shipX + 3f, shipY - 8f, 13f, 4f), new Color(accent.r, accent.g, accent.b, .88f));
-            FrontEndTheme.Fill(new Rect(shipX + 3f, shipY + 6f, 13f, 4f), new Color(accent.r, accent.g, accent.b, .88f));
         }
 
         private static void DrawCornerBrackets(Rect r, Color c, float len, float thick)
